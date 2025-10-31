@@ -1,8 +1,12 @@
 #!/bin/bash
-set -e
-
 # Post-tool-use hook that tracks edited files and their repos
 # This runs after Edit, MultiEdit, or Write tools complete successfully
+#
+# Copyright (c) 2025 Claude Code Infrastructure Contributors
+# Licensed under the MIT License
+# Source: https://github.com/yourusername/claude-code-infrastructure-showcase
+
+set -e
 
 
 # Read tool information from stdin

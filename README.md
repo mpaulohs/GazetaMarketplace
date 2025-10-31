@@ -106,10 +106,25 @@ This project uses the new [Microsoft.Testing.Platform](https://learn.microsoft.c
 - **Centralized Versions**: All NuGet package versions are managed in `Directory.Packages.props`. Do not specify versions in project files.
 - **Test Runner Configuration**: The test runner is configured in `global.json`. Do not use the `--test-runner` flag when creating new test projects, as it will overwrite `global.json`.
 
+## Claude Code Infrastructure
+
+This project includes Claude Code infrastructure for enhanced AI-assisted development:
+
+- **Auto-activating skills** via hooks that detect context and suggest relevant skills
+- **skill-developer** meta-skill for creating project-specific skills
+- **Dev docs system** for maintaining context across development sessions
+- **Specialized agents** for code review, refactoring, and documentation tasks
+
+See [.claude/README.md](.claude/README.md) for usage details and [CLAUDE.md](CLAUDE.md) for comprehensive development guidance.
+
+### Attribution
+
+The Claude Code infrastructure (`.claude/` directory) is based on the [Claude Code Infrastructure Showcase](https://github.com/yourusername/claude-code-infrastructure-showcase) repository, released under the MIT License. Copyright (c) 2025 Claude Code Infrastructure Contributors. See [.claude/ATTRIBUTION.md](.claude/ATTRIBUTION.md) for complete licensing information.
+
 ## Contributing
 
 This is an example project for demonstrating .NET 10 features and architecture patterns.
 
 ## License
 
-This project is provided as-is for educational and reference purposes.
+This project is provided as-is for educational and reference purposes. Note that the Claude Code infrastructure in the `.claude/` directory is subject to the MIT License (see [.claude/ATTRIBUTION.md](.claude/ATTRIBUTION.md)).

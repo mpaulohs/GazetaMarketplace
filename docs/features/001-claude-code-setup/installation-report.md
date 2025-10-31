@@ -104,3 +104,14 @@ dev/
 ## Issues Encountered
 
 None - installation completed successfully without errors.
+
+## License and Attribution
+
+This infrastructure is based on the [Claude Code Infrastructure Showcase](https://github.com/yourusername/claude-code-infrastructure-showcase) repository.
+
+**License:** MIT License
+**Copyright:** (c) 2025 Claude Code Infrastructure Contributors
+
+All components in `.claude/` directory (hooks, skills, commands) are subject to the MIT License terms. Complete attribution and license text available in `.claude/ATTRIBUTION.md`.
+
+As required by the MIT License, the copyright notice and permission notice have been preserved in all substantial portions of the software used from the showcase repository.

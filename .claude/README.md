@@ -2,6 +2,14 @@
 
 This directory contains Claude Code infrastructure installed from the showcase repository.
 
+## Attribution
+
+This infrastructure is based on the [Claude Code Infrastructure Showcase](https://github.com/yourusername/claude-code-infrastructure-showcase) repository, released under the MIT License.
+
+**Copyright (c) 2025 Claude Code Infrastructure Contributors**
+
+See [ATTRIBUTION.md](ATTRIBUTION.md) for complete licensing information and details about which components were used.
+
 ## Installed Components
 
 ### Hooks

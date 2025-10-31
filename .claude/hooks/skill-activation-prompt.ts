@@ -1,4 +1,11 @@
 #!/usr/bin/env node
+/**
+ * skill-activation-prompt hook
+ *
+ * Copyright (c) 2025 Claude Code Infrastructure Contributors
+ * Licensed under the MIT License
+ * Source: https://github.com/yourusername/claude-code-infrastructure-showcase
+ */
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
