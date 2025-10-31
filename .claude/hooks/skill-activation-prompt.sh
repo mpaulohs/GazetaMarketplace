@@ -5,23 +5,25 @@
 # Licensed under the MIT License
 # Source: https://github.com/yourusername/claude-code-infrastructure-showcase
 
-# Fail silently if anything goes wrong - don't block the user
-set +e
+set -e
 
 # Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
-if [ -z "$SCRIPT_DIR" ]; then
-    exit 0
-fi
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Change to the hooks directory
-cd "$SCRIPT_DIR" 2>/dev/null || exit 0
+cd "$SCRIPT_DIR"
 
 # Check if node/npx is available
-command -v npx >/dev/null 2>&1 || exit 0
+if ! command -v npx >/dev/null 2>&1; then
+    echo "ERROR: npx not found. Install Node.js to use skill-activation hooks." >&2
+    exit 1
+fi
 
-# Check if tsx is available
-npx tsx --version >/dev/null 2>&1 || exit 0
+# Check if dependencies are installed
+if [ ! -d "node_modules" ]; then
+    echo "ERROR: Hook dependencies not installed. Run: cd .claude/hooks && npm install" >&2
+    exit 1
+fi
 
 # Run the TypeScript hook
-cat | npx tsx skill-activation-prompt.ts 2>/dev/null || exit 0
+cat | npx tsx skill-activation-prompt.ts

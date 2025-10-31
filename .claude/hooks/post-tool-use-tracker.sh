@@ -6,30 +6,26 @@
 # Licensed under the MIT License
 # Source: https://github.com/yourusername/claude-code-infrastructure-showcase
 
-# Fail silently if anything goes wrong - don't block the user
-set +e
+set -e
 
 # Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
-if [ -z "$SCRIPT_DIR" ]; then
-    exit 0
-fi
-
-PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." 2>/dev/null && pwd)"
-if [ -z "$PROJECT_DIR" ]; then
-    exit 0
-fi
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Read tool information from stdin
 tool_info=$(cat)
 
-# Check if jq is available (required for JSON parsing)
-command -v jq >/dev/null 2>&1 || exit 0
+# Check if node-jq is available
+if [ ! -d "$SCRIPT_DIR/node_modules/node-jq" ]; then
+    echo "ERROR: node-jq not installed. Run: cd .claude/hooks && npm install" >&2
+    exit 1
+fi
 
-# Extract relevant data
-tool_name=$(echo "$tool_info" | jq -r '.tool_name // empty' 2>/dev/null || echo "")
-file_path=$(echo "$tool_info" | jq -r '.tool_input.file_path // empty' 2>/dev/null || echo "")
-session_id=$(echo "$tool_info" | jq -r '.session_id // empty' 2>/dev/null || echo "")
+# Extract relevant data using node-jq (via npx)
+# Note: Use 'npx --' to separate npx args from node-jq args
+tool_name=$(echo "$tool_info" | npx -- node-jq -r '.tool_name // empty')
+file_path=$(echo "$tool_info" | npx -- node-jq -r '.tool_input.file_path // empty')
+session_id=$(echo "$tool_info" | npx -- node-jq -r '.session_id // empty')
 
 # Skip if not an edit tool or no file path
 if [[ ! "$tool_name" =~ ^(Edit|MultiEdit|Write)$ ]] || [[ -z "$file_path" ]]; then
