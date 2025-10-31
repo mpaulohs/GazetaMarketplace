@@ -6,14 +6,25 @@
 # Licensed under the MIT License
 # Source: https://github.com/yourusername/claude-code-infrastructure-showcase
 
-set -e
+# Fail silently if anything goes wrong - don't block the user
+set +e
 
 # Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+if [ -z "$SCRIPT_DIR" ]; then
+    exit 0
+fi
+
+PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." 2>/dev/null && pwd)"
+if [ -z "$PROJECT_DIR" ]; then
+    exit 0
+fi
 
 # Read tool information from stdin
 tool_info=$(cat)
+
+# Check if jq is available (required for JSON parsing)
+command -v jq >/dev/null 2>&1 || exit 0
 
 # Extract relevant data
 tool_name=$(echo "$tool_info" | jq -r '.tool_name // empty' 2>/dev/null || echo "")
