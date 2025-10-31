@@ -3,6 +3,7 @@
     <Project Path="src/Example.Web/Example.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj" />
     <Project Path="tests/Example.Web.Tests/Example.Web.Tests.csproj" />
   </Folder>
 </Solution>
