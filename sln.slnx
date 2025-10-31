@@ -1,8 +1,11 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Example.API/Example.API.csproj" />
     <Project Path="src/Example.Web/Example.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj" />
+    <Project Path="tests/Example.API.Tests/Example.API.Tests.csproj" />
     <Project Path="tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj" />
     <Project Path="tests/Example.Web.Tests/Example.Web.Tests.csproj" />
   </Folder>
