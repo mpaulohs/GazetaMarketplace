@@ -333,5 +333,5 @@ $RECYCLE.BIN/
 # Claude Code Infrastructure
 .claude/hooks/node_modules/
 .claude/hooks/package-lock.json
-.claude/hooks/state/
+.claude/state/
 
