@@ -28,30 +28,24 @@ cp .claude/settings.json.backup .claude/settings.json
 
 The hooks require these dependencies:
 
-1. **Node.js and npm** - Required for skill-activation-prompt hook
+1. **Node.js and npm** - Required for both hooks
    ```bash
    node --version  # Should be v14 or higher
    npm --version
    ```
 
-2. **jq** - Required for post-tool-use-tracker hook
-   ```bash
-   jq --version
-   ```
-
-   On Windows, install jq:
-   ```bash
-   # Using Chocolatey
-   choco install jq
-
-   # Or download from https://jqlang.github.io/jq/download/
-   ```
-
-3. **Install hook dependencies**
+2. **Install hook dependencies** (includes node-jq for JSON parsing)
    ```bash
    cd .claude/hooks
    npm install
    ```
+
+   This installs:
+   - `tsx` - TypeScript execution for skill-activation-prompt
+   - `node-jq` - JSON parsing for post-tool-use-tracker
+   - TypeScript and type definitions
+
+   **Note**: No system `jq` installation required - everything runs via npm!
 
 ### Solution 2: Check Hook Scripts
 
@@ -91,16 +85,22 @@ If hooks are failing, Claude Code may provide more details in its error messages
 ### Common Issues
 
 **Issue**: "npx: command not found"
-**Solution**: Install Node.js and npm
+**Solution**: Install Node.js and npm from https://nodejs.org/
 
-**Issue**: "jq: command not found"
-**Solution**: Install jq (see Solution 1 above)
+**Issue**: "Hook dependencies not installed"
+**Solution**: Run `cd .claude/hooks && npm install`
+
+**Issue**: "node-jq not installed"
+**Solution**: Run `cd .claude/hooks && npm install` to install all dependencies including node-jq
 
 **Issue**: Hook errors on Windows
 **Solution**: Ensure you're using Git Bash or WSL, not Command Prompt or PowerShell
 
 **Issue**: Hooks work in terminal but not in Claude Code
-**Solution**: Claude Code may use a different shell environment. Try disabling hooks temporarily.
+**Solution**: The hooks may be working - check if you see skill activation messages in Claude Code responses
+
+**Issue**: Skill activation messages not appearing
+**Solution**: Test manually with `cd .claude/hooks && echo '{"session_id":"test","prompt":"create skill"}' | bash skill-activation-prompt.sh` - if you see output, hooks are working
 
 ## Skill Activation Not Working
 

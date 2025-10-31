@@ -2,6 +2,23 @@
 
 Claude Code hooks that enable skill auto-activation, file tracking, and validation.
 
+## Dependencies & Installation
+
+All dependencies are installed via npm (no system packages required):
+
+```bash
+cd .claude/hooks
+npm install
+```
+
+This installs:
+- **tsx** - TypeScript execution engine
+- **node-jq** - JSON parsing (no system jq needed!)
+- **typescript** - TypeScript compiler
+- **@types/node** - Node.js type definitions
+
+**Requirements**: Node.js v14+ and npm
+
 ---
 
 ## What Are Hooks?
