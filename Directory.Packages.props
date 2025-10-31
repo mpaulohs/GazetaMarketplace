@@ -5,8 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup Label="Core Packages">
-    <!-- Add your package versions here -->
-    <!-- Example: <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.0" /> -->
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.0-rc.2.25502.107" />
   </ItemGroup>
 
   <ItemGroup Label="Testing Packages">
