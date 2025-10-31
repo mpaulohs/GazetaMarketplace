@@ -148,3 +148,29 @@ Always reference packages without Version attributes in .csproj files. Versions 
 <!-- WRONG -->
 <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
 ```
+
+## Claude Code Infrastructure
+
+This project uses Claude Code infrastructure for enhanced development workflow:
+
+### Installed Components
+- **Auto-activating skills** via hooks
+- **skill-developer** meta-skill for creating project-specific skills
+- **Dev docs system** for context persistence across sessions
+- **Slash commands** for automated dev docs creation (/dev-docs, /dev-docs-update)
+
+### Configuration
+- `.claude/` directory contains skills, hooks, and configuration
+- `dev/active/` contains development documentation for complex tasks
+
+### Usage
+Skills activate automatically based on your prompts and file context. See `.claude/README.md` for details.
+
+### Creating .NET-Specific Skills
+Use skill-developer to create skills tailored to this .NET 10 project:
+- ASP.NET Core MVC patterns
+- Minimal API best practices
+- MSTest with Microsoft.Testing.Platform
+- .NET 10 specific guidance
+
+Start with: "I want to create a skill for [ASP.NET Core/testing/etc]"
