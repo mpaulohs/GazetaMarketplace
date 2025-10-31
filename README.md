@@ -90,6 +90,7 @@ This project uses [Central Package Management (CPM)](https://learn.microsoft.com
 ### Shared Build Configuration
 
 `Directory.Build.props` defines common build properties for all projects:
+
 - Target Framework: `net10.0`
 - Nullable Reference Types: Disabled
 - Implicit Usings: Disabled
