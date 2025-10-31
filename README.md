@@ -1,2 +1,114 @@
-# net10-project-example
-An full stack example
+# .NET 10 Project Example
+
+A full-stack .NET 10 example project demonstrating modern ASP.NET Core architecture with centralized package management, MSTest with the new Microsoft.Testing.Platform, and end-to-end testing with Playwright.
+
+## Prerequisites
+
+- [.NET 10.0 SDK RC 2](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) (version 10.0.100-rc.2.25502.107 or later)
+- [PowerShell](https://github.com/PowerShell/PowerShell) (for Playwright browser installation)
+- IDE: Visual Studio 2022, VS Code, or Rider
+
+## Technologies
+
+- **.NET 10.0 RC 2** - Latest .NET release candidate
+- **ASP.NET Core MVC** - Web application with Razor runtime compilation
+- **ASP.NET Core Minimal APIs** - Lightweight API with OpenAPI/Swagger
+- **MSTest v4** - Testing framework with Microsoft.Testing.Platform
+- **Playwright** - End-to-end browser testing
+- **Centralized Package Management** - NuGet package version management
+
+## Project Structure
+
+```
+├── src/
+│   ├── Example.Web/              # ASP.NET Core MVC application
+│   └── Example.API/              # ASP.NET Core Web API (Minimal APIs)
+├── tests/
+│   ├── Example.Web.Tests/        # Unit tests for MVC application
+│   ├── Example.Web.Tests.Playwright/  # E2E tests for MVC application
+│   ├── Example.API.Tests/        # Unit tests for API application
+│   └── Example.API.Tests.Playwright/  # E2E tests for API application
+├── Directory.Build.props          # Shared MSBuild properties
+├── Directory.Packages.props       # Centralized NuGet package versions
+├── global.json                    # SDK version and test runner config
+└── sln.slnx                      # Solution file
+```
+
+## Getting Started
+
+### Build the Solution
+
+```bash
+dotnet build
+```
+
+### Run the Applications
+
+```bash
+# Run the MVC application
+dotnet run --project src/Example.Web/Example.Web.csproj
+
+# Run the API application
+dotnet run --project src/Example.API/Example.API.csproj
+```
+
+The API will be available at `https://localhost:5001` with Swagger UI at `/swagger`.
+
+### Run Tests
+
+```bash
+# Run all tests
+dotnet test
+
+# Run specific test project
+dotnet run --project tests/Example.Web.Tests/Example.Web.Tests.csproj
+dotnet run --project tests/Example.API.Tests/Example.API.Tests.csproj
+```
+
+### Setup Playwright (First Time)
+
+After building the Playwright test projects, install the browsers:
+
+```powershell
+pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/Example.API.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+```
+
+Then run the Playwright tests:
+
+```bash
+dotnet run --project tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj
+dotnet run --project tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj
+```
+
+## Key Features
+
+### Centralized Package Management
+
+This project uses [Central Package Management (CPM)](https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management) to manage NuGet package versions in a single location (`Directory.Packages.props`). All project files reference packages without specifying versions.
+
+### Shared Build Configuration
+
+`Directory.Build.props` defines common build properties for all projects:
+- Target Framework: `net10.0`
+- Nullable Reference Types: Disabled
+- Implicit Usings: Disabled
+- Treat Warnings as Errors: Enabled
+
+### Microsoft.Testing.Platform
+
+This project uses the new [Microsoft.Testing.Platform](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-mstest-runner-intro) instead of the legacy VSTest runner. Test projects are executable and can be run directly with `dotnet run`.
+
+## Development Notes
+
+- **Explicit Using Statements Required**: `ImplicitUsings` is disabled, so all C# files must include explicit `using` statements.
+- **Centralized Versions**: All NuGet package versions are managed in `Directory.Packages.props`. Do not specify versions in project files.
+- **Test Runner Configuration**: The test runner is configured in `global.json`. Do not use the `--test-runner` flag when creating new test projects, as it will overwrite `global.json`.
+
+## Contributing
+
+This is an example project for demonstrating .NET 10 features and architecture patterns.
+
+## License
+
+This project is provided as-is for educational and reference purposes.
