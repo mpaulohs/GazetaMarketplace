@@ -8,16 +8,17 @@
 
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Read tool information from stdin
 tool_info=$(cat)
 
-
 # Extract relevant data
-tool_name=$(echo "$tool_info" | jq -r '.tool_name // empty')
-file_path=$(echo "$tool_info" | jq -r '.tool_input.file_path // empty')
-session_id=$(echo "$tool_info" | jq -r '.session_id // empty')
-
+tool_name=$(echo "$tool_info" | jq -r '.tool_name // empty' 2>/dev/null || echo "")
+file_path=$(echo "$tool_info" | jq -r '.tool_input.file_path // empty' 2>/dev/null || echo "")
+session_id=$(echo "$tool_info" | jq -r '.session_id // empty' 2>/dev/null || echo "")
 
 # Skip if not an edit tool or no file path
 if [[ ! "$tool_name" =~ ^(Edit|MultiEdit|Write)$ ]] || [[ -z "$file_path" ]]; then
@@ -30,13 +31,13 @@ if [[ "$file_path" =~ \.(md|markdown)$ ]]; then
 fi
 
 # Create cache directory in project
-cache_dir="$CLAUDE_PROJECT_DIR/.claude/tsc-cache/${session_id:-default}"
-mkdir -p "$cache_dir"
+cache_dir="$PROJECT_DIR/.claude/state/${session_id:-default}"
+mkdir -p "$cache_dir" 2>/dev/null || exit 0
 
 # Function to detect repo from file path
 detect_repo() {
     local file="$1"
-    local project_root="$CLAUDE_PROJECT_DIR"
+    local project_root="$PROJECT_DIR"
 
     # Remove project root from path
     local relative_path="${file#$project_root/}"
@@ -91,7 +92,7 @@ detect_repo() {
 # Function to get build command for repo
 get_build_command() {
     local repo="$1"
-    local project_root="$CLAUDE_PROJECT_DIR"
+    local project_root="$PROJECT_DIR"
     local repo_path="$project_root/$repo"
 
     # Check if package.json exists and has a build script
@@ -126,7 +127,7 @@ get_build_command() {
 # Function to get TSC command for repo
 get_tsc_command() {
     local repo="$1"
-    local project_root="$CLAUDE_PROJECT_DIR"
+    local project_root="$PROJECT_DIR"
     local repo_path="$project_root/$repo"
 
     # Check if tsconfig.json exists

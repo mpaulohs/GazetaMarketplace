@@ -7,5 +7,9 @@
 
 set -e
 
-cd "$CLAUDE_PROJECT_DIR/.claude/hooks"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Change to the hooks directory and run the TypeScript hook
+cd "$SCRIPT_DIR"
 cat | npx tsx skill-activation-prompt.ts
