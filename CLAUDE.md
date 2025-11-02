@@ -357,12 +357,10 @@ This blocks all Claude Code mentions and PR automation until disabled.
 
 This project includes a comprehensive continuous integration and deployment pipeline that builds, tests, and publishes applications across multiple platforms.
 
-### Multi-Platform Builds
+### Build & Test
 
 The CI/CD pipeline automatically builds and tests on:
 - **Linux** (Ubuntu latest)
-- **Windows** (Windows latest)
-- **macOS** (macOS latest)
 
 **Triggers:**
 - Push to `main` or `develop` branches
@@ -479,7 +477,7 @@ The CI/CD pipeline produces various artifacts:
    ┌───▼───┐       ┌───▼───┐
    │ Build │       │ Coverage│
    │ Test  │       │ Report │
-   │ (3 OS)│       │        │
+   │(Ubuntu)│      │        │
    └───┬───┘       └───┬────┘
        │               │
        │          ┌────▼────┐
@@ -531,7 +529,7 @@ The CI/CD pipeline produces various artifacts:
 - Download artifacts
 
 **Typical Run Times:**
-- Build & Test (per platform): 2-5 minutes
+- Build & Test: 2-5 minutes
 - Coverage Collection: 2-3 minutes
 - Docker Build: 3-5 minutes
 - Total (parallel): ~5-8 minutes

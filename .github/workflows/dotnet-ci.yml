@@ -14,23 +14,11 @@ env:
 
 jobs:
   # ============================================================================
-  # Multi-Platform Build & Test
+  # Build & Test (Ubuntu only)
   # ============================================================================
   build-and-test:
-    name: Build & Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            artifact-name: linux-x64
-          - os: windows-latest
-            artifact-name: windows-x64
-          - os: macos-latest
-            artifact-name: osx-x64
+    name: Build & Test
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -63,7 +51,6 @@ jobs:
           dotnet test --no-build --configuration Release --verbosity normal
 
       - name: Publish Example.Web
-        if: matrix.os == 'ubuntu-latest'
         run: |
           dotnet publish src/Example.Web/Example.Web.csproj \
             --configuration Release \
@@ -71,7 +58,6 @@ jobs:
             --no-build
 
       - name: Publish Example.API
-        if: matrix.os == 'ubuntu-latest'
         run: |
           dotnet publish src/Example.API/Example.API.csproj \
             --configuration Release \
@@ -79,23 +65,21 @@ jobs:
             --no-build
 
       - name: Upload Web artifacts
-        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: web-app-${{ matrix.artifact-name }}
+          name: web-app-linux-x64
           path: ./publish/Example.Web
           retention-days: 7
 
       - name: Upload API artifacts
-        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: api-app-${{ matrix.artifact-name }}
+          name: api-app-linux-x64
           path: ./publish/Example.API
           retention-days: 7
 
   # ============================================================================
-  # Test Coverage (Linux only for performance)
+  # Test Coverage
   # ============================================================================
   coverage:
     name: Code Coverage
