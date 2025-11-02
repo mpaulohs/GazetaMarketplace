@@ -602,12 +602,365 @@ jobs:
           exit 1
 
   # ============================================================================
+  # Step 4: Code Review
+  # ============================================================================
+  code-review:
+    name: "4️⃣ Code Review"
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    continue-on-error: true  # Don't fail pipeline if secret not configured
+    if: always()
+
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+      id-token: write  # Required for OIDC authentication
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for PR diff
+
+      - name: Check if Claude Code secret is configured
+        id: check-secret
+        run: |
+          if [ -z "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "::warning::CLAUDE_CODE_OAUTH_TOKEN secret not configured. Skipping code review."
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Claude Code review
+        if: steps.check-secret.outputs.configured == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          prompt: |
+            Review this PR for .NET 10 best practices and project compliance:
+
+            **Code Quality & Conventions:**
+            - Follow C# coding conventions and naming standards
+            - Proper use of async/await patterns
+            - Error handling and exception management
+            - Null safety and nullable reference types
+            - LINQ usage and performance considerations
+
+            **Architecture & Design:**
+            - Separation of concerns
+            - Dependency injection patterns
+            - API design and HTTP semantics (for Minimal APIs)
+            - MVC patterns and conventions (for Web project)
+
+            **.NET 10 & Project-Specific Requirements:**
+            - ImplicitUsings disabled - all using statements must be explicit
+            - Centralized Package Management - NO Version attributes in .csproj files
+            - MSTest with Microsoft.Testing.Platform (new test runner)
+            - TreatWarningsAsErrors compliance
+
+            **Testing:**
+            - Test coverage for new functionality
+            - Test quality and assertions
+            - Proper use of MSTest attributes
+            - Playwright test patterns (if applicable)
+
+            **Security:**
+            - Input validation and sanitization
+            - Authentication and authorization
+            - Secure configuration handling
+            - No hardcoded secrets or sensitive data
+
+            **Breaking Changes:**
+            - API surface changes
+            - Configuration schema changes
+            - Database migrations (if applicable)
+
+            **Documentation:**
+            - XML documentation comments for public APIs
+            - README updates if needed
+            - CLAUDE.md updates for architecture changes
+
+            Provide specific, actionable feedback with file:line references.
+
+      - name: Post skip message if secret not configured
+        if: steps.check-secret.outputs.configured == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- pr-validation:step-4 -->';
+            const markdown = `${marker}
+            ## 4️⃣ Code Review
+
+            ⚠️ **Skipped** - CLAUDE_CODE_OAUTH_TOKEN secret not configured
+
+            To enable automated code review:
+            1. Obtain OAuth token from Claude Code
+            2. Add as repository secret: \`CLAUDE_CODE_OAUTH_TOKEN\`
+            3. Re-run this workflow
+
+            **Status:** ⏭️ Skipped (non-blocking)
+            **Timestamp:** ${new Date().toISOString()}
+
+            ---
+            <!-- /pr-validation:step-4 -->`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('<!-- pr-validation:step-4 -->')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: markdown
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: markdown
+              });
+            }
+
+  # ============================================================================
+  # Step 5: Security Review
+  # ============================================================================
+  security-review:
+    name: "5️⃣ Security Review"
+    runs-on: ubuntu-latest
+    needs: code-review
+    if: always()
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # Secret scanning with GitLeaks
+      - name: Run GitLeaks secret scan
+        id: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check GitLeaks results
+        id: gitleaks-check
+        run: |
+          if [ "${{ steps.gitleaks.outcome }}" = "failure" ]; then
+            echo "GITLEAKS_FAILED=true" >> $GITHUB_ENV
+            echo "⚠️ GitLeaks detected potential secrets"
+          else
+            echo "✅ No secrets detected by GitLeaks"
+          fi
+
+      # .NET security analyzers (build with security analyzers enabled)
+      - name: Run .NET security analyzers
+        id: security-analyzers
+        continue-on-error: true
+        run: |
+          dotnet build /p:RunAnalyzers=true /p:EnableNETAnalyzers=true /p:AnalysisLevel=latest-all > security-analysis.txt 2>&1 || echo "SECURITY_ANALYZER_FAILED=true" >> $GITHUB_ENV
+
+          if [ "$SECURITY_ANALYZER_FAILED" = "true" ]; then
+            echo "⚠️ Security analyzer warnings/errors found"
+            cat security-analysis.txt
+          else
+            echo "✅ No security analyzer issues found"
+          fi
+
+      # NuGet vulnerability scan
+      - name: Run NuGet vulnerability scan
+        id: nuget-vuln
+        continue-on-error: true
+        run: |
+          pwsh -File .github/scripts/check-dotnet-vulnerabilities.ps1 > nuget-vuln.json 2>&1 || echo "NUGET_VULN_FAILED=true" >> $GITHUB_ENV
+
+      # Path security check
+      - name: Run path security check
+        id: path-security
+        continue-on-error: true
+        run: |
+          pwsh -File .github/scripts/check-path-security.ps1 -SourcePath . > path-security.json 2>&1 || echo "PATH_SECURITY_FAILED=true" >> $GITHUB_ENV
+
+      # Parse and aggregate all security results
+      - name: Parse security results
+        id: parse-results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const findings = [];
+
+            // Parse GitLeaks results
+            if (process.env.GITLEAKS_FAILED === 'true') {
+              findings.push({
+                severity: 'error',
+                category: 'Secret Scanning',
+                file: '',
+                line: 0,
+                rule: 'GITLEAKS',
+                message: 'Potential secrets detected in code',
+                remediation: 'Review GitLeaks output and remove any exposed secrets. See workflow logs for details.'
+              });
+            }
+
+            // Parse security analyzer results
+            if (process.env.SECURITY_ANALYZER_FAILED === 'true') {
+              try {
+                const analyzerOutput = fs.readFileSync('security-analysis.txt', 'utf8');
+                const warningMatches = analyzerOutput.match(/warning CA\d+:/g) || [];
+                const errorMatches = analyzerOutput.match(/error CA\d+:/g) || [];
+
+                if (errorMatches.length > 0 || warningMatches.length > 0) {
+                  findings.push({
+                    severity: errorMatches.length > 0 ? 'error' : 'warning',
+                    category: 'Security Analysis',
+                    file: '',
+                    line: 0,
+                    rule: 'DOTNET-SECURITY-ANALYZER',
+                    message: `Found ${errorMatches.length} security errors and ${warningMatches.length} warnings`,
+                    remediation: 'Review security analyzer output in workflow logs and fix identified issues'
+                  });
+                }
+              } catch (e) {
+                console.log('Could not parse security analyzer results:', e.message);
+              }
+            }
+
+            // Parse NuGet vulnerability results
+            if (fs.existsSync('nuget-vuln.json')) {
+              try {
+                const nugetResult = JSON.parse(fs.readFileSync('nuget-vuln.json', 'utf8'));
+                if (nugetResult.findings && nugetResult.findings.length > 0) {
+                  findings.push(...nugetResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse NuGet vulnerability results:', e.message);
+              }
+            }
+
+            // Parse path security results
+            if (fs.existsSync('path-security.json')) {
+              try {
+                const pathResult = JSON.parse(fs.readFileSync('path-security.json', 'utf8'));
+                if (pathResult.findings && pathResult.findings.length > 0) {
+                  findings.push(...pathResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse path security results:', e.message);
+              }
+            }
+
+            // Calculate summary
+            const summary = {
+              total: findings.length,
+              errors: findings.filter(f => f.severity === 'error').length,
+              warnings: findings.filter(f => f.severity === 'warning').length,
+              info: findings.filter(f => f.severity === 'info').length
+            };
+
+            // Determine status
+            const status = summary.errors > 0 ? 'failed' : summary.warnings > 0 ? 'warning' : 'pass';
+
+            const result = {
+              step: 'security-review',
+              status: status,
+              timestamp: new Date().toISOString(),
+              findings: findings,
+              summary: summary
+            };
+
+            core.setOutput('result', JSON.stringify(result));
+            core.setOutput('status', status);
+
+            console.log('Security review complete:');
+            console.log(`  Status: ${status}`);
+            console.log(`  Total findings: ${summary.total}`);
+            console.log(`  Errors: ${summary.errors}, Warnings: ${summary.warnings}, Info: ${summary.info}`);
+
+            return result;
+
+      # Post PR comment with security results
+      - name: Post security review comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const result = JSON.parse('${{ steps.parse-results.outputs.result }}');
+            const { execSync } = require('child_process');
+
+            const markdown = execSync(
+              `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
+              `-InputJson '${JSON.stringify(result)}' ` +
+              `-StepNumber 5 ` +
+              `-StepName "Security Review" ` +
+              `-Emoji "🔒" ` +
+              `-RunUrl "${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}"`,
+              { encoding: 'utf8' }
+            );
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('<!-- pr-validation:step-5 -->')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: markdown
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: markdown
+              });
+            }
+
+      - name: Fail if security issues found
+        if: steps.parse-results.outputs.status == 'failed'
+        run: |
+          echo "::error::Security review failed - critical security issues found"
+          exit 1
+
+  # ============================================================================
   # Validation Complete Summary
   # ============================================================================
   validation-complete:
     name: "✅ Validation Complete"
     runs-on: ubuntu-latest
-    needs: [authorization, guardrails, quality-checks]
+    needs: [authorization, guardrails, quality-checks, code-review, security-review]
     if: always()
 
     steps:
@@ -626,6 +979,12 @@ jobs:
               },
               qualityChecks: {
                 status: '${{ needs.quality-checks.result }}'
+              },
+              codeReview: {
+                status: '${{ needs.code-review.result }}'
+              },
+              securityReview: {
+                status: '${{ needs.security-review.result }}'
               }
             };
 
@@ -644,6 +1003,15 @@ jobs:
               overallStatus = '❌ Failed';
               failedSteps.push('Quality Checks');
             }
+            // Code review is optional (skipped if secret not configured)
+            if (results.codeReview.status === 'failure') {
+              overallStatus = '❌ Failed';
+              failedSteps.push('Code Review');
+            }
+            if (results.securityReview.status !== 'success') {
+              overallStatus = '❌ Failed';
+              failedSteps.push('Security Review');
+            }
 
             await core.summary
               .addHeading('PR Validation Pipeline Summary')
@@ -651,7 +1019,9 @@ jobs:
                 [{data: 'Step', header: true}, {data: 'Status', header: true}],
                 ['1️⃣ Authorization', results.authorization.status === 'success' ? '✅ Passed' : '❌ Failed'],
                 ['2️⃣ PR Guardrails', results.guardrails.status === 'success' ? '✅ Passed' : results.guardrails.status === 'failure' ? '❌ Failed' : '⚠️ Skipped'],
-                ['3️⃣ Quality Checks', results.qualityChecks.status === 'success' ? '✅ Passed' : results.qualityChecks.status === 'failure' ? '❌ Failed' : '⚠️ Skipped']
+                ['3️⃣ Quality Checks', results.qualityChecks.status === 'success' ? '✅ Passed' : results.qualityChecks.status === 'failure' ? '❌ Failed' : '⚠️ Skipped'],
+                ['4️⃣ Code Review', results.codeReview.status === 'success' ? '✅ Passed' : results.codeReview.status === 'failure' ? '❌ Failed' : '⏭️ Skipped'],
+                ['5️⃣ Security Review', results.securityReview.status === 'success' ? '✅ Passed' : results.securityReview.status === 'failure' ? '❌ Failed' : '⚠️ Skipped']
               ])
               .addRaw(`\n**Overall Status:** ${overallStatus}`)
               .addRaw(failedSteps.length > 0 ? `\n**Failed Steps:** ${failedSteps.join(', ')}` : '')
