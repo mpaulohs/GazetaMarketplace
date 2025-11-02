@@ -1,4 +1,4 @@
-# Claude Code Environment Setup Automation - Tasks
+# Claude Code WSL Environment Setup - Tasks
 
 **Last Updated:** 2025-11-02
 
@@ -6,164 +6,178 @@
 
 ### ✅ Completed
 
-- [x] Examine current Claude Code infrastructure installation
-- [x] Review manual setup documentation (001-claude-code-setup-plan.md)
-- [x] Analyze environment details (WSL2, Node.js, npm versions)
-- [x] Review INSTALLATION_REPORT.md for components list
+- [x] Clarify actual requirement (WSL system setup, not project infrastructure)
+- [x] Examine current WSL environment (Ubuntu, Node.js, npm, Claude Code CLI)
+- [x] Analyze Claude Code installation (v2.0.31 via npm global)
+- [x] Review manual setup process from guide
+- [x] Identify all components to automate
 - [x] Create comprehensive implementation plan
   - [x] Document current state analysis
-  - [x] Define proposed future state
-  - [x] Break down into 9 implementation phases
+  - [x] Define proposed future state with script capabilities
+  - [x] Break down into 10 implementation phases
   - [x] Identify risks and mitigations
   - [x] Define success metrics
   - [x] Estimate timelines
-- [x] Generate PowerShell 7+ automation script
+- [x] Generate PowerShell 7+ WSL automation script
   - [x] Script header and comment-based help
-  - [x] Parameter definitions (-SourceRepoPath, -TargetPath, -DryRun, -SkipValidation)
-  - [x] Helper functions (logging, prerequisites, path conversion)
+  - [x] Parameter definitions (-SkipBackup, -SkipCleanup, -UbuntuVersion, -NodeVersion)
+  - [x] Helper functions (logging, section headers)
   - [x] Prerequisites validation function
-  - [x] Interactive source repository prompt
-  - [x] Directory creation function
-  - [x] File copying functions (hooks, skills, agents, commands, docs)
-  - [x] Configuration generation (settings.json)
-  - [x] WSL npm installation function
-  - [x] Documentation update functions (CLAUDE.md, .gitignore)
-  - [x] Validation suite (file structure, configuration, hook execution)
+  - [x] Backup existing WSL function
+  - [x] Cleanup existing WSL function (with 'DELETE' confirmation)
+  - [x] WSL feature installation function (with reboot handling)
+  - [x] Ubuntu installation function
+  - [x] Node.js installation function (via nodesource)
+  - [x] npm configuration function (custom global directory)
+  - [x] PATH configuration function (.bashrc update)
+  - [x] Claude Code installation function (npm global)
+  - [x] Additional tools installation function
+  - [x] Comprehensive validation suite
   - [x] Installation report generation
   - [x] Error handling and try-catch blocks
   - [x] User-friendly output with colors and symbols
   - [x] Main execution flow with all phases
-- [x] Create dev docs structure
-  - [x] 003-setup-automation-plan.md
-  - [x] 003-setup-automation-context.md
-  - [x] 003-setup-automation-tasks.md
+- [x] Delete incorrect project infrastructure script
+- [x] Update dev docs to reflect correct scope
+  - [x] 003-setup-automation-plan.md (WSL setup focus)
+  - [x] 003-setup-automation-context.md (session progress)
+  - [x] 003-setup-automation-tasks.md (this file)
 
 ## Testing Tasks
 
 ### ⏳ Not Started
 
-- [ ] Test script on clean project (no existing .claude/)
-  - [ ] Verify all directories created
-  - [ ] Verify all files copied
-  - [ ] Verify npm dependencies installed
-  - [ ] Verify configuration files generated
+- [ ] Test script on clean Windows installation (no WSL)
+  - [ ] Verify WSL feature installation
+  - [ ] Verify Ubuntu installation
+  - [ ] Verify Node.js installation
+  - [ ] Verify npm configuration
+  - [ ] Verify Claude Code installation
   - [ ] Verify validation passes
   - [ ] Verify installation report generated
-- [ ] Test script dry-run mode
-  - [ ] Verify no changes made to filesystem
-  - [ ] Verify all operations logged as [DRY RUN]
-  - [ ] Verify prerequisites still validated
-- [ ] Test script idempotency (re-run on existing installation)
-  - [ ] Verify no errors when .claude/ exists
-  - [ ] Verify no duplicate content in CLAUDE.md
-  - [ ] Verify no duplicate rules in .gitignore
+- [ ] Test script on machine with existing WSL
+  - [ ] Verify backup function
+  - [ ] Verify cleanup confirmation prompt
+  - [ ] Verify existing WSL removal
+  - [ ] Verify fresh installation
+- [ ] Test script with -SkipBackup parameter
+  - [ ] Verify backup skipped
+  - [ ] Verify cleanup still works
+- [ ] Test script with -SkipCleanup parameter
+  - [ ] Verify existing WSL preserved
+  - [ ] Verify new Ubuntu installs alongside
+- [ ] Test script with custom parameters
+  - [ ] Test -UbuntuVersion "Ubuntu-22.04"
+  - [ ] Test -NodeVersion 18
 - [ ] Test script error handling
-  - [ ] Invalid source repository path
-  - [ ] Missing source repository files
-  - [ ] No WSL installed
-  - [ ] No Node.js in WSL
-  - [ ] npm install failure
-  - [ ] Permission denied errors
-- [ ] Test script on multiple environments
-  - [ ] Windows 10 with WSL2
-  - [ ] Windows 11 with WSL2
-  - [ ] PowerShell 7.3
-  - [ ] PowerShell 7.4
-  - [ ] Node.js v14, v18, v20
-- [ ] Test partial installation recovery
-  - [ ] Interrupt script mid-execution
-  - [ ] Re-run and verify completion
-- [ ] Test SkipValidation flag
-  - [ ] Verify validation suite skipped
-  - [ ] Verify installation still completes
+  - [ ] Test without Administrator privileges
+  - [ ] Test with insufficient Windows version
+  - [ ] Test with no internet connection
+  - [ ] Test interruption during installation
+- [ ] Test reboot requirement handling
+  - [ ] Test on machine needing reboot for WSL
+  - [ ] Verify script can resume after reboot
+- [ ] Test validation suite
+  - [ ] Verify all validation checks execute
+  - [ ] Verify failures reported correctly
 
 ## Documentation Tasks
 
 ### ⏳ Not Started
 
-- [ ] Create usage guide for team members
+- [ ] Create quick start guide for team
   - [ ] Prerequisites checklist
-  - [ ] Step-by-step instructions
-  - [ ] Screenshots (optional)
+  - [ ] Step-by-step instructions with screenshots
+  - [ ] Common scenarios (first install, existing WSL, re-run)
   - [ ] Troubleshooting section
-- [ ] Add script documentation to project README
-  - [ ] Brief description
-  - [ ] Link to usage guide
+- [ ] Create team distribution package
+  - [ ] README with overview
+  - [ ] Script file
+  - [ ] Usage instructions
+  - [ ] FAQ document
+- [ ] Add setup instructions to project README
+  - [ ] Brief description of script
+  - [ ] Link to detailed documentation
   - [ ] Link to script location
-- [ ] Create quick start guide
-  - [ ] One-pager with essential commands
-  - [ ] Common scenarios (first install, re-run, dry-run)
-- [ ] Document script parameters and examples
-  - [ ] Parameter descriptions
-  - [ ] Usage examples
-  - [ ] Advanced scenarios
+- [ ] Create video walkthrough (optional)
+  - [ ] Record full installation process
+  - [ ] Highlight key steps
+  - [ ] Show expected outputs
 
 ## Distribution Tasks
 
 ### ⏳ Not Started
 
+- [ ] Prepare script for distribution
+  - [ ] Final code review
+  - [ ] Add any missing comments
+  - [ ] Test on multiple machines
+  - [ ] Finalize version number
 - [ ] Commit script to repository
-  - [ ] Review code quality
-  - [ ] Add comments for clarity
-  - [ ] Test final version
-  - [ ] Commit with descriptive message
-- [ ] Communicate script availability to team
+  - [ ] Review changes
+  - [ ] Create descriptive commit message
+  - [ ] Push to remote
+- [ ] Communicate availability to team
   - [ ] Send email/message with instructions
-  - [ ] Schedule demo/walkthrough session
+  - [ ] Schedule demo/walkthrough session (optional)
   - [ ] Share troubleshooting resources
-- [ ] Create showcase repository access guide
-  - [ ] Document repository location
-  - [ ] Clone instructions if needed
-  - [ ] Alternative access methods
-- [ ] Gather feedback from team
+- [ ] Gather feedback from early adopters
   - [ ] Track issues encountered
   - [ ] Collect improvement suggestions
   - [ ] Note common pain points
+- [ ] Create support channel
+  - [ ] Dedicated Slack/Teams channel
+  - [ ] Document common issues
+  - [ ] Provide quick responses
 
 ## Enhancement Tasks (Future)
 
 ### 💡 Ideas for Future Versions
 
-- [ ] Add automatic showcase repository detection/cloning
-  - [ ] Check common locations
-  - [ ] Offer to clone if not found
-  - [ ] Validate repository after clone
-- [ ] Add backup/restore functionality
-  - [ ] Backup existing .claude/ before overwrite
-  - [ ] Restore from backup on failure
-  - [ ] Timestamp backup directories
-- [ ] Add update/upgrade functionality
-  - [ ] Detect existing installation version
-  - [ ] Selectively update components
-  - [ ] Preserve custom configurations
-- [ ] Add uninstall functionality
-  - [ ] Remove all Claude Code infrastructure
-  - [ ] Restore original files
-  - [ ] Clean removal option
-- [ ] Add configuration customization options
-  - [ ] Select which skills to install
-  - [ ] Select which agents to install
-  - [ ] Custom hook configurations
-- [ ] Add offline installation support
-  - [ ] Bundle npm dependencies
-  - [ ] Skip npm install if offline
-  - [ ] Provide manual installation instructions
-- [ ] Add CI/CD integration
-  - [ ] Non-interactive mode
-  - [ ] JSON output for parsing
-  - [ ] Exit codes for automation
-- [ ] Add progress bar for long operations
-  - [ ] File copying progress
-  - [ ] npm install progress
-  - [ ] Overall completion percentage
-- [ ] Add logging to file
-  - [ ] Save execution log
-  - [ ] Include timestamps
-  - [ ] Useful for debugging
-- [ ] Add version checking
-  - [ ] Detect showcase repository version
-  - [ ] Warn if incompatible
-  - [ ] Suggest upgrade path
+- [ ] Add automatic reboot and resume
+  - [ ] Detect when reboot needed
+  - [ ] Create scheduled task to resume
+  - [ ] Track state across reboot
+- [ ] Add non-interactive Ubuntu setup
+  - [ ] Pre-configure username/password
+  - [ ] Automate account creation
+  - [ ] Requires workarounds or scripting
+- [ ] Add Claude Code authentication automation
+  - [ ] Pre-configure API keys
+  - [ ] Automate OAuth flow (if possible)
+  - [ ] Store credentials securely
+- [ ] Add proxy support
+  - [ ] Detect corporate proxy settings
+  - [ ] Configure npm proxy
+  - [ ] Configure apt proxy
+- [ ] Add offline installation mode
+  - [ ] Bundle Node.js packages
+  - [ ] Bundle npm packages
+  - [ ] Provide manual instructions
+- [ ] Add Docker Desktop integration
+  - [ ] Install Docker Desktop for WSL2
+  - [ ] Configure Docker settings
+  - [ ] Validate Docker works with Claude Code
+- [ ] Add additional development tools
+  - [ ] VS Code Remote - WSL extension
+  - [ ] Python environment
+  - [ ] Other common tools
+- [ ] Add configuration backup/restore
+  - [ ] Backup ~/.claude directory
+  - [ ] Backup .bashrc customizations
+  - [ ] Restore on new installations
+- [ ] Add script update check
+  - [ ] Check for newer versions
+  - [ ] Prompt user to update
+  - [ ] Auto-download new version
+- [ ] Add telemetry/analytics (optional)
+  - [ ] Track installation success rate
+  - [ ] Monitor error patterns
+  - [ ] Identify improvement areas
+- [ ] Add GUI wrapper (optional)
+  - [ ] Create Windows Forms interface
+  - [ ] Provide visual progress
+  - [ ] Simplify parameter selection
 
 ## Monitoring Tasks
 
@@ -173,49 +187,82 @@
   - [ ] Number of successful installations
   - [ ] Common errors encountered
   - [ ] Average execution time
+  - [ ] Team adoption rate
 - [ ] Monitor script reliability
-  - [ ] Success rate
-  - [ ] Failure patterns
+  - [ ] Success rate percentage
+  - [ ] Failure patterns by scenario
   - [ ] Environment-specific issues
 - [ ] Collect team feedback
   - [ ] Ease of use ratings
   - [ ] Feature requests
   - [ ] Pain points
+  - [ ] Suggestions for improvement
 - [ ] Update script based on feedback
   - [ ] Bug fixes
   - [ ] Usability improvements
   - [ ] New features
+  - [ ] Performance optimizations
+- [ ] Maintain documentation
+  - [ ] Keep troubleshooting guide updated
+  - [ ] Add new common issues
+  - [ ] Update screenshots/videos
+  - [ ] Document workarounds
 
 ---
 
 ## Task Summary
 
-| Category | Total | Completed | In Progress | Not Started |
-|----------|-------|-----------|-------------|-------------|
-| Development | 19 | 19 | 0 | 0 |
-| Testing | 14 | 0 | 0 | 14 |
-| Documentation | 4 | 0 | 0 | 4 |
-| Distribution | 4 | 0 | 0 | 4 |
-| Enhancement | 11 | 0 | 0 | 11 |
-| Monitoring | 4 | 0 | 0 | 4 |
-| **TOTAL** | **56** | **19** | **0** | **37** |
+| Category | Total | Completed | Not Started |
+|----------|-------|-----------|-------------|
+| Development | 30 | 30 | 0 |
+| Testing | 15 | 0 | 15 |
+| Documentation | 4 | 0 | 4 |
+| Distribution | 5 | 0 | 5 |
+| Enhancement | 10 | 0 | 10 |
+| Monitoring | 5 | 0 | 5 |
+| **TOTAL** | **69** | **30** | **39** |
 
 ## Current Status
 
 **Phase:** Development Complete ✓
 
 **Next Priority Tasks:**
-1. Test script on clean project
-2. Test dry-run mode
+1. Test script on clean Windows installation
+2. Test script on machine with existing WSL
 3. Test error handling scenarios
-4. Create usage guide for team
+4. Create quick start guide for team
+5. Distribute to team members
 
 **Blockers:** None
 
 **Dependencies:**
-- Testing requires access to test environments
+- Testing requires access to clean Windows machines
 - Distribution requires successful testing completion
-- Documentation can be started in parallel with testing
+- Documentation can start in parallel with testing
+
+---
+
+## Script Scope Clarification
+
+**IMPORTANT:** This script is for **WSL environment setup**, NOT project infrastructure.
+
+**What This Script Does:**
+- ✅ Sets up WSL2 with Ubuntu on Windows
+- ✅ Installs Node.js and npm in WSL
+- ✅ Installs Claude Code CLI globally in WSL
+- ✅ Configures environment for `claude` command
+- ✅ System-level setup (one-time per developer machine)
+
+**What This Script Does NOT Do:**
+- ❌ Install project infrastructure (hooks, skills, agents)
+- ❌ Copy `.claude/` directory to projects
+- ❌ Configure project-level settings
+- ❌ Set up project repositories
+
+**For Project Infrastructure:**
+- Use the showcase repository's installation process
+- Reference: dev/archive/001-claude-code-setup/ documentation
+- That's a different scope (repository-level vs. system-level)
 
 ---
 
