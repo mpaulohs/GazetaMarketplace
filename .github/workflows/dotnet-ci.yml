@@ -113,11 +113,13 @@ jobs:
       - name: Build solution
         run: dotnet build --configuration Release --no-restore
 
+      - name: Install dotnet-coverage tool
+        run: dotnet tool install --global dotnet-coverage
+
       - name: Run tests with coverage
         run: |
-          dotnet test --configuration Release --no-build \
-            --collect:"XPlat Code Coverage" \
-            --results-directory ./coverage
+          dotnet-coverage collect --output ./coverage/coverage.cobertura.xml --output-format cobertura \
+            "dotnet test --configuration Release --no-build --verbosity normal"
 
       - name: Install ReportGenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
@@ -125,7 +127,7 @@ jobs:
       - name: Generate coverage report
         run: |
           reportgenerator \
-            -reports:./coverage/**/coverage.cobertura.xml \
+            -reports:./coverage/coverage.cobertura.xml \
             -targetdir:./coverage/report \
             -reporttypes:"HtmlInline_AzurePipelines;Cobertura;MarkdownSummaryGithub" \
             -verbosity:Info
@@ -192,7 +194,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./coverage/**/coverage.cobertura.xml
+          files: ./coverage/coverage.cobertura.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
