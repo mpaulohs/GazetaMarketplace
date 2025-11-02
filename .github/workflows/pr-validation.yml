@@ -37,13 +37,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Load authorization config
+        id: load-config
+        run: |
+          if [ -f .github/claude-authorized-users.yml ]; then
+            # Convert YAML to JSON using yq (pre-installed on GitHub runners)
+            echo "config=$(yq -o=json '.' .github/claude-authorized-users.yml | jq -c)" >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "config={}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Check authorization
         id: check-auth
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const yaml = require('js-yaml');
 
             // Get the PR author
             const actor = context.payload.pull_request?.user?.login || context.actor;
@@ -51,13 +62,23 @@ jobs:
 
             // Load authorization config
             let config;
-            try {
-              const configFile = fs.readFileSync('.github/claude-authorized-users.yml', 'utf8');
-              config = yaml.load(configFile);
-            } catch (error) {
+            const configExists = '${{ steps.load-config.outputs.exists }}' === 'true';
+
+            if (!configExists) {
               console.log('Authorization config not found, allowing all users');
               core.setOutput('authorized', 'true');
               core.setOutput('reason', 'No authorization config - allowing all');
+              core.setOutput('actor', actor);
+              core.setOutput('association', 'UNKNOWN');
+              return;
+            }
+
+            try {
+              config = JSON.parse('${{ steps.load-config.outputs.config }}');
+            } catch (error) {
+              console.log('Could not parse authorization config, allowing all users');
+              core.setOutput('authorized', 'true');
+              core.setOutput('reason', 'Invalid config - allowing all');
               core.setOutput('actor', actor);
               core.setOutput('association', 'UNKNOWN');
               return;
