@@ -156,21 +156,46 @@ This project uses Claude Code infrastructure for enhanced development workflow.
 **Environment:** Running on WSL2 (Ubuntu) - all hooks and scripts use Linux/bash conventions.
 
 ### Installed Components
-- **Auto-activating skills** via hooks (UserPromptSubmit, PostToolUse)
-- **skill-developer** meta-skill for creating project-specific skills
-- **Specialized agents** for complex tasks (refactoring, documentation, code review, etc.)
-- **Dev docs system** for context persistence across sessions
-- **Slash commands** for automated dev docs creation (/dev-docs, /dev-docs-update)
+
+**Hooks:**
+- **skill-activation-prompt** (UserPromptSubmit) - Auto-suggests relevant skills based on prompts and file context
+- **post-tool-use-tracker** (PostToolUse) - Tracks file changes for context management
+
+**Skills:**
+- **skill-developer** - Meta-skill for creating and managing Claude Code skills
+- **azure-devops** - Azure DevOps automation using az CLI with azure-devops extension
+- **.NET 10 Project-Specific Skills:**
+  - **mstest-testing-platform** - MSTest with Microsoft.Testing.Platform (new test runner)
+  - **dotnet-centralized-packages** - Centralized Package Management with Directory.Packages.props
+  - **playwright-dotnet** - E2E testing with Playwright for .NET
+  - **dotnet-minimal-apis** - ASP.NET Core Minimal APIs with OpenAPI
+  - **dotnet-cli-essentials** - Essential .NET CLI commands for this project
+  - **aspnet-configuration** - ASP.NET Core configuration and options pattern
+
+**Agents:**
+- **code-architecture-reviewer** - Reviews code for best practices and architectural consistency
+- **code-refactor-master** - Handles comprehensive code refactoring tasks
+- **documentation-architect** - Creates and enhances documentation
+- **plan-reviewer** - Reviews development plans before implementation
+- **refactor-planner** - Analyzes code and creates refactoring plans
+- **web-research-specialist** - Researches technical issues and solutions online
+
+**Dev Docs System:**
+- **Slash commands:** `/dev-docs` (create new docs), `/dev-docs-update` (update existing docs)
+- **Location:** `dev/active/` directory
+- **Pattern:** Three-file structure (plan.md, context.md, tasks.md) for complex tasks
 
 ### Configuration
 - `.claude/` directory contains skills, hooks, agents, and configuration
 - `.claude/hooks/` - TypeScript/bash hooks with npm dependencies
-- `dev/active/` contains development documentation for complex tasks
+- `.claude/settings.json` - Hook registration and settings
+- `.claude/skills/skill-rules.json` - Skill trigger definitions
+- `dev/active/` - Development documentation for complex tasks
 
 ### Usage
 Skills activate automatically based on your prompts and file context. See `.claude/README.md` for details.
 
-### Creating .NET-Specific Skills
+### Creating Additional .NET-Specific Skills
 Use skill-developer to create skills tailored to this .NET 10 project:
 - ASP.NET Core MVC patterns
 - Minimal API best practices
