@@ -136,7 +136,7 @@ See [.claude/README.md](.claude/README.md) for usage details and [CLAUDE.md](CLA
 
 ### Attribution
 
-The Claude Code infrastructure (`.claude/` directory) is based on the [Claude Code Infrastructure Showcase](https://github.com/yourusername/claude-code-infrastructure-showcase) repository, released under the MIT License. Copyright (c) 2025 Claude Code Infrastructure Contributors. See [.claude/ATTRIBUTION.md](.claude/ATTRIBUTION.md) for complete licensing information.
+The Claude Code infrastructure (`.claude/` directory) is based on the [Claude Code Infrastructure Showcase](https://github.com/diet103/claude-code-infrastructure-showcase) repository, released under the MIT License. Copyright (c) 2025 Claude Code Infrastructure Contributors. See [.claude/ATTRIBUTION.md](.claude/ATTRIBUTION.md) for complete licensing information.
 
 ## Contributing
 
