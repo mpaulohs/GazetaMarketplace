@@ -2,7 +2,7 @@
 
 ## Claude Code Infrastructure
 
-The Claude Code infrastructure in this directory (`.claude/`) is based on code from the [claude-code-infrastructure-showcase](https://github.com/yourusername/claude-code-infrastructure-showcase) repository.
+The Claude Code infrastructure in this directory (`.claude/`) is based on code from the [claude-code-infrastructure-showcase](https://github.com/diet103/claude-code-infrastructure-showcase) repository.
 
 ### Components Used
 
@@ -63,6 +63,5 @@ The components have been integrated into this .NET 10 project with the following
 
 ### Source Repository
 
-Original source: `C:\Users\bobby\src\claude\claude-code-infrastructure-showcase`
-
+Original source: `https://github.com/diet103/claude-code-infrastructure-showcase`
 For more information about the Claude Code Infrastructure Showcase, see the original repository's documentation.
