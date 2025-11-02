@@ -368,18 +368,24 @@ jobs:
 
       - name: Post PR comment
         uses: actions/github-script@v7
+        env:
+          RESULT_JSON: ${{ steps.aggregate.outputs.result }}
         with:
           script: |
-            // Use fromJSON to properly parse the output
-            const result = ${{ steps.aggregate.outputs.result }};
+            // Read from environment variable to avoid escaping issues
+            const resultJson = process.env.RESULT_JSON;
 
             // Debug output
-            console.log('Result received:', JSON.stringify(result, null, 2));
+            console.log('Result JSON length:', resultJson?.length || 0);
+            console.log('Result JSON preview:', resultJson?.substring(0, 200));
 
-            if (!result) {
+            if (!resultJson || resultJson.length === 0) {
               core.setFailed('Aggregate step did not produce a result output');
               return;
             }
+
+            const result = JSON.parse(resultJson);
+            console.log('Result parsed successfully:', JSON.stringify(result, null, 2));
 
             // Format the comment using PowerShell script
             const { execSync } = require('child_process');
