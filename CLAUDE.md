@@ -243,7 +243,7 @@ Every pull request goes through a **6-step automated validation pipeline**:
   - Breaking changes
   - Documentation completeness
 
-**Setup Required:** Add `CLAUDE_CODE_OAUTH_TOKEN` secret to repository
+**Setup Required:** Install Claude Code GitHub App (recommended) or add `CLAUDE_CODE_OAUTH_TOKEN` secret
 
 #### 5️⃣ Security Review
 - **GitLeaks:** Scans for exposed secrets (API keys, tokens, passwords)
@@ -274,6 +274,28 @@ Each step posts detailed results as PR comments that **update in place** (no spa
 - ⏭️ **Skipped** - Step skipped (e.g., no Claude Code token)
 
 ### Setting Up Claude Code Integration
+
+**Option 1: GitHub App (Recommended)**
+
+1. **Install via Claude Code CLI:**
+   ```bash
+   # Open Claude Code
+   claude
+
+   # Run installation command
+   /install-github-app
+   ```
+
+2. **Or install manually:**
+   - Visit https://github.com/apps/claude
+   - Click **Install** and select this repository
+   - Grant permissions and complete setup
+
+3. **Verify:** Create test PR and check Step 4 executes
+
+**Benefits:** No manual token management, automatic authentication, fine-grained permissions
+
+**Option 2: Manual OAuth Token**
 
 1. **Get OAuth Token:**
    ```bash

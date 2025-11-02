@@ -64,7 +64,7 @@ emergency:
 - **Job:** `code-review`
 - **Purpose:** Automated .NET-specific code review
 - **Provider:** Claude Code (Anthropic)
-- **Requires:** `CLAUDE_CODE_OAUTH_TOKEN` secret
+- **Requires:** Claude Code GitHub App (recommended) or `CLAUDE_CODE_OAUTH_TOKEN` secret
 
 **Review Criteria:**
 - C# coding conventions and naming
@@ -77,12 +77,23 @@ emergency:
 - Breaking changes detection
 - Documentation completeness
 
-**Setup:**
-1. Get OAuth token from Claude Code
+**Setup (Option 1 - Recommended):**
+1. Install Claude Code GitHub App:
+   ```bash
+   # From Claude Code CLI
+   claude
+   /install-github-app
+   ```
+2. Or visit: https://github.com/apps/claude
+3. Install to your repository
+4. App handles authentication automatically
+
+**Setup (Option 2 - Manual OAuth):**
+1. Get OAuth token: `claude auth token`
 2. Add as repository secret: `CLAUDE_CODE_OAUTH_TOKEN`
 3. Re-run workflow
 
-**Graceful Degradation:** Step skips if secret not configured
+**Graceful Degradation:** Step skips if not configured
 
 #### 5️⃣ Security Review
 - **Job:** `security-review`
@@ -194,6 +205,36 @@ Each validation step posts results as PR comments with **update-in-place** behav
 | `CLAUDE_CODE_OAUTH_TOKEN` | Claude Code auth | ❌ Optional | Manual |
 
 ### Setting Up Claude Code Integration
+
+**Option 1: GitHub App (Recommended)**
+
+1. **Install via Claude Code CLI:**
+   ```bash
+   # Open Claude Code
+   claude
+
+   # Run installation command
+   /install-github-app
+   ```
+
+2. **Or install manually:**
+   - Visit https://github.com/apps/claude
+   - Click **Install** or **Configure**
+   - Select your repository
+   - Grant permissions and complete installation
+
+3. **Verify:**
+   - Create test PR
+   - Check Step 4 (Code Review)
+   - Should execute instead of skip
+
+**Benefits:**
+- ✅ No manual token management
+- ✅ Automatic authentication
+- ✅ Fine-grained permissions
+- ✅ Easier to set up and maintain
+
+**Option 2: Manual OAuth Token**
 
 1. **Get OAuth Token:**
    ```bash
