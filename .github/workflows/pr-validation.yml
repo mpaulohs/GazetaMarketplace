@@ -370,18 +370,16 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const resultJson = `${{ steps.aggregate.outputs.result }}`.trim();
+            // Use fromJSON to properly parse the output
+            const result = ${{ steps.aggregate.outputs.result }};
 
             // Debug output
-            console.log('Result JSON length:', resultJson.length);
-            console.log('Result JSON:', resultJson.substring(0, 200) + (resultJson.length > 200 ? '...' : ''));
+            console.log('Result received:', JSON.stringify(result, null, 2));
 
-            if (!resultJson) {
+            if (!result) {
               core.setFailed('Aggregate step did not produce a result output');
               return;
             }
-
-            const result = JSON.parse(resultJson);
 
             // Format the comment using PowerShell script
             const { execSync } = require('child_process');
