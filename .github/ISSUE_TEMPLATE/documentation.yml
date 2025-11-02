@@ -1,0 +1,105 @@
+name: Documentation
+description: Report missing, incorrect, or unclear documentation
+title: "[Docs]: "
+labels: ["documentation", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve our documentation! Please fill out the form below.
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation needs attention?
+      options:
+        - README.md
+        - CLAUDE.md
+        - CONTRIBUTING.md
+        - SECURITY.md
+        - API Documentation
+        - Code Comments
+        - Tutorial or Guide
+        - Architecture Documentation
+        - Testing Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-state
+    attributes:
+      label: Current State
+      description: Describe what's currently documented (or missing)
+      placeholder: |
+        Current documentation says...
+        Or: There is no documentation for...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-changes
+    attributes:
+      label: Proposed Changes
+      description: What should be documented or how should it be improved?
+      placeholder: Describe what you'd like to see documented...
+    validations:
+      required: true
+
+  - type: input
+    id: file-location
+    attributes:
+      label: File Location
+      description: If applicable, which file or section needs updating?
+      placeholder: "e.g., README.md, src/Example.Web/Controllers/HomeController.cs"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How critical is this documentation issue?
+      options:
+        - Critical (prevents understanding core functionality)
+        - High (causes significant confusion)
+        - Medium (minor confusion or missing details)
+        - Low (cosmetic or nice-to-have improvement)
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected-audience
+    attributes:
+      label: Affected Audience
+      description: Who is affected by this documentation gap?
+      placeholder: |
+        - New contributors
+        - Experienced developers
+        - End users
+        - Claude Code users
+        - etc.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, examples, or screenshots
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched for similar documentation issues
+          required: true
+        - label: I am willing to help write or improve this documentation
+          required: false
