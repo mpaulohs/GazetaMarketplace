@@ -325,7 +325,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const result = JSON.parse(`${{ steps.aggregate.outputs.result }}`);
+            const result = JSON.parse('${{ steps.aggregate.outputs.result }}');
 
             // Format the comment using PowerShell script
             const { execSync } = require('child_process');
@@ -809,9 +809,13 @@ jobs:
         id: security-analyzers
         continue-on-error: true
         run: |
-          dotnet build /p:RunAnalyzers=true /p:EnableNETAnalyzers=true /p:AnalysisLevel=latest-all > security-analysis.txt 2>&1 || echo "SECURITY_ANALYZER_FAILED=true" >> $GITHUB_ENV
+          set +e
+          dotnet build /p:RunAnalyzers=true /p:EnableNETAnalyzers=true /p:AnalysisLevel=latest-all > security-analysis.txt 2>&1
+          BUILD_EXIT_CODE=$?
+          set -e
 
-          if [ "$SECURITY_ANALYZER_FAILED" = "true" ]; then
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
+            echo "SECURITY_ANALYZER_FAILED=true" >> $GITHUB_ENV
             echo "⚠️ Security analyzer warnings/errors found"
             cat security-analysis.txt
           else
@@ -823,14 +827,28 @@ jobs:
         id: nuget-vuln
         continue-on-error: true
         run: |
-          pwsh -File .github/scripts/check-dotnet-vulnerabilities.ps1 > nuget-vuln.json 2>&1 || echo "NUGET_VULN_FAILED=true" >> $GITHUB_ENV
+          set +e
+          pwsh -File .github/scripts/check-dotnet-vulnerabilities.ps1 > nuget-vuln.json 2>&1
+          PWSH_EXIT_CODE=$?
+          set -e
+
+          if [ $PWSH_EXIT_CODE -ne 0 ]; then
+            echo "NUGET_VULN_FAILED=true" >> $GITHUB_ENV
+          fi
 
       # Path security check
       - name: Run path security check
         id: path-security
         continue-on-error: true
         run: |
-          pwsh -File .github/scripts/check-path-security.ps1 -SourcePath . > path-security.json 2>&1 || echo "PATH_SECURITY_FAILED=true" >> $GITHUB_ENV
+          set +e
+          pwsh -File .github/scripts/check-path-security.ps1 -SourcePath . > path-security.json 2>&1
+          PWSH_EXIT_CODE=$?
+          set -e
+
+          if [ $PWSH_EXIT_CODE -ne 0 ]; then
+            echo "PATH_SECURITY_FAILED=true" >> $GITHUB_ENV
+          fi
 
       # Parse and aggregate all security results
       - name: Parse security results
