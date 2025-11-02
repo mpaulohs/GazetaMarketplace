@@ -42,6 +42,10 @@
   - [x] 003-setup-automation-plan.md (WSL setup focus)
   - [x] 003-setup-automation-context.md (session progress)
   - [x] 003-setup-automation-tasks.md (this file)
+- [x] Add PowerShell convenience function for Windows → WSL bridge
+  - [x] Update PowerShell profile to use PATH-based approach (user-agnostic)
+  - [x] Document function in WSL setup script installation report
+  - [x] Document function in dev docs (003-setup-automation-context.md)
 
 ## Testing Tasks
 
@@ -214,13 +218,13 @@
 
 | Category | Total | Completed | Not Started |
 |----------|-------|-----------|-------------|
-| Development | 30 | 30 | 0 |
+| Development | 31 | 31 | 0 |
 | Testing | 15 | 0 | 15 |
 | Documentation | 4 | 0 | 4 |
 | Distribution | 5 | 0 | 5 |
 | Enhancement | 10 | 0 | 10 |
 | Monitoring | 5 | 0 | 5 |
-| **TOTAL** | **69** | **30** | **39** |
+| **TOTAL** | **70** | **31** | **39** |
 
 ## Current Status
 

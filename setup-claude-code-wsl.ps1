@@ -603,11 +603,21 @@ function New-InstallationReport {
     Write-Host "     (Follow authentication prompts)" -ForegroundColor Gray
     Write-Host ""
 
-    Write-Host "  4. Navigate to your project:" -ForegroundColor White
+    Write-Host "  4. (Optional) Add PowerShell convenience function:" -ForegroundColor White
+    Write-Host "     Add this to your PowerShell profile to use 'claude' from PowerShell:" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "     function claude {" -ForegroundColor DarkGray
+    Write-Host "          wsl bash -c `"claude `$(`$args -join ' ')`"" -ForegroundColor DarkGray
+    Write-Host "     }" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "     Then reload profile: . `$PROFILE" -ForegroundColor Gray
+    Write-Host ""
+
+    Write-Host "  5. Navigate to your project:" -ForegroundColor White
     Write-Host "     cd /mnt/c/your/project/path" -ForegroundColor Gray
     Write-Host ""
 
-    Write-Host "  5. Start using Claude Code:" -ForegroundColor White
+    Write-Host "  6. Start using Claude Code:" -ForegroundColor White
     Write-Host "     claude" -ForegroundColor Gray
     Write-Host ""
 
@@ -646,6 +656,12 @@ function New-InstallationReport {
     Write-Host "  If authentication fails:" -ForegroundColor Yellow
     Write-Host "    - Ensure you have an active Claude subscription" -ForegroundColor Gray
     Write-Host "    - Follow browser OAuth flow" -ForegroundColor Gray
+    Write-Host ""
+
+    Write-Host "  To use claude from PowerShell (not just WSL):" -ForegroundColor Yellow
+    Write-Host "    - Add the function shown in step 4 to your PowerShell profile" -ForegroundColor Gray
+    Write-Host "    - Profile location: `$PROFILE (usually Documents\PowerShell\Microsoft.PowerShell_profile.ps1)" -ForegroundColor Gray
+    Write-Host "    - Then you can use 'claude' command from any PowerShell window" -ForegroundColor Gray
     Write-Host ""
 }
 

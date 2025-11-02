@@ -274,6 +274,41 @@ cd path\to\project
 4. Navigate to project: `cd /mnt/c/your/project`
 5. Start using: `claude`
 
+### PowerShell Convenience Function (Optional)
+
+For seamless access to Claude Code from Windows PowerShell (without typing `wsl`), add this function to your PowerShell profile:
+
+**Recommended approach (PATH-based, user-agnostic):**
+```powershell
+function claude {
+     wsl bash -c "claude $($args -join ' ')"
+}
+```
+
+**How to add to your profile:**
+1. Edit your PowerShell profile: `notepad $PROFILE`
+2. Add the function above
+3. Reload profile: `. $PROFILE`
+
+**Usage:**
+```powershell
+# From Windows PowerShell, calls Claude Code in WSL
+claude --version
+claude
+```
+
+**Why PATH-based:** This approach relies on the PATH configuration in WSL (set by the setup script in ~/.bashrc), making it work for any WSL user. No hardcoded paths needed.
+
+**Alternative (hardcoded path):**
+```powershell
+# Less flexible - hardcoded to specific user
+function claude {
+     wsl bash -c "/home/bobby/.npm-global/bin/claude $($args -join ' ')"
+}
+```
+
+The setup script includes documentation for this function in its installation report.
+
 ## Important Distinctions
 
 ### This Script vs. Project Infrastructure Script
