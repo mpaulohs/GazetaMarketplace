@@ -4,6 +4,23 @@
 
 ---
 
+## IMPORTANT: Progressive Disclosure Pattern
+
+**This file provides high-level task tracking. For detailed implementation instructions, see:**
+- `phases/phase-1-planning.md` - Phase 1 detailed instructions
+- `phases/phase-2-foundation.md` - Phase 2 detailed instructions
+- `phases/phase-3-developer-docs.md` - Phase 3 detailed instructions
+- `phases/phase-4-user-docs.md` - Phase 4 detailed instructions
+- `phases/phase-5-company-docs.md` - Phase 5 detailed instructions
+- `phases/phase-6-github-plugin.md` - Phase 6 detailed instructions
+- `phases/phase-7-azure-devops-plugin.md` - Phase 7 detailed instructions (OPTIONAL)
+- `phases/phase-8-ai-integration.md` - Phase 8 detailed instructions
+- `phases/phase-9-platform-switching.md` - Phase 9 detailed instructions
+
+**Read only the phase file you're currently working on to avoid context pollution.**
+
+---
+
 ## Quick Status Overview
 
 | Phase | Description | Status | Est. Hours | Actual Hours |
@@ -26,11 +43,12 @@
 
 **Goal**: Extract architecture content from plan.md into separate documentation files
 **Estimated**: 3-4 hours
-**Note**: All content already exists in ai-docs-plan.md, this phase extracts and organizes it
+**Detailed Instructions**: See `phases/phase-1-planning.md` for complete implementation details
 
 ### Tasks
 
 - [ ] **Task 1.1**: Create Architecture Documentation (M - 2 hours)
+  - **Details**: See `phases/phase-1-planning.md` Task 1.1
   - File: `docs/architecture/ai-docs-platform-agnostic-architecture.md`
   - Extract architecture sections from plan.md
   - Add platform-agnostic core architecture details
@@ -79,6 +97,7 @@
 **Goal**: Establish platform-agnostic infrastructure
 **Estimated**: 6-8 hours
 **Dependencies**: Phase 1 complete
+**Detailed Instructions**: See `phases/phase-2-foundation.md` for complete implementation details
 
 ### Tasks
 
@@ -140,6 +159,7 @@
 **Goal**: Create professional developer documentation site
 **Estimated**: 4-6 hours
 **Dependencies**: Phase 2 complete
+**Detailed Instructions**: See `phases/phase-3-developer-docs.md` for complete implementation details
 
 ### Tasks
 
@@ -192,6 +212,7 @@
 **Goal**: Create user-friendly documentation site
 **Estimated**: 3-4 hours
 **Dependencies**: Phase 3 complete
+**Detailed Instructions**: See `phases/phase-4-user-docs.md` for complete implementation details
 
 ### Tasks
 
@@ -237,6 +258,7 @@
 **Goal**: Create wiki-based company documentation
 **Estimated**: 2-3 hours
 **Dependencies**: Phase 4 complete
+**Detailed Instructions**: See `phases/phase-5-company-docs.md` for complete implementation details
 
 ### Tasks
 
@@ -287,6 +309,7 @@
 **Goal**: Automate all 3 documentation types on GitHub
 **Estimated**: 4-6 hours
 **Dependencies**: Phase 5 complete
+**Detailed Instructions**: See `phases/phase-6-github-plugin.md` for complete implementation details
 
 ### Tasks
 
@@ -347,6 +370,7 @@
 **Goal**: Implement complete Azure DevOps automation
 **Estimated**: 6-8 hours
 **Dependencies**: Phase 6 complete, Azure subscription required
+**Detailed Instructions**: See `phases/phase-7-azure-devops-plugin.md` for complete implementation details
 
 ### Tasks
 
@@ -405,6 +429,7 @@
 **Goal**: Enable AI-assisted documentation generation
 **Estimated**: 2-3 hours
 **Dependencies**: Phase 2 (MCP config), Phase 6 complete
+**Detailed Instructions**: See `phases/phase-8-ai-integration.md` for complete implementation details
 
 ### Tasks
 
@@ -443,6 +468,7 @@
 **Goal**: Enable platform portability and validate everything
 **Estimated**: 2-3 hours
 **Dependencies**: Phases 6, 8 complete (Phase 7 optional)
+**Detailed Instructions**: See `phases/phase-9-platform-switching.md` for complete implementation details
 
 ### Tasks
 

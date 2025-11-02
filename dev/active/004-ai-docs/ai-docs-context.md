@@ -131,11 +131,24 @@ None currently
 ### Dev Docs (Implementation Planning - This Directory)
 
 **dev/active/004-ai-docs/ai-docs-plan.md**
-- Comprehensive strategic plan (9 phases, 32-45 hours estimated)
-- Executive summary, current state, proposed future state
-- Detailed tasks with acceptance criteria
-- Risk assessment, success metrics, timeline estimates
-- **Use for:** Understanding overall strategy and implementation approach
+- Executive summary (~350 lines, reduced from 850)
+- High-level overview of all 9 phases
+- Timeline estimates, dependencies, success metrics
+- **Use for:** Understanding overall strategy at high level
+- **Changed:** No longer contains detailed task breakdowns (see phase files)
+
+**dev/active/004-ai-docs/phases/phase-*.md** (NEW - 9 files)
+- `phase-1-planning.md` - Documentation Planning & Architecture (3-4 hours)
+- `phase-2-foundation.md` - Core Foundation Setup (6-8 hours)
+- `phase-3-developer-docs.md` - System Developer Docs Setup (4-6 hours)
+- `phase-4-user-docs.md` - System User Docs Setup (3-4 hours)
+- `phase-5-company-docs.md` - Company System Docs Setup (2-3 hours)
+- `phase-6-github-plugin.md` - GitHub Plugin Implementation (4-6 hours)
+- `phase-7-azure-devops-plugin.md` - Azure DevOps Plugin (6-8 hours, OPTIONAL)
+- `phase-8-ai-integration.md` - AI Integration & Workflows (2-3 hours)
+- `phase-9-platform-switching.md` - Platform Switching & Testing (2-3 hours)
+- **Use for:** Detailed implementation instructions for current phase ONLY
+- **Progressive Disclosure:** Read only the phase you're working on
 
 **dev/active/004-ai-docs/ai-docs-context.md** (THIS FILE)
 - Current session progress
@@ -369,49 +382,89 @@ Add Phase 7 → 9 (complete)
 
 ---
 
-## Quick Resume Instructions
+## Quick Resume Instructions (PROGRESSIVE DISCLOSURE PATTERN)
+
+**Key Change**: Phase details are now in separate files. Only read the phase file for your current phase to minimize context pollution.
+
+### Current Phase Identification
+1. Read `ai-docs-context.md` (this file) to find current phase
+2. Read `ai-docs-tasks.md` to see which phase tasks are in progress
+3. Read ONLY the relevant phase file from `phases/phase-X-*.md`
 
 ### If Context Reset During Phase 1 (Documentation Planning)
-1. Read this file (ai-docs-context.md)
-2. Read ai-docs-plan.md (executive summary + current phase)
-3. Check ai-docs-tasks.md for current task
+1. Read `ai-docs-context.md` (this file)
+2. Read `phases/phase-1-planning.md` (detailed instructions for Phase 1)
+3. Read `ai-docs-tasks.md` (Phase 1 section for task checklist)
 4. Continue creating architecture documents in docs/architecture/
 
 ### If Context Reset During Phase 2 (Core Foundation)
-1. Read this file + plan.md + tasks.md
-2. Check what's completed in tasks.md (Phase 2 section)
-3. Verify tools installed: `docfx --version`, `dll2mmd --version`
-4. Continue with next task in Phase 2
+1. Read `ai-docs-context.md` (this file)
+2. Read `phases/phase-2-foundation.md` (detailed instructions for Phase 2)
+3. Read `ai-docs-tasks.md` (Phase 2 section for task checklist)
+4. Verify tools installed: `docfx --version`, `dll2mmd --version`
+5. Continue with next task in Phase 2
 
-### If Context Reset During Phases 3-5 (Documentation Setup)
-1. Read context.md + plan.md + tasks.md
-2. Check which documentation type is in progress (developer/user/company)
-3. Test local build: `make docs-developer-build` or similar
-4. Continue with next article or configuration
+### If Context Reset During Phase 3 (Developer Docs)
+1. Read `ai-docs-context.md` (this file)
+2. Read `phases/phase-3-developer-docs.md` (detailed instructions for Phase 3)
+3. Read `ai-docs-tasks.md` (Phase 3 section for task checklist)
+4. Test local build: `make docs-developer`
+5. Continue with next article or configuration
+
+### If Context Reset During Phase 4 (User Docs)
+1. Read `ai-docs-context.md` (this file)
+2. Read `phases/phase-4-user-docs.md` (detailed instructions for Phase 4)
+3. Read `ai-docs-tasks.md` (Phase 4 section for task checklist)
+4. Test local build: `make docs-user`
+5. Continue with next article
+
+### If Context Reset During Phase 5 (Company Docs)
+1. Read `ai-docs-context.md` (this file)
+2. Read `phases/phase-5-company-docs.md` (detailed instructions for Phase 5)
+3. Read `ai-docs-tasks.md` (Phase 5 section for task checklist)
+4. Continue with wiki content
 
 ### If Context Reset During Phase 6 (GitHub Plugin)
-1. Read context.md + plan.md + tasks.md
-2. Check which workflows are completed (.github/workflows/)
-3. Test workflow locally if possible
-4. Continue with next workflow or deployment step
+1. Read `ai-docs-context.md` (this file)
+2. Read `phases/phase-6-github-plugin.md` (detailed instructions for Phase 6)
+3. Read `ai-docs-tasks.md` (Phase 6 section for task checklist)
+4. Check which workflows are completed (.github/workflows/)
+5. Continue with next workflow or deployment step
 
-### If Context Reset During Phase 7 (Azure DevOps Plugin)
-1. Read context.md + plan.md + tasks.md
-2. Check Azure resources (az staticwebapp list)
-3. Check which pipelines are completed (.azuredevops/pipelines/)
-4. Continue with next pipeline
+### If Context Reset During Phase 7 (Azure DevOps Plugin - OPTIONAL)
+1. Read `ai-docs-context.md` (this file)
+2. Read `phases/phase-7-azure-devops-plugin.md` (detailed instructions for Phase 7)
+3. Read `ai-docs-tasks.md` (Phase 7 section for task checklist)
+4. Check Azure resources: `az staticwebapp list`
+5. Continue with next pipeline
 
 ### If Context Reset During Phase 8 (AI Integration)
-1. Read context.md + plan.md + tasks.md
-2. Check MCP server status in Claude Code
-3. Test AI assistance workflows
-4. Continue with documentation generation
+1. Read `ai-docs-context.md` (this file)
+2. Read `phases/phase-8-ai-integration.md` (detailed instructions for Phase 8)
+3. Read `ai-docs-tasks.md` (Phase 8 section for task checklist)
+4. Check MCP server status in Claude Code
+5. Continue with AI workflow testing
 
 ### If Context Reset During Phase 9 (Platform Switching)
-1. Read context.md + plan.md + tasks.md
-2. Check current platform (git remote -v, check workflows vs pipelines)
-3. Test platform switching script
-4. Continue with validation
+1. Read `ai-docs-context.md` (this file)
+2. Read `phases/phase-9-platform-switching.md` (detailed instructions for Phase 9)
+3. Read `ai-docs-tasks.md` (Phase 9 section for task checklist)
+4. Check current platform: `git remote -v`
+5. Continue with validation
+
+---
+
+## Progressive Disclosure Benefits
+
+**Token Savings Example**:
+- **Old Pattern**: Read 850-line ai-docs-plan.md on every reset
+- **New Pattern**: Read ~200-line executive summary + ~150-line current phase file = ~350 lines
+- **Savings**: ~500 lines (~60% reduction) per context reset
+
+**Context Quality**:
+- Only see details relevant to current phase
+- Completed phases don't pollute context
+- Future phases don't consume tokens before needed
 
 ---
 
