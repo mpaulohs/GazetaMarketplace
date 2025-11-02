@@ -342,10 +342,14 @@ jobs:
               const resultJson = JSON.stringify(result);
               console.log('Setting output with', resultJson.length, 'characters');
 
-              core.setOutput('result', resultJson);
-              core.setOutput('status', status);
+              // Use multiline output format for large JSON
+              const fs = require('fs');
+              const outputFile = process.env.GITHUB_OUTPUT;
+              const delimiter = 'EOF_RESULT_' + Math.random().toString(36).substring(7);
+              fs.appendFileSync(outputFile, `result<<${delimiter}\n${resultJson}\n${delimiter}\n`);
+              fs.appendFileSync(outputFile, `status=${status}\n`);
 
-              console.log('Outputs set successfully');
+              console.log('Outputs written to GITHUB_OUTPUT file');
 
               // Create step summary
               await core.summary
