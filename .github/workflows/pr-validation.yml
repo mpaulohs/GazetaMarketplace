@@ -327,19 +327,21 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const result = JSON.parse(`${{ steps.aggregate.outputs.result }}`);
+            const resultJson = `${{ steps.aggregate.outputs.result }}`;
+            const result = JSON.parse(resultJson);
 
             // Format the comment using PowerShell script
             const { execSync } = require('child_process');
             const fs = require('fs');
 
             // Write result to temp file
-            fs.writeFileSync('/tmp/result.json', JSON.stringify(result));
+            const tempFile = '/tmp/guardrails-result.json';
+            fs.writeFileSync(tempFile, JSON.stringify(result));
 
-            // Run PowerShell formatter
+            // Run PowerShell formatter using the temp file
             const markdown = execSync(
               `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
-              `-InputJson '${JSON.stringify(result)}' ` +
+              `-InputJsonPath '${tempFile}' ` +
               `-StepNumber 2 ` +
               `-StepName "PR Guardrails" ` +
               `-Emoji "🛡️" ` +

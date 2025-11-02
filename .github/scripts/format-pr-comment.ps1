@@ -9,7 +9,8 @@
     by category, truncation of large result sets, and links to workflow runs.
 
 .PARAMETER InputJson
-    JSON string containing validation results. Expected structure:
+    JSON string containing validation results. Mutually exclusive with InputJsonPath.
+    Expected structure:
     {
       "step": "step-name",
       "status": "pass|warning|failed",
@@ -33,6 +34,10 @@
       }
     }
 
+.PARAMETER InputJsonPath
+    Path to a JSON file containing validation results. Mutually exclusive with InputJson.
+    Use this parameter to avoid shell escaping issues when passing complex JSON.
+
 .PARAMETER StepNumber
     Step number (2-6) for the validation pipeline.
 
@@ -51,6 +56,9 @@
 .EXAMPLE
     .\format-pr-comment.ps1 -InputJson $json -StepNumber 2 -StepName "PR Guardrails" -Emoji "🛡️" -RunUrl $url
 
+.EXAMPLE
+    .\format-pr-comment.ps1 -InputJsonPath "/tmp/results.json" -StepNumber 2 -StepName "PR Guardrails" -Emoji "🛡️" -RunUrl $url
+
 .NOTES
     Author: GitHub Integration Implementation
     Version: 1.0
@@ -59,8 +67,11 @@
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false, ParameterSetName = "FromString")]
     [string]$InputJson,
+
+    [Parameter(Mandatory = $false, ParameterSetName = "FromFile")]
+    [string]$InputJsonPath,
 
     [Parameter(Mandatory = $true)]
     [ValidateRange(2, 6)]
@@ -81,7 +92,22 @@ param(
 
 # Parse JSON input
 try {
-    $result = $InputJson | ConvertFrom-Json
+    if ($InputJsonPath) {
+        # Read from file
+        if (-not (Test-Path $InputJsonPath)) {
+            Write-Error "Input JSON file not found: $InputJsonPath"
+            exit 1
+        }
+        $result = Get-Content $InputJsonPath -Raw | ConvertFrom-Json
+    }
+    elseif ($InputJson) {
+        # Parse from string
+        $result = $InputJson | ConvertFrom-Json
+    }
+    else {
+        Write-Error "Either InputJson or InputJsonPath must be provided"
+        exit 1
+    }
 }
 catch {
     Write-Error "Failed to parse JSON input: $_"
