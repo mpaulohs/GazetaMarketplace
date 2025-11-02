@@ -10,6 +10,16 @@ This infrastructure is based on the [Claude Code Infrastructure Showcase](https:
 
 See [ATTRIBUTION.md](ATTRIBUTION.md) for complete licensing information and details about which components were used.
 
+## Environment
+
+**Running on:** WSL2 (Ubuntu) on Windows
+
+This installation is configured for native Linux execution:
+- Hooks use `#!/bin/bash` shebang
+- Paths use forward slashes (`/`)
+- File permissions managed via `chmod`
+- npm/npx via Ubuntu Node.js installation
+
 ## Installed Components
 
 ### Hooks
@@ -18,6 +28,15 @@ See [ATTRIBUTION.md](ATTRIBUTION.md) for complete licensing information and deta
 
 ### Skills
 - **skill-developer**: Meta-skill for creating and managing Claude Code skills (tech-agnostic)
+
+### Agents
+Specialized autonomous agents for complex, multi-step tasks (see `agents/README.md`):
+- **code-architecture-reviewer**: Reviews code for best practices and architectural consistency
+- **code-refactor-master**: Handles comprehensive code refactoring tasks
+- **documentation-architect**: Creates and enhances documentation
+- **plan-reviewer**: Reviews development plans before implementation
+- **refactor-planner**: Analyzes code and creates refactoring plans
+- **web-research-specialist**: Researches technical issues and solutions online
 
 ### Slash Commands
 - **/dev-docs**: Creates new dev docs (plan, context, tasks) for a task
@@ -76,6 +95,40 @@ This infrastructure is tech-agnostic and works with this .NET 10 project:
 - skill-developer works with any language
 - Hooks detect file changes regardless of tech stack
 - Can create .NET-specific skills using skill-developer
+
+## WSL/Ubuntu Requirements
+
+**Prerequisites:**
+- Node.js installed in Ubuntu/WSL (not Windows)
+- npm/npx accessible from bash
+- Bash shell (default in WSL)
+
+**Hook Dependencies:**
+```bash
+cd .claude/hooks
+npm install
+```
+
+This installs:
+- `tsx` - TypeScript execution for hooks
+- `typescript` - TypeScript compiler
+- `node-jq` - JSON processing (jq via npm)
+- `@types/node` - TypeScript definitions
+
+**Validating Installation:**
+```bash
+# Test skill activation hook
+cd .claude/hooks
+echo '{"prompt":"test"}' | npx tsx skill-activation-prompt.ts
+
+# Check hook permissions
+ls -l .claude/hooks/*.sh
+# Should show: -rwxrwxrwx (executable)
+```
+
+## Troubleshooting
+
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues and solutions.
 
 ## Next Steps
 

@@ -151,16 +151,20 @@ Always reference packages without Version attributes in .csproj files. Versions 
 
 ## Claude Code Infrastructure
 
-This project uses Claude Code infrastructure for enhanced development workflow:
+This project uses Claude Code infrastructure for enhanced development workflow.
+
+**Environment:** Running on WSL2 (Ubuntu) - all hooks and scripts use Linux/bash conventions.
 
 ### Installed Components
-- **Auto-activating skills** via hooks
+- **Auto-activating skills** via hooks (UserPromptSubmit, PostToolUse)
 - **skill-developer** meta-skill for creating project-specific skills
+- **Specialized agents** for complex tasks (refactoring, documentation, code review, etc.)
 - **Dev docs system** for context persistence across sessions
 - **Slash commands** for automated dev docs creation (/dev-docs, /dev-docs-update)
 
 ### Configuration
-- `.claude/` directory contains skills, hooks, and configuration
+- `.claude/` directory contains skills, hooks, agents, and configuration
+- `.claude/hooks/` - TypeScript/bash hooks with npm dependencies
 - `dev/active/` contains development documentation for complex tasks
 
 ### Usage

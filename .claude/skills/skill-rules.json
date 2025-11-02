@@ -24,6 +24,35 @@
           "skill.*?(work|trigger|activate|system)"
         ]
       }
+    },
+    "azure-devops": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "Azure DevOps automation using az CLI with azure-devops extension",
+      "promptTriggers": {
+        "keywords": [
+          "azure devops",
+          "az devops",
+          "ado",
+          "azure pipelines",
+          "azure repos",
+          "azure boards",
+          "work items",
+          "service connection",
+          "variable group",
+          "devops automation",
+          "yaml pipeline",
+          "pull request azure",
+          "az cli devops"
+        ],
+        "intentPatterns": [
+          "(create|manage|configure|setup).*?(azure devops|ado|pipeline|repo|work item)",
+          "(az devops|az repos|az pipelines|az boards)",
+          "(azure|ado).*(pipeline|repo|pr|pull request|work item)",
+          "devops.*?(automation|ci/cd|deployment)"
+        ]
+      }
     }
   }
 }
