@@ -372,12 +372,10 @@ jobs:
 
       - name: Post PR comment
         uses: actions/github-script@v7
-        env:
-          RESULT_JSON: ${{ steps.aggregate.outputs.result }}
         with:
           script: |
-            // Read from environment variable to avoid escaping issues
-            const resultJson = process.env.RESULT_JSON;
+            // Read output directly from step - GitHub Actions handles multiline outputs correctly
+            const resultJson = `${{ steps.aggregate.outputs.result }}`;
 
             // Debug output
             console.log('Result JSON length:', resultJson?.length || 0);
