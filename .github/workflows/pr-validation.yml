@@ -74,7 +74,7 @@ jobs:
             }
 
             try {
-              config = JSON.parse('${{ steps.load-config.outputs.config }}');
+              config = ${{ steps.load-config.outputs.config }};
             } catch (error) {
               console.log('Could not parse authorization config, allowing all users');
               core.setOutput('authorized', 'true');
@@ -279,8 +279,8 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const sizeFindings = JSON.parse('${{ steps.check-size.outputs.findings }}' || '[]');
-            const descFindings = JSON.parse('${{ steps.check-description.outputs.findings }}' || '[]');
+            const sizeFindings = ${{ steps.check-size.outputs.findings }} || [];
+            const descFindings = ${{ steps.check-description.outputs.findings }} || [];
 
             const allFindings = [...sizeFindings, ...descFindings];
 
@@ -325,7 +325,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const result = JSON.parse('${{ steps.aggregate.outputs.result }}');
+            const result = ${{ steps.aggregate.outputs.result }};
 
             // Format the comment using PowerShell script
             const { execSync } = require('child_process');
@@ -579,7 +579,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const result = JSON.parse(`${{ steps.parse-results.outputs.result }}`);
+            const result = ${{ steps.parse-results.outputs.result }};
 
             // Run PowerShell formatter
             const { execSync } = require('child_process');
@@ -953,7 +953,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const result = JSON.parse('${{ steps.parse-results.outputs.result }}');
+            const result = ${{ steps.parse-results.outputs.result }};
             const { execSync } = require('child_process');
 
             const markdown = execSync(
@@ -1116,7 +1116,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const result = JSON.parse('${{ steps.parse-results.outputs.result }}');
+            const result = ${{ steps.parse-results.outputs.result }};
             const { execSync } = require('child_process');
 
             const markdown = execSync(

@@ -11,7 +11,10 @@ using Microsoft.Extensions.Hosting;
 
 namespace Example.Web
 {
-    public class Startup
+#pragma warning disable CA1812 // Startup is instantiated by ASP.NET Core via reflection
+#pragma warning disable CA1822 // ConfigureServices and Configure are called by ASP.NET Core via reflection
+    internal sealed class Startup
+#pragma warning restore CA1812
     {
         public Startup(IConfiguration configuration)
         {
