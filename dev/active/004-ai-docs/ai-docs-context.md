@@ -14,10 +14,10 @@
 - [x] Platform-agnostic architecture designed
 - [x] Option A strategy confirmed (3 documentation types with separate targets)
 - [x] GitHub-first approach approved (Azure DevOps as optional Phase 7)
-- [x] Dev docs structure created (dev/active/ai-assisted-documentation/)
-- [x] Comprehensive strategic plan written (ai-assisted-documentation-plan.md, 9 phases, ~850 lines)
-- [x] Context document created (ai-assisted-documentation-context.md, THIS FILE)
-- [x] Tasks checklist created (ai-assisted-documentation-tasks.md)
+- [x] Dev docs structure created (dev/active/004-ai-docs/)
+- [x] Comprehensive strategic plan written (ai-docs-plan.md, 9 phases, ~850 lines)
+- [x] Context document created (ai-docs-context.md, THIS FILE)
+- [x] Tasks checklist created (ai-docs-tasks.md)
 
 **Infrastructure Analysis:**
 - [x] Current project structure analyzed
@@ -40,7 +40,7 @@ The planning phase is complete. All architecture, strategies, and implementation
 - [ ] Extract GitHub workflows into docs/architecture/github-plugin-guide.md
 - [ ] Extract Azure DevOps pipelines into docs/architecture/azure-devops-plugin-guide.md
 
-**Phases 2-9**: See ai-assisted-documentation-tasks.md for complete checklist
+**Phases 2-9**: See ai-docs-tasks.md for complete checklist
 
 ### ⚠️ BLOCKERS
 
@@ -130,21 +130,21 @@ None currently
 
 ### Dev Docs (Implementation Planning - This Directory)
 
-**dev/active/ai-assisted-documentation/ai-assisted-documentation-plan.md**
+**dev/active/004-ai-docs/ai-docs-plan.md**
 - Comprehensive strategic plan (9 phases, 32-45 hours estimated)
 - Executive summary, current state, proposed future state
 - Detailed tasks with acceptance criteria
 - Risk assessment, success metrics, timeline estimates
 - **Use for:** Understanding overall strategy and implementation approach
 
-**dev/active/ai-assisted-documentation/ai-assisted-documentation-context.md** (THIS FILE)
+**dev/active/004-ai-docs/ai-docs-context.md** (THIS FILE)
 - Current session progress
 - Key decisions made during planning
 - File locations and purposes
 - Quick resume instructions
 - **Use for:** Resuming work after context reset
 
-**dev/active/ai-assisted-documentation/ai-assisted-documentation-tasks.md** (TO CREATE NEXT)
+**dev/active/004-ai-docs/ai-docs-tasks.md**
 - Checklist format for all 9 phases
 - Task status tracking (✅/🟡/⏳)
 - Quick visual progress indicator
@@ -372,9 +372,9 @@ Add Phase 7 → 9 (complete)
 ## Quick Resume Instructions
 
 ### If Context Reset During Phase 1 (Documentation Planning)
-1. Read this file (ai-assisted-documentation-context.md)
-2. Read ai-assisted-documentation-plan.md (executive summary + current phase)
-3. Check ai-assisted-documentation-tasks.md for current task
+1. Read this file (ai-docs-context.md)
+2. Read ai-docs-plan.md (executive summary + current phase)
+3. Check ai-docs-tasks.md for current task
 4. Continue creating architecture documents in docs/architecture/
 
 ### If Context Reset During Phase 2 (Core Foundation)
@@ -534,4 +534,4 @@ Use `/dev-docs-update` slash command to update all three files:
 ---
 
 **Context Status**: ✅ COMPLETE
-**Next Task**: Create ai-assisted-documentation-tasks.md
+**Next Task**: Begin Phase 1 implementation

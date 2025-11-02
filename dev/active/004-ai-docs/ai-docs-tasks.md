@@ -26,7 +26,7 @@
 
 **Goal**: Extract architecture content from plan.md into separate documentation files
 **Estimated**: 3-4 hours
-**Note**: All content already exists in ai-assisted-documentation-plan.md, this phase extracts and organizes it
+**Note**: All content already exists in ai-docs-plan.md, this phase extracts and organizes it
 
 ### Tasks
 

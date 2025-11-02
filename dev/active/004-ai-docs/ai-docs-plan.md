@@ -1356,9 +1356,9 @@ Phase 1 (Documentation)
 ## Appendix: Key File Locations
 
 ### Dev Docs (This Implementation)
-- `dev/active/ai-assisted-documentation/ai-assisted-documentation-plan.md` (this file)
-- `dev/active/ai-assisted-documentation/ai-assisted-documentation-context.md`
-- `dev/active/ai-assisted-documentation/ai-assisted-documentation-tasks.md`
+- `dev/active/004-ai-docs/ai-docs-plan.md` (this file)
+- `dev/active/004-ai-docs/ai-docs-context.md`
+- `dev/active/004-ai-docs/ai-docs-tasks.md`
 
 ### Architecture Documentation (To Be Created)
 - `docs/architecture/ai-docs-platform-agnostic-architecture.md`
@@ -1389,5 +1389,5 @@ Phase 1 (Documentation)
 
 **Plan Status**: ✅ COMPLETE
 **Ready to Begin**: YES
-**First Task**: Create ai-assisted-documentation-context.md
+**First Task**: Begin Phase 1 implementation
 
