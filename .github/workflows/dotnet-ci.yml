@@ -53,6 +53,11 @@ jobs:
         run: |
           dotnet build --no-restore --configuration Release
 
+      - name: Install Playwright browsers
+        run: |
+          pwsh tests/Example.Web.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+          pwsh tests/Example.API.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
       - name: Run unit tests
         run: |
           dotnet test --no-build --configuration Release --verbosity normal
@@ -112,6 +117,11 @@ jobs:
 
       - name: Build solution
         run: dotnet build --configuration Release --no-restore
+
+      - name: Install Playwright browsers
+        run: |
+          pwsh tests/Example.Web.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+          pwsh tests/Example.API.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
 
       - name: Install dotnet-coverage tool
         run: dotnet tool install --global dotnet-coverage
