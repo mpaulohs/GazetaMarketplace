@@ -279,56 +279,92 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            // Safely parse findings with fallback to empty array
-            const sizeFindingsJson = `${{ steps.check-size.outputs.findings }}`.trim();
-            const descFindingsJson = `${{ steps.check-description.outputs.findings }}`.trim();
+            try {
+              // Safely parse findings with fallback to empty array
+              const sizeFindingsJson = `${{ steps.check-size.outputs.findings }}`.trim();
+              const descFindingsJson = `${{ steps.check-description.outputs.findings }}`.trim();
 
-            console.log('Size findings JSON:', sizeFindingsJson || '(empty)');
-            console.log('Description findings JSON:', descFindingsJson || '(empty)');
+              console.log('Size findings JSON:', sizeFindingsJson || '(empty)');
+              console.log('Description findings JSON:', descFindingsJson || '(empty)');
 
-            const sizeFindings = sizeFindingsJson ? JSON.parse(sizeFindingsJson) : [];
-            const descFindings = descFindingsJson ? JSON.parse(descFindingsJson) : [];
+              let sizeFindings = [];
+              let descFindings = [];
 
-            const allFindings = [...sizeFindings, ...descFindings];
+              if (sizeFindingsJson) {
+                try {
+                  sizeFindings = JSON.parse(sizeFindingsJson);
+                  console.log('Parsed size findings:', sizeFindings.length, 'items');
+                } catch (e) {
+                  console.error('Failed to parse size findings:', e.message);
+                }
+              }
 
-            const summary = {
-              total: allFindings.length,
-              errors: allFindings.filter(f => f.severity === 'error').length,
-              warnings: allFindings.filter(f => f.severity === 'warning').length,
-              info: allFindings.filter(f => f.severity === 'info').length
-            };
+              if (descFindingsJson) {
+                try {
+                  descFindings = JSON.parse(descFindingsJson);
+                  console.log('Parsed description findings:', descFindings.length, 'items');
+                } catch (e) {
+                  console.error('Failed to parse description findings:', e.message);
+                }
+              }
 
-            let status = `${{ steps.check-size.outputs.status }}`.trim() || 'pass';
-            if (summary.errors > 0) {
-              status = 'failed';
-            } else if (summary.warnings > 0 && status === 'pass') {
-              status = 'warning';
+              const allFindings = [...sizeFindings, ...descFindings];
+              console.log('Total findings:', allFindings.length);
+
+              const summary = {
+                total: allFindings.length,
+                errors: allFindings.filter(f => f.severity === 'error').length,
+                warnings: allFindings.filter(f => f.severity === 'warning').length,
+                info: allFindings.filter(f => f.severity === 'info').length
+              };
+
+              let status = `${{ steps.check-size.outputs.status }}`.trim() || 'pass';
+              console.log('Initial status:', status);
+
+              if (summary.errors > 0) {
+                status = 'failed';
+              } else if (summary.warnings > 0 && status === 'pass') {
+                status = 'warning';
+              }
+
+              console.log('Final status:', status);
+
+              const result = {
+                step: 'guardrails',
+                status: status,
+                timestamp: new Date().toISOString(),
+                findings: allFindings,
+                summary: summary
+              };
+
+              console.log('Aggregate result:', JSON.stringify(result, null, 2));
+
+              const resultJson = JSON.stringify(result);
+              console.log('Setting output with', resultJson.length, 'characters');
+
+              core.setOutput('result', resultJson);
+              core.setOutput('status', status);
+
+              console.log('Outputs set successfully');
+
+              // Create step summary
+              await core.summary
+                .addHeading('2️⃣ PR Guardrails')
+                .addTable([
+                  [{data: 'Check', header: true}, {data: 'Result', header: true}],
+                  ['PR Size', `${context.payload.pull_request.additions + context.payload.pull_request.deletions} lines (${context.payload.pull_request.changed_files} files)`],
+                  ['Description Length', `${(context.payload.pull_request.body || '').length} characters`],
+                  ['Status', status === 'pass' ? '✅ Pass' : status === 'warning' ? '⚠️ Warning' : '❌ Failed'],
+                  ['Issues Found', `${summary.total} (${summary.errors} errors, ${summary.warnings} warnings)`]
+                ])
+                .write();
+
+              console.log('Step summary created successfully');
+            } catch (error) {
+              console.error('Error in aggregate step:', error);
+              core.setFailed(`Aggregate step failed: ${error.message}`);
+              throw error;
             }
-
-            const result = {
-              step: 'guardrails',
-              status: status,
-              timestamp: new Date().toISOString(),
-              findings: allFindings,
-              summary: summary
-            };
-
-            console.log('Aggregate result:', JSON.stringify(result, null, 2));
-
-            core.setOutput('result', JSON.stringify(result));
-            core.setOutput('status', status);
-
-            // Create step summary
-            await core.summary
-              .addHeading('2️⃣ PR Guardrails')
-              .addTable([
-                [{data: 'Check', header: true}, {data: 'Result', header: true}],
-                ['PR Size', `${context.payload.pull_request.additions + context.payload.pull_request.deletions} lines (${context.payload.pull_request.changed_files} files)`],
-                ['Description Length', `${(context.payload.pull_request.body || '').length} characters`],
-                ['Status', status === 'pass' ? '✅ Pass' : status === 'warning' ? '⚠️ Warning' : '❌ Failed'],
-                ['Issues Found', `${summary.total} (${summary.errors} errors, ${summary.warnings} warnings)`]
-              ])
-              .write();
 
       - name: Post PR comment
         uses: actions/github-script@v7
