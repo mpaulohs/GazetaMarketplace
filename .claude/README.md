@@ -27,7 +27,18 @@ This installation is configured for native Linux execution:
 - **post-tool-use-tracker** (PostToolUse): Tracks file changes for context management
 
 ### Skills
+
+**General:**
 - **skill-developer**: Meta-skill for creating and managing Claude Code skills (tech-agnostic)
+- **azure-devops**: Azure DevOps automation using az CLI with azure-devops extension
+
+**.NET 10 Project-Specific Skills:**
+- **mstest-testing-platform** (High Priority): MSTest with Microsoft.Testing.Platform (new test runner)
+- **dotnet-centralized-packages** (High Priority): Centralized Package Management with Directory.Packages.props
+- **playwright-dotnet** (High Priority): E2E testing with Playwright for .NET
+- **dotnet-minimal-apis** (Medium Priority): ASP.NET Core Minimal APIs with OpenAPI
+- **dotnet-cli-essentials** (Medium Priority): Essential .NET CLI commands for this project
+- **aspnet-configuration** (Medium Priority): ASP.NET Core configuration and options pattern
 
 ### Agents
 Specialized autonomous agents for complex, multi-step tasks (see `agents/README.md`):

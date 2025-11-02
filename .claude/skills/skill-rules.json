@@ -53,6 +53,204 @@
           "devops.*?(automation|ci/cd|deployment)"
         ]
       }
+    },
+    "mstest-testing-platform": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "MSTest with Microsoft.Testing.Platform (new test runner, not legacy VSTest)",
+      "promptTriggers": {
+        "keywords": [
+          "MSTest",
+          "Microsoft.Testing.Platform",
+          "test runner",
+          "EnableMSTestRunner",
+          "MSTestSettings",
+          "run tests",
+          "test execution",
+          "dotnet test",
+          "test parallelization",
+          "testing platform"
+        ],
+        "intentPatterns": [
+          "(run|execute|debug).*?test",
+          "mstest.*?(setup|config|runner|platform)",
+          "(test|testing).*?(platform|runner|execution)",
+          "how.*?(run|execute) (unit|integration) test",
+          "configure.*?test.*?parallel"
+        ]
+      },
+      "fileTriggers": {
+        "patterns": [
+          "tests/**/*.csproj",
+          "**/MSTestSettings.cs"
+        ]
+      }
+    },
+    "dotnet-centralized-packages": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Centralized Package Management (CPM) using Directory.Packages.props",
+      "promptTriggers": {
+        "keywords": [
+          "Directory.Packages.props",
+          "centralized package management",
+          "CPM",
+          "add package",
+          "nuget package",
+          "package version",
+          "CentralPackageTransitivePinningEnabled",
+          "package reference",
+          "manage packages",
+          "ManagePackageVersionsCentrally"
+        ],
+        "intentPatterns": [
+          "(add|install|update|remove).*?package",
+          "package.*?(version|management|reference)",
+          "Directory\\.Packages",
+          "centralized.*?package",
+          "nuget.*?(add|install|update|version)"
+        ]
+      },
+      "fileTriggers": {
+        "patterns": [
+          "Directory.Packages.props",
+          "**/*.csproj"
+        ]
+      }
+    },
+    "playwright-dotnet": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "E2E testing with Playwright for .NET using Microsoft.Playwright.MSTest.v4",
+      "promptTriggers": {
+        "keywords": [
+          "Playwright",
+          "browser automation",
+          "E2E",
+          "end-to-end test",
+          "playwright install",
+          "Microsoft.Playwright.MSTest",
+          "page object",
+          "browser test",
+          "headless",
+          "playwright.ps1",
+          "PageTest"
+        ],
+        "intentPatterns": [
+          "(create|write|debug).*?(playwright|e2e|browser) test",
+          "playwright.*?(install|setup|config)",
+          "(browser|web).*?(automation|testing)",
+          "end.?to.?end test",
+          "install.*?browser"
+        ]
+      },
+      "fileTriggers": {
+        "patterns": [
+          "**/*.Playwright.csproj",
+          "**/Playwright/**/*.cs"
+        ]
+      }
+    },
+    "dotnet-minimal-apis": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "ASP.NET Core Minimal APIs with OpenAPI/Swagger integration",
+      "promptTriggers": {
+        "keywords": [
+          "minimal API",
+          "minimal apis",
+          "MapGet",
+          "MapPost",
+          "MapPut",
+          "MapDelete",
+          "WebApplication",
+          "endpoint",
+          "route group",
+          "minimal endpoint",
+          "map endpoint"
+        ],
+        "intentPatterns": [
+          "(create|build|add|configure).*?minimal api",
+          "map(get|post|put|delete|patch)",
+          "minimal.*?(api|endpoint)",
+          "(route|endpoint).*?(group|organization)",
+          "openapi.*?endpoint"
+        ]
+      },
+      "fileTriggers": {
+        "patterns": [
+          "**/Program.cs"
+        ]
+      }
+    },
+    "dotnet-cli-essentials": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "Essential .NET CLI commands for building, running, testing, and managing projects",
+      "promptTriggers": {
+        "keywords": [
+          "dotnet build",
+          "dotnet run",
+          "dotnet test",
+          "dotnet cli",
+          "dotnet restore",
+          "dotnet clean",
+          "dotnet watch",
+          "solution",
+          "slnx",
+          "dotnet command"
+        ],
+        "intentPatterns": [
+          "(build|run|restore|clean|publish).*?(project|solution)",
+          "dotnet.*?(build|run|restore|clean|watch|publish)",
+          "solution.*?(management|structure)",
+          "\\.slnx",
+          "dotnet.*?command"
+        ]
+      },
+      "fileTriggers": {
+        "patterns": [
+          "*.sln",
+          "*.slnx",
+          "Directory.Build.props"
+        ]
+      }
+    },
+    "aspnet-configuration": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "ASP.NET Core configuration with appsettings.json, environment settings, and options pattern",
+      "promptTriggers": {
+        "keywords": [
+          "appsettings",
+          "configuration",
+          "IConfiguration",
+          "user secrets",
+          "environment variables",
+          "options pattern",
+          "appsettings.json",
+          "appsettings.Development.json",
+          "IOptions"
+        ],
+        "intentPatterns": [
+          "(configure|setup|manage|access).*?(appsettings|configuration)",
+          "user.*?secrets",
+          "environment.*?(variables|configuration)",
+          "options.*?pattern",
+          "(read|get|access).*?configuration"
+        ]
+      },
+      "fileTriggers": {
+        "patterns": [
+          "**/appsettings*.json"
+        ]
+      }
     }
   }
 }
