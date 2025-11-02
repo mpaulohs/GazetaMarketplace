@@ -330,3 +330,186 @@ emergency:
 ```
 
 This blocks all Claude Code mentions and PR automation until disabled.
+
+## CI/CD Pipeline
+
+This project includes a comprehensive continuous integration and deployment pipeline that builds, tests, and publishes applications across multiple platforms.
+
+### Multi-Platform Builds
+
+The CI/CD pipeline automatically builds and tests on:
+- **Linux** (Ubuntu latest)
+- **Windows** (Windows latest)
+- **macOS** (macOS latest)
+
+**Triggers:**
+- Push to `main` or `develop` branches
+- Pull requests to `main` or `develop`
+- Manual workflow dispatch
+
+### Code Coverage
+
+Automated test coverage collection and reporting:
+
+**Features:**
+- XPlat Code Coverage collection
+- HTML and Cobertura report generation
+- PR comments with coverage summary
+- Codecov integration (optional)
+- Coverage threshold checking
+
+**Setup Codecov:**
+```bash
+# Add CODECOV_TOKEN secret to repository
+# Get token from codecov.io after adding repository
+```
+
+**View Coverage:**
+- Check PR comments for summary
+- Download HTML report from workflow artifacts
+- View dashboard at codecov.io (if configured)
+
+### Docker Images
+
+Automated Docker image builds for both applications:
+
+**Images:**
+- `ghcr.io/{owner}/{repo}/example-web` - MVC application
+- `ghcr.io/{owner}/{repo}/example-api` - Minimal API
+
+**Triggers:**
+- Push to `main` branch only
+- Tagged releases
+
+**Pull Images:**
+```bash
+docker pull ghcr.io/{owner}/{repo}/example-web:main
+docker pull ghcr.io/{owner}/{repo}/example-api:main
+
+# Run containers
+docker run -p 8080:8080 ghcr.io/{owner}/{repo}/example-web:main
+docker run -p 8080:8080 ghcr.io/{owner}/{repo}/example-api:main
+```
+
+**Local Docker Build:**
+```bash
+# Build images
+docker build -f src/Example.Web/Dockerfile -t example-web:local .
+docker build -f src/Example.API/Dockerfile -t example-api:local .
+
+# Run locally
+docker run -p 8080:8080 example-web:local
+docker run -p 8080:8080 example-api:local
+```
+
+### NuGet Package Publishing
+
+Automated NuGet package publishing on tagged releases:
+
+**Trigger:** Tag push with pattern `v*` (e.g., `v1.0.0`)
+
+**Destinations:**
+- NuGet.org (if `NUGET_API_KEY` configured)
+- GitHub Packages (automatic)
+
+**Create Release:**
+```bash
+# Tag and push
+git tag -a v1.0.0 -m "Release 1.0.0"
+git push origin v1.0.0
+
+# Pipeline automatically:
+# 1. Builds solution
+# 2. Packs NuGet packages
+# 3. Publishes to NuGet.org and GitHub Packages
+# 4. Creates GitHub Release with artifacts
+```
+
+**Setup NuGet Publishing:**
+1. Get API key from [nuget.org](https://www.nuget.org/account/apikeys)
+2. Add as repository secret: `NUGET_API_KEY`
+
+### Artifacts
+
+The CI/CD pipeline produces various artifacts:
+
+**Build Artifacts** (7-day retention):
+- `web-app-linux-x64` - Published Web application
+- `api-app-linux-x64` - Published API application
+
+**Coverage Artifacts** (30-day retention):
+- `coverage-report` - HTML coverage report
+
+**Release Artifacts** (permanent):
+- NuGet packages
+- Published binaries
+- Attached to GitHub Releases
+
+### CI/CD Workflow Diagram
+
+```
+┌─────────────────────────────────────────────────┐
+│ Push/PR to main/develop                         │
+└──────────────┬──────────────────────────────────┘
+               │
+       ┌───────┴────────┐
+       │                │
+   ┌───▼───┐       ┌───▼───┐
+   │ Build │       │ Coverage│
+   │ Test  │       │ Report │
+   │ (3 OS)│       │        │
+   └───┬───┘       └───┬────┘
+       │               │
+       │          ┌────▼────┐
+       │          │ PR      │
+       │          │ Comment │
+       │          └─────────┘
+       │
+┌──────▼────────┐
+│ Push to main  │
+└──────┬────────┘
+       │
+   ┌───▼───┐
+   │ Docker│
+   │ Build │
+   └───┬───┘
+       │
+  ┌────▼────┐
+  │ GHCR    │
+  │ Publish │
+  └─────────┘
+
+┌──────────────┐
+│ Tag Push (v*)│
+└──────┬───────┘
+       │
+   ┌───▼────┐
+   │ NuGet  │
+   │ Publish│
+   └───┬────┘
+       │
+  ┌────▼─────┐
+  │ GitHub   │
+  │ Release  │
+  └──────────┘
+```
+
+### Optional Secrets
+
+| Secret | Purpose | Required | Setup |
+|--------|---------|----------|-------|
+| `CODECOV_TOKEN` | Upload coverage to Codecov | Optional | [codecov.io](https://codecov.io) |
+| `NUGET_API_KEY` | Publish to NuGet.org | Optional | [nuget.org](https://www.nuget.org/account/apikeys) |
+
+### Monitoring
+
+**View CI/CD Status:**
+- Actions tab → .NET CI/CD workflow
+- Check individual job logs
+- Download artifacts
+
+**Typical Run Times:**
+- Build & Test (per platform): 2-5 minutes
+- Coverage Collection: 2-3 minutes
+- Docker Build: 3-5 minutes
+- Total (parallel): ~5-8 minutes

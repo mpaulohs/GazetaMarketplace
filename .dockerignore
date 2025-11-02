@@ -1,0 +1,53 @@
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# VS/VSCode
+.vs/
+.vscode/
+*.user
+*.suo
+*.cache
+
+# Rider
+.idea/
+*.sln.iml
+
+# Test results
+**/TestResults/
+**/coverage/
+**/*.trx
+**/*.coverage
+
+# Packages
+**/packages/
+**/.nuget/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# GitHub
+.github/
+
+# Documentation
+*.md
+docs/
+dev/
+
+# Claude Code
+.claude/
+
+# Docker
+**/.dockerignore
+**/Dockerfile
+**/docker-compose*
+
+# Other
+**/node_modules/
+**/npm-debug.log
+**/.DS_Store
+**/Thumbs.db

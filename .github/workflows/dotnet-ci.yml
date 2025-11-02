@@ -1,0 +1,435 @@
+name: .NET CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  # ============================================================================
+  # Multi-Platform Build & Test
+  # ============================================================================
+  build-and-test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact-name: linux-x64
+          - os: windows-latest
+            artifact-name: windows-x64
+          - os: macos-latest
+            artifact-name: osx-x64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for GitVersion
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Display .NET info
+        run: dotnet --info
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: |
+          dotnet build --no-restore --configuration Release
+
+      - name: Run unit tests
+        run: |
+          dotnet test --no-build --configuration Release --verbosity normal
+
+      - name: Publish Example.Web
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          dotnet publish src/Example.Web/Example.Web.csproj \
+            --configuration Release \
+            --output ./publish/Example.Web \
+            --no-build
+
+      - name: Publish Example.API
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          dotnet publish src/Example.API/Example.API.csproj \
+            --configuration Release \
+            --output ./publish/Example.API \
+            --no-build
+
+      - name: Upload Web artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-app-${{ matrix.artifact-name }}
+          path: ./publish/Example.Web
+          retention-days: 7
+
+      - name: Upload API artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-app-${{ matrix.artifact-name }}
+          path: ./publish/Example.API
+          retention-days: 7
+
+  # ============================================================================
+  # Test Coverage (Linux only for performance)
+  # ============================================================================
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests with coverage
+        run: |
+          dotnet test --configuration Release --no-build \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./coverage
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: |
+          reportgenerator \
+            -reports:./coverage/**/coverage.cobertura.xml \
+            -targetdir:./coverage/report \
+            -reporttypes:"HtmlInline_AzurePipelines;Cobertura;MarkdownSummaryGithub" \
+            -verbosity:Info
+
+      - name: Add coverage comment to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Read the markdown summary
+            let summary = 'Coverage report not generated';
+            try {
+              summary = fs.readFileSync('./coverage/report/SummaryGithub.md', 'utf8');
+            } catch (e) {
+              console.log('Could not read coverage summary:', e.message);
+            }
+
+            const marker = '<!-- coverage-report -->';
+            const body = `${marker}
+            ## 📊 Code Coverage Report
+
+            ${summary}
+
+            <details>
+            <summary>View detailed coverage</summary>
+
+            Full HTML report available in workflow artifacts.
+
+            </details>
+
+            ---
+            *Coverage collected on: ${new Date().toISOString()}*
+            <!-- /coverage-report -->`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('<!-- coverage-report -->')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: body
+              });
+            }
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/**/coverage.cobertura.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coverage/report
+          retention-days: 30
+
+      - name: Check coverage threshold
+        run: |
+          # Extract line coverage percentage from Cobertura XML
+          COVERAGE=$(grep -oP 'line-rate="\K[0-9.]+' ./coverage/report/Cobertura.xml | head -1)
+          COVERAGE_PERCENT=$(echo "$COVERAGE * 100" | bc)
+          echo "Line coverage: $COVERAGE_PERCENT%"
+
+          # Set minimum threshold (adjust as needed)
+          THRESHOLD=0
+
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "::warning::Coverage $COVERAGE_PERCENT% is below threshold ${THRESHOLD}%"
+          else
+            echo "::notice::Coverage $COVERAGE_PERCENT% meets threshold ${THRESHOLD}%"
+          fi
+
+  # ============================================================================
+  # Docker Image Build (Optional)
+  # ============================================================================
+  docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-and-test]
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Example.Web
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/example-web
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push Example.Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/Example.Web/Dockerfile
+          push: true
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract metadata for Example.API
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/example-api
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push Example.API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/Example.API/Dockerfile
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # NuGet Package Publishing (if creating libraries)
+  # ============================================================================
+  publish-nuget:
+    name: Publish NuGet Packages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [build-and-test, coverage]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: |
+          dotnet build --configuration Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            --no-restore
+
+      - name: Pack NuGet packages
+        run: |
+          dotnet pack --configuration Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            --output ./packages \
+            --no-build
+
+      - name: Push to NuGet.org
+        run: |
+          dotnet nuget push ./packages/*.nupkg \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+        if: env.NUGET_API_KEY != ''
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+
+      - name: Push to GitHub Packages
+        run: |
+          dotnet nuget push ./packages/*.nupkg \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \
+            --skip-duplicate
+
+      - name: Upload NuGet packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./packages/*.nupkg
+          retention-days: 90
+
+  # ============================================================================
+  # Release Notes Generation
+  # ============================================================================
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [publish-nuget]
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release-artifacts
+
+      - name: Generate release notes
+        id: release-notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = context.ref.replace('refs/tags/', '');
+
+            // Get commits since last tag
+            const { data: tags } = await github.rest.repos.listTags({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 2
+            });
+
+            const previousTag = tags[1]?.name || '';
+            const currentTag = tags[0]?.name || version;
+
+            let releaseNotes = `## What's Changed\n\n`;
+
+            if (previousTag) {
+              const { data: comparison } = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: previousTag,
+                head: currentTag
+              });
+
+              comparison.commits.forEach(commit => {
+                const message = commit.commit.message.split('\n')[0];
+                releaseNotes += `- ${message} (@${commit.author?.login || 'unknown'})\n`;
+              });
+            }
+
+            releaseNotes += `\n**Full Changelog**: https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${previousTag}...${currentTag}`;
+
+            return releaseNotes;
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ steps.release-notes.outputs.result }}
+          files: |
+            release-artifacts/nuget-packages/*.nupkg
+            release-artifacts/web-app-*/**/*
+            release-artifacts/api-app-*/**/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

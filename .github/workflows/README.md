@@ -330,11 +330,201 @@ dotnet build --verbosity detailed
 4. **Update-in-place:** Avoid comment spam
 5. **Security first:** Never commit secrets to workflows
 
+---
+
+### `dotnet-ci.yml` - CI/CD Pipeline
+
+**Purpose:** Multi-platform continuous integration and deployment
+
+**Triggers:**
+- Push to `main` or `develop` branches
+- Pull requests to `main` or `develop`
+- Manual workflow dispatch
+- Tag pushes for releases (`v*`)
+
+**Jobs:**
+
+#### Build & Test (Multi-Platform)
+- **Platforms:** Linux, Windows, macOS
+- **Steps:**
+  - Restore dependencies
+  - Build solution (Release configuration)
+  - Run all unit tests
+  - Publish applications (Linux only)
+  - Upload artifacts
+
+**Artifacts Published:**
+- `web-app-linux-x64` - Example.Web application
+- `api-app-linux-x64` - Example.API application
+- Retention: 7 days
+
+#### Code Coverage
+- **Platform:** Linux (for performance)
+- **Steps:**
+  - Run tests with code coverage (`XPlat Code Coverage`)
+  - Generate HTML and Cobertura reports with ReportGenerator
+  - Post coverage summary to PR comments
+  - Upload to Codecov (if token configured)
+  - Upload coverage report as artifact
+  - Check coverage threshold
+
+**Coverage Reports:**
+- HTML report in artifacts (30-day retention)
+- PR comment with summary
+- Codecov dashboard (if configured)
+
+**Setup Codecov:**
+1. Sign up at [codecov.io](https://codecov.io)
+2. Add repository
+3. Get upload token
+4. Add as repository secret: `CODECOV_TOKEN`
+
+#### Docker Image Build
+- **Trigger:** Push to `main` branch only
+- **Registry:** GitHub Container Registry (ghcr.io)
+- **Images:**
+  - `ghcr.io/{owner}/{repo}/example-web`
+  - `ghcr.io/{owner}/{repo}/example-api`
+- **Tags:**
+  - Branch name (`main`)
+  - Git SHA (`main-{sha}`)
+  - Semantic version (if tagged)
+
+**Dockerfile Locations:**
+- `src/Example.Web/Dockerfile`
+- `src/Example.API/Dockerfile`
+
+**Pull Images:**
+```bash
+docker pull ghcr.io/{owner}/{repo}/example-web:main
+docker pull ghcr.io/{owner}/{repo}/example-api:main
+```
+
+#### NuGet Package Publishing
+- **Trigger:** Tag push (`v*` tags)
+- **Destinations:**
+  - NuGet.org (if `NUGET_API_KEY` configured)
+  - GitHub Packages (automatic)
+- **Versioning:** Extracted from git tag
+
+**Setup NuGet Publishing:**
+1. Get API key from [nuget.org](https://www.nuget.org/account/apikeys)
+2. Add as repository secret: `NUGET_API_KEY`
+3. Create tag: `git tag v1.0.0 && git push --tags`
+
+#### GitHub Release Creation
+- **Trigger:** Tag push (`v*` tags)
+- **Features:**
+  - Automatic release notes from commits
+  - Attached artifacts (binaries, NuGet packages)
+  - Changelog link
+
+**Create Release:**
+```bash
+git tag -a v1.0.0 -m "Release 1.0.0"
+git push origin v1.0.0
+```
+
+### CI/CD Pipeline Diagram
+
+```
+Push/PR → Build & Test (3 platforms) → Coverage Report
+   ↓
+Tag Push → NuGet Publish → GitHub Release
+   ↓
+Main Push → Docker Build → Container Registry
+```
+
+### Environment Variables
+
+| Variable | Purpose | Set By |
+|----------|---------|--------|
+| `DOTNET_SKIP_FIRST_TIME_EXPERIENCE` | Skip .NET welcome | Workflow |
+| `DOTNET_CLI_TELEMETRY_OPTOUT` | Disable telemetry | Workflow |
+| `DOTNET_NOLOGO` | Hide .NET logo | Workflow |
+| `ASPNETCORE_URLS` | ASP.NET listen address | Dockerfile |
+| `ASPNETCORE_ENVIRONMENT` | Environment name | Dockerfile |
+
+### Secrets Required
+
+| Secret | Required | Purpose | Setup |
+|--------|----------|---------|-------|
+| `GITHUB_TOKEN` | ✅ Auto | Artifacts, packages | Automatic |
+| `CODECOV_TOKEN` | ❌ Optional | Coverage upload | codecov.io |
+| `NUGET_API_KEY` | ❌ Optional | NuGet.org publish | nuget.org |
+
+### Testing CI/CD Locally
+
+**Build Docker images:**
+```bash
+# Build Web image
+docker build -f src/Example.Web/Dockerfile -t example-web:local .
+
+# Build API image
+docker build -f src/Example.API/Dockerfile -t example-api:local .
+
+# Run containers
+docker run -p 8080:8080 example-web:local
+docker run -p 8080:8080 example-api:local
+```
+
+**Test coverage locally:**
+```bash
+# Run tests with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Install ReportGenerator
+dotnet tool install --global dotnet-reportgenerator-globaltool
+
+# Generate report
+reportgenerator \
+  -reports:./**/coverage.cobertura.xml \
+  -targetdir:./coverage-report \
+  -reporttypes:HtmlInline
+```
+
+### Monitoring & Metrics
+
+**View Workflow Runs:**
+- Actions tab → .NET CI/CD workflow
+- Check logs for each job
+- Download artifacts
+
+**Key Metrics:**
+- Build time per platform (typical: 2-5 minutes)
+- Test duration (typical: 1-3 minutes)
+- Coverage percentage (configure threshold)
+- Docker build time (typical: 3-5 minutes)
+
+### Troubleshooting
+
+**Build fails on specific platform:**
+- Check platform-specific code
+- Review OS-specific file paths
+- Verify dependencies available
+
+**Coverage upload fails:**
+- Check `CODECOV_TOKEN` secret
+- Verify coverage file paths
+- Check Codecov service status
+
+**Docker build fails:**
+- Verify Dockerfile syntax
+- Check base image availability
+- Review build context size
+
+**NuGet publish fails:**
+- Verify `NUGET_API_KEY` secret
+- Check package version conflicts
+- Ensure unique version numbers
+
 ## Further Reading
 
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [Workflow Syntax](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions)
 - [Security Best Practices](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
+- [Docker Multi-Stage Builds](https://docs.docker.com/build/building/multi-stage/)
+- [Codecov Documentation](https://docs.codecov.com/)
 
 ---
 
