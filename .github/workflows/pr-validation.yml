@@ -955,12 +955,175 @@ jobs:
           exit 1
 
   # ============================================================================
+  # Step 6: .NET-Specific Validation
+  # ============================================================================
+  dotnet-validation:
+    name: "6️⃣ .NET Validation"
+    runs-on: ubuntu-latest
+    needs: security-review
+    if: always()
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Run .csproj structure validation
+      - name: Validate .csproj files
+        id: csproj-validation
+        continue-on-error: true
+        run: |
+          pwsh -File .github/scripts/check-csproj-structure.ps1 > csproj-validation.json 2>&1 || echo "CSPROJ_VALIDATION_FAILED=true" >> $GITHUB_ENV
+
+      # Run CPM compliance validation
+      - name: Validate Directory.Packages.props
+        id: cpm-validation
+        continue-on-error: true
+        run: |
+          pwsh -File .github/scripts/check-cpm-compliance.ps1 > cpm-validation.json 2>&1 || echo "CPM_VALIDATION_FAILED=true" >> $GITHUB_ENV
+
+      # Run global.json validation
+      - name: Validate global.json
+        id: globaljson-validation
+        continue-on-error: true
+        run: |
+          pwsh -File .github/scripts/check-global-json.ps1 > globaljson-validation.json 2>&1 || echo "GLOBALJSON_VALIDATION_FAILED=true" >> $GITHUB_ENV
+
+      # Parse and aggregate all .NET validation results
+      - name: Parse .NET validation results
+        id: parse-results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const findings = [];
+
+            // Parse .csproj validation results
+            if (fs.existsSync('csproj-validation.json')) {
+              try {
+                const csprojResult = JSON.parse(fs.readFileSync('csproj-validation.json', 'utf8'));
+                if (csprojResult.findings && csprojResult.findings.length > 0) {
+                  findings.push(...csprojResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse .csproj validation results:', e.message);
+              }
+            }
+
+            // Parse CPM validation results
+            if (fs.existsSync('cpm-validation.json')) {
+              try {
+                const cpmResult = JSON.parse(fs.readFileSync('cpm-validation.json', 'utf8'));
+                if (cpmResult.findings && cpmResult.findings.length > 0) {
+                  findings.push(...cpmResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse CPM validation results:', e.message);
+              }
+            }
+
+            // Parse global.json validation results
+            if (fs.existsSync('globaljson-validation.json')) {
+              try {
+                const globalJsonResult = JSON.parse(fs.readFileSync('globaljson-validation.json', 'utf8'));
+                if (globalJsonResult.findings && globalJsonResult.findings.length > 0) {
+                  findings.push(...globalJsonResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse global.json validation results:', e.message);
+              }
+            }
+
+            // Calculate summary
+            const summary = {
+              total: findings.length,
+              errors: findings.filter(f => f.severity === 'error').length,
+              warnings: findings.filter(f => f.severity === 'warning').length,
+              info: findings.filter(f => f.severity === 'info').length
+            };
+
+            // Determine status
+            const status = summary.errors > 0 ? 'failed' : summary.warnings > 0 ? 'warning' : 'pass';
+
+            const result = {
+              step: 'dotnet-validation',
+              status: status,
+              timestamp: new Date().toISOString(),
+              findings: findings,
+              summary: summary
+            };
+
+            core.setOutput('result', JSON.stringify(result));
+            core.setOutput('status', status);
+
+            console.log('.NET validation complete:');
+            console.log(`  Status: ${status}`);
+            console.log(`  Total findings: ${summary.total}`);
+            console.log(`  Errors: ${summary.errors}, Warnings: ${summary.warnings}, Info: ${summary.info}`);
+
+            return result;
+
+      # Post PR comment with .NET validation results
+      - name: Post .NET validation comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const result = JSON.parse('${{ steps.parse-results.outputs.result }}');
+            const { execSync } = require('child_process');
+
+            const markdown = execSync(
+              `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
+              `-InputJson '${JSON.stringify(result)}' ` +
+              `-StepNumber 6 ` +
+              `-StepName ".NET Validation" ` +
+              `-Emoji "🔧" ` +
+              `-RunUrl "${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}"`,
+              { encoding: 'utf8' }
+            );
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('<!-- pr-validation:step-6 -->')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: markdown
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: markdown
+              });
+            }
+
+      - name: Fail if .NET validation failed
+        if: steps.parse-results.outputs.status == 'failed'
+        run: |
+          echo "::error::.NET validation failed - critical configuration issues found"
+          exit 1
+
+  # ============================================================================
   # Validation Complete Summary
   # ============================================================================
   validation-complete:
     name: "✅ Validation Complete"
     runs-on: ubuntu-latest
-    needs: [authorization, guardrails, quality-checks, code-review, security-review]
+    needs: [authorization, guardrails, quality-checks, code-review, security-review, dotnet-validation]
     if: always()
 
     steps:
@@ -985,6 +1148,9 @@ jobs:
               },
               securityReview: {
                 status: '${{ needs.security-review.result }}'
+              },
+              dotnetValidation: {
+                status: '${{ needs.dotnet-validation.result }}'
               }
             };
 
@@ -1012,6 +1178,10 @@ jobs:
               overallStatus = '❌ Failed';
               failedSteps.push('Security Review');
             }
+            if (results.dotnetValidation.status !== 'success') {
+              overallStatus = '❌ Failed';
+              failedSteps.push('.NET Validation');
+            }
 
             await core.summary
               .addHeading('PR Validation Pipeline Summary')
@@ -1021,7 +1191,8 @@ jobs:
                 ['2️⃣ PR Guardrails', results.guardrails.status === 'success' ? '✅ Passed' : results.guardrails.status === 'failure' ? '❌ Failed' : '⚠️ Skipped'],
                 ['3️⃣ Quality Checks', results.qualityChecks.status === 'success' ? '✅ Passed' : results.qualityChecks.status === 'failure' ? '❌ Failed' : '⚠️ Skipped'],
                 ['4️⃣ Code Review', results.codeReview.status === 'success' ? '✅ Passed' : results.codeReview.status === 'failure' ? '❌ Failed' : '⏭️ Skipped'],
-                ['5️⃣ Security Review', results.securityReview.status === 'success' ? '✅ Passed' : results.securityReview.status === 'failure' ? '❌ Failed' : '⚠️ Skipped']
+                ['5️⃣ Security Review', results.securityReview.status === 'success' ? '✅ Passed' : results.securityReview.status === 'failure' ? '❌ Failed' : '⚠️ Skipped'],
+                ['6️⃣ .NET Validation', results.dotnetValidation.status === 'success' ? '✅ Passed' : results.dotnetValidation.status === 'failure' ? '❌ Failed' : '⚠️ Skipped']
               ])
               .addRaw(`\n**Overall Status:** ${overallStatus}`)
               .addRaw(failedSteps.length > 0 ? `\n**Failed Steps:** ${failedSteps.join(', ')}` : '')
