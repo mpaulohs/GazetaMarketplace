@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "microsoft-learn": {
+      "command": "npx",
+      "args": ["-y", "@microsoft/mcp-server-learn"],
+      "description": "Microsoft Learn documentation server for .NET and Azure",
+      "enabled": true
+    },
+    "docs-mcp": {
+      "command": "npx",
+      "args": ["-y", "docs-mcp-server"],
+      "description": "General documentation context server",
+      "enabled": false
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "context7-mcp"],
+      "description": "Context7 MCP server for code understanding",
+      "enabled": false
+    }
+  }
+}

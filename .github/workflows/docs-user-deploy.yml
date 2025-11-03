@@ -1,0 +1,57 @@
+name: Deploy User Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/docfx-user/**'
+      - '.github/workflows/docs-user-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-user"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Install DocFX
+        run: dotnet tool install -g docfx
+
+      - name: Build User Documentation
+        run: docfx build docs/docfx-user/docfx.json
+
+      - name: Prepare artifact with user/ prefix
+        run: |
+          mkdir -p _site/user
+          cp -r docs/docfx-user/_site/_site/* _site/user/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages-user
+      url: ${{ steps.deployment.outputs.page_url }}user/
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
