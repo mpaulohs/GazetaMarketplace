@@ -81,10 +81,10 @@ All test projects in this repository require these properties:
 ### Current Test Projects
 
 This repository has 4 test projects configured correctly:
-- `tests/Example.Web.Tests/Example.Web.Tests.csproj`
-- `tests/Example.API.Tests/Example.API.Tests.csproj`
-- `tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj`
-- `tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj`
+- `tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj`
+- `tests/ClaudeStack.API.Tests/ClaudeStack.API.Tests.csproj`
+- `tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj`
+- `tests/ClaudeStack.API.Tests.Playwright/ClaudeStack.API.Tests.Playwright.csproj`
 
 All follow the same configuration pattern.
 
@@ -98,10 +98,10 @@ The **preferred way** to run tests with Microsoft.Testing.Platform:
 
 ```bash
 # Run all tests in a specific project
-dotnet run --project tests/Example.Web.Tests/Example.Web.Tests.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj
 
 # Run all tests in a specific project (shorter path)
-dotnet run --project tests/Example.Web.Tests
+dotnet run --project tests/ClaudeStack.Web.Tests
 
 # Run all tests in all projects (from solution root)
 dotnet test
@@ -116,7 +116,7 @@ Use the `--filter` option to run specific tests:
 dotnet test --filter FullyQualifiedName~TestMethod1
 
 # Run all tests in a class
-dotnet test --filter FullyQualifiedName~Example.Web.Tests.Test1
+dotnet test --filter FullyQualifiedName~ClaudeStack.Web.Tests.Test1
 
 # Run tests matching a pattern
 dotnet test --filter Name~Login
@@ -129,7 +129,7 @@ dotnet test --filter TestCategory=Integration
 
 ```bash
 # Navigate to test project
-cd tests/Example.Web.Tests
+cd tests/ClaudeStack.Web.Tests
 
 # Run tests
 dotnet run
@@ -312,7 +312,7 @@ In CI/CD, use `--logger trx` and publish with `PublishTestResults@2` task (Azure
 
 **Solution**: Use `dotnet run --project` instead:
 ```bash
-dotnet run --project tests/Example.Web.Tests
+dotnet run --project tests/ClaudeStack.Web.Tests
 ```
 
 ### Issue: Global.json Overwritten
@@ -374,7 +374,7 @@ ImplicitUsings is disabled in this project (Directory.Build.props).
 
 ```bash
 # Run tests in a project
-dotnet run --project tests/Example.Web.Tests
+dotnet run --project tests/ClaudeStack.Web.Tests
 
 # Run all tests
 dotnet test

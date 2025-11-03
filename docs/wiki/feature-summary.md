@@ -40,7 +40,7 @@
 
 ### MVC Web Application
 
-The `Example.Web` project demonstrates a complete ASP.NET Core MVC implementation with modern patterns and best practices.
+The `ClaudeStack.Web` project demonstrates a complete ASP.NET Core MVC implementation with modern patterns and best practices.
 
 **Pages & Features:**
 
@@ -64,7 +64,7 @@ The `Example.Web` project demonstrates a complete ASP.NET Core MVC implementatio
 
 ### Minimal API Application
 
-The `Example.API` project demonstrates modern ASP.NET Core Minimal API patterns with comprehensive OpenAPI documentation.
+The `ClaudeStack.API` project demonstrates modern ASP.NET Core Minimal API patterns with comprehensive OpenAPI documentation.
 
 **Endpoints:**
 
@@ -99,16 +99,16 @@ Both applications include comprehensive testing infrastructure for unit and end-
 
 | Component | Location | Status | Description |
 |-----------|----------|--------|-------------|
-| Web App Tests | `tests/Example.Web.Tests/` | Stable | MSTest unit tests for MVC controllers and services |
-| API Tests | `tests/Example.API.Tests/` | Stable | MSTest unit tests for API endpoints and business logic |
+| Web App Tests | `tests/ClaudeStack.Web.Tests/` | Stable | MSTest unit tests for MVC controllers and services |
+| API Tests | `tests/ClaudeStack.API.Tests/` | Stable | MSTest unit tests for API endpoints and business logic |
 | Test Runner | Microsoft.Testing.Platform | Stable | Modern async-aware test runner with method-level parallelization |
 
 **Playwright E2E Testing:**
 
 | Component | Location | Status | Description |
 |-----------|----------|--------|-------------|
-| Web App E2E | `tests/Example.Web.Tests.Playwright/` | Stable | Browser automation tests for web workflows |
-| API E2E | `tests/Example.API.Tests.Playwright/` | Stable | HTTP-based API contract and integration tests |
+| Web App E2E | `tests/ClaudeStack.Web.Tests.Playwright/` | Stable | Browser automation tests for web workflows |
+| API E2E | `tests/ClaudeStack.API.Tests.Playwright/` | Stable | HTTP-based API contract and integration tests |
 | Browser Support | Chromium, Firefox, WebKit | Stable | Multi-browser testing capability |
 
 **Test Capabilities:**

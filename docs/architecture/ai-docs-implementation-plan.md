@@ -342,8 +342,8 @@ dotnet build
 
 # Check for XML files
 find src -name "*.xml" -path "*/bin/*"
-# Expected: src/Example.Web/bin/Debug/net10.0/Example.Web.xml
-#           src/Example.API/bin/Debug/net10.0/Example.API.xml
+# Expected: src/ClaudeStack.Web/bin/Debug/net10.0/ClaudeStack.Web.xml
+#           src/ClaudeStack.API/bin/Debug/net10.0/ClaudeStack.API.xml
 ```
 
 **Why CS1591 Suppression:** Prevents build warnings about missing XML comments initially. Remove this suppression in Phase 6 when PR validation enforces documentation.
@@ -709,8 +709,8 @@ dll2mmd --version
 puml-gen --version
 
 # Test on compiled assembly
-dotnet build src/Example.Web/Example.Web.csproj
-dll2mmd src/Example.Web/bin/Debug/net10.0/Example.Web.dll -o test-diagram.md
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
+dll2mmd src/ClaudeStack.Web/bin/Debug/net10.0/ClaudeStack.Web.dll -o test-diagram.md
 
 # Check output
 cat test-diagram.md
@@ -1024,7 +1024,7 @@ apiRules:
 Using the documentation-architect agent and Microsoft Learn MCP server:
 
 "Create comprehensive architecture documentation for this .NET 10 project. Include:
-1. System component overview (Example.Web MVC app, Example.API Minimal API, 4 test projects)
+1. System component overview (ClaudeStack.Web MVC app, ClaudeStack.API Minimal API, 4 test projects)
 2. Mermaid C4 component diagram showing relationships
 3. Sequence diagram for HTTP request flow through MVC
 4. Section on centralized package management (Directory.Packages.props)
@@ -1041,8 +1041,8 @@ Use correct Microsoft terminology for ASP.NET Core, Minimal APIs, and MSTest."
 ## System Components
 
 This system consists of:
-- **Example.Web**: ASP.NET Core MVC application
-- **Example.API**: ASP.NET Core Minimal API
+- **ClaudeStack.Web**: ASP.NET Core MVC application
+- **ClaudeStack.API**: ASP.NET Core Minimal API
 - **Test Projects**: MSTest + Playwright E2E tests
 
 ## Component Diagram
@@ -1050,15 +1050,15 @@ This system consists of:
 ```mermaid
 graph TB
     subgraph Web Layer
-        A[Example.Web<br/>ASP.NET Core MVC]
-        B[Example.API<br/>Minimal API]
+        A[ClaudeStack.Web<br/>ASP.NET Core MVC]
+        B[ClaudeStack.API<br/>Minimal API]
     end
 
     subgraph Test Layer
-        C[Example.Web.Tests<br/>MSTest]
-        D[Example.API.Tests<br/>MSTest]
-        E[Example.Web.Tests.Playwright<br/>E2E]
-        F[Example.API.Tests.Playwright<br/>E2E]
+        C[ClaudeStack.Web.Tests<br/>MSTest]
+        D[ClaudeStack.API.Tests<br/>MSTest]
+        E[ClaudeStack.Web.Tests.Playwright<br/>E2E]
+        F[ClaudeStack.API.Tests.Playwright<br/>E2E]
     end
 
     C --> A
@@ -1072,7 +1072,7 @@ graph TB
 ```mermaid
 sequenceDiagram
     participant Client
-    participant MVC as Example.Web
+    participant MVC as ClaudeStack.Web
     participant Controller
     participant View
 
@@ -1095,8 +1095,8 @@ sequenceDiagram
 **Commands:**
 ```bash
 # Build projects first
-dotnet build src/Example.Web/Example.Web.csproj
-dotnet build src/Example.API/Example.API.csproj
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
+dotnet build src/ClaudeStack.API/ClaudeStack.API.csproj
 
 # Generate diagrams
 make diagrams
@@ -1114,13 +1114,13 @@ ls -lh docs/docfx-developer/diagrams/
 
 ## Class Diagrams
 
-### Example.Web Class Structure
+### ClaudeStack.Web Class Structure
 
-![Example.Web Classes](../diagrams/Example.Web-mermaid.md)
+![ClaudeStack.Web Classes](../diagrams/ClaudeStack.Web-mermaid.md)
 
-### Example.API Class Structure
+### ClaudeStack.API Class Structure
 
-![Example.API Classes](../diagrams/Example.API-mermaid.md)
+![ClaudeStack.API Classes](../diagrams/ClaudeStack.API-mermaid.md)
 
 ## Key Classes
 
@@ -1133,7 +1133,7 @@ For detailed API reference, see the [API Documentation](../api/index.html).
 
 **AI Prompt:**
 ```
-"Analyze the Example.Web and Example.API projects and create domain model documentation.
+"Analyze the ClaudeStack.Web and ClaudeStack.API projects and create domain model documentation.
 Include entity descriptions, relationships, and Mermaid ER diagrams.
 Link to API reference using @NamespaceName.ClassName syntax."
 ```
@@ -1162,13 +1162,13 @@ erDiagram
 
 [Description, purpose, key properties]
 
-See API Reference: @Example.Web.Models.Entity1
+See API Reference: @ClaudeStack.Web.Models.Entity1
 
 ### [Entity 2]
 
 [Description, purpose, key properties]
 
-See API Reference: @Example.Web.Models.Entity2
+See API Reference: @ClaudeStack.Web.Models.Entity2
 ```
 
 #### Task 3.6: Test Local Developer Docs Build (Small - 30 minutes)
@@ -1193,7 +1193,7 @@ make docs-serve
 **Validation Checklist:**
 - [ ] Homepage loads
 - [ ] Articles menu shows architecture, domain-models, api-guide
-- [ ] API reference shows Example.Web, Example.API namespaces
+- [ ] API reference shows ClaudeStack.Web, ClaudeStack.API namespaces
 - [ ] Mermaid diagrams render correctly
 - [ ] Search works and returns results
 - [ ] Navigation sidebar functional
@@ -2308,7 +2308,7 @@ pwsh .docgen/setup-mcp.ps1
 #### Task 8.2: Test AI-Assisted API Documentation (Small - 30 minutes)
 
 **Workflow:**
-1. Select C# class (e.g., `src/Example.Web/Controllers/HomeController.cs`)
+1. Select C# class (e.g., `src/ClaudeStack.Web/Controllers/HomeController.cs`)
 2. Prompt Claude: "Generate XML documentation comments for this class using Microsoft Learn conventions"
 3. Review generated comments
 4. Commit if accurate
@@ -2330,7 +2330,7 @@ Use correct ASP.NET Core MVC terminology from Microsoft Learn.
 **Validation:**
 ```bash
 # Rebuild to regenerate XML
-dotnet build src/Example.Web/Example.Web.csproj
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
 
 # Rebuild developer docs
 make docs-developer
@@ -2355,8 +2355,8 @@ Using the documentation-architect agent:
 Create comprehensive architecture documentation for this .NET 10 project.
 
 Analyze:
-- Example.Web (ASP.NET Core MVC application)
-- Example.API (ASP.NET Core Minimal API)
+- ClaudeStack.Web (ASP.NET Core MVC application)
+- ClaudeStack.API (ASP.NET Core Minimal API)
 - Test projects (MSTest + Playwright)
 - Directory.Build.props
 - Directory.Packages.props

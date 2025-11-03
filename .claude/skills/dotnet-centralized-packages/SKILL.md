@@ -129,7 +129,7 @@ CPM works alongside `Directory.Build.props` which defines shared MSBuild propert
 <!-- Directory.Packages.props -->
 <PackageVersion Include="MSTest" Version="4.0.0-preview.25465.3" />
 
-<!-- tests/Example.Web.Tests/Example.Web.Tests.csproj -->
+<!-- tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj -->
 <PackageReference Include="MSTest" />
 ```
 
@@ -138,7 +138,7 @@ CPM works alongside `Directory.Build.props` which defines shared MSBuild propert
 <!-- Directory.Packages.props -->
 <PackageVersion Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.0-rc.2.25502.107" />
 
-<!-- src/Example.Web/Example.Web.csproj -->
+<!-- src/ClaudeStack.Web/ClaudeStack.Web.csproj -->
 <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" />
 ```
 
@@ -170,7 +170,7 @@ When using `dotnet add package`, you MUST add the version separately:
 # <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
 
 # Step 2: Add reference to project
-dotnet add src/Example.Web/Example.Web.csproj package Newtonsoft.Json
+dotnet add src/ClaudeStack.Web/ClaudeStack.Web.csproj package Newtonsoft.Json
 
 # OR manually add to .csproj:
 # <PackageReference Include="Newtonsoft.Json" />

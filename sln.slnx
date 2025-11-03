@@ -1,12 +1,12 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Example.API/Example.API.csproj" />
-    <Project Path="src/Example.Web/Example.Web.csproj" />
+    <Project Path="src/ClaudeStack.API/ClaudeStack.API.csproj" />
+    <Project Path="src/ClaudeStack.Web/ClaudeStack.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj" />
-    <Project Path="tests/Example.API.Tests/Example.API.Tests.csproj" />
-    <Project Path="tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj" />
-    <Project Path="tests/Example.Web.Tests/Example.Web.Tests.csproj" />
+    <Project Path="tests/ClaudeStack.API.Tests.Playwright/ClaudeStack.API.Tests.Playwright.csproj" />
+    <Project Path="tests/ClaudeStack.API.Tests/ClaudeStack.API.Tests.csproj" />
+    <Project Path="tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj" />
+    <Project Path="tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj" />
   </Folder>
 </Solution>

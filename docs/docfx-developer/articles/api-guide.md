@@ -4,7 +4,7 @@
 
 This guide provides an overview of the public APIs in the .NET 10 Project Example. The project consists of two main applications with minimal initial implementations designed as templates for future development.
 
-## Example.Web (MVC Application)
+## ClaudeStack.Web (MVC Application)
 
 ### Class Structure
 
@@ -44,9 +44,9 @@ classDiagram
 
 Entry point for the ASP.NET Core MVC application. Uses the Startup pattern for configuration.
 
-**Namespace**: Example.Web
+**Namespace**: ClaudeStack.Web
 
-**See API Reference**: @Example.Web.Program
+**See API Reference**: @ClaudeStack.Web.Program
 
 #### Startup
 
@@ -56,9 +56,9 @@ Configures services and the HTTP request pipeline for the MVC application.
 - `ConfigureServices`: Registers services with dependency injection
 - `Configure`: Sets up middleware pipeline
 
-**Namespace**: Example.Web
+**Namespace**: ClaudeStack.Web
 
-**See API Reference**: @Example.Web.Startup
+**See API Reference**: @ClaudeStack.Web.Startup
 
 #### HomeController
 
@@ -69,9 +69,9 @@ Default MVC controller providing home page, privacy page, and error handling.
 - `Privacy()`: Returns the privacy policy view
 - `Error()`: Returns the error view with request ID
 
-**Namespace**: Example.Web.Controllers
+**Namespace**: ClaudeStack.Web.Controllers
 
-**See API Reference**: @Example.Web.Controllers.HomeController
+**See API Reference**: @ClaudeStack.Web.Controllers.HomeController
 
 #### ErrorViewModel
 
@@ -81,11 +81,11 @@ View model for the error page, contains request ID tracking.
 - `RequestId`: Unique identifier for the request
 - `ShowRequestId`: Whether to display the request ID
 
-**Namespace**: Example.Web.Models
+**Namespace**: ClaudeStack.Web.Models
 
-**See API Reference**: @Example.Web.Models.ErrorViewModel
+**See API Reference**: @ClaudeStack.Web.Models.ErrorViewModel
 
-## Example.API (Minimal API Application)
+## ClaudeStack.API (Minimal API Application)
 
 ### Class Structure
 
@@ -114,9 +114,9 @@ Entry point for the ASP.NET Core Minimal API application. Uses top-level stateme
 **Endpoints**:
 - `GET /weatherforecast`: Returns sample weather forecast data
 
-**Namespace**: Example.API
+**Namespace**: ClaudeStack.API
 
-**See API Reference**: @Example.API.Program
+**See API Reference**: @ClaudeStack.API.Program
 
 #### WeatherForecast (if applicable)
 
@@ -124,7 +124,7 @@ Data model for weather forecast responses (commonly included in Minimal API temp
 
 ## Design Patterns
 
-### MVC Pattern (Example.Web)
+### MVC Pattern (ClaudeStack.Web)
 
 The MVC application follows the traditional Model-View-Controller pattern:
 
@@ -137,7 +137,7 @@ graph LR
     D -->|HTML Response| A
 ```
 
-### Minimal API Pattern (Example.API)
+### Minimal API Pattern (ClaudeStack.API)
 
 The Minimal API uses endpoint routing with top-level statements:
 
@@ -163,7 +163,7 @@ graph LR
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 
-namespace Example.Web.Controllers
+namespace ClaudeStack.Web.Controllers
 {
     public class ProductsController : Controller
     {
@@ -177,7 +177,7 @@ namespace Example.Web.Controllers
 
 ### To Add a New Minimal API Endpoint
 
-1. Open `Program.cs` in Example.API
+1. Open `Program.cs` in ClaudeStack.API
 2. Add endpoint mapping using `app.MapGet()`, `app.MapPost()`, etc.
 3. Define request/response models as needed
 

@@ -55,21 +55,21 @@ Thank you for your interest in contributing! This document provides guidelines a
 
 4. **Install Playwright browsers** (first time only):
    ```powershell
-   pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
-   pwsh -Command "cd tests/Example.API.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+   pwsh -Command "cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+   pwsh -Command "cd tests/ClaudeStack.API.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
    ```
 
 ### Running Applications
 
 **MVC Application:**
 ```bash
-dotnet run --project src/Example.Web/Example.Web.csproj
+dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj
 # Navigate to https://localhost:5001
 ```
 
 **API Application:**
 ```bash
-dotnet run --project src/Example.API/Example.API.csproj
+dotnet run --project src/ClaudeStack.API/ClaudeStack.API.csproj
 # Navigate to https://localhost:7001/swagger
 ```
 
@@ -296,7 +296,7 @@ dotnet new mstest -o tests/YourProject.Tests
 dotnet test
 
 # Specific project (using Microsoft.Testing.Platform)
-dotnet run --project tests/Example.Web.Tests/Example.Web.Tests.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj
 
 # Single test
 dotnet test --filter FullyQualifiedName~TestMethod1
@@ -307,13 +307,13 @@ dotnet test --filter FullyQualifiedName~TestMethod1
 **First-time setup:**
 
 ```powershell
-pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
 ```
 
 **Run Playwright tests:**
 
 ```bash
-dotnet run --project tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj
 ```
 
 ### Test Parallelization
@@ -333,13 +333,13 @@ Tests run in parallel at the method level (configured in `MSTestSettings.cs`):
 ├── .github/              # GitHub workflows, scripts, templates
 ├── dev/                  # Development documentation
 ├── src/
-│   ├── Example.Web/      # ASP.NET Core MVC application
-│   └── Example.API/      # ASP.NET Core Web API (Minimal APIs)
+│   ├── ClaudeStack.Web/      # ASP.NET Core MVC application
+│   └── ClaudeStack.API/      # ASP.NET Core Web API (Minimal APIs)
 └── tests/
-    ├── Example.Web.Tests/              # Unit tests for MVC
-    ├── Example.Web.Tests.Playwright/   # E2E tests for MVC
-    ├── Example.API.Tests/              # Unit tests for API
-    └── Example.API.Tests.Playwright/   # E2E tests for API
+    ├── ClaudeStack.Web.Tests/              # Unit tests for MVC
+    ├── ClaudeStack.Web.Tests.Playwright/   # E2E tests for MVC
+    ├── ClaudeStack.API.Tests/              # Unit tests for API
+    └── ClaudeStack.API.Tests.Playwright/   # E2E tests for API
 ```
 
 ### Configuration Files

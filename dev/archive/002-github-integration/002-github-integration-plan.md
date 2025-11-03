@@ -862,8 +862,8 @@ CODE_OF_CONDUCT.md                 # Code of conduct
 **Priority:** P3 (Low)
 
 **Acceptance Criteria:**
-- [ ] Dockerfile created for Example.Web
-- [ ] Dockerfile created for Example.API
+- [ ] Dockerfile created for ClaudeStack.Web
+- [ ] Dockerfile created for ClaudeStack.API
 - [ ] Multi-stage build for optimized images
 - [ ] Images built in CI workflow
 - [ ] Images tagged with:

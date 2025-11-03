@@ -48,7 +48,7 @@ Implementation of comprehensive GitHub integration for the .NET 10 project examp
 - `CLAUDE.md` - Development guidance with Claude Code infrastructure docs
 - `.claude/` - Claude Code infrastructure (skills, hooks, agents)
 - `dev/active/` and `dev/archive/` - Development documentation
-- `src/` - Example.Web (MVC) and Example.API (Minimal APIs)
+- `src/` - ClaudeStack.Web (MVC) and ClaudeStack.API (Minimal APIs)
 - `tests/` - MSTest + Playwright tests
 - `Directory.Build.props` - Shared MSBuild properties
 - `Directory.Packages.props` - Centralized Package Management

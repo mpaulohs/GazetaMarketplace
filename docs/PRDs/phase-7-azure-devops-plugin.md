@@ -774,7 +774,7 @@ stages:
 **Test Scenarios:**
 
 1. **Test Scenario 1: Developer Docs Deployment**
-   - Make change to `src/Example.Web/Controllers/HomeController.cs`
+   - Make change to `src/ClaudeStack.Web/Controllers/HomeController.cs`
    - Push to main branch
    - Verify pipeline triggers
    - Verify build succeeds

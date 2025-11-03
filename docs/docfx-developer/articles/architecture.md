@@ -6,9 +6,9 @@ This document provides a comprehensive overview of the .NET 10.0 RC 2 example pr
 
 The net10-project-example demonstrates a modern .NET full-stack architecture with two primary web applications and comprehensive testing infrastructure. The project showcases best practices for building maintainable, testable ASP.NET Core applications using the latest .NET 10 features.
 
-**Example.Web** is a traditional ASP.NET Core MVC application that follows the Model-View-Controller pattern. It uses the Startup class pattern for configuration, implements controller-based routing with Razor views, and includes runtime compilation support for rapid development iterations. The application demonstrates classic web development patterns suitable for server-rendered web applications with rich UI requirements.
+**ClaudeStack.Web** is a traditional ASP.NET Core MVC application that follows the Model-View-Controller pattern. It uses the Startup class pattern for configuration, implements controller-based routing with Razor views, and includes runtime compilation support for rapid development iterations. The application demonstrates classic web development patterns suitable for server-rendered web applications with rich UI requirements.
 
-**Example.API** is a lightweight ASP.NET Core Minimal API application that embraces the simplified hosting model introduced in .NET 6 and refined in subsequent versions. It uses top-level statements, inline endpoint definitions, and built-in OpenAPI support for API documentation. This architecture is ideal for microservices, RESTful APIs, and scenarios where minimal ceremony and maximum performance are priorities.
+**ClaudeStack.API** is a lightweight ASP.NET Core Minimal API application that embraces the simplified hosting model introduced in .NET 6 and refined in subsequent versions. It uses top-level statements, inline endpoint definitions, and built-in OpenAPI support for API documentation. This architecture is ideal for microservices, RESTful APIs, and scenarios where minimal ceremony and maximum performance are priorities.
 
 Both applications are supported by a comprehensive testing strategy that includes unit tests using MSTest with the modern Microsoft.Testing.Platform runner, and end-to-end tests using Playwright for cross-browser validation. The project demonstrates enterprise-grade development practices including centralized configuration management, consistent code standards, and automated quality assurance.
 
@@ -17,18 +17,18 @@ Both applications are supported by a comprehensive testing strategy that include
 ```mermaid
 graph TB
     subgraph "Web Layer"
-        A[Example.Web<br/>ASP.NET Core MVC<br/>Startup Pattern]
-        B[Example.API<br/>Minimal API<br/>Top-Level Statements]
+        A[ClaudeStack.Web<br/>ASP.NET Core MVC<br/>Startup Pattern]
+        B[ClaudeStack.API<br/>Minimal API<br/>Top-Level Statements]
     end
 
     subgraph "Test Layer - Unit Tests"
-        C[Example.Web.Tests<br/>MSTest + Testing.Platform]
-        D[Example.API.Tests<br/>MSTest + Testing.Platform]
+        C[ClaudeStack.Web.Tests<br/>MSTest + Testing.Platform]
+        D[ClaudeStack.API.Tests<br/>MSTest + Testing.Platform]
     end
 
     subgraph "Test Layer - E2E Tests"
-        E[Example.Web.Tests.Playwright<br/>Browser Automation]
-        F[Example.API.Tests.Playwright<br/>API E2E Testing]
+        E[ClaudeStack.Web.Tests.Playwright<br/>Browser Automation]
+        F[ClaudeStack.API.Tests.Playwright<br/>API E2E Testing]
     end
 
     subgraph "Build Configuration"
@@ -278,7 +278,7 @@ Tests are executed as standalone applications:
 
 ```bash
 # Run as executable (recommended with Microsoft.Testing.Platform)
-dotnet run --project tests/Example.Web.Tests/Example.Web.Tests.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj
 
 # Also works with traditional dotnet test
 dotnet test
@@ -345,7 +345,7 @@ public class Test1 : PageTest
 After creating a Playwright test project, browsers must be installed:
 
 ```powershell
-pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
 ```
 
 **Capabilities:**
@@ -435,7 +435,7 @@ However, overrides should be rare and well-justified to maintain consistency.
 ```
 net10-project-example/
 ├── src/
-│   ├── Example.Web/                        # ASP.NET Core MVC Application
+│   ├── ClaudeStack.Web/                        # ASP.NET Core MVC Application
 │   │   ├── Controllers/
 │   │   │   └── HomeController.cs          # MVC controllers
 │   │   ├── Views/
@@ -450,32 +450,32 @@ net10-project-example/
 │   │   ├── wwwroot/                       # Static files (CSS, JS, images)
 │   │   ├── Program.cs                     # Application entry point
 │   │   ├── Startup.cs                     # Service configuration & middleware
-│   │   └── Example.Web.csproj
+│   │   └── ClaudeStack.Web.csproj
 │   │
-│   └── Example.API/                        # ASP.NET Core Minimal API
+│   └── ClaudeStack.API/                        # ASP.NET Core Minimal API
 │       ├── Program.cs                     # Top-level statements, endpoint definitions
-│       └── Example.API.csproj
+│       └── ClaudeStack.API.csproj
 │
 ├── tests/
-│   ├── Example.Web.Tests/                 # Unit tests for MVC application
+│   ├── ClaudeStack.Web.Tests/                 # Unit tests for MVC application
 │   │   ├── MSTestSettings.cs              # Test parallelization configuration
 │   │   ├── Test1.cs                       # Sample unit tests
-│   │   └── Example.Web.Tests.csproj
+│   │   └── ClaudeStack.Web.Tests.csproj
 │   │
-│   ├── Example.API.Tests/                 # Unit tests for Minimal API
+│   ├── ClaudeStack.API.Tests/                 # Unit tests for Minimal API
 │   │   ├── MSTestSettings.cs
 │   │   ├── Test1.cs
-│   │   └── Example.API.Tests.csproj
+│   │   └── ClaudeStack.API.Tests.csproj
 │   │
-│   ├── Example.Web.Tests.Playwright/      # E2E tests for MVC application
+│   ├── ClaudeStack.Web.Tests.Playwright/      # E2E tests for MVC application
 │   │   ├── MSTestSettings.cs
 │   │   ├── Test1.cs                       # Browser automation tests
-│   │   └── Example.Web.Tests.Playwright.csproj
+│   │   └── ClaudeStack.Web.Tests.Playwright.csproj
 │   │
-│   └── Example.API.Tests.Playwright/      # E2E tests for Minimal API
+│   └── ClaudeStack.API.Tests.Playwright/      # E2E tests for Minimal API
 │       ├── MSTestSettings.cs
 │       ├── Test1.cs
-│       └── Example.API.Tests.Playwright.csproj
+│       └── ClaudeStack.API.Tests.Playwright.csproj
 │
 ├── Directory.Build.props                   # Shared MSBuild properties (all projects)
 ├── Directory.Packages.props                # Centralized NuGet package versions (CPM)
@@ -565,8 +565,8 @@ dotnet restore
 dotnet build
 
 # Install Playwright browsers (one-time setup)
-pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
-pwsh -Command "cd tests/Example.API.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.API.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
 ```
 
 ### Building
@@ -576,8 +576,8 @@ pwsh -Command "cd tests/Example.API.Tests.Playwright/bin/Debug/net10.0; ./playwr
 dotnet build
 
 # Build specific project
-dotnet build src/Example.Web/Example.Web.csproj
-dotnet build src/Example.API/Example.API.csproj
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
+dotnet build src/ClaudeStack.API/ClaudeStack.API.csproj
 
 # Build in Release configuration
 dotnet build --configuration Release
@@ -590,16 +590,16 @@ dotnet clean
 
 ```bash
 # Run MVC application
-dotnet run --project src/Example.Web/Example.Web.csproj
+dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj
 # Navigate to: https://localhost:5001 (or port shown in console)
 
 # Run Minimal API application
-dotnet run --project src/Example.API/Example.API.csproj
+dotnet run --project src/ClaudeStack.API/ClaudeStack.API.csproj
 # Navigate to: https://localhost:5001/weatherforecast
 # OpenAPI docs: https://localhost:5001/openapi/v1.json (development only)
 
 # Run with specific launch profile
-dotnet run --project src/Example.Web/Example.Web.csproj --launch-profile "https"
+dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj --launch-profile "https"
 ```
 
 ### Running Tests
@@ -609,10 +609,10 @@ dotnet run --project src/Example.Web/Example.Web.csproj --launch-profile "https"
 dotnet test
 
 # Run specific test project using Microsoft.Testing.Platform (recommended)
-dotnet run --project tests/Example.Web.Tests/Example.Web.Tests.csproj
-dotnet run --project tests/Example.API.Tests/Example.API.Tests.csproj
-dotnet run --project tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj
-dotnet run --project tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj
+dotnet run --project tests/ClaudeStack.API.Tests/ClaudeStack.API.Tests.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj
+dotnet run --project tests/ClaudeStack.API.Tests.Playwright/ClaudeStack.API.Tests.Playwright.csproj
 
 # Run with test filter
 dotnet test --filter FullyQualifiedName~TestMethod1
@@ -645,7 +645,7 @@ dotnet test --collect:"XPlat Code Coverage"
    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
 
    # Step 2: Add reference (without version) to project file
-   dotnet add src/Example.Web/Example.Web.csproj package Newtonsoft.Json
+   dotnet add src/ClaudeStack.Web/ClaudeStack.Web.csproj package Newtonsoft.Json
    ```
 
 3. **Creating New Test Projects:**
@@ -662,7 +662,7 @@ dotnet test --collect:"XPlat Code Coverage"
    - **MVC Application**: Razor views support hot reload (enabled via `RuntimeCompilation`)
    - **Code Changes**: Use `dotnet watch run` for automatic restart on C# changes
    ```bash
-   dotnet watch run --project src/Example.Web/Example.Web.csproj
+   dotnet watch run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj
    ```
 
 ### Troubleshooting Common Issues
@@ -670,7 +670,7 @@ dotnet test --collect:"XPlat Code Coverage"
 **Issue**: Tests fail with "Playwright browsers not found"
 ```bash
 # Solution: Install browsers
-pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
 ```
 
 **Issue**: Build errors about package versions

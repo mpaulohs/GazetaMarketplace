@@ -190,8 +190,8 @@ apiRules:
 ## System Components
 
 This system consists of:
-- **Example.Web**: ASP.NET Core MVC application
-- **Example.API**: ASP.NET Core Minimal API
+- **ClaudeStack.Web**: ASP.NET Core MVC application
+- **ClaudeStack.API**: ASP.NET Core Minimal API
 - **Test Projects**: MSTest + Playwright E2E tests
 
 ## Component Diagram
@@ -199,15 +199,15 @@ This system consists of:
 ```mermaid
 graph TB
     subgraph Web Layer
-        A[Example.Web<br/>ASP.NET Core MVC]
-        B[Example.API<br/>Minimal API]
+        A[ClaudeStack.Web<br/>ASP.NET Core MVC]
+        B[ClaudeStack.API<br/>Minimal API]
     end
 
     subgraph Test Layer
-        C[Example.Web.Tests<br/>MSTest]
-        D[Example.API.Tests<br/>MSTest]
-        E[Example.Web.Tests.Playwright<br/>E2E]
-        F[Example.API.Tests.Playwright<br/>E2E]
+        C[ClaudeStack.Web.Tests<br/>MSTest]
+        D[ClaudeStack.API.Tests<br/>MSTest]
+        E[ClaudeStack.Web.Tests.Playwright<br/>E2E]
+        F[ClaudeStack.API.Tests.Playwright<br/>E2E]
     end
 
     C --> A
@@ -221,7 +221,7 @@ graph TB
 ```mermaid
 sequenceDiagram
     participant Client
-    participant MVC as Example.Web
+    participant MVC as ClaudeStack.Web
     participant Controller
     participant View
 
@@ -244,7 +244,7 @@ sequenceDiagram
 Using the documentation-architect agent and Microsoft Learn MCP server:
 
 "Create comprehensive architecture documentation for this .NET 10 project. Include:
-1. System component overview (Example.Web MVC app, Example.API Minimal API, 4 test projects)
+1. System component overview (ClaudeStack.Web MVC app, ClaudeStack.API Minimal API, 4 test projects)
 2. Mermaid C4 component diagram showing relationships
 3. Sequence diagram for HTTP request flow through MVC
 4. Section on centralized package management (Directory.Packages.props)
@@ -261,8 +261,8 @@ Use correct Microsoft terminology for ASP.NET Core, Minimal APIs, and MSTest."
 **Script**: `make diagrams`
 
 **Acceptance Criteria**:
-- [ ] Mermaid class diagrams generated for Example.Web
-- [ ] Mermaid class diagrams generated for Example.API
+- [ ] Mermaid class diagrams generated for ClaudeStack.Web
+- [ ] Mermaid class diagrams generated for ClaudeStack.API
 - [ ] Output in `docs/docfx-developer/diagrams/`
 - [ ] Diagrams referenced from `articles/api-guide.md` (create this article)
 - [ ] PlantUML diagrams generated as alternative format
@@ -270,8 +270,8 @@ Use correct Microsoft terminology for ASP.NET Core, Minimal APIs, and MSTest."
 **Implementation**:
 ```bash
 # Build projects first
-dotnet build src/Example.Web/Example.Web.csproj
-dotnet build src/Example.API/Example.API.csproj
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
+dotnet build src/ClaudeStack.API/ClaudeStack.API.csproj
 
 # Generate diagrams
 make diagrams
@@ -289,13 +289,13 @@ ls -lh docs/docfx-developer/diagrams/
 
 ## Class Diagrams
 
-### Example.Web Class Structure
+### ClaudeStack.Web Class Structure
 
-![Example.Web Classes](../diagrams/Example.Web-mermaid.md)
+![ClaudeStack.Web Classes](../diagrams/ClaudeStack.Web-mermaid.md)
 
-### Example.API Class Structure
+### ClaudeStack.API Class Structure
 
-![Example.API Classes](../diagrams/Example.API-mermaid.md)
+![ClaudeStack.API Classes](../diagrams/ClaudeStack.API-mermaid.md)
 
 ## Key Classes
 
@@ -339,18 +339,18 @@ erDiagram
 
 [Description, purpose, key properties]
 
-See API Reference: @Example.Web.Models.Entity1
+See API Reference: @ClaudeStack.Web.Models.Entity1
 
 ### [Entity 2]
 
 [Description, purpose, key properties]
 
-See API Reference: @Example.Web.Models.Entity2
+See API Reference: @ClaudeStack.Web.Models.Entity2
 ```
 
 **AI Prompt**:
 ```
-"Analyze the Example.Web and Example.API projects and create domain model documentation.
+"Analyze the ClaudeStack.Web and ClaudeStack.API projects and create domain model documentation.
 Include entity descriptions, relationships, and Mermaid ER diagrams.
 Link to API reference using @NamespaceName.ClassName syntax."
 ```
@@ -388,7 +388,7 @@ make docs-serve
 # Test:
 # - Homepage loads
 # - Articles menu shows architecture, domain-models
-# - API reference shows Example.Web, Example.API
+# - API reference shows ClaudeStack.Web, ClaudeStack.API
 # - Mermaid diagrams render
 # - Search works
 ```

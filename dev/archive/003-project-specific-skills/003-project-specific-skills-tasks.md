@@ -103,8 +103,8 @@
 ## Phase 3: Playwright .NET Testing Skill (90 min)
 
 ### Research & Planning
-- [ ] 3.1.1 Examine Example.Web.Tests.Playwright project
-- [ ] 3.1.2 Examine Example.API.Tests.Playwright project
+- [ ] 3.1.1 Examine ClaudeStack.Web.Tests.Playwright project
+- [ ] 3.1.2 Examine ClaudeStack.API.Tests.Playwright project
 - [ ] 3.1.3 Review .csproj configurations
 - [ ] 3.1.4 Document browser installation process
 - [ ] 3.1.5 Review Test1.cs patterns in both projects
@@ -156,7 +156,7 @@
 ## Phase 5: Minimal APIs Skill (75 min)
 
 ### Research & Planning
-- [ ] 5.1.1 Examine Example.API Program.cs
+- [ ] 5.1.1 Examine ClaudeStack.API Program.cs
 - [ ] 5.1.2 Document MapGet, MapPost, MapPut, MapDelete patterns
 - [ ] 5.1.3 Review route group usage
 - [ ] 5.1.4 Identify parameter binding patterns

@@ -64,7 +64,7 @@ pwsh .docgen/setup-mcp.ps1
 **Purpose**: Validate that AI can generate accurate API documentation with Microsoft Learn context.
 
 **Acceptance Criteria**:
-- [ ] Select a C# class (e.g., `src/Example.Web/Controllers/HomeController.cs`)
+- [ ] Select a C# class (e.g., `src/ClaudeStack.Web/Controllers/HomeController.cs`)
 - [ ] Prompt Claude: "Generate XML documentation comments for this class using Microsoft Learn conventions"
 - [ ] AI generates comments using MCP server context
 - [ ] Comments use correct .NET terminology
@@ -119,7 +119,7 @@ public class HomeController : Controller
 **Validation**:
 ```bash
 # Rebuild to regenerate XML
-dotnet build src/Example.Web/Example.Web.csproj
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
 
 # Rebuild developer docs
 make docs-developer
@@ -154,8 +154,8 @@ Using the documentation-architect agent:
 Create comprehensive architecture documentation for this .NET 10 project located in src/.
 
 Analyze:
-- Example.Web (ASP.NET Core MVC application)
-- Example.API (ASP.NET Core Minimal API)
+- ClaudeStack.Web (ASP.NET Core MVC application)
+- ClaudeStack.API (ASP.NET Core Minimal API)
 - Test projects (MSTest + Playwright)
 - Directory.Build.props (centralized configuration)
 - Directory.Packages.props (centralized package management)

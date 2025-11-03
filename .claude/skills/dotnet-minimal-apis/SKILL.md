@@ -50,9 +50,9 @@ Minimal APIs are a simplified way to create HTTP APIs in ASP.NET Core without co
 
 ## Project Structure
 
-### Example.API Project
+### ClaudeStack.API Project
 
-This repository includes `src/Example.API` demonstrating minimal API patterns.
+This repository includes `src/ClaudeStack.API` demonstrating minimal API patterns.
 
 **Current Program.cs structure:**
 ```csharp
@@ -129,7 +129,7 @@ app.MapDelete("/users/{id}", (int id) => Results.NoContent());
 
 ### Example from Project
 
-From `src/Example.API/Program.cs`:
+From `src/ClaudeStack.API/Program.cs`:
 
 ```csharp
 app.MapGet("/weatherforecast", () =>
@@ -332,7 +332,7 @@ record User(int Id, string Name, string Email);
 record CreateUserRequest(string Name, string Email);
 ```
 
-Example.API uses this pattern:
+ClaudeStack.API uses this pattern:
 ```csharp
 record WeatherForecast(DateOnly Date, int TemperatureC, string Summary);
 ```

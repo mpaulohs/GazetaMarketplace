@@ -115,8 +115,8 @@ docs/docfx-developer/
 
 The system consists of three primary components:
 
-1. **Example.Web** - ASP.NET Core MVC application serving the user interface
-2. **Example.API** - Minimal API providing REST endpoints for data operations
+1. **ClaudeStack.Web** - ASP.NET Core MVC application serving the user interface
+2. **ClaudeStack.API** - Minimal API providing REST endpoints for data operations
 3. **Test Projects** - MSTest unit tests and Playwright end-to-end tests
 
 ## Component Diagram
@@ -416,7 +416,7 @@ The **documentation-architect** agent integrates with MCP servers for intelligen
 ### Example Prompts
 
 ```
-"Create comprehensive architecture documentation for the Example.Web and Example.API
+"Create comprehensive architecture documentation for the ClaudeStack.Web and ClaudeStack.API
 projects. Include system components, interaction flows with Mermaid diagrams, and
 key design decisions. Reference the centralized package management strategy."
 

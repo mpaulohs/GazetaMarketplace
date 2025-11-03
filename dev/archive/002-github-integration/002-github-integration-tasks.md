@@ -68,7 +68,7 @@
 - [x] Task 7.1: Create multi-platform build workflow (dotnet-ci.yml with Linux/Windows/macOS matrix)
 - [x] Task 7.2: Add test coverage reporting (Codecov or similar)
 - [x] Task 7.3: Add build artifact publishing (binaries, NuGet packages)
-- [x] Task 7.4: Add Docker image build (optional - Example.Web and Example.API containers)
+- [x] Task 7.4: Add Docker image build (optional - ClaudeStack.Web and ClaudeStack.API containers)
 
 **Checkpoint:** ✅ CI builds pass on all platforms, artifacts published
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a .NET 10.0 RC 2 example project demonstrating full-stack architecture with centralized package management. The project includes ASP.NET Core MVC and Minimal API applications, each with corresponding unit tests (MSTest) and end-to-end tests (Playwright).
+ClaudeStack.net is a .NET 10.0 RC 2 template project with integrated Claude Code AI assistance, demonstrating full-stack architecture with centralized package management. The project includes ASP.NET Core MVC and Minimal API applications, each with corresponding unit tests (MSTest) and end-to-end tests (Playwright).
 
 ## Build & Test Commands
 
@@ -14,17 +14,17 @@ This is a .NET 10.0 RC 2 example project demonstrating full-stack architecture w
 dotnet build
 
 # Build specific project
-dotnet build src/Example.Web/Example.Web.csproj
-dotnet build src/Example.API/Example.API.csproj
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
+dotnet build src/ClaudeStack.API/ClaudeStack.API.csproj
 ```
 
 ### Running Applications
 ```bash
 # Run MVC application
-dotnet run --project src/Example.Web/Example.Web.csproj
+dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj
 
 # Run API application
-dotnet run --project src/Example.API/Example.API.csproj
+dotnet run --project src/ClaudeStack.API/ClaudeStack.API.csproj
 ```
 
 ### Running Tests
@@ -33,12 +33,12 @@ dotnet run --project src/Example.API/Example.API.csproj
 dotnet test
 
 # Run specific test project (using Microsoft.Testing.Platform)
-dotnet run --project tests/Example.Web.Tests/Example.Web.Tests.csproj
-dotnet run --project tests/Example.API.Tests/Example.API.Tests.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj
+dotnet run --project tests/ClaudeStack.API.Tests/ClaudeStack.API.Tests.csproj
 
 # Run Playwright tests
-dotnet run --project tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj
-dotnet run --project tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj
+dotnet run --project tests/ClaudeStack.API.Tests.Playwright/ClaudeStack.API.Tests.Playwright.csproj
 
 # Run a single test (using test filter)
 dotnet test --filter FullyQualifiedName~TestMethod1
@@ -47,18 +47,18 @@ dotnet test --filter FullyQualifiedName~TestMethod1
 ### Playwright Setup
 After creating a new Playwright test project, install browsers:
 ```powershell
-pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
 ```
 
 ## Architecture
 
 ### Project Structure
-- **src/Example.Web**: ASP.NET Core MVC application with Razor runtime compilation enabled
-- **src/Example.API**: ASP.NET Core Web API using Minimal APIs with OpenAPI/Swagger
-- **tests/Example.Web.Tests**: MSTest unit tests for MVC application
-- **tests/Example.Web.Tests.Playwright**: Playwright end-to-end tests for MVC application
-- **tests/Example.API.Tests**: MSTest unit tests for API application
-- **tests/Example.API.Tests.Playwright**: Playwright end-to-end tests for API application
+- **src/ClaudeStack.Web**: ASP.NET Core MVC application with Razor runtime compilation enabled
+- **src/ClaudeStack.API**: ASP.NET Core Web API using Minimal APIs with OpenAPI/Swagger
+- **tests/ClaudeStack.Web.Tests**: MSTest unit tests for MVC application
+- **tests/ClaudeStack.Web.Tests.Playwright**: Playwright end-to-end tests for MVC application
+- **tests/ClaudeStack.API.Tests**: MSTest unit tests for API application
+- **tests/ClaudeStack.API.Tests.Playwright**: Playwright end-to-end tests for API application
 
 ### Configuration Files
 
@@ -403,23 +403,23 @@ Automated Docker image builds for both applications:
 
 **Pull Images:**
 ```bash
-docker pull ghcr.io/{owner}/{repo}/example-web:main
-docker pull ghcr.io/{owner}/{repo}/example-api:main
+docker pull ghcr.io/{owner}/{repo}/claudestack-web:main
+docker pull ghcr.io/{owner}/{repo}/claudestack-api:main
 
 # Run containers
-docker run -p 8080:8080 ghcr.io/{owner}/{repo}/example-web:main
-docker run -p 8080:8080 ghcr.io/{owner}/{repo}/example-api:main
+docker run -p 8080:8080 ghcr.io/{owner}/{repo}/claudestack-web:main
+docker run -p 8080:8080 ghcr.io/{owner}/{repo}/claudestack-api:main
 ```
 
 **Local Docker Build:**
 ```bash
 # Build images
-docker build -f src/Example.Web/Dockerfile -t example-web:local .
-docker build -f src/Example.API/Dockerfile -t example-api:local .
+docker build -f src/ClaudeStack.Web/Dockerfile -t claudestack-web:local .
+docker build -f src/ClaudeStack.API/Dockerfile -t claudestack-api:local .
 
 # Run locally
-docker run -p 8080:8080 example-web:local
-docker run -p 8080:8080 example-api:local
+docker run -p 8080:8080 claudestack-web:local
+docker run -p 8080:8080 claudestack-api:local
 ```
 
 ### NuGet Package Publishing

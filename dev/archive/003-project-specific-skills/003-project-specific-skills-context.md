@@ -88,12 +88,12 @@
 
 ### Test Projects
 **MSTest Projects:**
-- tests/Example.API.Tests/Example.API.Tests.csproj
-- tests/Example.Web.Tests/Example.Web.Tests.csproj
+- tests/ClaudeStack.API.Tests/ClaudeStack.API.Tests.csproj
+- tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj
 
 **Playwright Projects:**
-- tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj
-- tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj
+- tests/ClaudeStack.API.Tests.Playwright/ClaudeStack.API.Tests.Playwright.csproj
+- tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj
 
 All test projects use:
 - EnableMSTestRunner: true

@@ -26,8 +26,8 @@ This skill provides guidance for **configuration management** in ASP.NET Core ap
 ### appsettings.json
 
 Both projects have appsettings.json:
-- `src/Example.Web/appsettings.json`
-- `src/Example.API/appsettings.json`
+- `src/ClaudeStack.Web/appsettings.json`
+- `src/ClaudeStack.API/appsettings.json`
 
 **Standard structure:**
 ```json
@@ -58,8 +58,8 @@ ASP.NET Core loads configuration in this order (later sources override earlier):
 ### appsettings.Development.json
 
 Overrides appsettings.json in Development environment:
-- `src/Example.Web/appsettings.Development.json`
-- `src/Example.API/appsettings.Development.json`
+- `src/ClaudeStack.Web/appsettings.Development.json`
+- `src/ClaudeStack.API/appsettings.Development.json`
 
 **Example:**
 ```json
@@ -96,7 +96,7 @@ if (app.Environment.IsDevelopment())
 
 ```bash
 # Create production settings
-# src/Example.Web/appsettings.Production.json
+# src/ClaudeStack.Web/appsettings.Production.json
 ```
 
 Automatically loaded when `ASPNETCORE_ENVIRONMENT=Production`.
@@ -233,7 +233,7 @@ User Secrets stores sensitive configuration **outside** the project directory. U
 ### Initialize User Secrets
 
 ```bash
-cd src/Example.Web
+cd src/ClaudeStack.Web
 dotnet user-secrets init
 ```
 

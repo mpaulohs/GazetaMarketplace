@@ -32,13 +32,13 @@ This skill provides guidance for using the **.NET CLI** in this .NET 10 project.
 ├── Directory.Packages.props       # Centralized package versions
 ├── sln.slnx                       # XML-based solution file
 ├── src/
-│   ├── Example.Web/              # ASP.NET Core MVC
-│   └── Example.API/              # Minimal API
+│   ├── ClaudeStack.Web/              # ASP.NET Core MVC
+│   └── ClaudeStack.API/              # Minimal API
 └── tests/
-    ├── Example.Web.Tests/
-    ├── Example.Web.Tests.Playwright/
-    ├── Example.API.Tests/
-    └── Example.API.Tests.Playwright/
+    ├── ClaudeStack.Web.Tests/
+    ├── ClaudeStack.Web.Tests.Playwright/
+    ├── ClaudeStack.API.Tests/
+    └── ClaudeStack.API.Tests.Playwright/
 ```
 
 ### Key Configuration Files
@@ -67,8 +67,8 @@ dotnet build --verbosity detailed
 ### Build Specific Project
 
 ```bash
-dotnet build src/Example.Web/Example.Web.csproj
-dotnet build src/Example.API/Example.API.csproj
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
+dotnet build src/ClaudeStack.API/ClaudeStack.API.csproj
 ```
 
 ### Clean and Rebuild
@@ -106,10 +106,10 @@ dotnet restore
 
 ```bash
 # From solution root
-dotnet run --project src/Example.Web/Example.Web.csproj
+dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj
 
 # Or navigate to project directory
-cd src/Example.Web
+cd src/ClaudeStack.Web
 dotnet run
 ```
 
@@ -118,7 +118,7 @@ dotnet run
 ### Run API Application
 
 ```bash
-dotnet run --project src/Example.API/Example.API.csproj
+dotnet run --project src/ClaudeStack.API/ClaudeStack.API.csproj
 ```
 
 **Runs at**: https://localhost:5001
@@ -127,13 +127,13 @@ dotnet run --project src/Example.API/Example.API.csproj
 
 ```bash
 # Auto-restart on file changes
-dotnet watch --project src/Example.Web
+dotnet watch --project src/ClaudeStack.Web
 
 # With specific launch profile
-dotnet watch --project src/Example.Web --launch-profile https
+dotnet watch --project src/ClaudeStack.Web --launch-profile https
 ```
 
-**Key feature**: Razor runtime compilation enabled in Example.Web - changes to .cshtml files reload automatically.
+**Key feature**: Razor runtime compilation enabled in ClaudeStack.Web - changes to .cshtml files reload automatically.
 
 ---
 
@@ -147,19 +147,19 @@ dotnet test
 ```
 
 Runs all 4 test projects:
-- Example.Web.Tests
-- Example.API.Tests
-- Example.Web.Tests.Playwright
-- Example.API.Tests.Playwright
+- ClaudeStack.Web.Tests
+- ClaudeStack.API.Tests
+- ClaudeStack.Web.Tests.Playwright
+- ClaudeStack.API.Tests.Playwright
 
 ### Run Specific Test Project
 
 ```bash
 # Using dotnet run (Microsoft.Testing.Platform)
-dotnet run --project tests/Example.Web.Tests
+dotnet run --project tests/ClaudeStack.Web.Tests
 
 # Using dotnet test (also works)
-dotnet test tests/Example.Web.Tests/Example.Web.Tests.csproj
+dotnet test tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj
 ```
 
 See **mstest-testing-platform** skill for detailed testing guidance.
@@ -171,7 +171,7 @@ See **mstest-testing-platform** skill for detailed testing guidance.
 dotnet test --filter FullyQualifiedName~TestMethod1
 
 # Run tests in a class
-dotnet test --filter FullyQualifiedName~Example.Web.Tests.Test1
+dotnet test --filter FullyQualifiedName~ClaudeStack.Web.Tests.Test1
 ```
 
 ### Test Output
@@ -222,7 +222,7 @@ dotnet new mstest -o tests/Example.NewWeb.Tests
 
 ```bash
 # Add reference from test project to web project
-dotnet add tests/Example.Web.Tests reference src/Example.Web
+dotnet add tests/ClaudeStack.Web.Tests reference src/ClaudeStack.Web
 ```
 
 ---
@@ -253,7 +253,7 @@ dotnet list package --include-transitive
 # <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
 
 # Step 2: Add reference to project
-dotnet add src/Example.Web package Newtonsoft.Json
+dotnet add src/ClaudeStack.Web package Newtonsoft.Json
 ```
 
 See **dotnet-centralized-packages** skill for details.
@@ -271,12 +271,12 @@ dotnet build --configuration Release   # Release build
 dotnet clean                           # Clean artifacts
 
 # Run
-dotnet run --project src/Example.Web   # Run web app
-dotnet watch --project src/Example.Web # Run with hot reload
+dotnet run --project src/ClaudeStack.Web   # Run web app
+dotnet watch --project src/ClaudeStack.Web # Run with hot reload
 
 # Test
 dotnet test                            # Run all tests
-dotnet run --project tests/Example.Web.Tests  # Run specific test project
+dotnet run --project tests/ClaudeStack.Web.Tests  # Run specific test project
 
 # Solution
 dotnet sln list                        # List projects
@@ -314,19 +314,19 @@ dotnet add src/MyProject package PackageName
 ### Useful Paths
 
 ```bash
-# Example.Web (MVC)
-src/Example.Web/Example.Web.csproj
+# ClaudeStack.Web (MVC)
+src/ClaudeStack.Web/ClaudeStack.Web.csproj
 https://localhost:7001
 
-# Example.API (Minimal APIs)
-src/Example.API/Example.API.csproj
+# ClaudeStack.API (Minimal APIs)
+src/ClaudeStack.API/ClaudeStack.API.csproj
 https://localhost:5001
 
 # Test projects
-tests/Example.Web.Tests
-tests/Example.API.Tests
-tests/Example.Web.Tests.Playwright
-tests/Example.API.Tests.Playwright
+tests/ClaudeStack.Web.Tests
+tests/ClaudeStack.API.Tests
+tests/ClaudeStack.Web.Tests.Playwright
+tests/ClaudeStack.API.Tests.Playwright
 ```
 
 ---

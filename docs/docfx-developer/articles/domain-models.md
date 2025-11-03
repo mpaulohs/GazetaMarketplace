@@ -22,7 +22,7 @@ classDiagram
     }
 ```
 
-**Namespace**: `Example.Web.Models`
+**Namespace**: `ClaudeStack.Web.Models`
 
 **Purpose**: Provides data to the error view when application exceptions occur, enabling request tracking and debugging.
 
@@ -45,11 +45,11 @@ public IActionResult Error()
 
 It is then passed to the `Error.cshtml` view in `Views/Shared/Error.cshtml` for rendering.
 
-**See API Reference**: [@Example.Web.Models.ErrorViewModel](../api/Example.Web.Models.ErrorViewModel.html)
+**See API Reference**: [@ClaudeStack.Web.Models.ErrorViewModel](../api/ClaudeStack.Web.Models.ErrorViewModel.html)
 
-### WeatherForecast (Example.API)
+### WeatherForecast (ClaudeStack.API)
 
-The **WeatherForecast** is a record type defined in `Example.API/Program.cs` that demonstrates a simple data transfer object for API responses.
+The **WeatherForecast** is a record type defined in `ClaudeStack.API/Program.cs` that demonstrates a simple data transfer object for API responses.
 
 ```mermaid
 classDiagram
@@ -61,7 +61,7 @@ classDiagram
     }
 ```
 
-**Namespace**: `Example.API` (internal sealed record in Program.cs)
+**Namespace**: `ClaudeStack.API` (internal sealed record in Program.cs)
 
 **Purpose**: Represents weather forecast data in the Minimal API endpoint response. Uses C# record syntax for immutable, compact data structures.
 
@@ -111,7 +111,7 @@ When adding business domain entities to this application, follow these patterns:
 Organize models by purpose to maintain clarity:
 
 ```
-src/Example.Web/
+src/ClaudeStack.Web/
 ├── Models/                      # View models and presentation models
 │   ├── ErrorViewModel.cs
 │   └── UserProfileViewModel.cs
@@ -134,7 +134,7 @@ Use `init` accessors for immutable properties. This prevents accidental modifica
 ```csharp
 using System;
 
-namespace Example.Web.Domain.Entities
+namespace ClaudeStack.Web.Domain.Entities
 {
     /// <summary>
     /// Represents a product in the catalog.
@@ -183,7 +183,7 @@ ASP.NET Core integrates Data Annotations validation throughout the framework:
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Example.Web.Domain.ValueObjects
+namespace ClaudeStack.Web.Domain.ValueObjects
 {
     /// <summary>
     /// Represents a contact person with validation.
@@ -337,7 +337,7 @@ Understanding these distinct model types is critical for maintaining clean separ
 using System;
 using System.Collections.Generic;
 
-namespace Example.Web.Domain.Entities
+namespace ClaudeStack.Web.Domain.Entities
 {
     /// <summary>
     /// Represents a user in the system with business logic and validation.
@@ -399,7 +399,7 @@ namespace Example.Web.Domain.Entities
 
 **Characteristics**:
 - Never persisted to database
-- MVC/Razor views only (Example.Web)
+- MVC/Razor views only (ClaudeStack.Web)
 - May aggregate data from multiple sources
 - Include computed display properties
 - Shaped for specific view requirements
@@ -410,7 +410,7 @@ namespace Example.Web.Domain.Entities
 ```csharp
 using System;
 
-namespace Example.Web.Models
+namespace ClaudeStack.Web.Models
 {
     /// <summary>
     /// Represents user profile information for display in the web UI.
@@ -459,14 +459,14 @@ namespace Example.Web.Models
 - Provide API versioning flexibility
 - Can flatten complex object graphs
 - Use record types for immutability
-- Reside in `Dtos/` directory (Example.API)
+- Reside in `Dtos/` directory (ClaudeStack.API)
 
 **Example**:
 
 ```csharp
 using System;
 
-namespace Example.API.Dtos
+namespace ClaudeStack.API.Dtos
 {
     /// <summary>
     /// Data transfer object for user information in API responses.
@@ -523,7 +523,7 @@ Implement validation at multiple levels for robustness:
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Example.Web.Domain.Entities
+namespace ClaudeStack.Web.Domain.Entities
 {
     public class BlogPost
     {
@@ -554,7 +554,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Example.Web.Domain.ValueObjects
+namespace ClaudeStack.Web.Domain.ValueObjects
 {
     public class DateRange : IValidatableObject
     {
@@ -581,7 +581,7 @@ namespace Example.Web.Domain.ValueObjects
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Example.Web.Controllers
+namespace ClaudeStack.Web.Controllers
 {
     public class ProductsController : Controller
     {
@@ -603,11 +603,11 @@ namespace Example.Web.Controllers
 
 ## Adding Models to the Project
 
-### For MVC Application (Example.Web)
+### For MVC Application (ClaudeStack.Web)
 
 **Domain Models**:
 
-1. Create a new directory structure: `src/Example.Web/Domain/Entities/`
+1. Create a new directory structure: `src/ClaudeStack.Web/Domain/Entities/`
 2. Create your entity class with explicit using statements
 3. Add XML documentation comments
 4. Apply Data Annotations for validation
@@ -615,31 +615,31 @@ namespace Example.Web.Controllers
 
 ```bash
 # Example workflow
-cd src/Example.Web
+cd src/ClaudeStack.Web
 mkdir -p Domain/Entities
 # Create Product.cs with proper structure
 ```
 
 **View Models**:
 
-1. Add new classes to `src/Example.Web/Models/`
+1. Add new classes to `src/ClaudeStack.Web/Models/`
 2. Use the `ViewModel` suffix convention
 3. Keep properties simple (strings, numbers, bools)
 4. Include XML documentation
 5. Use `init` for immutability
 
-### For Minimal API (Example.API)
+### For Minimal API (ClaudeStack.API)
 
 **DTOs**:
 
-1. Create a `src/Example.API/Dtos/` directory
+1. Create a `src/ClaudeStack.API/Dtos/` directory
 2. Define records using primary constructor syntax
 3. Add XML documentation to properties
 4. Reference from endpoint handlers
 
 ```csharp
 // In Program.cs or separate file
-namespace Example.API.Dtos
+namespace ClaudeStack.API.Dtos
 {
     public record ProductDto(
         int Id,

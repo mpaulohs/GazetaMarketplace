@@ -222,8 +222,8 @@ net10-project-example/
 │       └── active-development.md
 │
 ├── src/                                    # Source code with XML comments
-│   ├── Example.Web/
-│   └── Example.API/
+│   ├── ClaudeStack.Web/
+│   └── ClaudeStack.API/
 │
 ├── .markdownlint.json                      # Markdown linting rules
 └── global.json                             # .NET SDK version
@@ -3053,17 +3053,17 @@ net10-project-example/
 │       └── active-development.md
 │
 ├── src/                                       # Source code with XML documentation comments
-│   ├── Example.Web/
-│   │   ├── Example.Web.csproj
+│   ├── ClaudeStack.Web/
+│   │   ├── ClaudeStack.Web.csproj
 │   │   ├── Controllers/
 │   │   └── Models/
-│   └── Example.API/
-│       ├── Example.API.csproj
+│   └── ClaudeStack.API/
+│       ├── ClaudeStack.API.csproj
 │       └── Endpoints/
 │
 ├── tests/                                     # Test projects
-│   ├── Example.Web.Tests/
-│   └── Example.API.Tests/
+│   ├── ClaudeStack.Web.Tests/
+│   └── ClaudeStack.API.Tests/
 │
 ├── .markdownlint.json                         # Markdown linting rules
 ├── global.json                                # .NET SDK version

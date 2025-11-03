@@ -86,13 +86,13 @@ dotnet build
 
 **MVC Web Application:**
 ```bash
-dotnet run --project src/Example.Web/Example.Web.csproj
+dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj
 ```
 Access at: `http://localhost:5000`
 
 **Minimal API Application:**
 ```bash
-dotnet run --project src/Example.API/Example.API.csproj
+dotnet run --project src/ClaudeStack.API/ClaudeStack.API.csproj
 ```
 Access at: `https://localhost:5001`
 Swagger UI: `https://localhost:5001/swagger`
@@ -104,8 +104,8 @@ Swagger UI: `https://localhost:5001/swagger`
 dotnet test
 
 # Run specific test project
-dotnet run --project tests/Example.Web.Tests/Example.Web.Tests.csproj
-dotnet run --project tests/Example.API.Tests/Example.API.Tests.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj
+dotnet run --project tests/ClaudeStack.API.Tests/ClaudeStack.API.Tests.csproj
 ```
 
 ### Step 6: Setup Playwright (First Time Only)
@@ -114,17 +114,17 @@ After building the Playwright test projects, install browser engines:
 
 ```powershell
 # For MVC tests
-pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
 
 # For API tests
-pwsh -Command "cd tests/Example.API.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.API.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
 ```
 
 Then run the Playwright end-to-end tests:
 
 ```bash
-dotnet run --project tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj
-dotnet run --project tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj
+dotnet run --project tests/ClaudeStack.API.Tests.Playwright/ClaudeStack.API.Tests.Playwright.csproj
 ```
 
 ## For End Users

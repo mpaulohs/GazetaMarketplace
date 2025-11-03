@@ -21,8 +21,8 @@ This documentation covers:
 ## Project Structure
 
 This is a .NET 10.0 RC 2 example project demonstrating:
-- ASP.NET Core MVC application (`Example.Web`)
-- ASP.NET Core Minimal API (`Example.API`)
+- ASP.NET Core MVC application (`ClaudeStack.Web`)
+- ASP.NET Core Minimal API (`ClaudeStack.API`)
 - MSTest unit tests with Microsoft.Testing.Platform
 - Playwright end-to-end tests
 - Centralized Package Management (CPM)

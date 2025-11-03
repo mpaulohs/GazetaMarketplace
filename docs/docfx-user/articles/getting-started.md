@@ -107,7 +107,7 @@ The web application is a traditional website with pages you can browse:
 2. Navigate to the project folder
 3. Run the web application:
    ```bash
-   dotnet run --project src/Example.Web/Example.Web.csproj
+   dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj
    ```
 4. You'll see messages about the application starting. Look for a message like:
    ```
@@ -127,7 +127,7 @@ The API provides data endpoints that applications can connect to:
 2. Navigate to the project folder
 3. Run the API:
    ```bash
-   dotnet run --project src/Example.API/Example.API.csproj
+   dotnet run --project src/ClaudeStack.API/ClaudeStack.API.csproj
    ```
 4. You'll see a message like:
    ```
@@ -187,8 +187,8 @@ flowchart TD
     E --> F["Navigate to Project Folder<br/>cd net10-project-example"]
     F --> G["Build Application<br/>dotnet build"]
     G --> H["Choose What to Run"]
-    H -->|Web App| I["Run Web Application<br/>dotnet run --project src/Example.Web/Example.Web.csproj"]
-    H -->|API| J["Run API<br/>dotnet run --project src/Example.API/Example.API.csproj"]
+    H -->|Web App| I["Run Web Application<br/>dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj"]
+    H -->|API| J["Run API<br/>dotnet run --project src/ClaudeStack.API/ClaudeStack.API.csproj"]
     I --> K["Open Browser<br/>https://localhost:5000"]
     J --> L["Open Browser<br/>https://localhost:5001/swagger"]
     K --> M["Explore Home Page<br/>View Features"]
@@ -245,7 +245,7 @@ kill -9 <PID>
 
 Alternatively, try running on a different port:
 ```bash
-dotnet run --project src/Example.Web/Example.Web.csproj -- --urls="https://localhost:5002"
+dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj -- --urls="https://localhost:5002"
 ```
 
 #### 3. Build Fails with "Could not restore"
@@ -288,10 +288,10 @@ This is completely safe for local development. The warning appears because your 
 - Check that the project file exists:
   ```bash
   # Windows
-  dir src\Example.Web\Example.Web.csproj
+  dir src\ClaudeStack.Web\ClaudeStack.Web.csproj
 
   # macOS/Linux
-  ls src/Example.Web/Example.Web.csproj
+  ls src/ClaudeStack.Web/ClaudeStack.Web.csproj
   ```
 - Try a clean build:
   ```bash

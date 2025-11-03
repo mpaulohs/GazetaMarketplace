@@ -461,7 +461,7 @@ dotnet tool install -g PlantUmlClassDiagramGenerator
 - [ ] `dll2mmd` installed globally
 - [ ] `PlantUmlClassDiagramGenerator` installed globally (command: `puml-gen`)
 - [ ] Both tools accessible from PATH
-- [ ] Test generation on Example.Web.dll works
+- [ ] Test generation on ClaudeStack.Web.dll works
 
 **Implementation**:
 ```bash
@@ -474,8 +474,8 @@ dll2mmd --version
 puml-gen --version
 
 # Test on compiled assembly
-dotnet build src/Example.Web/Example.Web.csproj
-dll2mmd src/Example.Web/bin/Debug/net10.0/Example.Web.dll -o test-diagram.md
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
+dll2mmd src/ClaudeStack.Web/bin/Debug/net10.0/ClaudeStack.Web.dll -o test-diagram.md
 
 # Check output
 cat test-diagram.md

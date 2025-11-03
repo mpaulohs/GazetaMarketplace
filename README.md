@@ -1,11 +1,11 @@
-# .NET 10 Project Example
+# ClaudeStack.net
 
 [![.NET Version](https://img.shields.io/badge/.NET-10.0%20RC%202-512BD4?logo=dotnet)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-Contributor%20Covenant-purple.svg)](CODE_OF_CONDUCT.md)
 
-A full-stack .NET 10 example project demonstrating modern ASP.NET Core architecture with centralized package management, MSTest with the new Microsoft.Testing.Platform, end-to-end testing with Playwright, and comprehensive GitHub Actions CI/CD pipeline.
+A full-stack .NET 10 template project with Claude Code AI integration, demonstrating modern ASP.NET Core architecture with centralized package management, MSTest with the new Microsoft.Testing.Platform, end-to-end testing with Playwright, and comprehensive GitHub Actions CI/CD pipeline with automated AI code review.
 
 ## Prerequisites
 
@@ -26,13 +26,13 @@ A full-stack .NET 10 example project demonstrating modern ASP.NET Core architect
 
 ```
 ├── src/
-│   ├── Example.Web/              # ASP.NET Core MVC application
-│   └── Example.API/              # ASP.NET Core Web API (Minimal APIs)
+│   ├── ClaudeStack.Web/          # ASP.NET Core MVC application
+│   └── ClaudeStack.API/          # ASP.NET Core Web API (Minimal APIs)
 ├── tests/
-│   ├── Example.Web.Tests/        # Unit tests for MVC application
-│   ├── Example.Web.Tests.Playwright/  # E2E tests for MVC application
-│   ├── Example.API.Tests/        # Unit tests for API application
-│   └── Example.API.Tests.Playwright/  # E2E tests for API application
+│   ├── ClaudeStack.Web.Tests/    # Unit tests for MVC application
+│   ├── ClaudeStack.Web.Tests.Playwright/  # E2E tests for MVC application
+│   ├── ClaudeStack.API.Tests/    # Unit tests for API application
+│   └── ClaudeStack.API.Tests.Playwright/  # E2E tests for API application
 ├── Directory.Build.props          # Shared MSBuild properties
 ├── Directory.Packages.props       # Centralized NuGet package versions
 ├── global.json                    # SDK version and test runner config
@@ -51,10 +51,10 @@ dotnet build
 
 ```bash
 # Run the MVC application
-dotnet run --project src/Example.Web/Example.Web.csproj
+dotnet run --project src/ClaudeStack.Web/ClaudeStack.Web.csproj
 
 # Run the API application
-dotnet run --project src/Example.API/Example.API.csproj
+dotnet run --project src/ClaudeStack.API/ClaudeStack.API.csproj
 ```
 
 The API will be available at `https://localhost:5001` with Swagger UI at `/swagger`.
@@ -66,8 +66,8 @@ The API will be available at `https://localhost:5001` with Swagger UI at `/swagg
 dotnet test
 
 # Run specific test project
-dotnet run --project tests/Example.Web.Tests/Example.Web.Tests.csproj
-dotnet run --project tests/Example.API.Tests/Example.API.Tests.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests/ClaudeStack.Web.Tests.csproj
+dotnet run --project tests/ClaudeStack.API.Tests/ClaudeStack.API.Tests.csproj
 ```
 
 ### Setup Playwright (First Time)
@@ -75,15 +75,15 @@ dotnet run --project tests/Example.API.Tests/Example.API.Tests.csproj
 After building the Playwright test projects, install the browsers:
 
 ```powershell
-pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
-pwsh -Command "cd tests/Example.API.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.API.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
 ```
 
 Then run the Playwright tests:
 
 ```bash
-dotnet run --project tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj
-dotnet run --project tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj
+dotnet run --project tests/ClaudeStack.API.Tests.Playwright/ClaudeStack.API.Tests.Playwright.csproj
 ```
 
 ## Key Features

@@ -480,7 +480,7 @@
   - Uses correct ASP.NET Core MVC terminology
   - Proper `<see cref>` cross-references
   - Realistic code examples in `<example>` tags
-  - Files: src/Example.Web/Controllers/HomeController.cs, src/Example.Web/Models/ErrorViewModel.cs
+  - Files: src/ClaudeStack.Web/Controllers/HomeController.cs, src/ClaudeStack.Web/Models/ErrorViewModel.cs
 
 - [x] **Task 8.3**: Document documentation-architect Agent Testing (M - 1 hour)
   - Agent extensively tested in Phases 3-5

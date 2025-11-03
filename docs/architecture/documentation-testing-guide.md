@@ -135,7 +135,7 @@ start docs/docfx-developer/_site/index.html      # Windows
 **Expected Results:**
 -  Build completes without errors
 -  Homepage displays correctly
--  API reference includes Example.Web and Example.API namespaces
+-  API reference includes ClaudeStack.Web and ClaudeStack.API namespaces
 -  Articles directory contains architecture documentation
 -  Navigation menu works
 -  "Edit this page" links point to correct git URLs

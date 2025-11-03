@@ -99,7 +99,7 @@ pwsh -File .github/scripts/check-dotnet-vulnerabilities.ps1 `
     {
       "severity": "error",
       "category": "NuGet Vulnerability (Direct)",
-      "file": "src/Example.Web/Example.Web.csproj",
+      "file": "src/ClaudeStack.Web/ClaudeStack.Web.csproj",
       "rule": "NUGET-VULN-High",
       "message": "Newtonsoft.Json 12.0.1 has a known High severity vulnerability",
       "remediation": "Update to a non-vulnerable version. See advisory: https://..."

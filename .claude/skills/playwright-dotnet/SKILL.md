@@ -53,8 +53,8 @@ This project uses the **MSTest integration** which provides:
 ### Current Playwright Projects
 
 This repository has 2 Playwright test projects:
-- `tests/Example.Web.Tests.Playwright/` - Tests for MVC application
-- `tests/Example.API.Tests.Playwright/` - Tests for API application
+- `tests/ClaudeStack.Web.Tests.Playwright/` - Tests for MVC application
+- `tests/ClaudeStack.API.Tests.Playwright/` - Tests for API application
 
 ### Project Configuration
 
@@ -111,7 +111,7 @@ After creating a Playwright project or after building, install browsers:
 
 ```powershell
 # Navigate to the build output directory
-cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0
+cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0
 
 # Run the Playwright PowerShell script
 ./playwright.ps1 install
@@ -123,12 +123,12 @@ cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0
 
 **Windows (PowerShell):**
 ```powershell
-pwsh -Command "cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
+pwsh -Command "cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0; ./playwright.ps1 install"
 ```
 
 **Linux/macOS (Bash):**
 ```bash
-pwsh tests/Example.Web.Tests.Playwright/bin/Debug/net10.0/playwright.ps1 install
+pwsh tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0/playwright.ps1 install
 ```
 
 ### Installing Specific Browsers
@@ -164,7 +164,7 @@ using System.Threading.Tasks;
 using Microsoft.Playwright.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Example.Web.Tests.Playwright;
+namespace ClaudeStack.Web.Tests.Playwright;
 
 [TestClass]
 public class HomePageTests : PageTest
@@ -245,7 +245,7 @@ await element.SelectOptionAsync("option");
 
 ```bash
 $env:HEADED="1"
-dotnet run --project tests/Example.Web.Tests.Playwright
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright
 ```
 
 ### Screenshots and Tracing
@@ -266,7 +266,7 @@ View trace: `pwsh .../playwright.ps1 show-trace trace.zip`
 
 ```bash
 $env:PWDEBUG="1"
-dotnet run --project tests/Example.Web.Tests.Playwright
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright
 ```
 
 ---
@@ -277,7 +277,7 @@ dotnet run --project tests/Example.Web.Tests.Playwright
 # Azure DevOps / GitHub Actions
 - Build project: dotnet build tests/**/*.Playwright.csproj
 - Install browsers: pwsh .../playwright.ps1 install --with-deps
-- Run tests: dotnet run --project tests/Example.Web.Tests.Playwright
+- Run tests: dotnet run --project tests/ClaudeStack.Web.Tests.Playwright
 ```
 
 **Important**: Use `--with-deps` flag in CI to install system dependencies (Linux).
@@ -292,7 +292,7 @@ dotnet run --project tests/Example.Web.Tests.Playwright
 
 **Solution**: Install browsers after building:
 ```powershell
-cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0
+cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0
 ./playwright.ps1 install
 ```
 
@@ -302,7 +302,7 @@ cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0
 
 **Solution**: Build first, then install browsers:
 ```bash
-dotnet build tests/Example.Web.Tests.Playwright
+dotnet build tests/ClaudeStack.Web.Tests.Playwright
 # Then install browsers
 ```
 
@@ -384,21 +384,21 @@ await element.CheckAsync();
 
 ```bash
 # Run all Playwright tests
-dotnet run --project tests/Example.Web.Tests.Playwright
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright
 
 # Headed mode
 $env:HEADED="1"
-dotnet run --project tests/Example.Web.Tests.Playwright
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright
 
 # Debug mode
 $env:PWDEBUG="1"
-dotnet run --project tests/Example.Web.Tests.Playwright
+dotnet run --project tests/ClaudeStack.Web.Tests.Playwright
 ```
 
 ### Browser Installation
 
 ```powershell
-cd tests/Example.Web.Tests.Playwright/bin/Debug/net10.0
+cd tests/ClaudeStack.Web.Tests.Playwright/bin/Debug/net10.0
 ./playwright.ps1 install              # All browsers
 ./playwright.ps1 install chromium     # Chromium only
 ./playwright.ps1 install --with-deps  # With system dependencies (Linux)

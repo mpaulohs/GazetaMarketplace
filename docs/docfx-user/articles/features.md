@@ -25,7 +25,7 @@ Both applications showcase modern .NET 10 capabilities, including centralized pa
 
 ## MVC Web Application Features
 
-The MVC web application provides an intuitive, user-friendly interface for interacting with the system. Located at `src/Example.Web`, it demonstrates ASP.NET Core MVC best practices with Razor views and a responsive design.
+The MVC web application provides an intuitive, user-friendly interface for interacting with the system. Located at `src/ClaudeStack.Web`, it demonstrates ASP.NET Core MVC best practices with Razor views and a responsive design.
 
 ### 1. Home Page Navigation
 
@@ -95,7 +95,7 @@ The MVC web application provides an intuitive, user-friendly interface for inter
 
 ## Minimal API Features
 
-The Minimal API application provides a lightweight, high-performance REST interface for programmatic access. Located at `src/Example.API`, it demonstrates modern API design patterns in .NET 10.
+The Minimal API application provides a lightweight, high-performance REST interface for programmatic access. Located at `src/ClaudeStack.API`, it demonstrates modern API design patterns in .NET 10.
 
 ### 1. RESTful Endpoints
 
@@ -383,8 +383,8 @@ var json = await response.Content.ReadAsStringAsync();
 **Scenario:** You want to learn modern ASP.NET Core development patterns.
 
 **Steps:**
-1. Examine the MVC application in `src/Example.Web`
-2. Review the Minimal API implementation in `src/Example.API`
+1. Examine the MVC application in `src/ClaudeStack.Web`
+2. Review the Minimal API implementation in `src/ClaudeStack.API`
 3. Check the test projects to understand testing patterns
 4. Try the hot reload feature during development
 5. Review error handling and security implementations
@@ -420,7 +420,7 @@ var json = await response.Content.ReadAsStringAsync();
 
 **Steps:**
 1. Run unit tests: `dotnet test`
-2. Run Playwright E2E tests: `dotnet run --project tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj`
+2. Run Playwright E2E tests: `dotnet run --project tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj`
 3. Verify no code formatting issues: `dotnet format --verify-no-changes`
 4. Review test results for failures
 5. Fix any issues before committing

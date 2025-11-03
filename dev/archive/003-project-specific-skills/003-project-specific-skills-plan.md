@@ -14,7 +14,7 @@ This plan outlines the creation of six Claude Code skills tailored to this .NET 
 3. **Playwright .NET Testing** - End-to-end testing with Microsoft.Playwright.MSTest.v4
 
 **Medium Priority (Project-Specific):**
-4. **Minimal APIs** - ASP.NET Core Minimal API patterns used in Example.API
+4. **Minimal APIs** - ASP.NET Core Minimal API patterns used in ClaudeStack.API
 5. **.NET CLI Essentials** - Common CLI operations specific to this project structure
 6. **ASP.NET Configuration** - Configuration patterns for appsettings and environments
 
@@ -56,8 +56,8 @@ This plan outlines the creation of six Claude Code skills tailored to this .NET 
 3. **playwright-dotnet** - 2 Playwright projects need guidance
 
 **Skills Potentially Useful (Lower Priority):**
-- dotnet-minimal-apis (Example.API patterns)
-- aspnet-mvc-razor (Example.Web patterns)
+- dotnet-minimal-apis (ClaudeStack.API patterns)
+- aspnet-mvc-razor (ClaudeStack.Web patterns)
 - dotnet-explicit-usings (ImplicitUsings=false)
 
 ---
@@ -440,8 +440,8 @@ echo '{"prompt":"Debug unit tests"}' | npx tsx skill-activation-prompt.ts
 4. Identify test patterns used
 
 **Files to Review:**
-- tests/Example.Web.Tests.Playwright/Example.Web.Tests.Playwright.csproj
-- tests/Example.API.Tests.Playwright/Example.API.Tests.Playwright.csproj
+- tests/ClaudeStack.Web.Tests.Playwright/ClaudeStack.Web.Tests.Playwright.csproj
+- tests/ClaudeStack.API.Tests.Playwright/ClaudeStack.API.Tests.Playwright.csproj
 - Test1.cs in both projects
 
 **Acceptance Criteria:**
@@ -534,11 +534,11 @@ echo '{"prompt":"Debug unit tests"}' | npx tsx skill-activation-prompt.ts
 
 ### Phase 5: dotnet-minimal-apis Skill (75 minutes)
 
-#### Task 5.1: Research Example.API Project (15 min)
+#### Task 5.1: Research ClaudeStack.API Project (15 min)
 **Effort:** S
 
 **Actions:**
-1. Analyze Example.API/Program.cs minimal API patterns
+1. Analyze ClaudeStack.API/Program.cs minimal API patterns
 2. Document current endpoint patterns (MapGet, etc.)
 3. Review OpenAPI integration
 4. Identify common patterns to document
@@ -581,7 +581,7 @@ echo '{"prompt":"Debug unit tests"}' | npx tsx skill-activation-prompt.ts
 
 **Acceptance Criteria:**
 - [ ] All sections complete
-- [ ] Real Example.API examples included
+- [ ] Real ClaudeStack.API examples included
 - [ ] Under 500 lines
 - [ ] Code tested
 

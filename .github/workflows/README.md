@@ -395,8 +395,8 @@ dotnet build --verbosity detailed
   - Upload artifacts
 
 **Artifacts Published:**
-- `web-app-linux-x64` - Example.Web application
-- `api-app-linux-x64` - Example.API application
+- `web-app-linux-x64` - ClaudeStack.Web application
+- `api-app-linux-x64` - ClaudeStack.API application
 - Retention: 7 days
 
 #### Code Coverage
@@ -424,21 +424,21 @@ dotnet build --verbosity detailed
 - **Trigger:** Push to `main` branch only
 - **Registry:** GitHub Container Registry (ghcr.io)
 - **Images:**
-  - `ghcr.io/{owner}/{repo}/example-web`
-  - `ghcr.io/{owner}/{repo}/example-api`
+  - `ghcr.io/{owner}/{repo}/claudestack-web`
+  - `ghcr.io/{owner}/{repo}/claudestack-api`
 - **Tags:**
   - Branch name (`main`)
   - Git SHA (`main-{sha}`)
   - Semantic version (if tagged)
 
 **Dockerfile Locations:**
-- `src/Example.Web/Dockerfile`
-- `src/Example.API/Dockerfile`
+- `src/ClaudeStack.Web/Dockerfile`
+- `src/ClaudeStack.API/Dockerfile`
 
 **Pull Images:**
 ```bash
-docker pull ghcr.io/{owner}/{repo}/example-web:main
-docker pull ghcr.io/{owner}/{repo}/example-api:main
+docker pull ghcr.io/{owner}/{repo}/claudestack-web:main
+docker pull ghcr.io/{owner}/{repo}/claudestack-api:main
 ```
 
 #### NuGet Package Publishing
@@ -499,14 +499,14 @@ Main Push → Docker Build → Container Registry
 **Build Docker images:**
 ```bash
 # Build Web image
-docker build -f src/Example.Web/Dockerfile -t example-web:local .
+docker build -f src/ClaudeStack.Web/Dockerfile -t claudestack-web:local .
 
 # Build API image
-docker build -f src/Example.API/Dockerfile -t example-api:local .
+docker build -f src/ClaudeStack.API/Dockerfile -t claudestack-api:local .
 
 # Run containers
-docker run -p 8080:8080 example-web:local
-docker run -p 8080:8080 example-api:local
+docker run -p 8080:8080 claudestack-web:local
+docker run -p 8080:8080 claudestack-api:local
 ```
 
 **Test coverage locally:**

@@ -147,7 +147,7 @@ Include:
 Use correct ASP.NET Core MVC terminology from Microsoft Learn.
 ```
 
-**Output**: See `src/Example.Web/Controllers/HomeController.cs:12-107`
+**Output**: See `src/ClaudeStack.Web/Controllers/HomeController.cs:12-107`
 
 Key features of generated XML comments:
 - ✅ Accurate ASP.NET Core MVC terminology
@@ -162,17 +162,17 @@ After adding XML comments:
 
 ```bash
 # Rebuild to generate XML documentation files
-dotnet build src/Example.Web/Example.Web.csproj
+dotnet build src/ClaudeStack.Web/ClaudeStack.Web.csproj
 
 # Check that XML file was generated
-ls src/Example.Web/bin/Debug/net10.0/Example.Web.xml
+ls src/ClaudeStack.Web/bin/Debug/net10.0/ClaudeStack.Web.xml
 
 # Rebuild developer documentation
 make docs-developer
 
 # Serve locally and verify API reference
 make docs-serve
-# Navigate to API → Example.Web.Controllers → HomeController
+# Navigate to API → ClaudeStack.Web.Controllers → HomeController
 ```
 
 ### Best Practices
@@ -237,8 +237,8 @@ Using the documentation-architect agent:
 Create comprehensive architecture documentation for the NET10 Project Example.
 
 Analyze:
-- src/Example.Web (ASP.NET Core MVC application)
-- src/Example.API (ASP.NET Core Minimal API)
+- src/ClaudeStack.Web (ASP.NET Core MVC application)
+- src/ClaudeStack.API (ASP.NET Core Minimal API)
 - Test projects (MSTest + Playwright)
 - Directory.Build.props (centralized configuration)
 - Directory.Packages.props (CPM)

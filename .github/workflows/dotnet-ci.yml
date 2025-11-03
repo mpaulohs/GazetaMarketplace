@@ -43,39 +43,39 @@ jobs:
 
       - name: Install Playwright browsers
         run: |
-          pwsh tests/Example.Web.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
-          pwsh tests/Example.API.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+          pwsh tests/ClaudeStack.Web.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+          pwsh tests/ClaudeStack.API.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
 
       - name: Run unit tests
         run: |
           dotnet test --no-build --configuration Release --verbosity normal
 
-      - name: Publish Example.Web
+      - name: Publish ClaudeStack.Web
         run: |
-          dotnet publish src/Example.Web/Example.Web.csproj \
+          dotnet publish src/ClaudeStack.Web/ClaudeStack.Web.csproj \
             --configuration Release \
-            --output ./publish/Example.Web \
+            --output ./publish/ClaudeStack.Web \
             --no-build
 
-      - name: Publish Example.API
+      - name: Publish ClaudeStack.API
         run: |
-          dotnet publish src/Example.API/Example.API.csproj \
+          dotnet publish src/ClaudeStack.API/ClaudeStack.API.csproj \
             --configuration Release \
-            --output ./publish/Example.API \
+            --output ./publish/ClaudeStack.API \
             --no-build
 
       - name: Upload Web artifacts
         uses: actions/upload-artifact@v4
         with:
           name: web-app-linux-x64
-          path: ./publish/Example.Web
+          path: ./publish/ClaudeStack.Web
           retention-days: 7
 
       - name: Upload API artifacts
         uses: actions/upload-artifact@v4
         with:
           name: api-app-linux-x64
-          path: ./publish/Example.API
+          path: ./publish/ClaudeStack.API
           retention-days: 7
 
   # ============================================================================
@@ -108,8 +108,8 @@ jobs:
 
       - name: Install Playwright browsers
         run: |
-          pwsh tests/Example.Web.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
-          pwsh tests/Example.API.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+          pwsh tests/ClaudeStack.Web.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+          pwsh tests/ClaudeStack.API.Tests.Playwright/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
 
       - name: Install dotnet-coverage tool
         run: dotnet tool install --global dotnet-coverage
@@ -250,44 +250,44 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for Example.Web
+      - name: Extract metadata for ClaudeStack.Web
         id: meta-web
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/example-web
+          images: ghcr.io/${{ github.repository }}/claudestack-web
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
-      - name: Build and push Example.Web image
+      - name: Build and push ClaudeStack.Web image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./src/Example.Web/Dockerfile
+          file: ./src/ClaudeStack.Web/Dockerfile
           push: true
           tags: ${{ steps.meta-web.outputs.tags }}
           labels: ${{ steps.meta-web.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Extract metadata for Example.API
+      - name: Extract metadata for ClaudeStack.API
         id: meta-api
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/example-api
+          images: ghcr.io/${{ github.repository }}/claudestack-api
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
-      - name: Build and push Example.API image
+      - name: Build and push ClaudeStack.API image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./src/Example.API/Dockerfile
+          file: ./src/ClaudeStack.API/Dockerfile
           push: true
           tags: ${{ steps.meta-api.outputs.tags }}
           labels: ${{ steps.meta-api.outputs.labels }}
