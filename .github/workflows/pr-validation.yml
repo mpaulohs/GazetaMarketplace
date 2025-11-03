@@ -1,0 +1,1391 @@
+name: PR Validation Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches:
+      - main
+      - develop
+
+  # Allow manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to validate'
+        required: false
+        type: number
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: pr-validation-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # Step 1: Authorization Check
+  # ============================================================================
+  authorization:
+    name: "1️⃣ Authorization Check"
+    runs-on: ubuntu-latest
+    outputs:
+      authorized: ${{ steps.check-auth.outputs.authorized }}
+      actor: ${{ steps.check-auth.outputs.actor }}
+      association: ${{ steps.check-auth.outputs.association }}
+      reason: ${{ steps.check-auth.outputs.reason }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Load authorization config
+        id: load-config
+        run: |
+          if [ -f .github/claude-authorized-users.yml ]; then
+            # Convert YAML to JSON using yq (pre-installed on GitHub runners)
+            echo "config=$(yq -o=json '.' .github/claude-authorized-users.yml | jq -c)" >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "config={}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check authorization
+        id: check-auth
+        uses: actions/github-script@v7
+        env:
+          CONFIG_JSON: ${{ steps.load-config.outputs.config }}
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Get the PR author
+            const actor = context.payload.pull_request?.user?.login || context.actor;
+            console.log(`Checking authorization for user: ${actor}`);
+
+            // Load authorization config
+            let config;
+            const configExists = '${{ steps.load-config.outputs.exists }}' === 'true';
+
+            if (!configExists) {
+              console.log('Authorization config not found, allowing all users');
+              core.setOutput('authorized', 'true');
+              core.setOutput('reason', 'No authorization config - allowing all');
+              core.setOutput('actor', actor);
+              core.setOutput('association', 'UNKNOWN');
+              return;
+            }
+
+            try {
+              // Read from environment variable to avoid template substitution issues
+              config = JSON.parse(process.env.CONFIG_JSON);
+            } catch (error) {
+              console.log('Could not parse authorization config, allowing all users');
+              core.setOutput('authorized', 'true');
+              core.setOutput('reason', 'Invalid config - allowing all');
+              core.setOutput('actor', actor);
+              core.setOutput('association', 'UNKNOWN');
+              return;
+            }
+
+            // Check emergency circuit breaker
+            if (config.emergency && config.emergency.enabled === true) {
+              const reason = config.emergency.reason || 'Emergency circuit breaker activated';
+              console.log(`❌ Circuit breaker enabled: ${reason}`);
+              core.setOutput('authorized', 'false');
+              core.setOutput('reason', reason);
+              core.setOutput('actor', actor);
+              core.setOutput('association', 'BLOCKED_BY_CIRCUIT_BREAKER');
+              return;
+            }
+
+            // Get user's association with the repository
+            let association = 'NONE';
+            let userPermission = 'none';
+
+            try {
+              const { data: permissionData } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: actor
+              });
+              userPermission = permissionData.permission;
+
+              // Get author association from PR
+              association = context.payload.pull_request?.author_association || 'NONE';
+
+              console.log(`User association: ${association}`);
+              console.log(`User permission: ${userPermission}`);
+            } catch (error) {
+              console.log(`Could not determine user association: ${error.message}`);
+            }
+
+            // Check if user is repository owner
+            const isOwner = association === 'OWNER' || userPermission === 'admin';
+
+            // Check if user is collaborator
+            const isCollaborator = ['write', 'maintain', 'admin'].includes(userPermission);
+
+            // Check if user is org member
+            const isMember = association === 'MEMBER';
+
+            // Check if user is first-time contributor
+            const isFirstTime = association === 'FIRST_TIME_CONTRIBUTOR';
+
+            // Check if user is in explicit authorized list
+            const isExplicitlyAuthorized = config.authorized_users &&
+                                          config.authorized_users.includes(actor);
+
+            console.log(`Authorization checks:`);
+            console.log(`  - Is owner: ${isOwner}`);
+            console.log(`  - Is collaborator: ${isCollaborator}`);
+            console.log(`  - Is org member: ${isMember}`);
+            console.log(`  - Is first-time: ${isFirstTime}`);
+            console.log(`  - Explicitly authorized: ${isExplicitlyAuthorized}`);
+
+            // Determine authorization
+            let authorized = false;
+            let reason = '';
+
+            if (isExplicitlyAuthorized) {
+              authorized = true;
+              reason = 'User is in authorized users list';
+            } else if (isOwner && config.settings?.allow_owner !== false) {
+              authorized = true;
+              reason = 'User is repository owner';
+            } else if (isCollaborator && config.settings?.allow_collaborators === true) {
+              authorized = true;
+              reason = 'User is repository collaborator';
+            } else if (isMember && config.settings?.allow_org_members === true) {
+              authorized = true;
+              reason = 'User is organization member';
+            } else if (isFirstTime && config.settings?.block_first_time_contributors === true) {
+              authorized = false;
+              reason = 'First-time contributors require approval';
+            } else if (association === 'NONE' && config.settings?.block_external_contributors === true) {
+              authorized = false;
+              reason = 'External contributors require approval';
+            } else {
+              // Default: allow if no strict config
+              authorized = true;
+              reason = 'Default authorization granted';
+            }
+
+            console.log(`\nAuthorization Decision:`);
+            console.log(`  User: ${actor}`);
+            console.log(`  Association: ${association}`);
+            console.log(`  Authorized: ${authorized}`);
+            console.log(`  Reason: ${reason}`);
+
+            core.setOutput('authorized', authorized.toString());
+            core.setOutput('reason', reason);
+            core.setOutput('actor', actor);
+            core.setOutput('association', association);
+
+            // Create summary
+            await core.summary
+              .addHeading('1️⃣ Authorization Check')
+              .addTable([
+                [{data: 'Field', header: true}, {data: 'Value', header: true}],
+                ['User', actor],
+                ['Association', association],
+                ['Authorized', authorized ? '✅ Yes' : '❌ No'],
+                ['Reason', reason]
+              ])
+              .write();
+
+      - name: Fail if unauthorized
+        if: steps.check-auth.outputs.authorized != 'true'
+        run: |
+          echo "::error::PR author is not authorized"
+          exit 1
+
+  # ============================================================================
+  # Step 2: PR Guardrails
+  # ============================================================================
+  guardrails:
+    name: "2️⃣ PR Guardrails"
+    runs-on: ubuntu-latest
+    needs: authorization
+    if: needs.authorization.outputs.authorized == 'true'
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check PR size
+        id: check-size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const additions = pr.additions || 0;
+            const deletions = pr.deletions || 0;
+            const totalChanges = additions + deletions;
+            const filesChanged = pr.changed_files || 0;
+
+            const MAX_SIZE = 2000;
+            const isOwner = '${{ needs.authorization.outputs.association }}' === 'OWNER';
+
+            console.log(`PR Size Check:`);
+            console.log(`  Additions: ${additions}`);
+            console.log(`  Deletions: ${deletions}`);
+            console.log(`  Total changes: ${totalChanges}`);
+            console.log(`  Files changed: ${filesChanged}`);
+
+            let status = 'pass';
+            const findings = [];
+
+            if (totalChanges > MAX_SIZE) {
+              const severity = isOwner ? 'warning' : 'error';
+              status = isOwner ? 'warning' : 'failed';
+
+              findings.push({
+                severity: severity,
+                category: 'PR Size',
+                message: `PR has ${totalChanges} lines changed (limit: ${MAX_SIZE})`,
+                remediation: 'Consider splitting this PR into smaller, more focused PRs'
+              });
+            }
+
+            core.setOutput('total_changes', totalChanges);
+            core.setOutput('files_changed', filesChanged);
+            core.setOutput('status', status);
+            core.setOutput('findings', JSON.stringify(findings));
+
+      - name: Check PR description
+        id: check-description
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            const MIN_LENGTH = 20;
+
+            console.log(`PR Description Check:`);
+            console.log(`  Length: ${body.length} characters`);
+
+            const findings = [];
+
+            if (body.length < MIN_LENGTH) {
+              findings.push({
+                severity: 'warning',
+                category: 'PR Description',
+                message: `PR description is too short (${body.length} characters, minimum: ${MIN_LENGTH})`,
+                remediation: 'Add a meaningful description explaining what changes were made and why'
+              });
+            }
+
+            core.setOutput('findings', JSON.stringify(findings));
+
+      - name: Aggregate guardrails results
+        id: aggregate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              // Safely parse findings with fallback to empty array
+              const sizeFindingsJson = `${{ steps.check-size.outputs.findings }}`.trim();
+              const descFindingsJson = `${{ steps.check-description.outputs.findings }}`.trim();
+
+              console.log('Size findings JSON:', sizeFindingsJson || '(empty)');
+              console.log('Description findings JSON:', descFindingsJson || '(empty)');
+
+              let sizeFindings = [];
+              let descFindings = [];
+
+              if (sizeFindingsJson) {
+                try {
+                  sizeFindings = JSON.parse(sizeFindingsJson);
+                  console.log('Parsed size findings:', sizeFindings.length, 'items');
+                } catch (e) {
+                  console.error('Failed to parse size findings:', e.message);
+                }
+              }
+
+              if (descFindingsJson) {
+                try {
+                  descFindings = JSON.parse(descFindingsJson);
+                  console.log('Parsed description findings:', descFindings.length, 'items');
+                } catch (e) {
+                  console.error('Failed to parse description findings:', e.message);
+                }
+              }
+
+              const allFindings = [...sizeFindings, ...descFindings];
+              console.log('Total findings:', allFindings.length);
+
+              const summary = {
+                total: allFindings.length,
+                errors: allFindings.filter(f => f.severity === 'error').length,
+                warnings: allFindings.filter(f => f.severity === 'warning').length,
+                info: allFindings.filter(f => f.severity === 'info').length
+              };
+
+              let status = `${{ steps.check-size.outputs.status }}`.trim() || 'pass';
+              console.log('Initial status:', status);
+
+              if (summary.errors > 0) {
+                status = 'failed';
+              } else if (summary.warnings > 0 && status === 'pass') {
+                status = 'warning';
+              }
+
+              console.log('Final status:', status);
+
+              const result = {
+                step: 'guardrails',
+                status: status,
+                timestamp: new Date().toISOString(),
+                findings: allFindings,
+                summary: summary
+              };
+
+              console.log('Aggregate result:', JSON.stringify(result, null, 2));
+
+              console.log('Setting outputs');
+
+              // Set status output separately
+              core.setOutput('status', status);
+
+              // Create step summary
+              await core.summary
+                .addHeading('2️⃣ PR Guardrails')
+                .addTable([
+                  [{data: 'Check', header: true}, {data: 'Result', header: true}],
+                  ['PR Size', `${context.payload.pull_request.additions + context.payload.pull_request.deletions} lines (${context.payload.pull_request.changed_files} files)`],
+                  ['Description Length', `${(context.payload.pull_request.body || '').length} characters`],
+                  ['Status', status === 'pass' ? '✅ Pass' : status === 'warning' ? '⚠️ Warning' : '❌ Failed'],
+                  ['Issues Found', `${summary.total} (${summary.errors} errors, ${summary.warnings} warnings)`]
+                ])
+                .write();
+
+              console.log('Step summary created successfully');
+
+              // Return the result object - github-script will JSON-encode it automatically
+              // This is more reliable than core.setOutput for complex objects
+              console.log('Returning result object');
+              return result;
+            } catch (error) {
+              console.error('Error in aggregate step:', error);
+              core.setFailed(`Aggregate step failed: ${error.message}`);
+              throw error;
+            }
+
+      - name: Post PR comment
+        uses: actions/github-script@v7
+        env:
+          RESULT_JSON: ${{ steps.aggregate.outputs.result }}
+        with:
+          script: |
+            // Read from environment variable - this properly handles multiline JSON
+            const resultJson = process.env.RESULT_JSON;
+
+            // Debug output
+            console.log('Result JSON length:', resultJson?.length || 0);
+            console.log('Result JSON preview:', resultJson?.substring(0, 200));
+
+            if (!resultJson || resultJson.length === 0) {
+              core.setFailed('Aggregate step did not produce a result output');
+              return;
+            }
+
+            const result = JSON.parse(resultJson);
+            console.log('Result parsed successfully');
+
+            // Format the comment using PowerShell script
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+
+            // Write result to temp file
+            const tempFile = '/tmp/guardrails-result.json';
+            fs.writeFileSync(tempFile, JSON.stringify(result));
+
+            // Run PowerShell formatter using the temp file
+            const markdown = execSync(
+              `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
+              `-InputJsonPath '${tempFile}' ` +
+              `-StepNumber 2 ` +
+              `-StepName "PR Guardrails" ` +
+              `-Emoji "🛡️" ` +
+              `-RunUrl "${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}"`,
+              { encoding: 'utf8' }
+            );
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('<!-- pr-validation:step-2 -->')
+            );
+
+            // Create or update comment
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: markdown
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: markdown
+              });
+            }
+
+      - name: Fail if guardrails failed
+        if: steps.aggregate.outputs.status == 'failed'
+        run: |
+          echo "::error::PR guardrails check failed"
+          exit 1
+
+  # ============================================================================
+  # Step 3: Quality Checks
+  # ============================================================================
+  quality-checks:
+    name: "3️⃣ Quality Checks"
+    runs-on: ubuntu-latest
+    needs: guardrails
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Check code formatting
+        id: check-format
+        continue-on-error: true
+        run: |
+          echo "Running dotnet format..."
+          dotnet format --verify-no-changes --verbosity diagnostic > format-output.txt 2>&1 || echo "FORMAT_FAILED=true" >> $GITHUB_ENV
+          cat format-output.txt
+
+      - name: Build solution
+        id: build
+        continue-on-error: true
+        run: |
+          echo "Building solution..."
+          dotnet build --no-restore --verbosity normal > build-output.txt 2>&1 || echo "BUILD_FAILED=true" >> $GITHUB_ENV
+          cat build-output.txt
+
+      - name: Install Playwright browsers
+        continue-on-error: true
+        run: |
+          pwsh tests/Example.Web.Tests.Playwright/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+          pwsh tests/Example.API.Tests.Playwright/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Run unit tests
+        id: test
+        continue-on-error: true
+        run: |
+          echo "Running tests..."
+          dotnet test --no-build --verbosity normal --logger "console;verbosity=detailed" > test-output.txt 2>&1 || echo "TEST_FAILED=true" >> $GITHUB_ENV
+          cat test-output.txt
+
+      - name: Parse quality check results
+        id: parse-results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const findings = [];
+
+            // Check formatting results
+            if (process.env.FORMAT_FAILED === 'true') {
+              try {
+                const formatOutput = fs.readFileSync('format-output.txt', 'utf8');
+                const lines = formatOutput.split('\n');
+
+                // Parse format violations
+                for (const line of lines) {
+                  if (line.includes('.cs(') || line.includes('warning')) {
+                    findings.push({
+                      severity: 'warning',
+                      category: 'Code Formatting',
+                      message: line.trim(),
+                      remediation: 'Run `dotnet format` to fix formatting issues'
+                    });
+                  }
+                }
+
+                if (findings.length === 0) {
+                  findings.push({
+                    severity: 'error',
+                    category: 'Code Formatting',
+                    message: 'Code formatting check failed',
+                    remediation: 'Run `dotnet format` to fix formatting issues'
+                  });
+                }
+              } catch (error) {
+                console.log('Could not parse format output:', error);
+              }
+            }
+
+            // Check build results
+            if (process.env.BUILD_FAILED === 'true') {
+              try {
+                const buildOutput = fs.readFileSync('build-output.txt', 'utf8');
+                const lines = buildOutput.split('\n');
+
+                for (const line of lines) {
+                  if (line.includes('error CS') || line.includes('error MSB')) {
+                    findings.push({
+                      severity: 'error',
+                      category: 'Build',
+                      message: line.trim(),
+                      remediation: 'Fix compilation errors'
+                    });
+                  } else if (line.includes('warning CS') || line.includes('warning MSB')) {
+                    findings.push({
+                      severity: 'warning',
+                      category: 'Build',
+                      message: line.trim(),
+                      remediation: 'Fix compilation warnings (TreatWarningsAsErrors is enabled)'
+                    });
+                  }
+                }
+
+                if (findings.filter(f => f.category === 'Build').length === 0) {
+                  findings.push({
+                    severity: 'error',
+                    category: 'Build',
+                    message: 'Build failed',
+                    remediation: 'Check build output for errors'
+                  });
+                }
+              } catch (error) {
+                console.log('Could not parse build output:', error);
+              }
+            }
+
+            // Check test results
+            if (process.env.TEST_FAILED === 'true') {
+              try {
+                const testOutput = fs.readFileSync('test-output.txt', 'utf8');
+                const lines = testOutput.split('\n');
+
+                for (const line of lines) {
+                  if (line.includes('Failed!') || line.includes('[FAIL]')) {
+                    findings.push({
+                      severity: 'error',
+                      category: 'Tests',
+                      message: line.trim(),
+                      remediation: 'Fix failing tests'
+                    });
+                  }
+                }
+
+                if (findings.filter(f => f.category === 'Tests').length === 0) {
+                  findings.push({
+                    severity: 'error',
+                    category: 'Tests',
+                    message: 'Tests failed',
+                    remediation: 'Run `dotnet test` locally to see failing tests'
+                  });
+                }
+              } catch (error) {
+                console.log('Could not parse test output:', error);
+              }
+            }
+
+            // Calculate summary
+            const summary = {
+              total: findings.length,
+              errors: findings.filter(f => f.severity === 'error').length,
+              warnings: findings.filter(f => f.severity === 'warning').length,
+              info: findings.filter(f => f.severity === 'info').length
+            };
+
+            let status = 'pass';
+            if (summary.errors > 0) {
+              status = 'failed';
+            } else if (summary.warnings > 0) {
+              status = 'warning';
+            }
+
+            const result = {
+              step: 'quality-checks',
+              status: status,
+              timestamp: new Date().toISOString(),
+              findings: findings,
+              summary: summary
+            };
+
+            // Set status output separately
+            core.setOutput('status', status);
+
+            // Create step summary
+            await core.summary
+              .addHeading('3️⃣ Quality Checks')
+              .addTable([
+                [{data: 'Check', header: true}, {data: 'Result', header: true}],
+                ['Code Formatting', process.env.FORMAT_FAILED === 'true' ? '❌ Failed' : '✅ Passed'],
+                ['Build', process.env.BUILD_FAILED === 'true' ? '❌ Failed' : '✅ Passed'],
+                ['Tests', process.env.TEST_FAILED === 'true' ? '❌ Failed' : '✅ Passed'],
+                ['Status', status === 'pass' ? '✅ Pass' : status === 'warning' ? '⚠️ Warning' : '❌ Failed'],
+                ['Issues Found', `${summary.total} (${summary.errors} errors, ${summary.warnings} warnings)`]
+              ])
+              .write();
+
+            // Return the result object - github-script will JSON-encode it automatically
+            return result;
+
+      - name: Post PR comment
+        uses: actions/github-script@v7
+        env:
+          RESULT_JSON: ${{ steps.parse-results.outputs.result }}
+        with:
+          script: |
+            // Read from environment variable - this properly handles multiline JSON
+            const resultJson = process.env.RESULT_JSON;
+
+            // Debug output
+            console.log('Result JSON length:', resultJson?.length || 0);
+            console.log('Result JSON preview:', resultJson?.substring(0, 200));
+
+            if (!resultJson || resultJson.length === 0) {
+              core.setFailed('Parse results step did not produce a result output');
+              return;
+            }
+
+            const result = JSON.parse(resultJson);
+            console.log('Result parsed successfully');
+
+            // Format the comment using PowerShell script
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+
+            // Write result to temp file
+            const tempFile = '/tmp/quality-checks-result.json';
+            fs.writeFileSync(tempFile, JSON.stringify(result));
+
+            // Run PowerShell formatter using the temp file
+            const markdown = execSync(
+              `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
+              `-InputJsonPath '${tempFile}' ` +
+              `-StepNumber 3 ` +
+              `-StepName "Quality Checks" ` +
+              `-Emoji "✨" ` +
+              `-RunUrl "${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}"`,
+              { encoding: 'utf8' }
+            );
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('<!-- pr-validation:step-3 -->')
+            );
+
+            // Create or update comment
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: markdown
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: markdown
+              });
+            }
+
+      - name: Fail if quality checks failed
+        if: steps.parse-results.outputs.status == 'failed'
+        run: |
+          echo "::error::Quality checks failed"
+          exit 1
+
+  # ============================================================================
+  # Step 4: Code Review
+  # ============================================================================
+  code-review:
+    name: "4️⃣ Code Review"
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    continue-on-error: true  # Don't fail pipeline if secret not configured
+    if: always()
+
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+      id-token: write  # Required for OIDC authentication
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for PR diff
+
+      - name: Check if Claude Code secret is configured
+        id: check-secret
+        run: |
+          if [ -z "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "::warning::CLAUDE_CODE_OAUTH_TOKEN secret not configured. Skipping code review."
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Claude Code review
+        if: steps.check-secret.outputs.configured == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          prompt: |
+            Review this PR for .NET 10 best practices and project compliance:
+
+            **Code Quality & Conventions:**
+            - Follow C# coding conventions and naming standards
+            - Proper use of async/await patterns
+            - Error handling and exception management
+            - Null safety and nullable reference types
+            - LINQ usage and performance considerations
+
+            **Architecture & Design:**
+            - Separation of concerns
+            - Dependency injection patterns
+            - API design and HTTP semantics (for Minimal APIs)
+            - MVC patterns and conventions (for Web project)
+
+            **.NET 10 & Project-Specific Requirements:**
+            - ImplicitUsings disabled - all using statements must be explicit
+            - Centralized Package Management - NO Version attributes in .csproj files
+            - MSTest with Microsoft.Testing.Platform (new test runner)
+            - TreatWarningsAsErrors compliance
+
+            **Testing:**
+            - Test coverage for new functionality
+            - Test quality and assertions
+            - Proper use of MSTest attributes
+            - Playwright test patterns (if applicable)
+
+            **Security:**
+            - Input validation and sanitization
+            - Authentication and authorization
+            - Secure configuration handling
+            - No hardcoded secrets or sensitive data
+
+            **Breaking Changes:**
+            - API surface changes
+            - Configuration schema changes
+            - Database migrations (if applicable)
+
+            **Documentation:**
+            - XML documentation comments for public APIs
+            - README updates if needed
+            - CLAUDE.md updates for architecture changes
+
+            Provide specific, actionable feedback with file:line references.
+
+      - name: Post skip message if secret not configured
+        if: steps.check-secret.outputs.configured == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- pr-validation:step-4 -->';
+            const markdown = `${marker}
+            ## 4️⃣ Code Review
+
+            ⚠️ **Skipped** - CLAUDE_CODE_OAUTH_TOKEN secret not configured
+
+            To enable automated code review:
+            1. Obtain OAuth token from Claude Code
+            2. Add as repository secret: \`CLAUDE_CODE_OAUTH_TOKEN\`
+            3. Re-run this workflow
+
+            **Status:** ⏭️ Skipped (non-blocking)
+            **Timestamp:** ${new Date().toISOString()}
+
+            ---
+            <!-- /pr-validation:step-4 -->`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('<!-- pr-validation:step-4 -->')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: markdown
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: markdown
+              });
+            }
+
+  # ============================================================================
+  # Step 5: Security Review
+  # ============================================================================
+  security-review:
+    name: "5️⃣ Security Review"
+    runs-on: ubuntu-latest
+    needs: code-review
+    if: always()
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # Secret scanning with GitLeaks
+      - name: Run GitLeaks secret scan
+        id: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check GitLeaks results
+        id: gitleaks-check
+        run: |
+          if [ "${{ steps.gitleaks.outcome }}" = "failure" ]; then
+            echo "GITLEAKS_FAILED=true" >> $GITHUB_ENV
+            echo "⚠️ GitLeaks detected potential secrets"
+          else
+            echo "✅ No secrets detected by GitLeaks"
+          fi
+
+      # .NET security analyzers (build with security analyzers enabled)
+      - name: Run .NET security analyzers
+        id: security-analyzers
+        continue-on-error: true
+        run: |
+          set +e
+          dotnet build /p:RunAnalyzers=true /p:EnableNETAnalyzers=true /p:AnalysisLevel=latest-all > security-analysis.txt 2>&1
+          BUILD_EXIT_CODE=$?
+          set -e
+
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
+            echo "SECURITY_ANALYZER_FAILED=true" >> $GITHUB_ENV
+            echo "⚠️ Security analyzer warnings/errors found"
+            cat security-analysis.txt
+          else
+            echo "✅ No security analyzer issues found"
+          fi
+
+      # NuGet vulnerability scan
+      - name: Run NuGet vulnerability scan
+        id: nuget-vuln
+        continue-on-error: true
+        run: |
+          set +e
+          pwsh -File .github/scripts/check-dotnet-vulnerabilities.ps1 > nuget-vuln.json 2>&1
+          PWSH_EXIT_CODE=$?
+          set -e
+
+          if [ $PWSH_EXIT_CODE -ne 0 ]; then
+            echo "NUGET_VULN_FAILED=true" >> $GITHUB_ENV
+          fi
+
+      # Path security check
+      - name: Run path security check
+        id: path-security
+        continue-on-error: true
+        run: |
+          set +e
+          pwsh -File .github/scripts/check-path-security.ps1 -SourcePath . > path-security.json 2>&1
+          PWSH_EXIT_CODE=$?
+          set -e
+
+          if [ $PWSH_EXIT_CODE -ne 0 ]; then
+            echo "PATH_SECURITY_FAILED=true" >> $GITHUB_ENV
+          fi
+
+      # Parse and aggregate all security results
+      - name: Parse security results
+        id: parse-results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const findings = [];
+
+            // Parse GitLeaks results
+            if (process.env.GITLEAKS_FAILED === 'true') {
+              findings.push({
+                severity: 'error',
+                category: 'Secret Scanning',
+                file: '',
+                line: 0,
+                rule: 'GITLEAKS',
+                message: 'Potential secrets detected in code',
+                remediation: 'Review GitLeaks output and remove any exposed secrets. See workflow logs for details.'
+              });
+            }
+
+            // Parse security analyzer results
+            if (process.env.SECURITY_ANALYZER_FAILED === 'true') {
+              try {
+                const analyzerOutput = fs.readFileSync('security-analysis.txt', 'utf8');
+                const warningMatches = analyzerOutput.match(/warning CA\d+:/g) || [];
+                const errorMatches = analyzerOutput.match(/error CA\d+:/g) || [];
+
+                if (errorMatches.length > 0 || warningMatches.length > 0) {
+                  findings.push({
+                    severity: errorMatches.length > 0 ? 'error' : 'warning',
+                    category: 'Security Analysis',
+                    file: '',
+                    line: 0,
+                    rule: 'DOTNET-SECURITY-ANALYZER',
+                    message: `Found ${errorMatches.length} security errors and ${warningMatches.length} warnings`,
+                    remediation: 'Review security analyzer output in workflow logs and fix identified issues'
+                  });
+                }
+              } catch (e) {
+                console.log('Could not parse security analyzer results:', e.message);
+              }
+            }
+
+            // Parse NuGet vulnerability results
+            if (fs.existsSync('nuget-vuln.json')) {
+              try {
+                const nugetResult = JSON.parse(fs.readFileSync('nuget-vuln.json', 'utf8'));
+                if (nugetResult.findings && nugetResult.findings.length > 0) {
+                  findings.push(...nugetResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse NuGet vulnerability results:', e.message);
+              }
+            }
+
+            // Parse path security results
+            if (fs.existsSync('path-security.json')) {
+              try {
+                const pathResult = JSON.parse(fs.readFileSync('path-security.json', 'utf8'));
+                if (pathResult.findings && pathResult.findings.length > 0) {
+                  findings.push(...pathResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse path security results:', e.message);
+              }
+            }
+
+            // Calculate summary
+            const summary = {
+              total: findings.length,
+              errors: findings.filter(f => f.severity === 'error').length,
+              warnings: findings.filter(f => f.severity === 'warning').length,
+              info: findings.filter(f => f.severity === 'info').length
+            };
+
+            // Determine status
+            const status = summary.errors > 0 ? 'failed' : summary.warnings > 0 ? 'warning' : 'pass';
+
+            const result = {
+              step: 'security-review',
+              status: status,
+              timestamp: new Date().toISOString(),
+              findings: findings,
+              summary: summary
+            };
+
+            // Set status output separately
+            core.setOutput('status', status);
+
+            console.log('Security review complete:');
+            console.log(`  Status: ${status}`);
+            console.log(`  Total findings: ${summary.total}`);
+            console.log(`  Errors: ${summary.errors}, Warnings: ${summary.warnings}, Info: ${summary.info}`);
+
+            // Return the result object - github-script will JSON-encode it automatically
+            return result;
+
+      # Post PR comment with security results
+      - name: Post security review comment
+        uses: actions/github-script@v7
+        env:
+          RESULT_JSON: ${{ steps.parse-results.outputs.result }}
+        with:
+          script: |
+            // Read from environment variable - this properly handles multiline JSON
+            const resultJson = process.env.RESULT_JSON;
+
+            // Debug output
+            console.log('Result JSON length:', resultJson?.length || 0);
+            console.log('Result JSON preview:', resultJson?.substring(0, 200));
+
+            if (!resultJson || resultJson.length === 0) {
+              core.setFailed('Parse results step did not produce a result output');
+              return;
+            }
+
+            const result = JSON.parse(resultJson);
+            console.log('Result parsed successfully');
+
+            // Format the comment using PowerShell script
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+
+            // Write result to temp file
+            const tempFile = '/tmp/security-review-result.json';
+            fs.writeFileSync(tempFile, JSON.stringify(result));
+
+            // Run PowerShell formatter using the temp file
+            const markdown = execSync(
+              `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
+              `-InputJsonPath '${tempFile}' ` +
+              `-StepNumber 5 ` +
+              `-StepName "Security Review" ` +
+              `-Emoji "🔒" ` +
+              `-RunUrl "${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}"`,
+              { encoding: 'utf8' }
+            );
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('<!-- pr-validation:step-5 -->')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: markdown
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: markdown
+              });
+            }
+
+      - name: Fail if security issues found
+        if: steps.parse-results.outputs.status == 'failed'
+        run: |
+          echo "::error::Security review failed - critical security issues found"
+          exit 1
+
+  # ============================================================================
+  # Step 6: .NET-Specific Validation
+  # ============================================================================
+  dotnet-validation:
+    name: "6️⃣ .NET Validation"
+    runs-on: ubuntu-latest
+    needs: security-review
+    if: always()
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Run .csproj structure validation
+      - name: Validate .csproj files
+        id: csproj-validation
+        continue-on-error: true
+        run: |
+          pwsh -File .github/scripts/check-csproj-structure.ps1 > csproj-validation.json 2>&1 || echo "CSPROJ_VALIDATION_FAILED=true" >> $GITHUB_ENV
+
+      # Run CPM compliance validation
+      - name: Validate Directory.Packages.props
+        id: cpm-validation
+        continue-on-error: true
+        run: |
+          pwsh -File .github/scripts/check-cpm-compliance.ps1 > cpm-validation.json 2>&1 || echo "CPM_VALIDATION_FAILED=true" >> $GITHUB_ENV
+
+      # Run global.json validation
+      - name: Validate global.json
+        id: globaljson-validation
+        continue-on-error: true
+        run: |
+          pwsh -File .github/scripts/check-global-json.ps1 > globaljson-validation.json 2>&1 || echo "GLOBALJSON_VALIDATION_FAILED=true" >> $GITHUB_ENV
+
+      # Parse and aggregate all .NET validation results
+      - name: Parse .NET validation results
+        id: parse-results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const findings = [];
+
+            // Parse .csproj validation results
+            if (fs.existsSync('csproj-validation.json')) {
+              try {
+                const csprojResult = JSON.parse(fs.readFileSync('csproj-validation.json', 'utf8'));
+                if (csprojResult.findings && csprojResult.findings.length > 0) {
+                  findings.push(...csprojResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse .csproj validation results:', e.message);
+              }
+            }
+
+            // Parse CPM validation results
+            if (fs.existsSync('cpm-validation.json')) {
+              try {
+                const cpmResult = JSON.parse(fs.readFileSync('cpm-validation.json', 'utf8'));
+                if (cpmResult.findings && cpmResult.findings.length > 0) {
+                  findings.push(...cpmResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse CPM validation results:', e.message);
+              }
+            }
+
+            // Parse global.json validation results
+            if (fs.existsSync('globaljson-validation.json')) {
+              try {
+                const globalJsonResult = JSON.parse(fs.readFileSync('globaljson-validation.json', 'utf8'));
+                if (globalJsonResult.findings && globalJsonResult.findings.length > 0) {
+                  findings.push(...globalJsonResult.findings);
+                }
+              } catch (e) {
+                console.log('Could not parse global.json validation results:', e.message);
+              }
+            }
+
+            // Calculate summary
+            const summary = {
+              total: findings.length,
+              errors: findings.filter(f => f.severity === 'error').length,
+              warnings: findings.filter(f => f.severity === 'warning').length,
+              info: findings.filter(f => f.severity === 'info').length
+            };
+
+            // Determine status
+            const status = summary.errors > 0 ? 'failed' : summary.warnings > 0 ? 'warning' : 'pass';
+
+            const result = {
+              step: 'dotnet-validation',
+              status: status,
+              timestamp: new Date().toISOString(),
+              findings: findings,
+              summary: summary
+            };
+
+            // Set status output separately
+            core.setOutput('status', status);
+
+            console.log('.NET validation complete:');
+            console.log(`  Status: ${status}`);
+            console.log(`  Total findings: ${summary.total}`);
+            console.log(`  Errors: ${summary.errors}, Warnings: ${summary.warnings}, Info: ${summary.info}`);
+
+            // Return the result object - github-script will JSON-encode it automatically
+            return result;
+
+      # Post PR comment with .NET validation results
+      - name: Post .NET validation comment
+        uses: actions/github-script@v7
+        env:
+          RESULT_JSON: ${{ steps.parse-results.outputs.result }}
+        with:
+          script: |
+            // Read from environment variable - this properly handles multiline JSON
+            const resultJson = process.env.RESULT_JSON;
+
+            // Debug output
+            console.log('Result JSON length:', resultJson?.length || 0);
+            console.log('Result JSON preview:', resultJson?.substring(0, 200));
+
+            if (!resultJson || resultJson.length === 0) {
+              core.setFailed('Parse results step did not produce a result output');
+              return;
+            }
+
+            const result = JSON.parse(resultJson);
+            console.log('Result parsed successfully');
+
+            // Format the comment using PowerShell script
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+
+            // Write result to temp file
+            const tempFile = '/tmp/dotnet-validation-result.json';
+            fs.writeFileSync(tempFile, JSON.stringify(result));
+
+            // Run PowerShell formatter using the temp file
+            const markdown = execSync(
+              `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
+              `-InputJsonPath '${tempFile}' ` +
+              `-StepNumber 6 ` +
+              `-StepName ".NET Validation" ` +
+              `-Emoji "🔧" ` +
+              `-RunUrl "${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}"`,
+              { encoding: 'utf8' }
+            );
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('<!-- pr-validation:step-6 -->')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: markdown
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: markdown
+              });
+            }
+
+      - name: Fail if .NET validation failed
+        if: steps.parse-results.outputs.status == 'failed'
+        run: |
+          echo "::error::.NET validation failed - critical configuration issues found"
+          exit 1
+
+  # ============================================================================
+  # Validation Complete Summary
+  # ============================================================================
+  validation-complete:
+    name: "✅ Validation Complete"
+    runs-on: ubuntu-latest
+    needs: [authorization, guardrails, quality-checks, code-review, security-review, dotnet-validation]
+    if: always()
+
+    steps:
+      - name: Create validation summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              authorization: {
+                status: '${{ needs.authorization.result }}',
+                actor: '${{ needs.authorization.outputs.actor }}',
+                association: '${{ needs.authorization.outputs.association }}'
+              },
+              guardrails: {
+                status: '${{ needs.guardrails.result }}'
+              },
+              qualityChecks: {
+                status: '${{ needs.quality-checks.result }}'
+              },
+              codeReview: {
+                status: '${{ needs.code-review.result }}'
+              },
+              securityReview: {
+                status: '${{ needs.security-review.result }}'
+              },
+              dotnetValidation: {
+                status: '${{ needs.dotnet-validation.result }}'
+              }
+            };
+
+            let overallStatus = '✅ Passed';
+            const failedSteps = [];
+
+            if (results.authorization.status !== 'success') {
+              overallStatus = '❌ Failed';
+              failedSteps.push('Authorization');
+            }
+            if (results.guardrails.status !== 'success') {
+              overallStatus = '❌ Failed';
+              failedSteps.push('PR Guardrails');
+            }
+            if (results.qualityChecks.status !== 'success') {
+              overallStatus = '❌ Failed';
+              failedSteps.push('Quality Checks');
+            }
+            // Code review is optional (skipped if secret not configured)
+            if (results.codeReview.status === 'failure') {
+              overallStatus = '❌ Failed';
+              failedSteps.push('Code Review');
+            }
+            if (results.securityReview.status !== 'success') {
+              overallStatus = '❌ Failed';
+              failedSteps.push('Security Review');
+            }
+            if (results.dotnetValidation.status !== 'success') {
+              overallStatus = '❌ Failed';
+              failedSteps.push('.NET Validation');
+            }
+
+            await core.summary
+              .addHeading('PR Validation Pipeline Summary')
+              .addTable([
+                [{data: 'Step', header: true}, {data: 'Status', header: true}],
+                ['1️⃣ Authorization', results.authorization.status === 'success' ? '✅ Passed' : '❌ Failed'],
+                ['2️⃣ PR Guardrails', results.guardrails.status === 'success' ? '✅ Passed' : results.guardrails.status === 'failure' ? '❌ Failed' : '⚠️ Skipped'],
+                ['3️⃣ Quality Checks', results.qualityChecks.status === 'success' ? '✅ Passed' : results.qualityChecks.status === 'failure' ? '❌ Failed' : '⚠️ Skipped'],
+                ['4️⃣ Code Review', results.codeReview.status === 'success' ? '✅ Passed' : results.codeReview.status === 'failure' ? '❌ Failed' : '⏭️ Skipped'],
+                ['5️⃣ Security Review', results.securityReview.status === 'success' ? '✅ Passed' : results.securityReview.status === 'failure' ? '❌ Failed' : '⚠️ Skipped'],
+                ['6️⃣ .NET Validation', results.dotnetValidation.status === 'success' ? '✅ Passed' : results.dotnetValidation.status === 'failure' ? '❌ Failed' : '⚠️ Skipped']
+              ])
+              .addRaw(`\n**Overall Status:** ${overallStatus}`)
+              .addRaw(failedSteps.length > 0 ? `\n**Failed Steps:** ${failedSteps.join(', ')}` : '')
+              .write();

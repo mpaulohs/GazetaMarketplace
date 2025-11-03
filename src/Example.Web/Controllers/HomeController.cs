@@ -9,7 +9,9 @@ using Example.Web.Models;
 
 namespace Example.Web.Controllers
 {
+#pragma warning disable CA1515 // Controllers must be public for MVC routing discovery
     public class HomeController : Controller
+#pragma warning restore CA1515
     {
         private readonly ILogger<HomeController> _logger;
 

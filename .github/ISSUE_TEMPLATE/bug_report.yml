@@ -1,0 +1,136 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug. Please fill out the form below to help us investigate and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the problem you encountered...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run command '...'
+        2. Navigate to '...'
+        3. Click on '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe what you expected...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually happened...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: project
+    attributes:
+      label: Affected Project
+      description: Which project does this bug affect?
+      options:
+        - Example.Web (MVC application)
+        - Example.API (Minimal API)
+        - Example.Web.Tests (Unit tests)
+        - Example.API.Tests (Unit tests)
+        - Example.Web.Tests.Playwright (E2E tests)
+        - Example.API.Tests.Playwright (E2E tests)
+        - Build/Solution configuration
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: dotnet-version
+    attributes:
+      label: .NET SDK Version
+      description: Run `dotnet --version` to get your SDK version
+      placeholder: "10.0.100-rc.2.25502.107"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Linux (Ubuntu)
+        - Linux (Other)
+        - WSL2 (Ubuntu)
+        - WSL2 (Other)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: ide
+    attributes:
+      label: IDE/Editor
+      description: What IDE or editor are you using?
+      placeholder: "Visual Studio 2022, VS Code, Rider, etc."
+    validations:
+      required: false
+
+  - type: textarea
+    id: error-output
+    attributes:
+      label: Build Output or Error Messages
+      description: Please paste any relevant build output, error messages, or stack traces
+      placeholder: |
+        Paste error messages here...
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here (screenshots, logs, etc.)
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched for similar issues and this is not a duplicate
+          required: true
+        - label: I have provided all the requested information above
+          required: true
+        - label: I can reproduce this issue consistently
+          required: false

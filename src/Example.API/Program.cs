@@ -27,6 +27,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
+#pragma warning disable CA5394 // Random is acceptable for demo data generation
     var forecast =  Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
@@ -35,13 +36,14 @@ app.MapGet("/weatherforecast", () =>
             summaries[Random.Shared.Next(summaries.Length)]
         ))
         .ToArray();
+#pragma warning restore CA5394
     return forecast;
 })
 .WithName("GetWeatherForecast");
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string Summary)
+internal sealed record WeatherForecast(DateOnly Date, int TemperatureC, string Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }

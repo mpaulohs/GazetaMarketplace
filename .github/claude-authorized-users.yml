@@ -1,0 +1,76 @@
+# Claude Code Authorization Configuration
+#
+# This file controls who can trigger Claude Code via @claude mentions in issues and PRs.
+#
+# Security Notice: Carefully manage this file as it grants code execution permissions.
+# All changes to this file should be reviewed by repository administrators.
+
+# Explicit list of authorized GitHub usernames
+# Users listed here can always trigger Claude Code (unless emergency circuit breaker is enabled)
+authorized_users:
+  - NotMyself  # Repository owner
+
+# Authorization settings
+settings:
+  # Allow repository collaborators (users with write access or higher)
+  allow_collaborators: true
+
+  # Allow organization members (for org-owned repositories)
+  allow_org_members: true
+
+  # Allow repository owner (recommended: true)
+  allow_owner: true
+
+  # Block first-time contributors (users who have never contributed before)
+  # Recommended: true for security
+  block_first_time_contributors: true
+
+  # Block external contributors (users who are not collaborators or org members)
+  # Recommended: true for private repos, false for open source with careful monitoring
+  block_external_contributors: false
+
+# Audit logging
+audit:
+  # Log all authorization attempts (both successful and failed)
+  log_attempts: true
+
+  # Log authorized user actions
+  log_authorized: true
+
+  # Log blocked attempts
+  log_blocked: true
+
+  # Include user association in logs (OWNER, COLLABORATOR, MEMBER, etc.)
+  log_association: true
+
+# Emergency circuit breaker
+# Set enabled: true to immediately block ALL Claude Code usage (including owner)
+# Use this if Claude Code is behaving unexpectedly or for security incidents
+emergency:
+  enabled: false
+  reason: ""  # Document why circuit breaker was activated
+
+  # Last modified timestamp (update when changing circuit breaker)
+  last_modified: ""
+
+  # Contact for questions about circuit breaker status
+  contact: ""
+
+# Rate limiting (future feature - placeholder)
+rate_limiting:
+  enabled: false
+
+  # Maximum Claude Code invocations per user per day
+  max_per_user_per_day: 50
+
+  # Maximum Claude Code invocations per PR
+  max_per_pr: 20
+
+  # Cooldown period in minutes between invocations
+  cooldown_minutes: 5
+
+# Notes:
+# - Changes to this file take effect immediately on next @claude mention
+# - Test authorization with a comment containing @claude to verify configuration
+# - Circuit breaker overrides all other settings when enabled
+# - For security, always review Claude Code's actions and limit authorized users

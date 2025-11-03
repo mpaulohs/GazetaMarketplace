@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/[owner]/net10-project-example/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: Security Vulnerability Report
+    url: https://github.com/[owner]/net10-project-example/security/advisories/new
+    about: Report security vulnerabilities privately
+  - name: .NET Documentation
+    url: https://learn.microsoft.com/en-us/dotnet/
+    about: Official .NET documentation and guides

@@ -1,6 +1,11 @@
 # .NET 10 Project Example
 
-A full-stack .NET 10 example project demonstrating modern ASP.NET Core architecture with centralized package management, MSTest with the new Microsoft.Testing.Platform, and end-to-end testing with Playwright.
+[![.NET Version](https://img.shields.io/badge/.NET-10.0%20RC%202-512BD4?logo=dotnet)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-Contributor%20Covenant-purple.svg)](CODE_OF_CONDUCT.md)
+
+A full-stack .NET 10 example project demonstrating modern ASP.NET Core architecture with centralized package management, MSTest with the new Microsoft.Testing.Platform, end-to-end testing with Playwright, and comprehensive GitHub Actions CI/CD pipeline.
 
 ## Prerequisites
 
@@ -100,6 +105,18 @@ This project uses [Central Package Management (CPM)](https://learn.microsoft.com
 
 This project uses the new [Microsoft.Testing.Platform](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-mstest-runner-intro) instead of the legacy VSTest runner. Test projects are executable and can be run directly with `dotnet run`.
 
+### Automated PR Validation Pipeline
+
+Comprehensive GitHub Actions workflow that automatically validates all pull requests:
+
+- **6-step validation process**: Authorization → PR Guardrails → Quality Checks → Code Review → Security Review → .NET Validation
+- **Security scanning**: GitLeaks, NuGet vulnerabilities, .NET security analyzers, path security
+- **.NET-specific validation**: CPM compliance, .csproj structure, global.json configuration
+- **Code quality**: Automated formatting, build verification, test execution
+- **Optional AI review**: Claude Code integration for .NET best practices
+
+See [.github/workflows/README.md](.github/workflows/README.md) for detailed documentation.
+
 ## Development Notes
 
 - **Explicit Using Statements Required**: `ImplicitUsings` is disabled, so all C# files must include explicit `using` statements.
@@ -119,11 +136,24 @@ See [.claude/README.md](.claude/README.md) for usage details and [CLAUDE.md](CLA
 
 ### Attribution
 
-The Claude Code infrastructure (`.claude/` directory) is based on the [Claude Code Infrastructure Showcase](https://github.com/yourusername/claude-code-infrastructure-showcase) repository, released under the MIT License. Copyright (c) 2025 Claude Code Infrastructure Contributors. See [.claude/ATTRIBUTION.md](.claude/ATTRIBUTION.md) for complete licensing information.
+The Claude Code infrastructure (`.claude/` directory) is based on the [Claude Code Infrastructure Showcase](https://github.com/diet103/claude-code-infrastructure-showcase) repository, released under the MIT License. Copyright (c) 2025 Claude Code Infrastructure Contributors. See [.claude/ATTRIBUTION.md](.claude/ATTRIBUTION.md) for complete licensing information.
 
 ## Contributing
 
-This is an example project for demonstrating .NET 10 features and architecture patterns.
+We welcome contributions! This project demonstrates .NET 10 features and modern development practices.
+
+**Before contributing, please read:**
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Development setup, coding standards, and PR process
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - Community guidelines
+- [SECURITY.md](SECURITY.md) - Security policy and vulnerability reporting
+
+**Key contribution areas:**
+- Bug fixes and improvements
+- Additional test coverage
+- Documentation enhancements
+- New example features demonstrating .NET 10 capabilities
+
+All pull requests go through automated validation including code quality, security scanning, and .NET-specific checks.
 
 ## License
 
