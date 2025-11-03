@@ -1,0 +1,8 @@
+# DocFX generated directories
+_site/
+api/
+obj/
+
+# DocFX artifacts
+.manifest
+log.txt

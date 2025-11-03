@@ -1,0 +1,13 @@
+- name: Home
+  href: index.md
+- name: Articles
+  href: articles/
+  items:
+    - name: Architecture Overview
+      href: articles/architecture.md
+    - name: Domain Models
+      href: articles/domain-models.md
+    - name: API Guide
+      href: articles/api-guide.md
+- name: API Reference
+  href: api/

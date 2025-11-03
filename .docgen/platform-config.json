@@ -1,0 +1,72 @@
+{
+  "defaultPlatform": "auto",
+  "platforms": {
+    "github": {
+      "enabled": true,
+      "workflowsPath": ".github/workflows",
+      "scriptsPath": ".github/scripts",
+      "deploymentTargets": {
+        "developerDocs": {
+          "type": "github-pages",
+          "branch": "gh-pages",
+          "path": "/",
+          "url": "https://notmyself.github.io/net10-project-example/"
+        },
+        "userDocs": {
+          "type": "github-pages",
+          "branch": "gh-pages",
+          "path": "/user/",
+          "url": "https://notmyself.github.io/net10-project-example/user/"
+        },
+        "companyDocs": {
+          "type": "github-wiki",
+          "repository": "NotMyself/net10-project-example.wiki",
+          "url": "https://github.com/NotMyself/net10-project-example/wiki"
+        }
+      },
+      "features": {
+        "prValidation": true,
+        "automaticDeployment": true,
+        "wikiSync": true,
+        "diagramGeneration": true
+      }
+    },
+    "azuredevops": {
+      "enabled": false,
+      "pipelinesPath": ".azuredevops/pipelines",
+      "scriptsPath": ".azuredevops/scripts",
+      "deploymentTargets": {
+        "developerDocs": {
+          "type": "azure-static-web-app",
+          "resourceGroup": "docs-rg",
+          "appName": "net10-docs-developer",
+          "url": "https://net10-docs.azurestaticapps.net/"
+        },
+        "userDocs": {
+          "type": "azure-static-web-app",
+          "resourceGroup": "docs-rg",
+          "appName": "net10-docs-user",
+          "url": "https://net10-docs-user.azurestaticapps.net/"
+        },
+        "companyDocs": {
+          "type": "azure-devops-wiki",
+          "project": "net10-project-example",
+          "wikiName": "net10-project-example.wiki",
+          "url": "https://dev.azure.com/org/net10-project-example/_wiki"
+        }
+      },
+      "features": {
+        "prValidation": true,
+        "automaticDeployment": true,
+        "wikiSync": true,
+        "diagramGeneration": true
+      }
+    }
+  },
+  "sharedConfig": {
+    "docfxVersion": "latest",
+    "diagramTools": ["dll2mmd", "PlantUmlClassDiagramGenerator"],
+    "markdownlintConfig": ".markdownlint.json",
+    "validateOnPR": true
+  }
+}

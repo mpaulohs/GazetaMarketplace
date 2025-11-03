@@ -1,6 +1,6 @@
 # AI-Assisted Documentation System - Context
 
-**Last Updated:** 2025-11-02
+**Last Updated:** 2025-11-03 (Session 2)
 
 ---
 
@@ -15,7 +15,7 @@
 - [x] Option A strategy confirmed (3 documentation types with separate targets)
 - [x] GitHub-first approach approved (Azure DevOps as optional Phase 7)
 - [x] Dev docs structure created (dev/active/004-ai-docs/)
-- [x] Comprehensive strategic plan written (ai-docs-plan.md, 9 phases, ~850 lines)
+- [x] Comprehensive strategic plan written (ai-docs-plan.md, 9 phases)
 - [x] Context document created (ai-docs-context.md, THIS FILE)
 - [x] Tasks checklist created (ai-docs-tasks.md)
 
@@ -25,22 +25,47 @@
 - [x] Platform detection strategy defined
 - [x] MCP server configuration approach designed
 
+**Phase 1: Documentation Planning & Architecture** (COMPLETE - 2 hours actual)
+- [x] Created ai-docs-platform-agnostic-architecture.md (3,599 lines, 113 KB)
+- [x] Created documentation-content-strategy.md (612 lines, 23 KB)
+- [x] Created ai-docs-implementation-plan.md (~800 lines, 73 KB)
+- [x] Created github-plugin-guide.md (3,355 lines, 100 KB)
+- [x] Created azure-devops-plugin-guide.md (1,584 lines, 108 KB)
+- [x] All 5 architecture documents validated and complete
+
+**Phase 2: Core Foundation Setup** (COMPLETE - 2 hours actual)
+- [x] Enabled XML documentation generation (Directory.Build.props)
+- [x] Created .docgen/ directory with 8 scripts and README.md
+- [x] Created platform-config.json (valid JSON, GitHub + Azure DevOps configured)
+- [x] Created mcp-config.json + setup-mcp.ps1 (with rollback support)
+- [x] Created cross-platform Makefile (15+ targets, works on WSL2)
+- [x] Installed DocFX 2.78.4 globally
+- [x] Installed dll2mmd 1.0.6 and PlantUmlClassDiagramGenerator 1.4.0
+- [x] Created diagram-gen.ps1 with error handling
+
+**Phase 3: System Developer Docs Setup** (COMPLETE - 2-3 hours actual)
+- [x] Created docs/docfx-developer/ directory structure
+- [x] Configured docfx.json with Mermaid support
+- [x] Created filterConfig.yml for API filtering
+- [x] Created architecture.md (711 lines, 3 Mermaid diagrams)
+- [x] Created domain-models.md (676 lines, 3 Mermaid diagrams, AI-assisted)
+- [x] Created api-guide.md (5,509 bytes with class diagrams)
+- [x] DocFX build succeeded, generated _site/ with all articles
+
 ### 🟡 IN PROGRESS
 
-**READY TO START IMPLEMENTATION**
-
-The planning phase is complete. All architecture, strategies, and implementation details are documented in the plan.md file. During Phase 1 implementation, this content will be extracted into separate architecture documents.
+**Phase 4: System User Docs Setup** (NOT STARTED)
+- Next task: Create docs/docfx-user/ directory structure
+- Estimated: 3-4 hours
 
 ### ⏳ NOT STARTED
 
-**Phase 1: Documentation Planning** (3-4 hours estimated)
-- [ ] Extract architecture content from plan.md into docs/architecture/ai-docs-platform-agnostic-architecture.md
-- [ ] Extract content strategy into docs/architecture/documentation-content-strategy.md
-- [ ] Extract implementation steps into docs/architecture/ai-docs-implementation-plan.md
-- [ ] Extract GitHub workflows into docs/architecture/github-plugin-guide.md
-- [ ] Extract Azure DevOps pipelines into docs/architecture/azure-devops-plugin-guide.md
-
-**Phases 2-9**: See ai-docs-tasks.md for complete checklist
+**Phase 4: System User Docs Setup** (3-4 hours estimated)
+**Phase 5: Company System Docs Setup** (2-3 hours estimated)
+**Phase 6: GitHub Plugin Implementation** (4-6 hours estimated)
+**Phase 7: Azure DevOps Plugin** (6-8 hours, OPTIONAL)
+**Phase 8: AI Integration & Workflows** (2-3 hours estimated)
+**Phase 9: Platform Switching & Testing** (2-3 hours estimated)
 
 ### ⚠️ BLOCKERS
 
@@ -123,6 +148,51 @@ None currently
 **Impact:**
 - Keeps project organization clean
 - No confusion about what gets published
+
+### Decision 6: WSL2 Environment and Windows Tooling
+**When:** During Phase 2 implementation (2025-11-03)
+**What:** Use Windows-native .NET tools accessed from WSL2 via `/mnt/c/` paths
+
+**Why:**
+- .NET SDK installed on Windows host, not in WSL2
+- DocFX and diagram tools installed via Windows dotnet.exe
+- PowerShell scripts run via Windows PowerShell.exe
+- Avoids duplicate installations
+
+**Impact:**
+- Commands use `/mnt/c/Program Files/dotnet/dotnet.exe` prefix
+- PowerShell scripts run via `/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe`
+- Makefile designed to work in both environments
+
+### Decision 7: Minimal Diagram Generation for Template Project
+**When:** During Phase 3 implementation (2025-11-03)
+**What:** Created manual class diagrams in api-guide.md instead of automated generation
+
+**Why:**
+- Template project has minimal classes (HomeController, ErrorViewModel, Program)
+- dll2mmd and puml-gen produced empty output
+- Hand-crafted diagrams more meaningful for documentation
+- Automated generation will work when more classes added
+
+**Impact:**
+- api-guide.md shows pattern for future diagram integration
+- Diagram generation infrastructure ready for production use
+- Documentation explains how to regenerate diagrams with `make diagrams`
+
+### Decision 8: Documentation-Architect Agent for Content Generation
+**When:** During Phase 3 implementation (2025-11-03)
+**What:** Successfully used documentation-architect agent for architecture.md and domain-models.md
+
+**Results:**
+- architecture.md: 711 lines, 3 Mermaid diagrams, comprehensive technical content
+- domain-models.md: 676 lines, 3 Mermaid diagrams, best practices included
+- High-quality professional writing achieved
+- Reduced authoring time significantly
+
+**Impact:**
+- Established pattern for using AI assistance in Phases 4-5
+- Confirmed documentation-architect agent effectiveness
+- Will use for user docs and company docs creation
 
 ---
 

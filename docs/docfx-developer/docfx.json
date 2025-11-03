@@ -1,0 +1,63 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../../src",
+          "files": ["**/*.csproj"],
+          "exclude": ["**/bin/**", "**/obj/**"]
+        }
+      ],
+      "dest": "api",
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "filter": "filterConfig.yml"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": ["**/*.{md,yml}"],
+        "src": "api",
+        "dest": "api"
+      },
+      {
+        "files": ["**/*.md"],
+        "src": "articles",
+        "dest": "articles"
+      },
+      {
+        "files": ["toc.yml", "index.md"]
+      }
+    ],
+    "resource": [
+      {
+        "files": ["images/**", "diagrams/**"]
+      }
+    ],
+    "output": "_site",
+    "template": ["default", "modern"],
+    "globalMetadata": {
+      "_appTitle": "NET10 Project Example - Developer Docs",
+      "_appFooter": "NET10 Project Example Developer Documentation",
+      "_enableSearch": true,
+      "_disableContribution": false,
+      "_gitContribute": {
+        "repo": "https://github.com/NotMyself/net10-project-example",
+        "branch": "main"
+      }
+    },
+    "markdownEngineProperties": {
+      "markdigExtensions": [
+        "attributes",
+        "customcontainers",
+        "figures",
+        "footnotes",
+        "smartypants",
+        "mathematics",
+        "diagrams"
+      ]
+    },
+    "postProcessors": ["ExtractSearchIndex"]
+  }
+}
