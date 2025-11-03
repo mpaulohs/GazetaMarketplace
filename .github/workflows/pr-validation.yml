@@ -52,6 +52,8 @@ jobs:
       - name: Check authorization
         id: check-auth
         uses: actions/github-script@v7
+        env:
+          CONFIG_JSON: ${{ steps.load-config.outputs.config }}
         with:
           script: |
             const fs = require('fs');
@@ -74,7 +76,8 @@ jobs:
             }
 
             try {
-              config = JSON.parse(`${{ steps.load-config.outputs.config }}`);
+              // Read from environment variable to avoid template substitution issues
+              config = JSON.parse(process.env.CONFIG_JSON);
             } catch (error) {
               console.log('Could not parse authorization config, allowing all users');
               core.setOutput('authorized', 'true');
@@ -630,7 +633,7 @@ jobs:
               summary: summary
             };
 
-            core.setOutput('result', JSON.stringify(result));
+            // Set status output separately
             core.setOutput('status', status);
 
             // Create step summary
@@ -646,17 +649,42 @@ jobs:
               ])
               .write();
 
+            // Return the result object - github-script will JSON-encode it automatically
+            return result;
+
       - name: Post PR comment
         uses: actions/github-script@v7
+        env:
+          RESULT_JSON: ${{ steps.parse-results.outputs.result }}
         with:
           script: |
-            const result = JSON.parse(`${{ steps.parse-results.outputs.result }}`);
+            // Read from environment variable - this properly handles multiline JSON
+            const resultJson = process.env.RESULT_JSON;
 
-            // Run PowerShell formatter
+            // Debug output
+            console.log('Result JSON length:', resultJson?.length || 0);
+            console.log('Result JSON preview:', resultJson?.substring(0, 200));
+
+            if (!resultJson || resultJson.length === 0) {
+              core.setFailed('Parse results step did not produce a result output');
+              return;
+            }
+
+            const result = JSON.parse(resultJson);
+            console.log('Result parsed successfully');
+
+            // Format the comment using PowerShell script
             const { execSync } = require('child_process');
+            const fs = require('fs');
+
+            // Write result to temp file
+            const tempFile = '/tmp/quality-checks-result.json';
+            fs.writeFileSync(tempFile, JSON.stringify(result));
+
+            // Run PowerShell formatter using the temp file
             const markdown = execSync(
               `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
-              `-InputJson '${JSON.stringify(result)}' ` +
+              `-InputJsonPath '${tempFile}' ` +
               `-StepNumber 3 ` +
               `-StepName "Quality Checks" ` +
               `-Emoji "✨" ` +
@@ -1009,7 +1037,7 @@ jobs:
               summary: summary
             };
 
-            core.setOutput('result', JSON.stringify(result));
+            // Set status output separately
             core.setOutput('status', status);
 
             console.log('Security review complete:');
@@ -1017,19 +1045,43 @@ jobs:
             console.log(`  Total findings: ${summary.total}`);
             console.log(`  Errors: ${summary.errors}, Warnings: ${summary.warnings}, Info: ${summary.info}`);
 
+            // Return the result object - github-script will JSON-encode it automatically
             return result;
 
       # Post PR comment with security results
       - name: Post security review comment
         uses: actions/github-script@v7
+        env:
+          RESULT_JSON: ${{ steps.parse-results.outputs.result }}
         with:
           script: |
-            const result = JSON.parse(`${{ steps.parse-results.outputs.result }}`);
-            const { execSync } = require('child_process');
+            // Read from environment variable - this properly handles multiline JSON
+            const resultJson = process.env.RESULT_JSON;
 
+            // Debug output
+            console.log('Result JSON length:', resultJson?.length || 0);
+            console.log('Result JSON preview:', resultJson?.substring(0, 200));
+
+            if (!resultJson || resultJson.length === 0) {
+              core.setFailed('Parse results step did not produce a result output');
+              return;
+            }
+
+            const result = JSON.parse(resultJson);
+            console.log('Result parsed successfully');
+
+            // Format the comment using PowerShell script
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+
+            // Write result to temp file
+            const tempFile = '/tmp/security-review-result.json';
+            fs.writeFileSync(tempFile, JSON.stringify(result));
+
+            // Run PowerShell formatter using the temp file
             const markdown = execSync(
               `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
-              `-InputJson '${JSON.stringify(result)}' ` +
+              `-InputJsonPath '${tempFile}' ` +
               `-StepNumber 5 ` +
               `-StepName "Security Review" ` +
               `-Emoji "🔒" ` +
@@ -1172,7 +1224,7 @@ jobs:
               summary: summary
             };
 
-            core.setOutput('result', JSON.stringify(result));
+            // Set status output separately
             core.setOutput('status', status);
 
             console.log('.NET validation complete:');
@@ -1180,19 +1232,43 @@ jobs:
             console.log(`  Total findings: ${summary.total}`);
             console.log(`  Errors: ${summary.errors}, Warnings: ${summary.warnings}, Info: ${summary.info}`);
 
+            // Return the result object - github-script will JSON-encode it automatically
             return result;
 
       # Post PR comment with .NET validation results
       - name: Post .NET validation comment
         uses: actions/github-script@v7
+        env:
+          RESULT_JSON: ${{ steps.parse-results.outputs.result }}
         with:
           script: |
-            const result = JSON.parse(`${{ steps.parse-results.outputs.result }}`);
-            const { execSync } = require('child_process');
+            // Read from environment variable - this properly handles multiline JSON
+            const resultJson = process.env.RESULT_JSON;
 
+            // Debug output
+            console.log('Result JSON length:', resultJson?.length || 0);
+            console.log('Result JSON preview:', resultJson?.substring(0, 200));
+
+            if (!resultJson || resultJson.length === 0) {
+              core.setFailed('Parse results step did not produce a result output');
+              return;
+            }
+
+            const result = JSON.parse(resultJson);
+            console.log('Result parsed successfully');
+
+            // Format the comment using PowerShell script
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+
+            // Write result to temp file
+            const tempFile = '/tmp/dotnet-validation-result.json';
+            fs.writeFileSync(tempFile, JSON.stringify(result));
+
+            // Run PowerShell formatter using the temp file
             const markdown = execSync(
               `pwsh -File .github/scripts/format-pr-comment.ps1 ` +
-              `-InputJson '${JSON.stringify(result)}' ` +
+              `-InputJsonPath '${tempFile}' ` +
               `-StepNumber 6 ` +
               `-StepName ".NET Validation" ` +
               `-Emoji "🔧" ` +
