@@ -339,14 +339,10 @@ jobs:
 
               console.log('Aggregate result:', JSON.stringify(result, null, 2));
 
-              const resultJson = JSON.stringify(result);
-              console.log('Setting output with', resultJson.length, 'characters');
+              console.log('Setting outputs');
 
-              // Use core.setOutput for github-script - it handles JSON properly
-              core.setOutput('result', resultJson);
+              // Set status output separately
               core.setOutput('status', status);
-
-              console.log('Outputs set via core.setOutput');
 
               // Create step summary
               await core.summary
@@ -361,6 +357,11 @@ jobs:
                 .write();
 
               console.log('Step summary created successfully');
+
+              // Return the result object - github-script will JSON-encode it automatically
+              // This is more reliable than core.setOutput for complex objects
+              console.log('Returning result object');
+              return result;
             } catch (error) {
               console.error('Error in aggregate step:', error);
               core.setFailed(`Aggregate step failed: ${error.message}`);
