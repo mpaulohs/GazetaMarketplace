@@ -1,0 +1,67 @@
+name: Sync Wiki
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/wiki/**'
+      - '.github/workflows/docs-wiki-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      - name: Checkout wiki repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy wiki files
+        run: |
+          # Copy all markdown files except README.md
+          cp docs/wiki/*.md wiki/
+          # Rename README.md to Home.md (GitHub Wiki convention)
+          if [ -f "wiki/README.md" ]; then
+            mv wiki/README.md wiki/Home.md
+          fi
+
+      - name: Create sidebar
+        run: |
+          cat > wiki/_Sidebar.md <<'EOF'
+          **[Home](Home)**
+
+          **Documentation**
+          * [System Purpose](system-purpose)
+          * [System Access](system-access)
+          * [Feature Summary](feature-summary)
+          * [Active Development](active-development)
+
+          ---
+
+          **External Links**
+          * [Developer Docs](https://notmyself.github.io/net10-project-example/)
+          * [User Docs](https://notmyself.github.io/net10-project-example/user/)
+          * [GitHub Repository](https://github.com/NotMyself/net10-project-example)
+          EOF
+
+      - name: Commit and push to wiki
+        working-directory: wiki
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "Update wiki from main repository [skip ci]"
+            git push
+          else
+            echo "No changes to wiki content"
+          fi

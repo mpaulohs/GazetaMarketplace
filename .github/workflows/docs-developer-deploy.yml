@@ -1,0 +1,68 @@
+name: Deploy Developer Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/docfx-developer/**'
+      - 'src/**'
+      - '.github/workflows/docs-developer-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-developer"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Install DocFX
+        run: dotnet tool install -g docfx
+
+      - name: Install Diagram Tools
+        run: |
+          dotnet tool install -g dll2mmd
+          dotnet tool install -g PlantUmlClassDiagramGenerator
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build projects
+        run: dotnet build --no-restore
+
+      - name: Generate diagrams
+        run: pwsh .docgen/diagram-gen.ps1 -All
+        continue-on-error: true
+
+      - name: Build Developer Documentation
+        run: docfx build docs/docfx-developer/docfx.json
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/docfx-developer/_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
