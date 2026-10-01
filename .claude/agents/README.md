@@ -71,8 +71,8 @@ Agents are autonomous Claude instances that handle specific complex tasks. Unlik
 **When to use:**
 
 - Browser console errors
-- TypeScript compilation errors in frontend
-- React errors
+- JavaScript module / import errors in the frontend
+- Razor view compile errors
 - Build failures
 
 **Integration:** ⚠️ May reference screenshot paths - update if needed
@@ -126,12 +126,12 @@ Agents are autonomous Claude instances that handle specific complex tasks. Unlik
 
 
 
-**Purpose:** Automatically fix TypeScript compilation errors
+**Purpose:** Automatically fix C# compilation errors
 
 **When to use:**
 
-- Build failures with TypeScript errors
-- After refactoring that breaks types
+- Build failures with compiler errors (warnings are errors)
+- After refactoring that breaks types or `using` directives (ImplicitUsings is disabled)
 - Systematic error resolution needed
 
 **Integration:** ⚠️ May need path updates

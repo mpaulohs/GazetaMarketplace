@@ -1,0 +1,186 @@
+---
+name: review
+description: Review a pull request or branch changes using the Five-Axis Framework
+---
+
+# /review — Code Review
+
+> "Quality is non-negotiable."
+
+## Purpose
+
+Perform a thorough code review of specified files, branch changes, or a pull request using the **Five-Axis Framework** (Correctness, Readability, Architecture, Security, Performance).
+
+> **Workspace Mode:** if the session root declares `Mode: workspace` → resolve the target repo per `CLAUDE.md` §Workspace Mode **before anything else**; every path, probe, and gate below is relative to the **target repo**, and the workspace disk-check applies at the gate.
+
+## Prerequisites
+
+- Code implementation complete (`/build` done)
+- Tests passing (`/test` done)
+- Code compiles without errors (`dotnet build`)
+
+## Inputs
+
+The reviewer MUST ingest these artifacts before scoring. A finding without traceability back to one of them cannot satisfy the `Relates-to` requirement and will fail Gate 7. *(Brownfield: ingest only what the diff relates-to — see §Brownfield Mode.)*
+
+| Artifact | Used to verify |
+|----------|----------------|
+| `specs/SPEC.md` + `specs/user-stories/*` | **Correctness** — does the implementation match each `US-XXX` acceptance criterion? |
+| `architecture/adr/*.md` + `architecture/api/*` | **Architecture** — are ADR decisions honored? Do API contracts match the implemented routes/DTOs? |
+| `plans/todo.md` | **Scope** — did `/build` close exactly the tasks it claimed (`Task N.N`)? Flag orphan changes or unticked tasks. |
+| `plans/plan.md` §Impact Analysis | **Blast radius** — diff the actual changed files/components against the declared impact map; changes outside the declared surface = scope-creep finding (ties to `principles-and-practices.md` §2.5 Surgical changes). |
+| `security/PRE_DEV_REVIEW.md` | **Security** — are the Required Controls (`RC-N`) and threat mitigations (`S1..E10` from STRIDE) present in code? |
+| `reports/TEST_REPORT.md` | **Gate-6 PASS verdict** (Step 2 trusts this instead of re-running the suite) + **Coverage numbers** + every `OPEN-XXX` debt from `/test` must be tagged **CLOSED / DEFERRED-to-Pn / ESCALATED** in this review — none may be silently dropped. |
+| `db/schema-snapshot/` | **Schema-evidence freshness** — if the diff contains a migration that changes the schema or a DB-resident object (proc/trigger/view/index) but the snapshot is untouched, the committed baseline is now stale: 🟡 finding (`brownfield.md` checklist). Also flag the reverse smell — a snapshot edited *without* a migration, which means someone changed the database by hand. |
+| `.claude/rules/*.md` | **Compliance Check** table (see Output File §6). |
+
+## Usage
+```text
+/review                    # Review current branch changes
+/review <file>             # Review specific file
+/review <PR#>              # Review pull request
+```
+
+---
+
+## Workflow
+
+1. **Identify Scope** — Determine files/PR/branch to review
+2. **Confirm the build & trust the test gate** — run `dotnet build` (cheap compile sanity; Node core → `npm run typecheck && npm run build`). Do **NOT** re-run the full `dotnet test` suite (especially TestContainers) up front: `/test` already certified it green on this unchanged code in `reports/TEST_REPORT.md` (Gate 6 PASS). **Re-run the affected tests only after a fix** made during this review (the §Resolution verification numbers come from that re-run). **Fallback:** if `TEST_REPORT.md` is absent (review run standalone, no `/test`), run the full suite once.
+3. **Apply Five-Axis Review** — Correctness, Readability, Architecture, Security, Performance
+4. **Document Findings** — Create `reports/CODE_REVIEW.md`
+5. **Decision** — APPROVE / REQUEST CHANGES / NEEDS DISCUSSION
+
+---
+
+## Review Checklist
+
+> **Two layers, one review.** The list below is the **quick pass by rule area** — does this diff comply with each `rules/*.md`? The **axis-organized depth** (per-axis criteria + code examples, incl. §Scope discipline and §Cross-cutting controls — wired, not just defined) lives in [`references/code-review-checklist.md`](../references/code-review-checklist.md); open it when an axis needs more than a yes/no, or when scoring that axis below 5.
+
+### Code Quality
+- [ ] Code follows style guide (`.claude/rules/code-style.md`)
+- [ ] No unnecessary complexity or duplication
+- [ ] Functions are small and focused (single responsibility)
+- [ ] Variable and function names are descriptive
+
+### Security
+- [ ] No hardcoded secrets or credentials
+- [ ] Input validation is present
+- [ ] Authentication/authorization checks in place
+- [ ] See `.claude/rules/security.md` for full checklist
+
+### Error Handling
+- [ ] Errors are properly caught and handled
+- [ ] Meaningful error messages
+- [ ] No swallowed exceptions
+- [ ] See `.claude/rules/error-handling.md`
+
+### Testing
+- [ ] Unit tests cover new logic
+- [ ] Edge cases are tested
+- [ ] Tests are readable and maintainable
+- [ ] See `.claude/rules/testing.md`
+
+### Database
+- [ ] Queries are optimized (no N+1)
+- [ ] Transactions used where appropriate
+- [ ] See `.claude/rules/database.md`
+
+### API
+- [ ] Endpoints follow REST conventions
+- [ ] Request/response schemas are documented
+- [ ] See `.claude/rules/api-conventions.md`
+
+### Cross-layer conformance (spec ↔ contract ↔ consumer ↔ wiring)
+> Feeds the **Correctness** + **Architecture** axes; each finding carries `Relates-to`.
+- [ ] **Consumer matches contract** — consumer code (FE client / SDK / BFF) uses the **same HTTP method / path / success-status** as the API contract & controllers. No drift (e.g. client `PUT` vs route `PATCH`).
+- [ ] **No orphan / everything wired** — every acceptance behavior is **reachable from the app entry point**; flag any component / handler / endpoint that exists but is never mounted, passed, or routed. "Exists in code" ≠ "wired".
+- [ ] **Scenario coverage** — every `@US-XXX-Snn` from the spec maps to a **wired** path **and** to a test that asserts that scenario's observable *Then* (not just an isolated unit / endpoint) — rule: [`references/scenario-traceability.md`](../references/scenario-traceability.md).
+- [ ] **Anti-vacuous audit** — for each scenario, open its mapped test and confirm it asserts the observable outcome (effect/state, persisted across a round-trip) — **a test that would still pass if the feature were silently removed does NOT satisfy the scenario**.
+- [ ] **Dual-implementation parity** — if the diff reimplements a rule in a second representation (SQL migration backfill, client validation mirror, cache-key across multiple services, serialize↔parse format…): confirm there is a **differential test** per `rules/testing.md §Dual-Implementation Parity` (one test that runs BOTH implementations over the same input table enumerating every variant class), OR that it has been unified into a single source (backfill calls the app code itself). Missing → 🟡 finding, at least P1. *(Per-side tests both passing on each side is NOT enough — drift still slips through.)*
+
+## Output Format
+Provide feedback as:
+- 🔴 **Critical** — Must fix before merge
+- 🟡 **Warning** — Should fix, potential issue
+- 🟢 **Suggestion** — Nice to have improvement
+- ✅ **Good** — Highlight what's done well
+
+> **MANDATORY — `Relates-to` traceability.** Every finding (Critical / Warning / Suggestion) MUST end with a `Relates-to: <ID(s)>` line citing the source artifacts it touches: User Stories (`US-XXX`), NFR keys (`NFR-xx`), Required Controls (`RC-N`), ADRs (`ADR-NNN`), plan tasks (`Task N.N`), or threat IDs (`S1..E10`). This is the bridge that lets `/scan` and `/deploy` close the loop back to spec and threat model. A finding without `Relates-to` is half-done.
+
+## Output File
+
+**IMPORTANT:** After completing the review, you MUST create a report file:
+
+```text
+reports/CODE_REVIEW.md
+```
+
+> **Boilerplate template (fill-only — saves time):** copy [`templates/CODE_REVIEW_TEMPLATE.md`](../templates/CODE_REVIEW_TEMPLATE.md) and fill it in — do NOT re-author the 7-section structure on every review.
+
+The report MUST include:
+1. **Executive Summary** with severity counts
+2. **Five-Axis Scores** table — numerical 1-5 per axis with one-line justification (skeleton: template §2). **Score honesty (evidence-anchored):** an axis with an open 🔴 Critical scores **≤ 2**; an axis with an unresolved 🟡 Warning (incl. accept-with-tracking / an open Action Item) scores **≤ 4** — **5 only when that axis has no outstanding finding**. Each justification must cite the finding(s) / Evidence anchoring the number, not a subjective impression. If `REQUEST CHANGES → APPROVED` after a fix, re-score and show the updated number.
+3. **All findings** organized by severity (Critical → Warning → Suggestion → Good), each with `Where` (file:line), `Description`, `Recommendation`, and `Relates-to`.
+4. **Action Items** checklist (P0, P1, P2) — tick `[x]` for items resolved during the review cycle.
+5. **Test Coverage** summary (cite numbers from `reports/TEST_REPORT.md`).
+6. **Compliance Check** table — every `.claude/rules/*.md` mapped to PASS / WARNING / FAIL with a one-line note **and an `Evidence` citation** (skeleton: template §6). This frees `/scan` from re-checking rule compliance.
+   > **Evidence-based, not asserted (mandatory).** A `PASS` is invalid without an `Evidence` citation — a `file:line`, a wired-pipeline reference, or a test name proving the control is actually present. "Code looks compliant" is not evidence. **Cross-cutting controls especially** (security headers, CORS, HTTPS-redirect, rate-limiting, auth middleware, global exception handler): confirm they are **registered in the request pipeline** (cite where) **and** backed by a test — a control that is *defined but never wired* is a 🔴/🟡 finding, not a PASS. (This closes the gap that let a missing security-headers middleware pass review with a 5/5 security score.)
+7. **Approval Status** table with decision (APPROVE / REQUEST CHANGES / NEEDS DISCUSSION). If the verdict flipped (REQUEST CHANGES → APPROVED after fix), include a §Resolution sub-section listing: (a) what changed, (b) verification numbers from re-run, (c) re-scored axes.
+
+Create the `reports/` folder if it doesn't exist.
+
+---
+
+## Quality Gate 7 — Five-Axis Review (Optional)
+
+> Per CLAUDE.md §Quality Gates, `/review` is an **optional** pipeline step (Legend: `*`). **If run**, the checklist below must fully pass before `/scan` — no partial pass.
+
+Run the §Orchestrator disk-check (below) first, then review. Before proceeding to `/scan`:
+
+- [ ] Five-axis review completed **with numerical scores (1-5) per axis**
+- [ ] **Cross-layer conformance checked** — consumer↔contract method/path match · no orphan (every behavior wired) · each `@US-XXX-Snn` maps to a wired path + an effect-asserting test (anti-vacuous)
+- [ ] No outstanding 🔴 Critical findings
+- [ ] All 🟡 Warnings have been addressed or explicitly accepted
+- [ ] `reports/CODE_REVIEW.md` created with approval decision
+- [ ] All critical feedback addressed before merge
+- [ ] **Compliance Check table** present — every `.claude/rules/*.md` → PASS / WARNING / FAIL **with an `Evidence` citation per PASS** (no PASS without `file:line` / wired-pipeline ref / test name); cross-cutting controls verified as wired, not just defined
+- [ ] **Every finding has `Relates-to: <US-XXX | NFR-xx | RC-N | ADR-NNN | Task N.N | S1..E10>`** for downstream traceability
+- [ ] If verdict flipped post-fix, §Resolution section documents what changed + verification numbers + re-scored axes
+
+### Orchestrator disk-check (run BEFORE presenting for Gate 7 review)
+
+A sub-agent's "done" report is NOT ground truth — same discipline as `CLAUDE.md` §Verification After Delegation, applied at artifact level (mechanical invariants only; review judgment stays with the reviewer):
+
+- [ ] **Structure** — `reports/CODE_REVIEW.md` exists with all 7 sections.
+- [ ] **Relates-to complete** — every 🔴/🟡/🟢 finding carries a `Relates-to:` line (count findings vs `Relates-to` occurrences — must match).
+- [ ] **Compliance table full** — one row per `.claude/rules/*.md`; no PASS row with an empty Evidence cell.
+- [ ] **OPEN reconciliation** — the §5 disposition table covers exactly the `OPEN-###` set from `TEST_REPORT.md §12` (diff the two sets — none silently dropped).
+- [ ] **Score-honesty consistency** — no axis scored >2 while §3 shows an open 🔴 on that axis; none >4 with an unresolved 🟡 (cross-check §2 vs §3).
+- [ ] **No template residue** — no unfilled `[…]` placeholders in `reports/CODE_REVIEW.md`.
+
+Any mismatch → fix on disk first.
+
+## Brownfield Mode (when `Project Profile → Mode: brownfield`)
+
+`/review` is **per-change** on legacy — review the **diff/slice**, not the whole repo:
+
+- **Scope the review to the diff** — the Five-Axis applies to the changed lines **+ their blast radius** (callers/callees the change can affect), not the entire reverse-engineered codebase. Run `/review` on the branch diff / changed files.
+- **Ingest relates-to only** — pull in only the spec stories, ADRs, and `RC-N` controls the diff *relates to* (via the plan's task → scenario map), not the full baseline `SPEC.md` / `ARCHITECTURE.md` (which describe the whole as-is system).
+- **Backward-compat is a Critical axis** — for a B2 (modify) change, verify the diff does NOT break an existing contract / response shape / behavior; a regression here is a 🔴 Critical. This is the review counterpart of `/plan`'s backward-compat AC and `/secure`'s regression-security check.
+- **Characterization tests present** — confirm any touched legacy area without prior tests got a characterization test (per `rules/brownfield.md`) before modification; flag its absence as a finding.
+- **Trust the regression net** — the full-suite regression run is `/test`'s job (Gate 6); `/review` trusts `TEST_REPORT.md` (Step 2). Do not re-review unchanged modules.
+
+> **B5 (architecture upgrade) exception:** review the redesign against its ADR + migration plan (strangler-fig), not just a diff.
+
+## Agent
+
+Invoke: **Code Reviewer** (Senior Staff Engineer perspective) for deep review.
+
+**Phase ownership** — the Code Reviewer sub-agent cannot converse with the user: a `NEEDS DISCUSSION` verdict, a 🟡 Warning that needs an "explicitly accepted" decision, or a fix that would exceed the scope of a documented finding → **return early** with the item instead of deciding alone. The orchestrator obtains those decisions, runs the Gate 7 disk-check, and presents the verdict in the main loop.
+
+> Sub-agent prompt MUST include: "Output language: \<declared language — resolve from Project Profile → Output Language\> for prose/artifacts, English for code and technical identifiers (see `.claude/CLAUDE.md` → Output Language)." **(brownfield)** It MUST also carry the resolved flow (**B1/B2/B5**) — B2 makes backward-compat a 🔴 Critical axis; B5 reviews the redesign against its ADR + migration plan, not just a diff (§Brownfield Mode).
+
+## Next Step
+
+After review approved, run `/scan` for post-development security scanning.

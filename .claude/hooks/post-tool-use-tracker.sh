@@ -21,11 +21,11 @@ if [ ! -d "$SCRIPT_DIR/node_modules/node-jq" ]; then
     exit 1
 fi
 
-# Extract relevant data using node-jq (via npx)
-# Note: Use 'npx --' to separate npx args from node-jq args
-tool_name=$(echo "$tool_info" | npx -- node-jq -r '.tool_name // empty')
-file_path=$(echo "$tool_info" | npx -- node-jq -r '.tool_input.file_path // empty')
-session_id=$(echo "$tool_info" | npx -- node-jq -r '.session_id // empty')
+# Extract relevant data using the locally installed node-jq binary (npx re-resolves the package on every call, ~5s each on Windows)
+NODE_JQ="$SCRIPT_DIR/node_modules/.bin/node-jq"
+tool_name=$(echo "$tool_info" | "$NODE_JQ" -r '.tool_name // empty')
+file_path=$(echo "$tool_info" | "$NODE_JQ" -r '.tool_input.file_path // empty')
+session_id=$(echo "$tool_info" | "$NODE_JQ" -r '.session_id // empty')
 
 # Skip if not an edit tool or no file path
 if [[ ! "$tool_name" =~ ^(Edit|MultiEdit|Write)$ ]] || [[ -z "$file_path" ]]; then

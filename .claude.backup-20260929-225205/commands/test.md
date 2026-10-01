@@ -1,0 +1,323 @@
+---
+name: test
+description: QA verification with real dependencies — the quality gate before review
+---
+
+# /test — Quality Gate Testing
+
+> "Tests are proof, not afterthought."
+
+## Purpose
+
+Verify code works correctly in **production-like environment** with real dependencies (database, cache). This is the quality gate before `/review`.
+
+> **Workspace Mode:** if the session root declares `Mode: workspace` → resolve the target repo per `CLAUDE.md` §Workspace Mode **before anything else**; every path, probe, and gate below is relative to the **target repo**, and the workspace disk-check applies at the gate.
+
+> **Stack Profile note:** read `Project Profile` first. **Core = Node.js** → `rules/overrides/test-nodejs.md` replaces the test stack (Jest/Vitest instead of xUnit/Moq/FluentAssertions; `@testcontainers/*` fixtures + `prisma migrate deploy` per its §Template B; coverage via `npm test -- --coverage`) — the `dotnet` commands in this file map accordingly. **Database** → the TestContainers image follows the Profile: SQL Server (default) · Oracle → Oracle XE/Free · MySQL → `mysql:8.0` · PostgreSQL → `postgres:16-alpine` · MongoDB → `mongo:7.0` (see `rules/overrides/database-*.md`). Observability ELK → `rules/overrides/monitoring-elk.md`. **On Apple Silicon (arm64):** swap the SQL Server image to `azure-sql-edge` + a TCP/port-wait — the default `mssql/server:2022` image segfaults under qemu; see `rules/testing.md` Template B arm64 note.
+
+## Prerequisites
+
+- Code implemented via `/build`
+- **Docker Desktop installed and running** (REQUIRED)
+
+---
+
+## Test Engineer Responsibilities
+
+`/test` differs from `/build`:
+
+| Aspect | /build (Developer) | /test (Test Engineer) |
+|--------|-------------------|------------------------|
+| **Focus** | Write tests while implementing | Verify, supplement, and re-run with real engines |
+| **Tests ADDED** | Unit (Mock) + Integration (In-Memory) | TestContainers + E2E |
+| **Tests EXECUTED** | Unit (Mock) + Integration (In-Memory) | **Everything** — re-runs `/build`'s suite (Unit + In-Memory + frontend Vitest) **AND** adds TestContainers + Playwright E2E |
+| **Docker** | ❌ Not required | ✅ Required |
+| **Goal** | Feature works | Feature works **in production-like env**, with no regressions |
+
+### Test Engineer Tasks in /test
+
+1. **Run All Tests with Real Dependencies**
+   - TestContainers: Real SQL Server, Redis
+   - E2E: Full stack with Docker Compose
+
+2. **Coverage Gap Analysis**
+   - Run coverage report
+   - Identify untested code paths
+   - Add missing edge case tests
+
+3. **Boundary Testing**
+   - Input validation edge cases
+   - Null/empty/max values
+   - Concurrent access scenarios
+
+4. **Regression Testing**
+   - Verify bug fixes have tests
+   - Ensure no regressions from changes
+
+5. **Scenario reconciliation (spec ↔ test)** — per [`references/scenario-traceability.md`](../references/scenario-traceability.md)
+   - Every `@US-XXX-Snn` has ≥ 1 test asserting that scenario's observable *Then* (effect, not presence). A **UI-observable** scenario needs a UI/E2E-layer test (deep UI E2E may be deferred to `/verify` — record the gap, do not count it as covered here).
+   - Any scenario with no asserting test → file it (TEST_REPORT §9) for `/verify` / `/review`, never silently treat as covered.
+
+6. **Consumer-contract conformance (cross-layer drift)**
+   - Wherever a first-party client / SDK / BFF calls the API, assert its **method + path + success-status** match the API contract (`architecture/api/openapi.yaml` or the controllers). Catches client↔API drift (e.g. client sends `PUT` while the route is `PATCH`) that per-side tests miss because each side passes in isolation.
+
+7. **Schema-snapshot refresh** — *(only when the change-set touches DB schema, and the repo keeps a `db/schema-snapshot/`)*
+   - The migration has just been applied to a **clean TestContainer** — that container now holds the exact target-state schema. Re-export the snapshot **from it** (`.claude/scripts/export-db-schema.sh` against the container's mapped endpoint, or an equivalent throwaway container with the migration applied) and commit the refreshed files **in the same change-set** as the migration.
+   - **Never re-export from the real DB** — the change has not shipped there, so exporting would re-record the *old* state as the new baseline (and the connection tripwire forbids reaching it anyway).
+   - Why here and not `/build`: this is the first point in the pipeline where the migration has demonstrably applied to a clean database. Skipping it leaves `db/schema-snapshot/` describing a schema the code no longer expects — and every later characterization test reads that snapshot as truth.
+
+## Testing Strategy for /test
+
+> **IMPORTANT:** `/test` uses tests that REQUIRE Docker.
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                    /test TESTING APPROACH                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   ✅ USED IN /test:                                             │
+│   ├── Integration Tests (TestContainers) ─ Real SQL Server      │
+│   └── E2E Tests (Docker Compose) ──────────── Full Stack        │
+│                                                                  │
+│   ✅ ALSO RUN (from /build):                                    │
+│   ├── Unit Tests (Mock)                                         │
+│   └── Integration Tests (In-Memory)                             │
+│                                                                  │
+│   Required:  .NET SDK 8.0 + Docker Desktop                      │
+│   Docker:    ✅ REQUIRED                                        │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Why Docker is Required
+
+`/test` re-runs the full `/build` suite (unit + in-memory integration + frontend Vitest) **and additionally** runs **TestContainers** (real SQL Server / Redis instances spun up per test fixture) and **Docker-Compose E2E** (full stack). The latter two depend on a running Docker daemon — they exist to catch issues In-Memory cannot surface (collation, indexes, transactions, network timing, real HTTP).
+
+### Running Tests in /test
+
+```bash
+docker info                                                # verify Docker daemon
+
+# ONE full run — covers unit + in-memory + TestContainers AND collects coverage.
+# Do NOT also run a plain `dotnet test` or `dotnet test --filter "Category=RequiresDocker"`:
+# the full suite already includes them, and re-running spins the TestContainers SQL Server/Redis up redundantly.
+dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory ./coverage
+
+# Stack-level E2E (separate from dotnet test — cannot be folded into the run above)
+docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
+docker-compose -f docker-compose.test.yml down -v
+```
+
+> **E2E transport by pipeline position:** on a greenfield first pass, `/infra` (step 9) has not run yet — there is no `docker/Dockerfile` or compose file to `--build`. Run Playwright E2E against the **locally hosted stack** (Kestrel `dotnet run` / `npm run preview`, with dependencies TestContainers-backed) — the fully containerized pass is re-exercised by `/verify` against the real artifact. From `/infra` onward (and in brownfield, where Docker artifacts already exist), use the compose overlay above; if `docker-compose.test.yml` is missing there, the **Test Engineer authors it as a test-only overlay** (listed in TEST_REPORT §10 — a test artifact, not production config).
+
+> **E2E assertion contract — same bar at Gate 6 as at Gate 11.** Every E2E test written here follows the contract canonicalized in [`verify.md`](verify.md) §Phase 3: ① `Given` may be seeded via API, but the **`When` must traverse the real control** (simulating it with an API/DB call verifies nothing) · ② **no conditional interaction** — a missing control FAILs, never `if (exists) act()` · ③ **assert the effect, then reload and re-assert**, so only server-persisted state passes · ④ **network tripwire** — any same-origin call returning ≥ 400 during a happy path fails the journey. `/test`'s E2E suite is the one that runs on **every** change, so it is the suite that most needs the contract: a test that would still pass with the feature removed is not coverage.
+
+### Test Categories
+
+Tag tests with `[Trait("Category", "RequiresDocker")]` or `[Trait("Category", "E2E")]` so `/test` can filter them. Untagged tests are the `/build` baseline that also re-runs here.
+
+> Implementation patterns (fixture code, `CustomWebApplicationFactory`, container image selection) live in [`rules/testing.md`](../rules/testing.md).
+
+### Run artifacts & failure capture (canonical layout)
+
+Everything the runners generate goes under **one fixed root — `reports/test-artifacts/`** — mirroring the `/verify` layout:
+
+```text
+reports/
+├── TEST_REPORT.md              # tracked — gate report
+└── test-artifacts/             # ALL run-generated output (one fixed root)
+    ├── report/                 # machine-readable results: results.json / trx (tracked) + html reports (ignored)
+    └── runner/                 # per-test trace / video / screenshot — retain-on-failure (ignored, heavy)
+```
+
+The four **determinism rules of `verify.md` §Phase 6 apply verbatim** with root `reports/test-artifacts/`: commit the paths in the runner config (never ad-hoc CLI flags) · let the runner clean its output dir each run · capture policy `retain-on-failure` (screenshot/video/trace kept only for failing tests) · gitignore the heavy binaries, track the text. Differences from `/verify`: no `evidence/` subdir (hand-authored failure detail lives in `TEST_REPORT.md` §1 failed-case table + §8 bug reports), and the coverage HTML keeps its existing `./coverage/report` path (§Generate Coverage Report).
+
+---
+
+## Bug Reproduction: Prove-It Pattern (write-only)
+
+> `/test` is read-only on production code. Inside `/test` we PROVE the bug exists; the fix happens in `/review` (or `/fix-issue` for prod hotfixes).
+
+### Step 1 — Write a failing reproduction test
+
+```csharp
+[Fact]
+public async Task AddItemAsync_WhenAddingSameProductTwice_ShouldIncrementQuantity()
+{
+    // This test should FAIL against the current (buggy) production code.
+    var cart = new Cart();
+
+    await cart.AddItemAsync("product-1", 1);
+    await cart.AddItemAsync("product-1", 1);
+
+    cart.Items.Should().HaveCount(1);
+    cart.Items[0].Quantity.Should().Be(2);
+}
+```
+
+### Step 2 — Verify it fails
+
+Run the test — confirm it fails against unchanged production code. Capture the failure output into TEST_REPORT §8 (Bug Reports → Evidence).
+
+### Step 3 — File BUG-### in §8
+
+Use the Bug Report Template (Severity / Steps / Expected / Actual / Root cause `file:line` / Proposed fix / Regression test = the test you just wrote).
+
+> "Fix the code" + "verify green" are explicitly out of scope here — they belong to `/review` / `/fix-issue`, which will run the same regression test you authored.
+
+---
+
+## Test Pyramid
+
+| Level | Percentage | Speed | Scope |
+|-------|------------|-------|-------|
+| **Unit** | 80% | ms | Single class, no I/O |
+| **Integration** | 15% | seconds | API + DB, component interactions |
+| **E2E** | 5% | minutes | Full user flows |
+
+---
+
+## Writing Good Tests
+
+> Patterns (AAA, DAMP, naming `Method_Scenario_ExpectedResult`), test doubles, `CustomWebApplicationFactory`/TestContainers fixture code, and anti-patterns are defined in:
+> - [`rules/testing.md`](../rules/testing.md) — mandatory standards + fixture templates
+
+In `/test`, the rule is simple: **prefer real implementations over fakes**. `/build` uses In-Memory providers; `/test` swaps them for TestContainers-backed real engines and re-runs the full suite.
+
+**Assert the effect, not the absence of error.** A test must assert the **resulting state/outcome** the scenario's *Then* describes — not merely that no exception was thrown or that an element rendered. A test that would still pass if the feature were silently removed does not count. Cover the **failure-prone input variant** (e.g. the path a user hits *without* the convenient keystroke), not only the happy path.
+
+---
+
+## Coverage Analysis
+
+Test Engineer must verify coverage meets the threshold before passing the quality gate.
+
+### Coverage Scope Policy (`coverlet.runsettings`)
+
+**MANDATORY.** Create `coverlet.runsettings` at the repo root before generating coverage. Without an explicit scope, auto-generated and host-glue code (which has no meaningful tests by design) inflates the uncovered-line count and produces a misleading low number.
+
+Minimum exclusions:
+
+- `**/Migrations/**/*.cs` — EF Core scaffolded code.
+- `**/Program.cs` — host-builder glue; tested implicitly via integration tests.
+- `[Obsolete]`, `[GeneratedCode]`, `[CompilerGenerated]`, `[ExcludeFromCodeCoverage]` attributes.
+- Scaffolded API clients / DTOs with only auto-properties (case-by-case).
+
+Document any additional exclusions in `TEST_REPORT.md §Coverage` with a one-line rationale per entry.
+
+### Generate Coverage Report
+
+```bash
+# Run tests with coverage (honors coverlet.runsettings)
+dotnet test --collect:"XPlat Code Coverage" \
+  --settings coverlet.runsettings \
+  --results-directory ./coverage
+
+# Generate HTML report
+reportgenerator \
+  -reports:./coverage/**/coverage.cobertura.xml \
+  -targetdir:./coverage/report \
+  -reporttypes:Html
+
+# Open report
+open ./coverage/report/index.html
+```
+
+### Coverage Thresholds (Quality Gate 6)
+
+| Metric | Minimum | Target |
+|--------|---------|--------|
+| Line coverage | 80% | 90% |
+| Branch coverage | 75% | 85% |
+| Methods at 0% | each carries a test or a one-line reason; **no business-logic method without a reason** | zero business-logic methods at 0% |
+
+> Scope per Mode — the table above is the **greenfield whole-repo** gate; brownfield per-change gates on **delta coverage + whole-repo ratchet** instead (`rules/testing.md §Coverage Thresholds`; the Gate 6 item below states which number gates).
+
+### Identify Coverage Gaps
+
+```bash
+# Find uncovered lines in report
+# Focus on:
+# - Error handling paths
+# - Edge cases
+# - Validation logic
+```
+
+---
+
+## Test Commands & Assertion Cheatsheet
+
+> Full `dotnet test` flags, FluentAssertions cheatsheet, and the anti-pattern table live in [`rules/testing.md`](../rules/testing.md). `/test` only needs the four-command core shown in "Running Tests in /test" above.
+
+---
+
+## Output — `reports/TEST_REPORT.md` (MANDATORY)
+
+`/test` produces ONE primary artifact: `reports/TEST_REPORT.md`. It is the handoff document to `/review` and `/scan`.
+
+> **Boilerplate template (fill-only — saves time):** copy [`templates/TEST_REPORT_TEMPLATE.md`](../templates/TEST_REPORT_TEMPLATE.md) and fill in the placeholders — do NOT re-author the 12-section structure on every run. Every section must be present even when it is "n/a, see §X".
+
+**12 sections:** 1 Summary (verdict PASS / PASS-WITH-CONDITIONS / FAIL — PWC = baseline green + ≥1 BUG-### + no Critical blocker) · 2 Backend in-memory re-run · 3 TestContainers (NEW) · 4 Frontend Vitest re-run · 5 E2E live · 6 Coverage (scope policy + metrics + top-5 uncovered with rationale) · 7 Gate-6 checklist · 8 Bug reports (BUG-###, Prove-It) · 9 Gaps deferred (each line names the next owner) · 10 Files added (+ boundary statement) · 11 Gate 6 verdict · 12 Open items for `/review` (stable `OPEN-###` ids).
+
+> **Boundary rule:** `/test` MUST NOT modify production code under `src/` or `web/src/`. Bugs found during `/test` are filed as reports in §8 with a proposed fix; the fix happens in `/review` (or `/fix-issue` for production hotfixes). This is what makes the regression net in §3 trustworthy — the TestContainers tests are written against unchanged production code.
+
+## Quality Gate 6 — Exit Criteria
+
+Per `CLAUDE.md` §Verification After Delegation, the **orchestrator re-runs the canonical gate-deciding commands itself, once** (the single coverage run · `npm test` · the E2E run in whichever transport applies) and diffs the real exit codes / test counts against `TEST_REPORT.md` — the sub-agent's report is not ground truth. *(The "do not run the suite multiple times" warnings in this file target redundant runs inside the sub-agent's own workflow; this single orchestrator re-run is the documented price of blocking false-green — it is exactly how the "`npm test` RED, report PASS" bug class is caught.)*
+
+Before proceeding to `/review`:
+
+- [ ] All tests pass — **confirmed by the canonical commands exiting 0** (`dotnet test` AND `npm test`), not merely asserted in `TEST_REPORT.md`. A green report with a red command = gate FAIL.
+- [ ] **Adding a new test runner did NOT break the unit-test command** — when scaffolding Playwright/visual/E2E tooling, `npm test` (vitest) MUST still exit 0 (runner isolation: exclude `e2e/`/Playwright specs from the unit runner's glob). The unit command staying green is part of this gate.
+- [ ] **No production config mutated for test isolation** — `git diff` shows no changes to `appsettings*.json` / `Program.cs` / `docker-compose*.yml` originating from test setup; isolation was achieved runtime-only (fixture DI swap / env vars / `appsettings.Testing.json`), so the artifact deploys with its **original** connections *(the test-only overlay `docker-compose.test.yml` is a test artifact — authoring/updating it is allowed; the production `docker-compose.yml` / `docker-compose.deploy.yml` are not)*
+- [ ] **(schema-touching change-set) `db/schema-snapshot/` refreshed in THIS change-set** — re-exported from the migrated TestContainer (never the real DB); `git status` shows the refreshed snapshot files staged alongside the migration. A migration shipping without its snapshot silently rots the baseline that `/inspect`, `/spec` REVERSE and every characterization test read as ground truth.
+- [ ] **Connection tripwire (whitelist) passes** — the orchestrator's canonical re-run captures the FULL runner output/logs (`tee`), then greps every endpoint host that appears: hosts on the **whitelist** (loopback `localhost`/`127.0.0.1`/`::1`, compose service names, TestContainers-assigned endpoints) are expected; **any host outside the whitelist = gate FAIL + investigate**; the known-host reference list is `docs/CODEBASE_MAP.md` §Connection inventory when present (otherwise derive from config as before) — a flagged host matching an inventory row = named FAIL, citing that row. This catches sources the repo cannot declare up front (a forgotten `IHostedService`, a hardcoded string inside a method, a value read from Registry/vault); a flagged host that also matches a production config value in the repo = named FAIL (cite the log line + the config file). *Strict mode (v2 trigger — regulated environments, or after a first real leak): run the suite inside a network-isolated container (internal-only network) so any external attempt fails loudly instead of relying on log visibility.*
+- [ ] **Every `@US-XXX-Snn` has a test asserting its observable *Then*** (effect, not presence); scenarios needing UI-layer proof and deferred to `/verify` are listed in §9, not counted as covered
+- [ ] **Consumer↔API contract conformance checked** — first-party client/SDK/BFF calls match the contract's method/path/status (no `PUT`-vs-`PATCH`-style drift)
+- [ ] **Dual-implementation parity** — if this change encodes the **same rule in ≥ 2 places** (SQL backfill ↔ app-side computed logic · FE ↔ BE validation · a cache/partition key computed in 2 services · producer format ↔ consumer parser), then either the second representation was **eliminated**, or a **differential test** runs BOTH over the same input table and asserts each output pair matches — with ≥ 1 input per clause of the rule. **Two per-side test suites both passing does NOT satisfy this** — that is exactly how the drift ships (`rules/testing.md` §Dual-Implementation Parity). *Whether this change has ≥ 2 representations is the reviewer's judgment; the item exists to force the question to be asked, not to auto-detect it.*
+- [ ] Code coverage meets the threshold **per Mode** (`rules/testing.md §Coverage Thresholds`): greenfield = whole-repo line ≥ 80% · branch ≥ 75% · brownfield per-change = **delta-coverage ≥ 80%** (files changed) + whole-repo **does not drop** (ratchet) — TEST_REPORT §Coverage records BOTH numbers + states clearly which one is the gate (with `coverlet.runsettings` scope applied — exemptions documented); **plus** every 0%-coverage method listed with a test or a reason, none of them business logic without one; **A method shipping code already references needs a test, not a reason.**
+- [ ] No skipped or disabled tests
+- [ ] Bug fixes have reproduction tests
+- [ ] Edge cases covered
+- [ ] E2E tests for critical paths
+- [ ] **Run artifacts landed at the canonical path** — `reports/test-artifacts/report/` holds this run's machine-readable results (`results.json` / `.trx`), and a run with failures left its trace/screenshot/video under `reports/test-artifacts/runner/`. Empty while the report claims a run happened = the reporter was driven by ad-hoc CLI flags instead of committed runner config → the next run lands somewhere else and the failure evidence in TEST_REPORT §1 becomes unreproducible.
+- [ ] `reports/TEST_REPORT.md` produced with all 12 sections populated
+- [ ] No production code under `src/` or `web/src/` modified during `/test`
+
+### Results board (MANDATORY presentation)
+
+The orchestrator's final message MUST present — from the REAL runner outputs of the Gate-6 re-run (`results.json`/trx, console exit codes, coverage report), never from the sub-agent's report:
+
+1. **Stats board**:
+
+   | Suite | Total | Pass | Fail | Skip | Duration |
+   |-------|-------|------|------|------|----------|
+   | Unit + in-memory (dotnet) | 142 | 142 | 0 | 0 | 38s |
+
+   plus the three coverage numbers (delta / whole-repo / ratchet vs previous — state which one is the gate) and AC-scenario coverage (`n/m` `@US-XXX-Snn` have a test at the required layer; the deferred-to-`/verify` list counted separately, per §9).
+2. **Failed-case table** (only when failures exist): `Test | @US-Snn | Input/data | Expected → Actual | Evidence | BUG-###?` — evidence = the `reports/test-artifacts/runner/` path (screenshot/trace) or a log excerpt; a case already triaged cites its BUG-### in §8.
+3. **Drill-down pointers**: `reports/TEST_REPORT.md` · coverage HTML (`./coverage/report/index.html`) · runner HTML report (`reports/test-artifacts/report/`).
+
+## Verification Checklist (Test Engineer)
+
+> The first three checks are all satisfied by the **single** coverage run in "Running Tests in /test" — do not run the suite three times (it would spin up the TestContainers engines redundantly).
+
+| Check | Satisfied by |
+|-------|--------------|
+| All tests pass (unit + in-memory + TestContainers) | `dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings` (the one run) |
+| Coverage ≥ 80% | same run (`--collect` output) |
+| E2E tests pass | `docker-compose -f docker-compose.test.yml up` (separate) |
+
+## Agent
+
+Invoke: **Test Engineer** (owns strategy, execution, and verification)
+
+| Agent | Responsibility |
+|-------|----------------|
+| Test Engineer | Test strategy + TDD coaching + coverage policy + test plans + TestContainers/E2E execution + bug triage |
+
+> Sub-agent prompt MUST include: "Output language: \<declared language — resolve from Project Profile → Output Language\> for prose/artifacts, English for code and technical identifiers (see `.claude/CLAUDE.md` → Output Language)."
+
+## Next Step
+
+After all tests pass with coverage ≥ 80%, run `/review` for code review.

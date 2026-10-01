@@ -1,0 +1,686 @@
+openapi: 3.0.3
+info:
+  title: GazetaMarketplace — API interna
+  version: 1.0.0
+  description: |
+    Endpoints JSON usados pelas páginas do próprio site (mesma origem, sem CORS).
+    As páginas do site público e do painel são renderizadas no servidor (Razor) e não fazem parte deste contrato.
+
+    Contrato de erros: ProblemDetails (RFC 7807) com o campo `code` da tabela de `ARCHITECTURE.md` §8
+    (`VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `RATE_LIMITED`,
+    `CEP_SERVICE_UNAVAILABLE`, `INTERNAL_ERROR`). `traceId` sempre presente; é o "código de referência" das telas de erro.
+
+    Autenticação: cookie de sessão do ASP.NET Core Identity (ADR-003). Escritas exigem também o cabeçalho
+    `RequestVerificationToken` (antiforgery, NFR-11).
+servers:
+  - url: /
+    description: Mesma origem do site
+tags:
+  - name: Localização
+    description: Consulta de CEP (ADR-007)
+  - name: Fotos
+    description: Envio, capa e remoção de fotos de anúncio (ADR-005)
+  - name: Catálogo de veículos
+    description: Listas encadeadas marca → modelo → ano → versão (ADR-008)
+  - name: Vitrine
+    description: Anúncios publicados para "Meus favoritos" (US-005)
+  - name: Saúde
+    description: Verificações de funcionamento (ADR-010)
+
+paths:
+  /api/v1/cep/{cep}:
+    get:
+      tags: [Localização]
+      summary: Cidade e UF de um CEP
+      description: |
+        Só para a equipe logada. Responde do cache do banco (30 dias) ou consulta o ViaCEP com uma tentativa de até 5 s.
+        Em `503`, a tela repete uma vez ("tentativa 2 de 2") e, na segunda falha, abre o preenchimento manual (US-008-S14).
+        CEP inexistente responde `404` e não abre o preenchimento manual (S24).
+      operationId: getCep
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: cep
+          in: path
+          required: true
+          description: CEP com 8 dígitos, sem hífen
+          schema:
+            type: string
+            pattern: '^[0-9]{8}$'
+            example: '13015100'
+      responses:
+        '200':
+          description: CEP encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CepResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/CepServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/ads/{adId}/photos:
+    post:
+      tags: [Fotos]
+      summary: Enviar uma foto para um anúncio
+      description: |
+        Uma foto por requisição. Aceita JPG, PNG, WebP, GIF e HEIC, conferidos pelo conteúdo do arquivo; até 10 MB.
+        O servidor grava o original por 30 dias e gera duas versões WebP (1.600 px e 480 px) sem metadados.
+        O limite do servidor para o corpo é de 11 MB, para que um arquivo de 10 a 11 MB receba a mensagem
+        `VALIDATION_ERROR` da aplicação; acima disso, o próprio servidor recusa com 413.
+        Limite de fotos pelo grupo de campos da categoria: 20 (padrão), 6 (Serviços), 0 (Vagas de emprego).
+      operationId: uploadAdPhoto
+      security:
+        - cookieAuth: []
+          antiforgery: []
+      parameters:
+        - $ref: '#/components/parameters/AdId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Arquivo de imagem
+      responses:
+        '201':
+          description: Foto processada e adicionada ao fim da galeria (a primeira é a capa)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/ads/{adId}/photos/{photoId}/cover:
+    post:
+      tags: [Fotos]
+      summary: Tornar a foto a capa do anúncio
+      description: Move a foto para a primeira posição (US-008-S03). Não precisa arrastar.
+      operationId: setAdPhotoCover
+      security:
+        - cookieAuth: []
+          antiforgery: []
+      parameters:
+        - $ref: '#/components/parameters/AdId'
+        - $ref: '#/components/parameters/PhotoId'
+      responses:
+        '204':
+          description: Capa alterada
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/ads/{adId}/photos/{photoId}:
+    delete:
+      tags: [Fotos]
+      summary: Remover uma foto do anúncio
+      description: Remove a foto e seus arquivos WebP (US-008-S03). Se era a capa, a próxima foto passa a ser a capa.
+      operationId: deleteAdPhoto
+      security:
+        - cookieAuth: []
+          antiforgery: []
+      parameters:
+        - $ref: '#/components/parameters/AdId'
+        - $ref: '#/components/parameters/PhotoId'
+      responses:
+        '204':
+          description: Foto removida
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/vehicle-catalog/brands:
+    get:
+      tags: [Catálogo de veículos]
+      summary: Marcas de carros ou de motos
+      description: Público (usado no formulário do anúncio e no filtro de marca da busca). Resposta cacheável por 10 minutos.
+      operationId: listVehicleBrands
+      parameters:
+        - name: kind
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [car, moto]
+            example: car
+      responses:
+        '200':
+          description: Marcas em ordem alfabética
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogItem'
+              example:
+                - id: 21
+                  name: Honda
+                - id: 58
+                  name: Toyota
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/vehicle-catalog/brands/{brandId}/models:
+    get:
+      tags: [Catálogo de veículos]
+      summary: Modelos de uma marca
+      operationId: listVehicleModels
+      parameters:
+        - name: brandId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            example: 21
+      responses:
+        '200':
+          description: Modelos em ordem alfabética
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogItem'
+              example:
+                - id: 301
+                  name: Civic
+                - id: 305
+                  name: Fit
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/vehicle-catalog/models/{modelId}/years:
+    get:
+      tags: [Catálogo de veículos]
+      summary: Anos disponíveis de um modelo
+      operationId: listVehicleModelYears
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            example: 301
+      responses:
+        '200':
+          description: Anos em ordem decrescente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  example: 2018
+              example: [2021, 2020, 2019, 2018]
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/vehicle-catalog/models/{modelId}/years/{year}/versions:
+    get:
+      tags: [Catálogo de veículos]
+      summary: Versões de um modelo num ano
+      operationId: listVehicleVersions
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            example: 301
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1950
+            maximum: 2100
+            example: 2018
+      responses:
+        '200':
+          description: Versões em ordem alfabética
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogItem'
+              example:
+                - id: 90412
+                  name: EXL 2.0 Flex Automático
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/ads:
+    get:
+      tags: [Vitrine]
+      summary: Anúncios publicados por lista de ids (Meus favoritos)
+      description: |
+        Público. Devolve **só anúncios publicados**; ids de anúncios que deixaram de estar disponíveis simplesmente não voltam,
+        e a página tira esses ids do `localStorage` com aviso (US-005-S06). Até 100 ids, só números.
+      operationId: listAdsByIds
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          description: Ids separados por vírgula
+          schema:
+            type: string
+            pattern: '^[0-9]+(,[0-9]+){0,99}$'
+            example: '12,57,104'
+      responses:
+        '200':
+          description: Anúncios publicados encontrados, na ordem dos ids pedidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedAdCards'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /fotos/{adId}/{photoId}-{size}.webp:
+    get:
+      tags: [Fotos]
+      summary: Arquivo de uma foto (não é JSON)
+      description: |
+        Entrega a versão WebP da foto. Anúncio publicado: público, com cache longo (o nome muda quando a foto muda).
+        Outras situações: só a equipe com acesso ao anúncio. Os originais (`_originals/`) não têm rota.
+      operationId: getPhotoFile
+      parameters:
+        - $ref: '#/components/parameters/AdId'
+        - $ref: '#/components/parameters/PhotoId'
+        - name: size
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: ['1600', '480']
+            example: '480'
+      responses:
+        '200':
+          description: Imagem
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=31536000, immutable
+          content:
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Foto inexistente ou de anúncio que o público não pode ver (mesma resposta nos dois casos)
+
+  /health/live:
+    get:
+      tags: [Saúde]
+      summary: O processo está vivo
+      operationId: healthLive
+      responses:
+        '200':
+          description: Vivo
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Healthy
+
+  /health/ready:
+    get:
+      tags: [Saúde]
+      summary: Pronto para atender (banco acessível e última migration aplicada)
+      operationId: healthReady
+      responses:
+        '200':
+          description: Pronto
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Healthy
+        '503':
+          description: Não pronto (sem detalhes internos na resposta)
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Unhealthy
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: .AspNetCore.Identity.Application
+      description: Cookie de sessão do Identity (HttpOnly, Secure, SameSite=Lax; 30 min sem uso)
+    antiforgery:
+      type: apiKey
+      in: header
+      name: RequestVerificationToken
+      description: Token antiforgery lido da página (meta `request-verification-token`)
+
+  parameters:
+    AdId:
+      name: adId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+        example: 104
+    PhotoId:
+      name: photoId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+        example: 877
+
+  schemas:
+    CepResult:
+      type: object
+      required: [cep, city, uf, source]
+      properties:
+        cep:
+          type: string
+          example: '13015100'
+        city:
+          type: string
+          example: Campinas
+        uf:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: SP
+        source:
+          type: string
+          enum: [cache, viacep]
+          example: cache
+
+    Photo:
+      type: object
+      required: [id, sortOrder, url480, url1600, width, height]
+      properties:
+        id:
+          type: integer
+          example: 877
+        sortOrder:
+          type: integer
+          description: 0 = capa
+          example: 0
+        url480:
+          type: string
+          example: /fotos/104/877-480.webp
+        url1600:
+          type: string
+          example: /fotos/104/877-1600.webp
+        width:
+          type: integer
+          example: 1600
+        height:
+          type: integer
+          example: 1200
+
+    CatalogItem:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          example: 21
+        name:
+          type: string
+          example: Honda
+
+    AdCard:
+      type: object
+      description: Dados de um card de anúncio. `priceCents` nulo = categoria sem preço (Serviços, A6); `coverUrl` nulo = categoria sem fotos (Vagas de emprego, A4).
+      required: [id, title, city, uf, categoryName, fieldGroup, url]
+      properties:
+        id:
+          type: integer
+          example: 104
+        title:
+          type: string
+          example: Honda Civic 2018
+        priceCents:
+          type: integer
+          format: int64
+          nullable: true
+          example: 6200000
+        priceLabel:
+          type: string
+          description: Rótulo do valor no card ("Preço" ou "Salário" em Vagas de emprego)
+          enum: [Preço, Salário]
+          nullable: true
+          example: Preço
+        serviceType:
+          type: string
+          nullable: true
+          description: Tipo do serviço, mostrado no lugar do preço em Serviços (A6)
+          example: null
+        city:
+          type: string
+          example: Campinas
+        uf:
+          type: string
+          example: SP
+        categoryName:
+          type: string
+          example: Carros, vans e utilitários
+        fieldGroup:
+          type: string
+          example: carros
+        coverUrl:
+          type: string
+          nullable: true
+          example: /fotos/104/877-480.webp
+        url:
+          type: string
+          example: /anuncio/104/honda-civic-2018
+
+    PagedAdCards:
+      type: object
+      description: Envelope `PagedResult` (NFR-22)
+      required: [items, page, pageSize, totalCount, totalPages, hasPrevious, hasNext]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdCard'
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 3
+        totalCount:
+          type: integer
+          example: 2
+        totalPages:
+          type: integer
+          example: 1
+        hasPrevious:
+          type: boolean
+          example: false
+        hasNext:
+          type: boolean
+          example: false
+
+    ProblemDetails:
+      type: object
+      description: Erro no formato RFC 7807, com `code` estável (ARCHITECTURE.md §8)
+      required: [status, title, code, traceId]
+      properties:
+        type:
+          type: string
+          example: https://tools.ietf.org/html/rfc7231#section-6.5.1
+        title:
+          type: string
+          example: Bad Request
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: Formato não aceito. Use JPG, PNG, WebP, GIF ou HEIC
+        instance:
+          type: string
+          example: /api/v1/ads/104/photos
+        code:
+          type: string
+          enum: [VALIDATION_ERROR, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT, RATE_LIMITED, CEP_SERVICE_UNAVAILABLE, INTERNAL_ERROR]
+          example: VALIDATION_ERROR
+        traceId:
+          type: string
+          example: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+        errors:
+          type: object
+          description: Só em VALIDATION_ERROR; mensagens por campo
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            file: ['A foto excede o limite de 10 MB']
+
+  responses:
+    ValidationError:
+      description: Dados inválidos (VALIDATION_ERROR)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Unauthorized:
+      description: Sem sessão válida (UNAUTHORIZED)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            status: 401
+            title: Unauthorized
+            code: UNAUTHORIZED
+            detail: Faça login para continuar
+            traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+    Forbidden:
+      description: Sem permissão para o anúncio (FORBIDDEN)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            status: 403
+            title: Forbidden
+            code: FORBIDDEN
+            detail: Você não tem permissão para acessar este anúncio
+            traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+    NotFound:
+      description: Recurso inexistente ou CEP não encontrado (NOT_FOUND)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            status: 404
+            title: Not Found
+            code: NOT_FOUND
+            detail: CEP não encontrado. Confira os números.
+            traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+    Conflict:
+      description: Limite de fotos atingido, anúncio em situação que não permite a ação, ou edição simultânea (CONFLICT)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            status: 409
+            title: Conflict
+            code: CONFLICT
+            detail: Cada anúncio pode ter no máximo 20 fotos
+            traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+    RateLimited:
+      description: Muitas requisições (RATE_LIMITED)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    CepServiceUnavailable:
+      description: ViaCEP sem resposta, com erro ou sem rede (CEP_SERVICE_UNAVAILABLE); a tela tenta mais uma vez
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            status: 503
+            title: Service Unavailable
+            code: CEP_SERVICE_UNAVAILABLE
+            detail: Não foi possível buscar o CEP agora
+            traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+    InternalError:
+      description: Erro inesperado (INTERNAL_ERROR); detalhes só no log
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            status: 500
+            title: Internal Server Error
+            code: INTERNAL_ERROR
+            detail: Ocorreu um erro inesperado
+            traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01

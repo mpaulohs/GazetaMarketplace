@@ -149,6 +149,14 @@ Always reference packages without Version attributes in .csproj files. Versions 
 <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
 ```
 
+## Spec-Driven Kit (SpecGate)
+
+The `.claude/` folder also contains the SpecGate spec-driven SDLC kit (source: `dinhnguyenngoc/spec-driven-claude-code`, version in `.claude/KIT_VERSION`), merged into this project:
+
+- Workflow and gates: `.claude/CLAUDE.md`. Entry point: `/spec <requirements>`, then `/arch`, `/plan`, `/build`, `/test`, ... (12-step pipeline).
+- Project profile: `.claude/PROJECT_PROFILE.md` (Mode: greenfield, Output Language: Portuguese).
+- **This file wins** over the kit's generic rules: .NET 10, MSTest (not xUnit), Central Package Management, `Nullable`/`ImplicitUsings` disabled. Project-specific overrides of kit rules live in `.claude/local/CLAUDE.local.md`.
+
 ## Claude Code Infrastructure
 
 This project uses Claude Code infrastructure for enhanced development workflow.

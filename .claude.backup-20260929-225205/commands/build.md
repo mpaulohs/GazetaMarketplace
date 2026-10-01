@@ -1,0 +1,336 @@
+---
+name: build
+description: Implement tasks incrementally using TDD and vertical slices
+---
+
+# /build — Incremental Implementation
+
+> "The simplest thing that could work."
+
+## Purpose
+
+Implement tasks one at a time using Test-Driven Development. Each increment leaves the system in a working, testable state.
+
+> **Workspace Mode:** if the session root declares `Mode: workspace` → resolve the target repo per `CLAUDE.md` §Workspace Mode **before anything else**; every path, probe, and gate below is relative to the **target repo**, and the workspace disk-check applies at the gate.
+
+> **Stack Profile note:** examples + commands below use the **default profile** (C#/.NET + SQL Server). Read `Project Profile` (`.claude/PROJECT_PROFILE.md`) first: **Core = Node.js** → `rules/overrides/lang-nodejs.md` + `framework-nodejs-web.md` + `test-nodejs.md` replace the language/framework/test layers — the `dotnet` commands in this file map to their npm equivalents (`npm test`, `tsc --noEmit`, `npm run build`; in-memory integration template per `test-nodejs.md` §Template A). **Database ≠ SQL Server** → `rules/overrides/database-*.md` (Oracle / MySQL / PostgreSQL / MongoDB) for data access + test setup. Brownfield: follow `rules/brownfield.md` (characterization test before modifying legacy code that has no tests).
+
+## Prerequisites
+
+**Required:**
+- A plan exists — `plans/plan.md` (task detail: AC, **Scenarios covered**, **NFRs covered** (when the task delivers an NFR mechanism), Files to modify, Tests to add) + `plans/todo.md` (the actionable checklist)
+- Understanding of task acceptance criteria
+- The declared core's SDK installed — .NET SDK 8.0 (default) | Node.js 20 LTS (when the Profile declares Node core)
+
+**Optional (if available):**
+- Pre-development security review (`security/PRE_DEV_REVIEW.md` from `/secure`) — **if `/secure` was run, it must be marked APPROVED before building** (Gate 4 is BLOCKING if run)
+- Threat model (`security/THREAT_MODEL.md` from `/secure`)
+
+## Agent Selection
+
+| Task Type | Agent to Invoke |
+|-----------|-----------------|
+| APIs, services, DB, background jobs | 🔧 Backend Developer |
+| Components, pages, routing, UI | 🖥️ Frontend Developer |
+
+> Sub-agent prompt MUST include: "Output language: \<declared language — resolve from Project Profile → Output Language\> for prose/artifacts, English for code and technical identifiers (see `.claude/CLAUDE.md` → Output Language)."
+
+> Sub-agent prompt MUST also include: "Ambiguity policy: implementation details → decide per rules, never ask; non-blocking behavior/contract gaps → implement the most conservative interpretation and add an Assumptions-log entry (`A-xx`); blocking or expensive-if-wrong gaps → stop and return early with the question (see `rules/principles-and-practices.md` §2.5). Return every `A-xx` entry (or 'Assumptions: none') in your completion report — the orchestrator owns the `[A-xx]` todo markers and the Gate 5 batch review."
+
+## Testing Strategy for /build
+
+> **IMPORTANT:** `/build` uses tests that do NOT require Docker.
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                   /build TESTING APPROACH                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   ✅ USED IN /build:                                            │
+│   ├── Unit Tests (Mock) ─────────── No Docker required          │
+│   └── Integration Tests (In-Memory) ─ No Docker required        │
+│                                                                  │
+│   ❌ NOT USED IN /build (deferred to /test):                    │
+│   ├── Integration Tests (TestContainers) ─ Docker required      │
+│   └── E2E Tests (Docker Compose) ─────────── Docker required    │
+│                                                                  │
+│   Required:  .NET SDK 8.0                                       │
+│   Docker:    ❌ NOT REQUIRED                                    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Test Doubles for /build
+
+```csharp
+// Unit Tests: Use Mocks
+var mockRepo = new Mock<IUserRepository>();
+var mockCache = new Mock<ICacheService>();
+var service = new AuthService(mockRepo.Object, mockCache.Object);
+
+// Integration Tests: Use In-Memory providers
+services.AddDbContext<AppDbContext>(options =>
+    options.UseInMemoryDatabase("TestDb"));  // No SQL Server needed
+
+services.AddDistributedMemoryCache();  // No Redis needed
+```
+
+### Running Tests in /build
+
+```bash
+# Run all tests EXCEPT those requiring Docker
+dotnet test --filter "Category!=RequiresDocker&Category!=E2E"
+
+# Or simply (In-Memory tests don't have special category)
+dotnet test
+```
+
+## Workflow
+
+> **MANDATORY — Progress tracking is non-negotiable.**
+>
+> `plans/todo.md` is the single source of truth for what's done. **Every completed task MUST be ticked (`- [x]`) before the agent reports back.** A task without its tick is not done.
+>
+> **Responsibility (clear chain):**
+> - When `/build` runs the workflow directly → the agent doing the work ticks the box (Step 6 below).
+> - When `/build` delegates to a sub-agent (e.g. Backend Developer, Frontend Developer) → **the orchestrator owns the tick**, applied after the sub-agent reports success. The sub-agent stays focused on code; the orchestrator updates `plans/todo.md` because only the orchestrator sees the full task list and the boundaries between batches.
+> - When a checkpoint is reached → tick the `CHECKPOINT N` line too, with a one-line verification note in `plan.md` if anything surprising came up.
+>
+> If `plans/todo.md` doesn't match reality at the end of `/build`, Gate 5 fails — see the Exit Criteria at the bottom.
+
+> **Related skills & rules:** invoke the `tdd` skill for the full RED-GREEN-REFACTOR rhythm and `incremental-implementation` for vertical-slice guidance. Test patterns + coverage thresholds live in [`.claude/rules/testing.md`](../rules/testing.md); commit format + pre-commit hooks live in [`.claude/rules/git-workflow.md`](../rules/git-workflow.md).
+
+### For Each Task
+
+#### Step 1: Load Context
+
+```text
+1. Read the task's acceptance criteria
+2. Identify relevant existing code and patterns
+3. Understand types and interfaces involved
+```
+
+#### Step 1.5: Ambiguity gate — before writing any code
+
+If the AC/plan is silent or contradictory on something this task needs, apply the **ambiguity ladder** from [`principles-and-practices.md`](../rules/principles-and-practices.md) §2.5 — implementation detail → decide, never ask · non-blocking behavior gap → conservative choice + log entry below · blocking gap → sub-agent returns early with the question.
+
+For every non-blocking behavior gap, add an entry to the **Assumptions log** (collected in the `/build` completion report; mark the task in `plans/todo.md` with `[A-xx]`):
+
+```text
+A-01 · Task 2.3 (@US-003-S02)
+  Gap:     SPEC does not define the response when a duplicate email is registered
+  Chosen:  409 Conflict with ProblemDetails (reject, don't merge)
+  Why:     Most conservative — reversible; silently merging would destroy data if wrong
+```
+
+#### Step 2: RED — Write Failing Test
+
+Write a failing test for the task's claimed scenario (`@US-XXX-Snn`). See the `tdd` skill §RED Phase for the canonical shape (Arrange-Act-Assert + FluentAssertions); the example there is generic — here, assert this task's observable *Then*.
+
+> **Producer→consumer handoff:** if the scenario hands a value from one unit to another (navigation-state key, context, event/message name, shared prop), the failing test must exercise **both ends together** — producer acts → assert the consumer's observable effect — not just the producing side in isolation. See Rules §"Test the handoff" + [`references/scenario-traceability.md`](../references/scenario-traceability.md) §3. (A key/name mismatch passes each side alone yet breaks the feature.)
+
+Run test — confirm it **fails**.
+
+```bash
+dotnet test --filter "CreateAsync_WithValidTitle_ReturnsTaskWithId"
+```
+
+#### Step 3: GREEN — Minimal Implementation
+
+Write the **minimum** code to pass the test — no extra features, no premature optimization. See the `tdd` skill §GREEN Phase.
+
+Run test — confirm it **passes**.
+
+```bash
+dotnet test --filter "CreateAsync_WithValidTitle_ReturnsTaskWithId"
+```
+
+#### Step 4: REFACTOR — Improve Code Quality
+
+```csharp
+// Clean up while keeping tests green
+// - Improve naming
+// - Extract helpers if needed
+// - Remove duplication
+// - Apply clean code patterns
+```
+
+Run the task's tests — confirm the refactor kept them **green** (fast inner loop; the single full-suite regression run happens once at Step 5):
+
+```bash
+dotnet test --filter "FullyQualifiedName~TaskServiceTests"
+```
+
+#### Step 5: Verify & Commit
+
+```bash
+# Full regression gate — the single full-suite run for this task (Step 4 ran only the task's tests)
+dotnet test
+
+# Enforce code-style.md (pre-commit hook also runs this — see git-workflow.md)
+dotnet format --verify-no-changes
+
+# Commit with a Conventional Commit message (type(scope): description — see git-workflow.md)
+# Stage ONLY this task's files (surgical-change discipline — keeps the blast radius declared)
+git add src/MyApp.Core/Services/TaskService.cs tests/MyApp.UnitTests/Services/TaskServiceTests.cs
+git commit -m "feat(tasks): add CreateAsync method to TaskService"
+```
+
+> **Per-task compile is guaranteed by `dotnet test`** (it builds the solution in Debug). The full **Release** build runs once per checkpoint (Step 6) and at Gate 5 exit — not on every task.
+
+#### Step 6: Mark Complete — REQUIRED
+
+Tick the task in `plans/todo.md` **before moving to the next task or reporting done.** This is not optional. If a sub-agent did the work, the orchestrator applies the tick after receiving the success report.
+
+```markdown
+- [x] Task N.N: Task description (US-XXX) [S|M|L]
+```
+
+When a phase finishes, run the **Release build** (the per-checkpoint artifact check), then tick its checkpoint line and note the verification in `plan.md` if anything diverged from the plan:
+```bash
+dotnet build --configuration Release
+```
+```markdown
+- [x] CHECKPOINT 1 — Auth slice complete: ...
+```
+
+### Frontend TDD (Vitest + React Testing Library)
+
+Same RED → GREEN → REFACTOR loop, different stack. The Backend examples above use xUnit + Moq; for `web/` use Vitest + RTL and query the DOM the way a user would (role / label / text — not implementation details). See [`frontend.md`](../rules/frontend.md) for the full rules.
+
+```tsx
+// RED — web/src/components/__tests__/LoginForm.test.tsx
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { LoginForm } from "../LoginForm";
+
+test("submitting empty form surfaces a Zod validation error", async () => {
+  render(<LoginForm onSubmit={vi.fn()} />);
+  await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(/email is required/i);
+});
+```
+
+```bash
+# Verify (per task)
+npm run test -- LoginForm
+
+# Verify (before commit) — mirrors what /test runs again at Gate 6
+npm run typecheck && npm run lint && npm run build && npm run test
+```
+
+- **Single Zod schema** validates both client (RHF resolver) and server input — never duplicate.
+- **No `useEffect + fetch`** — TanStack Query owns cache, retries, error states.
+- **Query priority:** role > label > text > testId.
+
+### Rules
+
+| Rule | Why |
+|------|-----|
+| **100-line limit** | Test before writing more than ~100 lines |
+| **Touch only what's needed** | Don't refactor adjacent code |
+| **Keep it building** | Project must compile after each increment |
+| **No orphan — wire end-to-end** | A slice is "done" only when the new control/handler is **reachable from the application entry point** (mounted / passed / routed), not merely defined. A button/endpoint/handler that nothing invokes from the real app path is incomplete — even if its unit tests pass. |
+| **Cover the scenario, not just the unit** | A task is done only when **every `@US-XXX-Snn` it claims** (plan's "Scenarios covered") is exercised by a passing test asserting that scenario's observable *Then* through the wired path — not merely that an isolated class works. |
+| **Test the handoff, not just each side** | When a unit produces a value another consumes (navigation-state key, context, event/message name, shared prop contract), ≥ 1 test must exercise **both ends together** (producer acts → consumer's effect asserted). Two sides each unit-passing in isolation does NOT cover the join — a key/name mismatch passes both yet breaks the feature. See [`references/scenario-traceability.md`](../references/scenario-traceability.md) §3. |
+| **Feature flags** | Use flags for incomplete features that need merging |
+| **Rollback-friendly** | Each increment should be independently revertable |
+
+### When Stuck
+
+If a step fails:
+
+1. **Stop** — Don't push through broken code
+2. **Diagnose** — Use `/debug` to find root cause
+3. **Fix** — Address the actual problem
+4. **Guard** — Add test to prevent recurrence
+5. **Resume** — Continue from where you stopped
+
+## Common Commands
+
+```bash
+# Build solution
+dotnet build
+
+# Run all tests
+dotnet test
+
+# Run tests with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Run specific test project
+dotnet test tests/MyApp.UnitTests
+
+# Run tests matching filter
+dotnet test --filter "FullyQualifiedName~UserServiceTests"
+
+# Watch mode (rebuild on changes)
+dotnet watch run --project src/MyApp.Api
+
+# Add EF Core migration FILE (design-time scaffolding — no DB connection)
+dotnet ef migrations add MigrationName --project src/MyApp.Infrastructure --startup-project src/MyApp.Api
+```
+
+> ⚠️ **Do NOT run `dotnet ef database update` during `/build`.** `/build` uses `UseInMemoryDatabase` for tests — no migrations needed. Applying migrations from `/build` would target the connection string in `appsettings.json` (typically `localhost`) and **write to a real database on your host machine**, which violates the host-isolation contract.
+>
+> Migrations are applied at well-defined points:
+> | Phase | How migrations are applied |
+> |-------|----------------------------|
+> | `/build` tests | `UseInMemoryDatabase` — no migrations |
+> | `/test` integration | TestContainers fixtures **apply the repo's migrations** (`Database.MigrateAsync()` / `prisma migrate deploy`) on the ephemeral container — plus repo DDL scripts per `testing.md` §Template B (raw-DDL objects). Migrations themselves are under test here — `EnsureCreated`-style schema-from-model would silently skip them |
+> | `/infra` (local dev) | `docker-compose up` runs migrations against the containerized SQL Server |
+> | `/deploy` (prod) | `dotnet ef migrations script --idempotent` → DBA review → apply via CI/CD |
+
+> **What goes IN the migration** (the table above covers *when* it is applied): a schema change on a **live** system follows **expand-contract** — expand → backfill → switch → contract, planned as separate tasks (`database.md` §Expand-contract · `/plan` Phase 2). Stored procedures, triggers and functions are **source code**: change them by authoring a versioned migration script in the repo — **never edit the object in the database and export it back** (`database.md` §DB-resident objects are source code). And a schema-touching change refreshes **`db/schema-snapshot/` in the same change-set** (`brownfield.md` checklist) — re-export from the `/test` TestContainer once the migration has applied there.
+
+## Red Flags
+
+Stop and reassess if you find yourself:
+
+- Writing > 100 lines without testing
+- Mixing unrelated changes in one commit
+- Expanding scope mid-task
+- Breaking the build between increments
+- Creating abstractions "for later"
+
+## Output
+
+- Working, tested code
+- Updated `plans/todo.md` with completed items
+- Clean git history with atomic commits
+- **Assumptions log** — every `A-xx` recorded during the run (state "None" if empty), presented as a batch for Gate 5 review
+
+## Quality Gate 5 — Exit Criteria
+
+Per `CLAUDE.md` §Verification After Delegation, the sub-agent's report is **not** ground truth — the orchestrator re-verifies on disk before this gate passes (§Orchestrator disk-check below).
+
+Before proceeding to `/test`:
+
+- [ ] All tasks in `plans/todo.md` marked complete
+- [ ] **Every `@US-XXX-Snn` claimed by the completed tasks is reachable from the app entry (no orphan) and backed by a passing test asserting its observable *Then*** — a scenario whose code exists but is unwired, or has only a presence-level test, is NOT done
+- [ ] All unit tests pass (`dotnet test`)
+- [ ] **Assumptions log dispositioned** — every `A-xx` reviewed by the user: approved → one-line AC amendment appended to the affected story in `specs/` (marked `amended @ Gate 5, A-xx`); rejected → the task returns to rework. No silent assumption survives the gate
+- [ ] **(If `/secure` ran) Security controls implemented** — every applicable `SECURITY_REQUIREMENTS.md` control and `RC-N` Required Control is implemented (dev-agent self-audit per their Build Discipline checklists; `/review` / `/scan` re-audit with file:line evidence when run)
+- [ ] Code compiles without errors in Release (`dotnet build --configuration Release`)
+- [ ] **(If `web/` exists) Frontend gate green** — `npm run typecheck && npm run lint && npm run build && npm run test` all pass, including `tailwindcss/no-custom-classname` (no undefined breakpoint/variant class)
+- [ ] No red flags present (see Red Flags section)
+- [ ] Git commits are clean and atomic
+- [ ] **Out-of-scope findings recorded, not just narrated** — anything noticed outside the tasks'
+      scope is written where `principles-and-practices.md` §2.5's routing table sends it, and the
+      report cites that location (distinct from the in-scope `A-xx` Assumptions log above)
+
+### Orchestrator disk-check (run BEFORE declaring Gate 5 passed)
+
+A sub-agent's "done" report is NOT ground truth — same discipline as `CLAUDE.md` §Verification After Delegation. The orchestrator re-verifies the **mechanical** invariants on disk itself (whether the code is *good* stays human judgment at `/review`):
+
+- [ ] **Gate-deciding commands re-run** — `dotnet build -c Release` + `dotnet test` (or the Node/PHP equivalents), plus the frontend gate when `web/` exists. Read the **real exit code and test count**, never the report's adjective.
+- [ ] **Task ↔ evidence** — every task ticked `- [x]` in `plans/todo.md` is genuinely complete, and every `@US-XXX-Snn` those tasks claim has a **named test that exists and passes**. A tick without its test is an untruthful plan (`CLAUDE.md` §11).
+- [ ] **Blast radius** — `git diff --name-only` ⊆ (the completed tasks' *Files to modify* ∪ tests ∪ migrations). A file outside that surface needs a **disposition**, not a silent pass: either add it to `plans/plan.md` §Impact Analysis with a one-line reason, or revert it. *(`/plan` cannot foresee every helper file — the point is that the surface stays **declared**, not that it was predicted perfectly. Surgical-change rule: `principles-and-practices.md` §2.5.)*
+- [ ] **Assumptions flow-back** — each approved `A-xx` has exactly one AC amendment in `specs/` carrying its `amended @ Gate 5, A-xx` marker; the counts match. An approved assumption that never reached the spec is a behavior decision living only in code.
+- [ ] **(Schema-touching tasks) Migration + snapshot** — the migration script is in the repo **and** `db/schema-snapshot/` was refreshed in the same change-set (`brownfield.md` checklist). A schema change with no snapshot update rots the baseline evidence from this commit onward.
+
+Any mismatch → fix on disk first; never hand `/test` a build whose own gate mechanics fail.
+
+## Next Step
+
+After all tasks complete, run `/test` for comprehensive testing with real dependencies.

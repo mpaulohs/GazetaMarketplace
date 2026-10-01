@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<!--
+  PROTÓTIPO CLICÁVEL — GazetaMarketplace (auxílio de aprovação, nível de intenção)
+
+  * DESCARTÁVEL: serve apenas para o Product Owner clicar pelas telas e aprovar o desenho.
+    Depois da aprovação pode ser apagado ou guardado como retrato desta versão. NÃO é mantido
+    em dia com mudanças de requisitos e NÃO é o produto.
+  * FONTE DA VERDADE: os wireframes em ASCII (specs/wireframes/screens/*.md) e a SPEC (specs/SPEC.md).
+    Em caso de diferença, vale o ASCII.
+  * Sem backend: todos os dados são fictícios e ficam na memória da aba (sessionStorage).
+    Só os favoritos usam localStorage (apenas os números dos anúncios), como pede a US-005.
+  * Autocontido: CSS e JavaScript embutidos, sem CDN, sem fontes, sem imagens remotas. Abre offline.
+  * Não define a paleta, os componentes nem os tokens oficiais do produto: isso é da etapa de arquitetura.
+    Os valores --pt-* abaixo são neutros e servem só para o desenho ficar legível.
+  * As etiquetas @US-xxx-Snn (botão "Mostrar tags @US") usam os IDs reais dos cenários da SPEC.
+  * CEP: a busca é SIMULADA com o dicionário local CEP_MOCK (funciona offline). Só 01310-100, 20040-020 e
+    30130-010 foram dados pelo Product Owner; os demais CEPs são fictícios, não conferidos com os Correios.
+    No site real, o SERVIDOR consulta o ViaCEP (ou similar) e devolve Cidade/UF; o navegador não chama o
+    serviço externo. Cidade e UF vêm do CEP e não são digitadas. O CEP aparece só no painel (suposição S25).
+  * Preço: máscara estilo banco (os dígitos entram pelos centavos; S28). O formulário guarda centavos inteiros
+    (priceCents); o anúncio salvo no protótipo guarda reais, para não mexer em busca e ordenação. Guardar em
+    centavos no banco é decisão do /arch.
+  * CEP fora do ar (US-008-S14, NFR-24): marque "Simular CEP fora do ar" na barra. Tempos encurtados: 1 s aqui
+    representa os 5 s reais de cada tentativa. CEP já encontrado vem do cache (cepCache), sem nova busca.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GazetaMarketplace — Protótipo clicável (aprovação)</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  /* valores NEUTROS do protótipo (não são os tokens do produto) */
+  --pt-bg:#eef1f5;--pt-paper:#fff;--pt-text:#1a2233;--pt-muted:#4a5568;--pt-line:#cbd5e1;--pt-field:#64748b;
+  --pt-accent:#1d4ed8;--pt-accent-d:#1e40af;--pt-danger:#b42318;--pt-danger-bg:#fef3f2;--pt-danger-tx:#7a1710;
+  --pt-ok:#0b6b3a;--pt-ok-bg:#e8f6ee;--pt-ok-tx:#0b4a2b;--pt-warn-bg:#fff4d6;--pt-warn-tx:#5e3a00;--pt-info-bg:#e7f0ff;--pt-info-tx:#17407f;
+}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#d9dde4;color:var(--pt-text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+[hidden]{display:none!important}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0;margin:-1px}
+:focus-visible{outline:3px solid #111;outline-offset:2px;box-shadow:0 0 0 2px #fff}
+a{color:var(--pt-accent)}
+h1,h2,h3{line-height:1.25;margin:0 0 8px}
+h1{font-size:1.5rem}h2{font-size:1.2rem}h3,.h3{font-size:1.05rem;margin:0 0 6px}
+p{margin:0 0 10px}
+img,svg{max-width:100%}
+
+/* ===== barra do protótipo (visualmente distinta do produto) ===== */
+.protobar{position:sticky;top:0;z-index:100;background:#2b1055;color:#fff;font-size:13px;border-bottom:3px solid #ffd84d}
+.protobar .strip{background:#ffd84d;color:#1a1200;text-align:center;font-weight:700;padding:4px 8px}
+.protobar .ctl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:8px 12px}
+.protobar .brand{font-size:13px}
+.protobar label{display:flex;align-items:center;gap:6px}
+.protobar select,.protobar button,.protobar summary{font:inherit;font-size:13px;border-radius:6px;border:1px solid #8a78c4;background:#3c2278;color:#fff;padding:4px 8px;min-height:32px;cursor:pointer;width:auto}
+.protobar select{max-width:260px}
+.protobar button[aria-pressed=true]{background:#ffd84d;color:#1a1200;border-color:#ffd84d;font-weight:700}
+.protobar .grp{display:inline-flex;gap:0}
+.protobar .grp button:first-child{border-radius:6px 0 0 6px}.protobar .grp button:last-child{border-radius:0 6px 6px 0}
+.protobar :focus-visible{outline-color:#fff;box-shadow:0 0 0 2px #2b1055}
+.protobar .scn{position:relative}
+.protobar .scn-b{position:absolute;top:calc(100% + 4px);left:0;background:#3c2278;border:1px solid #8a78c4;border-radius:8px;padding:10px;z-index:120;min-width:300px;display:grid;gap:8px}
+.protobar .scn-b label{align-items:flex-start}
+.protobar .scn-b input{width:auto;min-height:0;margin-top:3px}
+.protobar .tstat{color:#ffd84d;font-weight:600}
+.protobar .hint2{color:#d9d0f5;font-size:12px}
+@media (max-width:700px){.protobar{position:static}}
+
+.stage{display:flex;justify-content:center;padding:16px 8px 40px}
+#app{container:app/inline-size;width:100%;max-width:1000px;position:relative;background:var(--pt-bg);border:1px solid #9aa4b2;border-radius:8px;overflow-x:clip;min-height:70vh}
+body.mobile #app{max-width:320px;box-shadow:0 0 0 8px #1c1c28;border-radius:22px;border-color:#1c1c28}
+.ribbon{background:#ffd84d;color:#1a1200;font-size:12px;font-weight:700;text-align:center;padding:3px 8px}
+.skip{position:absolute;left:8px;top:-80px;background:#fff;padding:8px 12px;border-radius:6px;z-index:60;font-weight:700}
+.skip:focus{top:30px}
+main{display:block;padding:16px;outline:none}
+main:focus,[tabindex="-1"]:focus{outline:none}
+main:focus-visible{outline:none;box-shadow:none}
+
+/* ===== botões, campos, alertas ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:8px;border:2px solid var(--pt-accent);background:var(--pt-accent);color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;line-height:1.2;text-align:center}
+.btn:hover{background:var(--pt-accent-d);border-color:var(--pt-accent-d)}
+.btn.sec{background:#fff;color:var(--pt-accent)}
+.btn.sec:hover{background:#eef4ff}
+.btn.danger{background:var(--pt-danger);border-color:var(--pt-danger)}
+.btn.wa{background:var(--pt-ok);border-color:var(--pt-ok)}
+.btn.block{width:100%}
+.btn[disabled],.btn[aria-disabled=true]{opacity:.55;cursor:not-allowed}
+label{display:block;font-weight:600;margin:12px 0 4px}
+input,select,textarea{font:inherit;color:inherit;width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--pt-field);border-radius:8px;background:#fff}
+input[type=checkbox],input[type=radio]{width:auto;min-height:0}
+textarea{min-height:96px;resize:vertical}
+input:disabled,select:disabled{background:#eceff3;color:#4a5568}
+input[readonly]{background:#eceff3;color:#1a202c}
+.cep-row{display:flex;align-items:center;gap:10px}
+.selo{display:inline-block;background:var(--pt-warn-bg);color:var(--pt-warn-tx);border:1px solid #efd08a;border-radius:999px;padding:2px 10px;font-size:.875rem;font-weight:600}.selo-wrap{margin:8px 0}.cep-row input{max-width:12rem}
+[aria-invalid=true]{border:2px solid var(--pt-danger)}
+.hint{color:var(--pt-muted);font-size:.875rem}
+.err{color:var(--pt-danger);font-weight:600;font-size:.9rem;margin-top:4px}
+.err:empty{display:none}
+.err:not(:empty)::before{content:"! "}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+fieldset{border:1px solid var(--pt-line);border-radius:8px;padding:8px 12px 12px;margin:14px 0 0;min-width:0}
+legend{font-weight:700;padding:0 6px}
+.radios{display:flex;gap:18px;flex-wrap:wrap}
+.radios label{display:flex;align-items:center;gap:8px;font-weight:400;margin:6px 0}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:8px;border:1px solid;margin:12px 0}
+.alert p{margin:0 0 6px}.alert p:last-child{margin:0}.alert ul{margin:6px 0 0;padding-left:20px}
+.alert .ic{flex:0 0 22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;border:2px solid currentColor;line-height:1}
+.alert .ic::after{content:attr(data-c)}
+.alert.error{background:var(--pt-danger-bg);border-color:#f0b4ad;color:var(--pt-danger-tx)}
+.alert.info{background:var(--pt-info-bg);border-color:#b9d0f5;color:var(--pt-info-tx)}
+.alert.ok{background:var(--pt-ok-bg);border-color:#a9dcbf;color:var(--pt-ok-tx)}
+.alert.warn{background:var(--pt-warn-bg);border-color:#efd08a;color:var(--pt-warn-tx)}
+.alert a{color:inherit;font-weight:700}
+.empty{background:#fff;border:2px dashed var(--pt-line);border-radius:10px;padding:28px 16px;text-align:center;color:var(--pt-muted)}
+.empty .btn{margin-top:8px}
+.card{background:#fff;border:1px solid var(--pt-line);border-radius:10px;padding:16px;margin-bottom:14px}
+.proto-box{border:2px dashed #7c5cc4;background:#f4efff;color:#2b1055;border-radius:8px;padding:10px 12px;margin:14px 0;font-size:.875rem}
+.proto-box strong.t{display:block;margin-bottom:4px}
+.proto-box .btn{min-height:36px;padding:4px 10px;font-size:.85rem;margin:2px 4px 2px 0}
+.proto-box table{border-collapse:collapse;width:100%}
+.proto-box td,.proto-box th{padding:2px 6px 2px 0;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.us{display:none;background:#ecfeff;border:1px solid #67b8cc;color:#0b5566;border-radius:5px;font-size:10px;line-height:1.3;padding:0 5px;margin:0 2px;font-weight:700;font-style:normal;max-width:100%;overflow-wrap:anywhere;vertical-align:middle;white-space:normal}
+body.show-us .us{display:inline-block}
+.sk{background:linear-gradient(90deg,#dfe4ea,#f1f4f7,#dfe4ea);background-size:200% 100%;animation:sk 1.3s infinite;border-radius:6px}
+@keyframes sk{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+
+/* ===== site público ===== */
+.site-h{background:#fff;border-bottom:1px solid var(--pt-line);padding:12px 16px;display:grid;grid-template-columns:1fr auto;grid-template-areas:"logo fav" "search search";gap:10px}
+.logo{grid-area:logo;font-weight:800;font-size:1.2rem;color:var(--pt-accent);text-decoration:none;align-self:center}
+.favlink{grid-area:fav;text-decoration:none;font-weight:700;color:var(--pt-danger);align-self:center;min-height:44px;display:inline-flex;align-items:center;gap:4px}
+.search{grid-area:search;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.search input{flex:1;min-width:0}
+.site-f{padding:16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--pt-muted);border-top:1px solid var(--pt-line);background:#fff;font-size:.9rem}
+.site-f a{color:var(--pt-muted);display:inline-flex;align-items:center;min-height:44px}
+.crumbs{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-wrap:wrap;gap:2px 0;font-size:.9rem}
+.crumbs li+li::before{content:">";margin:0 8px;color:var(--pt-muted)}
+.crumbs li[aria-current]{color:var(--pt-muted)}
+.cats,.chips{list-style:none;margin:0 0 20px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.chips{display:flex;flex-wrap:wrap}
+.chips a{display:inline-flex;align-items:center;min-height:44px;padding:6px 14px;border:1px solid var(--pt-accent);border-radius:999px;background:#fff;text-decoration:none;font-weight:600}
+.catcard{display:flex;align-items:center;gap:10px;min-height:64px;padding:10px;background:#fff;border:1px solid var(--pt-line);border-radius:10px;text-decoration:none;color:var(--pt-text);font-weight:700}
+.catcard:hover{border-color:var(--pt-accent)}
+.cico{flex:0 0 36px;height:36px;border-radius:8px;background:hsl(var(--h) 45% 32%);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;list-style:none;padding:0;margin:0 0 16px}
+.ad{position:relative;background:#fff;border:1px solid var(--pt-line);border-radius:10px;overflow:hidden;height:100%}
+.ad-link{display:block;color:inherit;text-decoration:none}
+.ad-link:hover .ad-t{text-decoration:underline}
+.ph-w{display:block;aspect-ratio:4/3;background:#1a2233}
+.ph{display:block;width:100%;height:100%}
+.ad-t{display:block;padding:8px 10px 0;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.ad-p{display:block;padding:2px 10px;font-weight:800;font-size:1.1rem}
+.ad-c{display:flex;align-items:center;min-height:48px;padding:0 54px 4px 10px;color:var(--pt-muted);font-size:.9rem}
+.heart{position:absolute;right:2px;bottom:2px;width:44px;height:44px;border-radius:50%;border:0;background:transparent;font-size:1.5rem;color:var(--pt-danger);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;min-height:44px}
+.heart:hover{background:#fdecea}
+.ad.rmv .ad-c{padding-right:10px;min-height:0;padding-bottom:6px}
+.ad.rmv .rm{margin:0 10px 10px;width:calc(100% - 20px)}
+.ad-us{padding:0 6px 4px}
+.tot{font-weight:700}
+.det{display:grid;gap:16px;margin-bottom:16px}
+.det>*{min-width:0}
+.gal-stage{position:relative}
+.gal-main{display:block;width:100%;aspect-ratio:4/3;padding:0;border:0;background:#1a2233;border-radius:10px;overflow:hidden;cursor:zoom-in}
+.gal-broken{display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#1a2233;font-weight:700;border:2px dashed var(--pt-field);cursor:default}
+.gal-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:2px solid #fff;background:rgba(15,23,42,.85);color:#fff;font-size:1.1rem;cursor:pointer;padding:0;min-height:44px}
+.gal-nav.p{left:8px}.gal-nav.n{right:8px}
+.gal-count{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.88);color:#fff;border-radius:999px;padding:1px 12px;font-size:.85rem}
+.thumbs{display:flex;gap:6px;overflow-x:auto;padding:8px 2px;margin:0;list-style:none;max-width:100%}
+.thumbs li{flex:0 0 72px}
+.thumbs button{display:block;width:72px;height:54px;padding:0;border:3px solid transparent;border-radius:6px;overflow:hidden;background:#1a2233;cursor:pointer;min-height:0;color:#fff;font-weight:800}
+.thumbs button[aria-current=true]{border-color:var(--pt-accent)}
+.ad-title{overflow-wrap:anywhere}
+.price{font-size:1.6rem;font-weight:800;margin:0 0 4px}
+.meta{color:var(--pt-muted);margin:0 0 4px}
+.contact{margin-top:12px;background:#f6faff;border-color:#b9d0f5}
+.phone{font-size:1.4rem;font-weight:800;margin:0 0 10px}
+.cbtns{display:grid;gap:8px}
+.favbtn{margin-top:8px;width:100%}
+.txt{white-space:pre-line;overflow-wrap:anywhere}
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:0}
+.specs dt{color:var(--pt-muted);font-size:.85rem}.specs dd{margin:0;font-weight:700}
+.srch{display:grid;gap:16px}
+.srch>*{min-width:0}
+.filters{margin:0}
+.ftoggle{display:none;width:100%}
+.res-h{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.res-h label{display:flex;align-items:center;gap:8px;margin:0;font-weight:600}
+.res-h select{width:auto}
+.pager{list-style:none;display:flex;flex-wrap:wrap;gap:6px;padding:0;margin:8px 0 16px;justify-content:center}
+.pg{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:4px 12px;border:1px solid var(--pt-line);border-radius:8px;background:#fff;text-decoration:none;font-weight:600;font:inherit;color:var(--pt-accent);cursor:pointer}
+.pg.cur{background:var(--pt-accent);color:#fff;border-color:var(--pt-accent)}
+.pg.dis{color:#5b6472;background:#eceff3;cursor:not-allowed}
+.results .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* ===== acesso da equipe ===== */
+.auth-h{background:#fff;border-bottom:1px solid var(--pt-line);padding:12px 16px;font-weight:800}
+.auth-h a{text-decoration:none}
+.auth-card{max-width:440px;margin:16px auto}
+.auth-card .btn.block{margin-top:14px}
+
+/* ===== painel ===== */
+.pan-h{background:#1e293b;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}
+.pan-brand{font-weight:800}
+.pan-nav{display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap}
+.pan-nav ul{list-style:none;margin:0;padding:0;display:flex;gap:4px;flex-wrap:wrap}
+.pan-nav a{display:inline-flex;align-items:center;min-height:44px;padding:6px 12px;border-radius:6px;color:#fff;text-decoration:none;font-weight:600}
+.pan-nav a:hover{background:#334155}
+.pan-nav a[aria-current=page]{background:#fff;color:#1e293b;font-weight:800}
+.pan-user{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pan-h :focus-visible{outline-color:#fff;box-shadow:0 0 0 2px #1e293b}
+.pan-h .btn.sec{background:transparent;color:#fff;border-color:#fff}
+.menu-btn{display:none}
+.back{display:inline-flex;align-items:center;min-height:44px;margin-bottom:4px}
+.pt{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.pt h1{margin:0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;padding:0;list-style:none}
+.tabs a{display:inline-flex;align-items:center;min-height:44px;padding:6px 14px;border:1px solid var(--pt-line);border-radius:8px;background:#fff;text-decoration:none;font-weight:600}
+.tabs a[aria-current=page]{background:var(--pt-accent);color:#fff;border-color:var(--pt-accent)}
+.filt{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px}
+.tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--pt-line)}
+.tbl th,.tbl td{padding:10px;text-align:left;border-bottom:1px solid var(--pt-line);vertical-align:top}
+.tbl th{background:#f1f5f9;font-size:.85rem}
+.tbl a{font-weight:700}
+.reason{color:var(--pt-danger-tx);font-size:.875rem;margin-top:4px}
+.cards-list{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
+.cards-list li{background:#fff;border:1px solid var(--pt-line);border-radius:10px;padding:12px}
+.cards-list .k{color:var(--pt-muted);font-size:.85rem}
+.only-narrow{display:none}
+.st{display:inline-block;padding:1px 10px;border-radius:999px;font-size:.8rem;font-weight:700;border:1px solid;white-space:nowrap}
+.st-draft{background:#e2e8f0;color:#1e293b;border-color:#94a3b8}
+.st-review{background:var(--pt-warn-bg);color:var(--pt-warn-tx);border-color:#e0b95a}
+.st-published{background:var(--pt-ok-bg);color:var(--pt-ok-tx);border-color:#7fc39a}
+.st-rejected{background:var(--pt-danger-bg);color:var(--pt-danger-tx);border-color:#e58f86}
+.st-archived{background:#f1f5f9;color:#334155;border:1px dashed #64748b}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.prev-frame{border:2px dashed var(--pt-line);border-radius:10px;padding:12px;background:#fff;margin-top:8px}
+.ptiles{list-style:none;margin:8px 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ptile{background:#fff;border:1px solid var(--pt-line);border-radius:10px;padding:8px;display:grid;gap:6px;align-content:start}
+.pimg{position:relative;aspect-ratio:4/3;background:#1a2233;border-radius:6px;overflow:hidden}
+.pov{position:absolute;inset:0;background:rgba(15,23,42,.82);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;font-weight:700;font-size:.85rem;padding:6px}
+.pov.fail{background:#7a1710}
+.bar{width:80%;height:8px;border-radius:4px;background:#475569;overflow:hidden}.bar i{display:block;height:100%;width:60%;background:#ffd84d}
+.capa{display:inline-block;font-weight:800;font-size:.8rem;color:var(--pt-ok-tx);background:var(--pt-ok-bg);border:1px solid #7fc39a;border-radius:4px;padding:1px 8px;justify-self:start}
+.ptile .btn{min-height:40px;padding:4px 8px;font-size:.85rem}
+.pbar{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.formfoot{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.ficha{margin-top:14px}
+.prov{display:inline-block;font-size:.75rem;font-weight:600;background:var(--pt-warn-bg);color:var(--pt-warn-tx);border:1px solid #efd08a;border-radius:999px;padding:1px 8px;vertical-align:middle}
+.ph-none{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#e2e8f0;color:var(--pt-text);font-weight:700;text-align:center;padding:8px}
+.ad-lbl{font-weight:600;font-size:.9rem;color:var(--pt-muted)}.ad-alt{font-size:1rem}
+.job-head{aspect-ratio:4/3;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:20px;background:#e2e8f0;border-radius:10px}.job-head .jk{font-size:1.3rem;font-weight:800;margin:0}
+.cnt{display:block;text-align:right;font-size:.875rem;color:var(--pt-muted)}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0 16px}.checks label{display:flex;align-items:center;gap:8px;font-weight:400;margin:4px 0;min-height:28px}
+.tree{list-style:none;margin:0;padding:0}
+.tree ul{list-style:none;margin:0;padding:0 0 0 22px}
+.tree li{border-bottom:1px solid var(--pt-line)}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 80px auto;gap:8px;align-items:center;padding:6px 8px;background:#fff}
+.tr .nm{font-weight:700;overflow-wrap:anywhere}
+.tr .ac{display:flex;gap:6px;flex-wrap:wrap}
+.tr .btn{min-height:44px;padding:4px 10px}
+.thead{display:grid;grid-template-columns:minmax(0,1fr) 80px auto;gap:8px;padding:8px;background:#f1f5f9;font-weight:700;font-size:.85rem;border:1px solid var(--pt-line)}
+.thead span:last-child{min-width:236px}
+
+/* ===== janelas (dialog nativo, fora do #app) ===== */
+dialog.dlg{border:0;border-radius:12px;padding:0;width:480px;max-width:calc(100vw - 32px);box-shadow:0 24px 70px rgba(0,0,0,.45);color:var(--pt-text);background:#fff}
+dialog.dlg::backdrop{background:rgba(15,23,42,.62)}
+dialog.dlg.big{width:min(900px,calc(100vw - 32px))}
+body.mobile dialog.dlg{width:296px}
+body.mobile dialog.dlg.big{width:296px}
+.dlg-h{padding:16px 20px 0}.dlg-h h2{margin:0}
+.dlg-b{padding:8px 20px}
+.dlg-f{padding:8px 20px 20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.dlg blockquote{margin:8px 0;padding:8px 12px;background:#f1f5f9;border-left:4px solid var(--pt-ok);white-space:pre-line;overflow-wrap:anywhere}
+.dlg .bigph{aspect-ratio:4/3;background:#1a2233;border-radius:8px;overflow:hidden}
+
+/* ===== responsivo: consultas ao contêiner do produto (funciona no modo celular 320 px) ===== */
+@container app (min-width:560px){
+  .cats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ptiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@container app (min-width:768px){
+  .site-h{grid-template-columns:auto 1fr auto;grid-template-areas:"logo search fav";align-items:center;gap:16px}
+  .site-h .search{margin:0}
+  main{padding:20px 24px}
+  .det{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+  .cbtns{grid-template-columns:1fr 1fr}
+  .filt{grid-template-columns:1fr 260px}
+  .ptiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@container app (min-width:860px){
+  .cats{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .results .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@container app (min-width:900px){
+  .srch{grid-template-columns:270px minmax(0,1fr);align-items:start}
+}
+@container app (max-width:767px){
+  .ftoggle{display:inline-flex}
+  .filters .fbody{display:none}
+  .filters.open .fbody{display:block;margin-top:10px}
+  .only-wide{display:none}
+  .only-narrow{display:grid}
+  .fav-word{display:none}
+  .menu-btn{display:inline-flex;margin-left:auto}
+  .pan-nav{display:none;width:100%;flex-direction:column;align-items:stretch}
+  .pan-nav.open{display:flex}
+  .pan-nav ul{flex-direction:column}
+  .pan-user{margin-left:0;flex-direction:column;align-items:stretch}
+  .actions .btn,.formfoot .btn,.cbtns .btn{width:100%}
+  .row2.keep{grid-template-columns:1fr 1fr}
+  .row2:not(.keep){grid-template-columns:1fr}
+  .tr{grid-template-columns:minmax(0,1fr) auto}
+  .tr .ac{grid-column:1/-1}
+  .thead{display:none}
+  .tbl-users{display:none}
+}
+</style>
+</head>
+<body class="desktop">
+
+<div class="protobar" role="region" aria-label="Controles do protótipo (não fazem parte do produto)">
+  <div class="strip">Protótipo de aprovação — dados fictícios — não é o produto</div>
+  <div class="ctl">
+    <strong class="brand">PROTÓTIPO · GazetaMarketplace</strong>
+    <label>Ir para
+      <select id="t-jump" aria-label="Ir para a tela">
+        <option value="">Escolha uma tela…</option>
+        <optgroup label="Site público (Visitante)">
+          <option value="#/">US-001 · Página inicial</option>
+          <option value="#/categoria/2">US-001 · Categoria: Automóveis, Peças e Acessórios</option>
+          <option value="#/categoria/36">US-001 · Subcategoria: Motos</option>
+          <option value="#/categoria/89">US-001 · Categoria sem anúncios publicados (Tratores e máquinas agrícolas)</option>
+          <option value="#/categoria/barcos">US-001 · Categoria inexistente</option>
+          <option value="#/busca?cat=33">US-002 · Busca e filtros (Carros, vans e utilitários, 32 resultados)</option>
+          <option value="#/anuncio/1">US-003/004 · Detalhe com 20 fotos e contato</option>
+          <option value="#/anuncio/4">US-003 · Detalhe sem atributos, 1 foto</option>
+          <option value="#/anuncio/64">US-003 · Serviço: sem preço, Tipo no lugar (provisório A6)</option>
+          <option value="#/anuncio/65">US-003 · Vaga de emprego: sem fotos, Salário (provisório A4)</option>
+          <option value="#/anuncio/5">US-003 · Detalhe com foto que não carrega</option>
+          <option value="#/anuncio/110">US-003 · Anúncio indisponível (arquivado)</option>
+          <option value="#/favoritos">US-005 · Meus favoritos</option>
+        </optgroup>
+        <optgroup label="Acesso da equipe">
+          <option value="#/equipe/entrar">US-006 · Entrar</option>
+          <option value="#/equipe/senha-nova" data-pending="u4">US-006 · Defina sua nova senha (primeiro acesso)</option>
+          <option value="#/equipe/esqueci">US-007 · Esqueci minha senha</option>
+          <option value="#/equipe/redefinir?link=ok">US-007 · Definir nova senha (link do e-mail)</option>
+          <option value="#/equipe/redefinir?link=expirado">US-007 · Link vencido</option>
+          <option value="#/equipe/redefinir?link=usado">US-007 · Link já usado</option>
+        </optgroup>
+        <optgroup label="Painel da equipe">
+          <option value="#/painel/anuncios" data-need="u2">US-012 · Meus anúncios / Todos os anúncios</option>
+          <option value="#/painel/fila" data-need="u1">US-010 · Fila de revisão (Administrador)</option>
+          <option value="#/painel/anuncios/novo" data-need="u2">US-008 · Novo anúncio</option>
+          <option value="#/painel/anuncios/104" data-need="u2">US-008 · Anúncio rejeitado (com motivo)</option>
+          <option value="#/painel/anuncios/106" data-need="u2">US-009 · Rascunho incompleto (enviar para revisão)</option>
+          <option value="#/painel/anuncios/101" data-need="u1">US-010 · Em revisão: publicar ou rejeitar</option>
+          <option value="#/painel/anuncios/1" data-need="u1">US-011 · Publicado: despublicar ou arquivar</option>
+          <option value="#/painel/categorias" data-need="u1">US-013 · Categorias</option>
+          <option value="#/painel/usuarios" data-need="u1">US-014 · Usuários da equipe</option>
+          <option value="#/painel/configuracoes" data-need="u1">US-015 · Configurações (telefone/WhatsApp)</option>
+        </optgroup>
+      </select>
+    </label>
+    <label>Entrar como
+      <select id="t-role" aria-label="Entrar como">
+        <option value="guest">Visitante (sem login)</option>
+        <option value="u2">Redator — Ana Souza</option>
+        <option value="u1">Administrador — Marcos Paulo</option>
+      </select>
+    </label>
+    <span class="grp" role="group" aria-label="Tamanho da tela">
+      <button type="button" id="t-desktop" aria-pressed="true">Computador</button>
+      <button type="button" id="t-mobile" aria-pressed="false">Celular 320 px</button>
+    </span>
+    <button type="button" id="t-us" aria-pressed="false">Mostrar tags @US</button>
+    <label>Estado da tela
+      <select id="t-state" aria-label="Pré-visualizar estado da tela">
+        <option value="normal">Normal</option>
+        <option value="empty">Vazio</option>
+        <option value="noresult">Sem resultado</option>
+        <option value="error">Erro</option>
+        <option value="loading">Carregando</option>
+      </select>
+    </label>
+    <details class="scn">
+      <summary>Cenários especiais</summary>
+      <div class="scn-b">
+        <label><input type="checkbox" id="f-nophone"> Telefone do site não configurado (US-010-S08, US-015)</label>
+        <label><input type="checkbox" id="f-storage"> Navegador bloqueia favoritos (US-005-S07)</label>
+        <label><input type="checkbox" id="f-conflict"> Outro administrador decide antes (US-010-S07)</label>
+        <label><input type="checkbox" id="f-upfail"> A próxima foto enviada falha (US-008-S06)</label>
+        <label><input type="checkbox" id="f-cepdown"> Simular CEP fora do ar (US-008-S14)</label>
+        <button type="button" id="t-expire">Simular sessão expirada (US-006-S08)</button>
+        <span class="hint2">Os quatro primeiros valem para o que você fizer a seguir; o último age no próximo clique dentro do painel.</span>
+      </div>
+    </details>
+    <button type="button" id="t-reset">Reiniciar dados</button>
+    <span id="t-status" class="tstat" role="status"></span>
+  </div>
+</div>
+
+<div class="stage"><div id="app"></div></div>
+<div id="dlg-root"></div>
+<div id="live" class="sr" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   1. Utilitários
+   ===================================================================== */
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const grp=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+/* centavos só quando não são zero (S29): R$ 62.000 · R$ 2.499,90 */
+const money=n=>{const c=Math.round((+n||0)*100);return 'R$ '+grp(Math.floor(c/100))+(c%100?','+String(c%100).padStart(2,'0'):'');};
+const PRICE_MAX_DIGITS=10; /* R$ 99.999.999,99 (S28) */
+const fmtCents=c=>'R$ '+grp(Math.floor(c/100))+','+String(c%100).padStart(2,'0');
+const TODAY='2026-09-30';
+const fmtDate=iso=>iso?iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';
+const addDays=(iso,n)=>{const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);};
+const CEP_MOCK={'01310-100':['São Paulo','SP'],'20040-020':['Rio de Janeiro','RJ'],'30130-010':['Belo Horizonte','MG'],'13015-100':['Campinas','SP'],'11010-000':['Santos','SP'],'14010-000':['Ribeirão Preto','SP'],'24020-000':['Niterói','RJ'],'25610-000':['Petrópolis','RJ'],'38400-000':['Uberlândia','MG'],'36010-000':['Juiz de Fora','MG'],'80010-000':['Curitiba','PR'],'86010-000':['Londrina','PR'],'87013-000':['Maringá','PR'],'90010-000':['Porto Alegre','RS'],'95020-000':['Caxias do Sul','RS'],'88010-000':['Florianópolis','SC'],'89201-000':['Joinville','SC'],'40020-000':['Salvador','BA'],'44001-000':['Feira de Santana','BA'],'50010-000':['Recife','PE'],'53010-000':['Olinda','PE'],'60010-000':['Fortaleza','CE'],'74003-000':['Goiânia','GO'],'70040-000':['Brasília','DF'],'69005-000':['Manaus','AM'],'66010-000':['Belém','PA'],'29010-000':['Vitória','ES'],'78005-000':['Cuiabá','MT'],'79002-000':['Campo Grande','MS'],'59012-000':['Natal','RN']};
+/* CEP de exemplo de cada cidade (para os anúncios fictícios já nascerem com CEP) */
+const cepFor=(city,uf)=>{for(const k in CEP_MOCK){if(CEP_MOCK[k][0]===city&&CEP_MOCK[k][1]===uf)return k.replace('-','');}return '';};
+const fmtCep=d=>{d=String(d||'').replace(/\D/g,'').slice(0,8);return d.length>5?d.slice(0,5)+'-'+d.slice(5):d;};
+const withCep=d=>{d.ads.forEach(a=>{if(a.cep===undefined)a.cep=cepFor(a.city,a.uf);});return d;};
+let cepSeq=0;
+const cepCache=new Map(); /* CEPs já encontrados (no site real: cache no servidor, NFR-24) */
+const UF_ALL=['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+/* cidade digitada no preenchimento manual: casa com a lista ignorando acentos/caixa; senão Title Case (acentos mantidos) */
+const normCity=(t,uf)=>{t=String(t||'').trim().replace(/\s+/g,' ');if(!t)return '';const m=(UFS[uf]||[]).find(c=>norm(c)===norm(t));if(m)return m;const low=['de','da','do','das','dos','e'];return t.toLowerCase().split(' ').map((w,i)=>i>0&&low.includes(w)?w:w.charAt(0).toUpperCase()+w.slice(1)).join(' ');};
+const fmtPhone=d=>{d=String(d||'').replace(/\D/g,'');if(d.length===11)return '('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);if(d.length===10)return '('+d.slice(0,2)+') '+d.slice(2,6)+'-'+d.slice(6);return d;};
+const us=(...ids)=>ids.map(i=>'<span class="us" aria-hidden="true">@'+i+'</span>').join('');
+const STATUS={draft:'Rascunho',review:'Em revisão',published:'Publicado',rejected:'Rejeitado',archived:'Arquivado'};
+const ROLE={admin:'Administrador',writer:'Redator'};
+const STATE_LABEL={empty:'Vazio',noresult:'Sem resultado',error:'Erro',loading:'Carregando'};
+const FAV_KEY='gm-proto-favs',STORE_KEY='gm-proto-v2',REF='7F3A-92C1',MAXP=20;
+/* Campos de Serviços e Vagas de emprego (SPEC, Apêndice B) e Condição (lista ProductCondition do GazetaOnline) */
+const SVC_TYPES=['Serviços domésticos','Outros','Babá','Eventos / Festas','Reparação / Conserto / Reforma','Saúde / Beleza','Informática','Tradução','Transporte / Mudanças','Profissionais liberais','Turismo'];
+const JOB_AREAS=['Administrativo / Secretariado / Finanças','Comercial / Vendas','Engenharia / Arquitetura / Design','Telecomunicações / Informática / Multimídia','Atendimento ao Cliente / Call Center','Banco / Seguros / Consultoria / Jurídica','Logística / Distribuição','Turismo / Hotelaria / Restaurante','Educação / Formação','Marketing / Comunicação','Serviços Domésticos / Limpezas','Construção / Industrial','Saúde / Medicina / Enfermagem','Agricultura / Pecuária / Veterinária'];
+const CONDS=['Novo','Usado - Excelente','Usado - Bom','Recondicionado','Com defeito ou avarias'];
+const LONG_MAX=6000;
+const UFS={SP:['São Paulo','Campinas','Santos','Ribeirão Preto'],RJ:['Rio de Janeiro','Niterói','Petrópolis'],MG:['Belo Horizonte','Uberlândia','Juiz de Fora'],PR:['Curitiba','Londrina','Maringá'],RS:['Porto Alegre','Caxias do Sul'],SC:['Florianópolis','Joinville'],BA:['Salvador','Feira de Santana'],PE:['Recife','Olinda'],CE:['Fortaleza'],GO:['Goiânia'],DF:['Brasília'],AM:['Manaus'],PA:['Belém'],ES:['Vitória'],MT:['Cuiabá'],MS:['Campo Grande'],RN:['Natal']};
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+/* =====================================================================
+   2. Dados fictícios (semente)
+   ===================================================================== */
+function seed(){
+  const users=[
+    {id:'u1',name:'Marcos Paulo',email:'marcos@exemplo.com.br',role:'admin',active:true,pass:'Prot0tipo!',mustChange:false},
+    {id:'u2',name:'Ana Souza',email:'ana.souza@exemplo.com.br',role:'writer',active:true,pass:'Prot0tipo!',mustChange:false},
+    {id:'u3',name:'Bruno Lima',email:'bruno.lima@exemplo.com.br',role:'writer',active:false,pass:'Prot0tipo!',mustChange:false},
+    {id:'u4',name:'Carla Dias',email:'carla.dias@exemplo.com.br',role:'writer',active:true,pass:'Provis0ria!',mustChange:true}
+  ];
+  const cats=[
+    /* Subconjunto da árvore real (specs/categories.md), com os ids reais. A árvore completa é trabalho do /build. */
+    {id:'2',name:'Automóveis, Peças e Acessórios',parent:null,ficha:'vehicle',locked:true},
+    {id:'33',name:'Carros, vans e utilitários',parent:'2',ficha:'vehicle'},{id:'36',name:'Motos',parent:'2',ficha:'vehicle'},{id:'34',name:'Caminhões',parent:'2',ficha:'vehicle'},
+    {id:'1',name:'Imóveis',parent:null},
+    {id:'26',name:'Apartamentos',parent:'1'},{id:'27',name:'Casas',parent:'1'},{id:'30',name:'Terrenos, sítios e fazendas',parent:'1',ficha:'land',locked:true},
+    {id:'4',name:'Celulares e Telefonia',parent:null},{id:'43',name:'Celulares e Smartphones',parent:'4'},
+    {id:'5',name:'Casa, Decoração e Utensílios',parent:null},{id:'50',name:'Decorações Para Casa',parent:'5',ficha:'general'},
+    {id:'8',name:'Moda e beleza',parent:null},{id:'68',name:'Roupas',parent:'8'},
+    {id:'20',name:'Eletro',parent:null},{id:'128',name:'Ar-condicionados',parent:'20'},
+    {id:'11',name:'Música e hobbies',parent:null},{id:'86',name:'Livros e revistas',parent:'11',ficha:'general'},
+    {id:'12',name:'Agro e indústria',parent:null},{id:'89',name:'Tratores e máquinas agrícolas',parent:'12'},
+    {id:'7',name:'Serviços',parent:null},{id:'66',name:'Serviços',parent:'7',ficha:'service',locked:true},
+    {id:'13',name:'Vagas de emprego',parent:null},{id:'96',name:'Vagas de emprego',parent:'13',ficha:'job',locked:true}
+  ];
+  const d={users,cats,ads:[],phone:'11912345678',attempts:0,resetUsed:false,nid:200,cid:101,uid:10,pid:1000};
+  const CARD=['Veículo revisado, documentação em dia e segundo dono.','Ótimo estado de conservação, pneus em bom estado.','Aceita avaliação de veículo na troca. Pronto para transferir.','Manual e chave reserva. Pode ser visto com hora marcada.'];
+  const V=(brand,model,year,km,price,uf,city,cat,ph,title)=>({title:title||(brand+' '+model+' '+year),cat:cat||'33',price,uf,city,brand,model,year,km,photos:ph||4,desc:''});
+  const G=(title,cat,price,uf,city,desc,ph,x)=>Object.assign({title,cat,price,uf,city,desc,photos:ph||3},x||{});
+  const featured=[
+    Object.assign(V('Honda','Civic',2018,45000,62000,'SP','Campinas','33',20),{desc:'Único dono, revisões feitas na concessionária, pneus novos.\nAceita troca por veículo de menor valor.',author:'u2'}),
+    G('Terreno 450 m²','30',120000,'PR','Curitiba','Terreno plano, murado, com escritura em dia e água encanada.',5,{area:450,author:'u3'}),
+    Object.assign(V('Honda','CG 160',2021,18000,14500,'PE','Recife','36',4,'Moto CG 160 2021'),{desc:'Moto econômica, revisada, sem quedas.',author:'u1'}),
+    G('Jaqueta jeans masculina','68',180,'GO','Goiânia','Jaqueta jeans tamanho M, bem conservada. Retirada no local.',1,{author:'u2'}),
+    G('Sítio "Boa Vista" & Cia','30',380000,'MG','Uberlândia','Sítio com nascente, pomar e casa simples. Documentação regular.',3,{area:20000,author:'u1',broken:[1]}),
+    Object.assign(V('Fiat','Strada',2019,52000,58000,'AM','Manaus','33',4),{desc:CARD[0],author:'u3'}),
+    Object.assign(V('Yamaha','Fazer 250',2020,14000,17900,'BA','Salvador','36',4),{desc:'Moto com baixa quilometragem, freios novos.',author:'u1'})
+  ];
+  const cars=[['Honda','Fit',2016,78000,48500,'SP','Campinas',6],['Honda','City',2017,62000,55000,'SP','Campinas'],['Honda','HR-V',2015,89000,49900,'SP','Campinas'],['Honda','Accord',2014,101000,69000,'GO','Goiânia'],
+    ['Fiat','Palio',2014,98000,32000,'SP','Campinas'],['Volkswagen','Gol',2016,71000,36500,'SP','Campinas'],['Chevrolet','Onix',2018,54000,47900,'SP','Campinas'],['Renault','Sandero',2015,86000,29900,'SP','Campinas'],
+    ['Ford','Ka',2017,63000,33900,'SP','Santos'],['Toyota','Corolla',2016,92000,79000,'PR','Curitiba'],['Toyota','Etios',2015,88000,38500,'PR','Curitiba'],['Hyundai','HB20',2019,37000,52000,'RJ','Niterói'],
+    ['Hyundai','Creta',2018,66000,84000,'MG','Belo Horizonte'],['Volkswagen','Polo',2020,29000,68900,'RS','Porto Alegre'],['Volkswagen','Fox',2013,112000,24900,'MG','Uberlândia'],['Chevrolet','Prisma',2016,74000,39900,'SC','Joinville'],
+    ['Jeep','Renegade',2017,69000,71500,'SC','Florianópolis'],['Nissan','Kicks',2019,41000,78500,'DF','Brasília'],['Peugeot','208',2018,52000,44500,'SP','São Paulo'],['Citroën','C3',2016,79000,31000,'SP','São Paulo'],
+    ['Fiat','Argo',2019,33000,51900,'PE','Recife'],['Fiat','Uno',2012,124000,17500,'BA','Salvador'],['Renault','Duster',2017,72000,56900,'CE','Fortaleza'],['Chevrolet','Cruze',2017,68000,65900,'ES','Vitória'],
+    ['Ford','EcoSport',2016,81000,48900,'SP','Santos'],['Volkswagen','Virtus',2019,35000,73900,'SP','Ribeirão Preto'],['Toyota','Yaris',2020,24000,66900,'RN','Natal'],['Renault','Kwid',2021,15000,39900,'SP','Campinas'],['Fiat','Mobi',2019,38000,34900,'MG','Juiz de Fora']
+  ].map((c,i)=>Object.assign(V(c[0],c[1],c[2],c[3],c[4],c[5],c[6],'33',c[7]||4),{desc:CARD[i%4]}));
+  const motos=[V('Honda','Biz 125',2019,21000,9800,'SP','São Paulo','36',3),V('Yamaha','Factor 150',2018,26000,8900,'MG','Belo Horizonte','36',3),V('Kawasaki','Ninja 300',2017,19000,21900,'RJ','Rio de Janeiro','36',4)].map(m=>Object.assign(m,{desc:'Moto revisada, documentação em dia.'}));
+  const cam=[V('Volkswagen','Delivery 9.170',2014,145000,148000,'RS','Caxias do Sul','34',4),V('Ford','Transit',2016,98000,132000,'SP','Santos','33',4)].map(m=>Object.assign(m,{desc:'Veículo de trabalho, manutenção em dia.'}));
+  const terr=[G('Terreno 300 m² no Jardim das Flores','30',185000,'SP','Campinas','Lote em loteamento com ruas asfaltadas.',3,{area:300}),G('Lote 600 m² em condomínio','30',240000,'SP','Ribeirão Preto','Condomínio fechado com portaria 24 horas.',4,{area:600}),G('Terreno 1.000 m² com escritura','30',210000,'MG','Uberlândia','Terreno amplo, ideal para chácara.',3,{area:1000}),G('Terreno 360 m² próximo ao centro','30',158000,'SC','Joinville','Terreno regular, perto de comércio e escolas.',3,{area:360})];
+  const casas=[G('Casa térrea com churrasqueira','27',520000,'SP','Campinas','Casa com 3 quartos, quintal amplo e churrasqueira.',5),G('Casa de vila com 2 quartos','27',340000,'RJ','Niterói','Casa de vila reformada, perto do transporte.',4),G('Casa em condomínio fechado','27',780000,'PR','Londrina','Casa com 4 suítes e área de lazer completa.',6)];
+  const apto=[G('Apartamento com 2 quartos no centro','26',415000,'SP','São Paulo','Apartamento com vaga, portaria e lazer.',5),G('Apartamento com varanda gourmet','26',380000,'RS','Porto Alegre','Apartamento reformado, andar alto.',4),G('Kitnet mobiliada','26',165000,'BA','Salvador','Kitnet mobiliada perto da praia.',3)];
+  const ele=[G('Smartphone Galaxy A54 128 GB','43',1400,'SP','São Paulo','Aparelho com nota fiscal, sem marcas de uso.',4),G('iPhone 11 64 GB','43',1600,'RJ','Rio de Janeiro','Aparelho com bateria em 85% e capinha.',3),G('Ar-condicionado split 12.000 BTUs','128',1900,'MG','Belo Horizonte','Ar-condicionado inverter, 220 V, com controle remoto.',3),G('Motorola Moto G84 256 GB','43',1350,'DF','Brasília','Aparelho com nota fiscal e carregador.',4),G('Xiaomi Redmi Note 13 128 GB','43',1100,'PR','Curitiba','Aparelho novo, na caixa lacrada.',2)];
+  const cj=[G('Quadro decorativo em tela 60 x 90 cm','50',320,'SP','Campinas','Quadro com moldura de madeira, pronto para pendurar.',3,{cond:'Usado - Excelente',ptype:'Quadros'}),G('Luminária de chão com cúpula','50',450,'PR','Curitiba','Luminária de 1,60 m, pouco usada.',2,{cond:'Usado - Bom',ptype:'Luminárias'}),G('Conjunto de vasos de cerâmica','50',180,'SC','Florianópolis','Seis vasos de tamanhos variados.',2,{cond:'Novo',ptype:'Vasos'})];
+  const moda=[G('Vestido de festa longo','68',350,'RJ','Rio de Janeiro','Vestido tamanho P, usado uma vez.',3),G('Camisa social slim','68',120,'SP','São Paulo','Camisa tamanho G, sem uso, com etiqueta.',3)];
+  const outros=[G('Coleção Harry Potter (7 livros)','86',250,'SP','Campinas','Coleção completa, capa dura, em bom estado.',3,{cond:'Usado - Bom',ptype:'Livros'}),G('Coleção de revistas em quadrinhos','86',400,'RS','Porto Alegre','Cerca de 80 revistas em bom estado.',4,{cond:'Usado - Bom',ptype:'Revistas e quadrinhos'})];
+  const rest=[];
+  const lists=[cars,motos,cam,terr,casas,apto,ele,cj,moda,outros];
+  for(let i=0;lists.some(l=>i<l.length);i++)lists.forEach(l=>{if(i<l.length)rest.push(l[i]);});
+  /* Um anúncio publicado de Serviços (sem preço) e um de Vagas de emprego (sem fotos) */
+  const extra=[G('Diarista com experiência em limpeza residencial','66',0,'SP','São Paulo','Faxina completa, passadoria e organização. Referências disponíveis.',3,{svcType:'Serviços domésticos',author:'u2'}),
+    G('Pizzaiolo com experiência, período integral','96',2800,'SP','Campinas','Pizzaria no centro procura pizzaiolo com experiência em forno a lenha. Período integral, de terça a domingo. Salário mais vale-transporte.',0,{jobAreas:['Turismo / Hotelaria / Restaurante'],author:'u1'})];
+  const ordered=featured.concat(rest,extra);
+  const hueOf={'2':215,'1':150,'4':265,'5':30,'8':330,'20':290,'11':55,'12':95,'7':180,'13':120};
+  const rootId=c=>{const k=cats.find(x=>x.id===c);return k&&k.parent?k.parent:c;};
+  ordered.forEach((o,i)=>{
+    const id=i+1;
+    d.ads.push(Object.assign({id,brand:'',model:'',year:'',km:'',area:'',status:'published',author:(i%2?'u1':'u3'),reason:'',sent:'',broken:[]},o,{
+      hue:((hueOf[rootId(o.cat)]||200)+(id*17)%40)%360,pub:addDays('2026-09-12',-i),updated:addDays('2026-09-12',-i),
+      photos:Array.from({length:o.photos},(_,k)=>({id:'s'+id+'-'+k,broken:!!(o.broken&&o.broken.indexOf(k)>=0)}))}));
+  });
+  d.ads.filter(a=>a.id>ordered.length-extra.length).forEach(a=>{a.pub='2026-09-12';a.updated='2026-09-12';});
+  const N=(id,o)=>Object.assign({id,brand:'',model:'',year:'',km:'',area:'',desc:'',reason:'',pub:'',sent:'',broken:[],hue:(hueOf[rootId(o.cat)]||200)+20,status:'draft'},o,{photos:Array.from({length:o.photos},(_,k)=>({id:'s'+id+'-'+k}))});
+  d.ads.push(
+    N(101,{title:'Casa com quintal',cat:'27',price:495000,uf:'SP',city:'Campinas',desc:'Casa térrea com 3 quartos e quintal amplo.',photos:4,status:'review',author:'u3',sent:'2026-09-28',updated:'2026-09-28'}),
+    N(102,{title:'Fiat Toro 2020',cat:'33',price:99900,uf:'SP',city:'Campinas',brand:'Fiat',model:'Toro',year:2020,km:32000,desc:'Picape diesel com tração 4x4, revisada.',photos:5,status:'review',author:'u2',sent:'2026-09-29',updated:'2026-09-29'}),
+    N(103,{locManual:true,title:'Enciclopédia Barsa completa',cat:'86',price:2800,uf:'PR',city:'Curitiba',cond:'Usado - Excelente',ptype:'Livros',desc:'Edição de colecionador com 18 volumes.',photos:3,status:'review',author:'u2',sent:'2026-09-30',updated:'2026-09-30'}),
+    N(104,{title:'Moto para retirar peças',cat:'36',price:3500,uf:'BA',city:'Salvador',brand:'Honda',model:'CG 125',year:2009,km:62000,desc:'Moto sem documento, ideal para retirar peças.',photos:2,status:'rejected',author:'u2',reason:'Fotos escuras; envie fotos com boa iluminação',updated:'2026-09-30'}),
+    N(105,{title:'Terreno 500 m² de esquina',cat:'30',price:210000,uf:'SP',city:'Ribeirão Preto',area:500,desc:'Terreno de esquina em bairro planejado.',photos:2,status:'draft',author:'u2',updated:'2026-09-28'}),
+    N(106,{title:'Celular Samsung Galaxy S21',cat:'43',price:2400,uf:'',city:'',desc:'Aparelho com 128 GB, sem marcas de uso.',photos:0,status:'draft',author:'u2',updated:'2026-09-27'}),
+    N(107,{title:'Trator Massey Ferguson 275',cat:'89',price:89000,uf:'GO',city:'Goiânia',desc:'Trator com 4.500 horas de uso, pneus em bom estado.',photos:2,status:'draft',author:'u2',updated:'2026-09-26'}),
+    N(110,{title:'Fusca 1975 restaurado',cat:'33',price:38000,uf:'MG',city:'Belo Horizonte',brand:'Volkswagen',model:'Fusca',year:1975,km:88000,desc:'Restaurado, motor revisado.',photos:4,status:'archived',author:'u3',pub:'2026-08-01',updated:'2026-09-25'})
+  );
+  return d;
+}
+
+/* =====================================================================
+   3. Estado, persistência, favoritos
+   ===================================================================== */
+const S={d:null,session:{userId:null},pending:null,view:{state:'normal'},flags:{storage:false,conflict:false,upfail:false,expire:false,cepdown:false},flash:null,returnTo:null,
+  panel:{q:'',status:'',page:1},form:null,gal:null,favGone:null,filtersOpen:false,navOpen:false,fg:null,cmsg:null,umsg:null,resetEmail:''};
+function persist(){try{sessionStorage.setItem(STORE_KEY,JSON.stringify({d:S.d,u:S.session.userId}));}catch(e){}}
+function load(){try{const raw=sessionStorage.getItem(STORE_KEY);if(raw){const o=JSON.parse(raw);if(o&&o.d&&o.d.ads&&o.d.cats){S.d=withCep(o.d);S.session.userId=o.u||null;return;}}}catch(e){}S.d=withCep(seed());}
+function favRead(){try{const v=JSON.parse(localStorage.getItem(FAV_KEY)||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='number'):[];}catch(e){return [];}}
+function favWrite(list){if(S.flags.storage)return false;try{localStorage.setItem(FAV_KEY,JSON.stringify(list));return true;}catch(e){return false;}}
+const isFav=id=>favRead().indexOf(id)>=0;
+
+/* ---- acessores de domínio ---- */
+const ads=()=>S.d.ads;
+const findAd=id=>S.d.ads.find(a=>a.id===id);
+const published=()=>S.d.ads.filter(a=>a.status==='published');
+const byRecent=(a,b)=>(b.pub||'').localeCompare(a.pub||'')||b.id-a.id;
+const cat=id=>S.d.cats.find(c=>c.id===id);
+const mains=()=>S.d.cats.filter(c=>!c.parent);
+const kids=id=>S.d.cats.filter(c=>c.parent===id);
+const descIds=id=>[id].concat(kids(id).map(c=>c.id));
+const catFicha=id=>{const c=cat(id);if(!c)return null;if(c.ficha)return c.ficha;if(c.parent){const p=cat(c.parent);return p&&p.ficha||null;}return null;};
+const catName=id=>{const c=cat(id);return c?c.name:'';};
+const catPath=id=>{const c=cat(id);if(!c)return '';return c.parent?catName(c.parent)+' > '+c.name:c.name;};
+const catHue=id=>({'2':215,'1':150,'4':265,'5':30,'8':330,'20':290,'11':55,'12':95,'7':180,'13':120}[id]||(id.length*47)%360);
+const KIND={'2':'car','33':'car','36':'moto','34':'truck','1':'house','26':'house','27':'house','30':'land','4':'phone','43':'phone','5':'sofa','50':'sofa','8':'bag','68':'bag','20':'box','128':'box','11':'box','86':'box','12':'truck','89':'truck','7':'tool','66':'tool','13':'box','96':'box'};
+/* Regras por categoria (SPEC, US-008 e Apêndice B) */
+const maxPhotos=c=>{const fi=catFicha(c);return fi==='job'?0:fi==='service'?6:MAXP;};
+const hasPrice=c=>catFicha(c)!=='service';
+const isLongDesc=c=>{const fi=catFicha(c);return fi==='service'||fi==='job';};
+const descLabel=c=>isLongDesc(c)?'Informações adicionais':'Descrição';
+const titleMax=c=>catFicha(c)==='job'?90:120;
+const priceText=ad=>{const fi=catFicha(ad.cat);return fi==='service'?'Tipo: '+(ad.svcType||'—'):(fi==='job'?'Salário ':'')+money(ad.price);};
+const kindOf=id=>{const c=cat(id);if(!c)return 'box';return KIND[c.id]||KIND[c.parent]||'box';};
+const user=id=>S.d.users.find(u=>u.id===id);
+const me=()=>S.session.userId?user(S.session.userId):null;
+const isAdmin=()=>{const u=me();return !!u&&u.role==='admin';};
+const authorName=a=>{const u=user(a.author);return u?u.name:'—';};
+const landing=u=>u.role==='admin'?'#/painel/fila':'#/painel/anuncios';
+const favCount=()=>{const p=new Set(published().map(a=>a.id));return favRead().filter(id=>p.has(id)).length;};
+
+/* =====================================================================
+   4. Blocos de interface reutilizáveis
+   ===================================================================== */
+function alertBox(kind,html,o){o=o||{};const ic={error:'!',info:'i',ok:'✓',warn:'!'}[kind];const role=o.role||((kind==='error'||kind==='warn')?'alert':'status');
+  return '<div class="alert '+kind+'" role="'+role+'"'+(o.id?' id="'+o.id+'"':'')+(o.focus?' tabindex="-1" data-autofocus':'')+'><span class="ic" aria-hidden="true" data-c="'+ic+'"></span><div>'+html+'</div></div>';}
+function flashHtml(){const f=S.flash;return f?alertBox(f.kind,f.html):'';}
+function photoSvg(ad,i){
+  const h=((ad.hue||200)+i*23)%360,k=kindOf(ad.cat),g='hsl('+h+' 30% 93%)',dk='#1a2233';let s='';
+  if(k==='car')s='<rect x="90" y="160" width="220" height="50" rx="12" fill="'+g+'"/><path d="M130 160l25-42h90l30 42z" fill="'+g+'"/><circle cx="140" cy="212" r="22" fill="'+dk+'"/><circle cx="270" cy="212" r="22" fill="'+dk+'"/>';
+  else if(k==='moto')s='<circle cx="130" cy="205" r="34" fill="none" stroke="'+g+'" stroke-width="10"/><circle cx="280" cy="205" r="34" fill="none" stroke="'+g+'" stroke-width="10"/><path d="M130 205l60-60h60l30 60M190 145l-18-28h-32" fill="none" stroke="'+g+'" stroke-width="10" stroke-linecap="round"/>';
+  else if(k==='truck')s='<rect x="70" y="120" width="170" height="90" rx="6" fill="'+g+'"/><path d="M240 150h50l34 36v24h-84z" fill="'+g+'"/><circle cx="130" cy="214" r="22" fill="'+dk+'"/><circle cx="290" cy="214" r="22" fill="'+dk+'"/>';
+  else if(k==='land')s='<circle cx="320" cy="80" r="30" fill="'+g+'"/><path d="M0 215q100-30 200 0t200-10v95H0z" fill="hsl('+h+' 40% 22%)"/><path d="M60 215v-40M120 218v-40M180 216v-40M240 213v-40" stroke="'+g+'" stroke-width="8"/>';
+  else if(k==='house')s='<path d="M110 150l90-60 90 60z" fill="'+g+'"/><rect x="130" y="150" width="140" height="80" fill="'+g+'"/><rect x="185" y="185" width="30" height="45" fill="'+dk+'"/>';
+  else if(k==='phone')s='<rect x="160" y="70" width="80" height="150" rx="14" fill="'+g+'"/><rect x="170" y="88" width="60" height="100" rx="4" fill="'+dk+'"/><circle cx="200" cy="205" r="6" fill="'+dk+'"/>';
+  else if(k==='sofa')s='<rect x="90" y="140" width="220" height="60" rx="14" fill="'+g+'"/><rect x="70" y="160" width="50" height="60" rx="12" fill="'+g+'"/><rect x="280" y="160" width="50" height="60" rx="12" fill="'+g+'"/><rect x="110" y="215" width="14" height="14" fill="'+dk+'"/><rect x="276" y="215" width="14" height="14" fill="'+dk+'"/>';
+  else if(k==='bag')s='<rect x="120" y="120" width="160" height="110" rx="12" fill="'+g+'"/><path d="M160 120q0-50 40-50t40 50" fill="none" stroke="'+g+'" stroke-width="12"/>';
+  else if(k==='tool')s='<circle cx="200" cy="150" r="50" fill="none" stroke="'+g+'" stroke-width="18"/><rect x="190" y="100" width="20" height="100" fill="'+g+'"/>';
+  else s='<rect x="120" y="110" width="160" height="110" fill="'+g+'"/><path d="M120 110l40-30h120l-40 30z" fill="hsl('+h+' 25% 80%)"/><path d="M200 110v110" stroke="'+dk+'" stroke-width="6"/>';
+  return '<svg class="ph" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><rect width="400" height="300" fill="hsl('+h+' 45% 34%)"/><rect y="230" width="400" height="70" fill="hsl('+h+' 40% 26%)"/>'+s+'<text x="392" y="290" text-anchor="end" font-size="20" font-family="sans-serif" fill="#fff" opacity=".9">Foto '+(i+1)+'</text></svg>';
+}
+function skGrid(n){return '<p class="sr" role="status">Carregando…</p><ul class="grid" aria-busy="true">'+Array.from({length:n},()=>'<li><div class="card" style="padding:8px"><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="height:14px;margin:10px 0 6px;width:80%"></div><div class="sk" style="height:14px;width:50%"></div></div></li>').join('')+'</ul>';}
+function skRows(n){return '<p class="sr" role="status">Carregando…</p><div aria-busy="true">'+Array.from({length:n},()=>'<div class="sk" style="height:48px;margin:0 0 8px"></div>').join('')+'</div>';}
+function errBlock(kind){
+  const msg=kind==='search'?'Não foi possível buscar agora. Tente novamente.':'Não foi possível carregar a página. Tente novamente.';
+  return alertBox('error','<p>'+msg+'</p><p class="hint" style="color:inherit">Código de referência: '+REF+'</p>',{focus:true})+'<button type="button" class="btn" data-act="retry">Tentar novamente</button>'+us(kind==='search'?'US-002-S11':'US-001-S06');
+}
+function crumbs(list){return '<nav aria-label="Você está em"><ol class="crumbs">'+list.map((c,i)=>i===list.length-1?'<li aria-current="page">'+esc(c.l)+'</li>':'<li><a href="'+c.h+'">'+esc(c.l)+'</a></li>').join('')+'</ol></nav>';}
+function catChips(exceptId){return '<ul class="chips">'+mains().filter(c=>c.id!==exceptId).map(c=>'<li><a href="#/categoria/'+c.id+'">'+esc(c.name)+'</a></li>').join('')+'</ul>';}
+function statusPill(s){return '<span class="st st-'+s+'">'+STATUS[s]+'</span>';}
+function pager(cur,total,hrefFn,btnMode){
+  if(total<=1)return '';
+  const items=[];for(let p=1;p<=total;p++){if(total<=7||p===1||p===total||Math.abs(p-cur)<=1)items.push(p);else if(items[items.length-1]!=='…')items.push('…');}
+  const link=(p,label,cls,extra)=>btnMode?'<button type="button" class="pg '+(cls||'')+'" data-act="lpage" data-p="'+p+'" '+(extra||'')+'>'+label+'</button>':'<a class="pg '+(cls||'')+'" href="'+hrefFn(p)+'" '+(extra||'')+'>'+label+'</a>';
+  let h='<nav aria-label="Paginação"><ul class="pager">';
+  h+='<li>'+(cur>1?link(cur-1,'<span aria-hidden="true">◀</span> Anterior'):'<span class="pg dis" aria-disabled="true"><span aria-hidden="true">◀</span> Anterior</span>')+'</li>';
+  items.forEach(p=>{h+=p==='…'?'<li><span class="pg" aria-hidden="true">…</span></li>':'<li>'+(p===cur?link(p,p,'cur','aria-current="page"'):link(p,p,'','aria-label="Página '+p+'"'))+'</li>';});
+  h+='<li>'+(cur<total?link(cur+1,'Próxima <span aria-hidden="true">▶</span>'):'<span class="pg dis" aria-disabled="true">Próxima <span aria-hidden="true">▶</span></span>')+'</li></ul></nav>';
+  return h;
+}
+function field(id,label,o){o=o||{};
+  return '<label for="'+id+'">'+label+(o.req?' *':'')+'</label><input id="'+id+'" name="'+id+'" type="'+(o.type||'text')+'" value="'+esc(o.value||'')+'"'+(o.ac?' autocomplete="'+o.ac+'"':'')+(o.req?' aria-required="true"':'')+(o.attrs?' '+o.attrs:'')+' aria-describedby="e-'+id+(o.hint?' h-'+id:'')+'">'+(o.hint?'<div class="hint" id="h-'+id+'">'+o.hint+'</div>':'')+'<div class="err" id="e-'+id+'" role="alert"></div>';}
+function setErr(id,msg){const e=document.getElementById('e-'+id),i=document.getElementById(id);if(e)e.textContent=msg;if(i){i.setAttribute('aria-invalid','true');}}
+function clearErrs(root){$$('.err',root||document).forEach(e=>e.textContent='');$$('[aria-invalid]',root||document).forEach(i=>i.removeAttribute('aria-invalid'));}
+function announce(msg){const l=$('#live');l.textContent='';setTimeout(()=>{l.textContent=msg;},40);}
+let tsT=null;
+function pstat(msg){const t=$('#t-status');t.textContent=msg;clearTimeout(tsT);tsT=setTimeout(()=>{t.textContent='';},7000);}
+function catOptions(sel,mode,allLabel){
+  let h=allLabel?'<option value="">'+allLabel+'</option>':'';
+  mains().forEach(m=>{const ks=kids(m.id);
+    if(mode==='search'){h+='<option value="'+m.id+'" data-f="'+(catFicha(m.id)||'')+'"'+(sel===m.id?' selected':'')+'>'+esc(m.name)+'</option>';ks.forEach(k=>{h+='<option value="'+k.id+'" data-f="'+(catFicha(k.id)||'')+'"'+(sel===k.id?' selected':'')+'>— '+esc(k.name)+'</option>';});}
+    else if(mode==='form'){if(ks.length)h+='<optgroup label="'+esc(m.name)+'">'+ks.map(k=>'<option value="'+k.id+'"'+(sel===k.id?' selected':'')+'>'+esc(k.name)+'</option>').join('')+'</optgroup>';else h+='<option value="'+m.id+'"'+(sel===m.id?' selected':'')+'>'+esc(m.name)+'</option>';}
+    else h+='<option value="'+m.id+'"'+(sel===m.id?' selected':'')+'>'+esc(m.name)+'</option>';});
+  return h;
+}
+const ufOptions=(sel,all)=>'<option value="">'+all+'</option>'+Object.keys(UFS).map(u=>'<option value="'+u+'"'+(sel===u?' selected':'')+'>'+u+'</option>').join('');
+const cityOptions=(uf,sel,all)=>'<option value="">'+all+'</option>'+((UFS[uf]||[]).map(c=>'<option value="'+esc(c)+'"'+(sel===c?' selected':'')+'>'+esc(c)+'</option>').join(''));
+
+/* =====================================================================
+   5. Layouts
+   ===================================================================== */
+const ribbon='<div class="ribbon">Protótipo de aprovação — dados fictícios — não é o produto</div>';
+function pubLayout(main,o){o=o||{};const fc=favCount();
+  return ribbon+'<a class="skip" href="#" data-act="skip">Ir para o conteúdo</a>'+
+  '<header class="site-h"><a class="logo" href="#/">GazetaMarketplace</a>'+
+  '<a class="favlink" href="#/favoritos" data-fk="favlink" aria-label="Favoritos ('+fc+')"><span aria-hidden="true">'+(fc?'♥':'♡')+'</span><span aria-hidden="true"><span class="fav-word">Favoritos </span>('+fc+')</span>'+us('US-005-S01')+'</a>'+
+  '<form class="search" role="search" data-form="search"><label class="sr" for="q">Buscar anúncios</label><input id="q" type="search" placeholder="Buscar anúncios…" value="'+esc(o.q||'')+'" autocomplete="off"><button class="btn" type="submit">Buscar</button>'+us('US-001-S01','US-002-S01')+'</form></header>'+
+  '<main id="main" tabindex="-1">'+flashHtml()+main+'</main>'+
+  '<footer class="site-f"><span>© GazetaMarketplace</span><span><a href="#/equipe/entrar">Área da equipe</a>'+us('US-006-S01')+'</span></footer>';
+}
+function authLayout(main){
+  return ribbon+'<a class="skip" href="#" data-act="skip">Ir para o conteúdo</a><header class="auth-h"><a href="#/">GazetaMarketplace</a> · Área da equipe</header><main id="main" tabindex="-1">'+flashHtml()+main+'</main>';
+}
+function panelLayout(main,active){
+  const u=me(),adm=u.role==='admin';
+  const items=adm?[['ads','Anúncios','#/painel/fila'],['cats','Categorias','#/painel/categorias'],['users','Usuários','#/painel/usuarios'],['settings','Configurações','#/painel/configuracoes']]:[['ads','Meus anúncios','#/painel/anuncios']];
+  return ribbon+'<a class="skip" href="#" data-act="skip">Ir para o conteúdo</a><div class="pan"><header class="pan-h"><span class="pan-brand">Gazeta · Painel</span>'+
+  '<button type="button" class="btn sec menu-btn" data-act="menu" aria-expanded="'+S.navOpen+'" aria-controls="pan-nav">Menu</button>'+
+  '<div class="pan-nav'+(S.navOpen?' open':'')+'" id="pan-nav"><nav aria-label="Menu do painel"><ul>'+items.map(i=>'<li><a href="'+i[2]+'"'+(i[0]===active?' aria-current="page"':'')+'>'+i[1]+'</a></li>').join('')+'</ul></nav>'+us('US-006-S02')+
+  '<div class="pan-user"><span>'+esc(u.name)+' ('+ROLE[u.role]+')</span><button type="button" class="btn sec" data-act="logout">Sair</button>'+us('US-006-S03')+'</div></div></header>'+
+  '<main id="main" tabindex="-1">'+flashHtml()+main+'</main></div>';
+}
+function deniedPage(what){
+  const adm=isAdmin();
+  return {html:panelLayout('<h1 data-autofocus tabindex="-1">Acesso negado</h1>'+alertBox('error','Você não tem permissão para acessar '+(what==='ad'?'este anúncio':'esta página')+'.')+'<a class="btn" href="'+landing(me())+'">Voltar para '+(adm?'a Fila de revisão':'Meus anúncios')+'</a> '+us('US-006-S10','US-008-S10','US-010-S09','US-015-S06'),'ads'),title:'Acesso negado',states:[]};
+}
+
+/* =====================================================================
+   6. Site público
+   ===================================================================== */
+function cardMedia(ad){return catFicha(ad.cat)==='job'?'<span class="ph-w ph-none"><span>Vaga de emprego</span><span class="prov">provisório (A4)</span></span>':'<span class="ph-w">'+photoSvg(ad,0)+'</span>';}
+function cardPrice(ad){const fi=catFicha(ad.cat);
+  if(fi==='service')return '<span class="ad-p ad-alt">'+esc(ad.svcType||'Serviço')+' <span class="prov">provisório (A6)</span></span>';
+  return '<span class="ad-p">'+(fi==='job'?'<span class="ad-lbl">Salário </span>':'')+money(ad.price)+'</span>';}
+function adCard(ad,o){o=o||{};const fav=isFav(ad.id),label=ad.title+', '+priceText(ad)+', '+ad.city+'/'+ad.uf;
+  return '<li><article class="ad'+(o.remove?' rmv':'')+'"><a class="ad-link" href="#/anuncio/'+ad.id+'" aria-label="'+esc(label)+'">'+cardMedia(ad)+'<span class="ad-t">'+esc(ad.title)+'</span>'+cardPrice(ad)+'<span class="ad-c">'+esc(ad.city)+'/'+ad.uf+'</span></a>'+
+  (o.remove?'<button type="button" class="btn sec rm" data-act="fav" data-id="'+ad.id+'" data-fk="fav-'+ad.id+'" aria-label="Remover '+esc(ad.title)+' dos favoritos">Remover</button>':
+  '<button type="button" class="heart" data-act="fav" data-id="'+ad.id+'" data-fk="fav-'+ad.id+'" aria-pressed="'+fav+'" aria-label="Favoritar anúncio '+esc(ad.title)+'"><span aria-hidden="true">'+(fav?'♥':'♡')+'</span></button>')+
+  '<div class="ad-us">'+(o.t?us.apply(null,o.t):'')+'</div></article></li>';}
+const adGrid=(list,o)=>'<ul class="grid">'+list.map(a=>adCard(a,o)).join('')+'</ul>';
+
+function homePage(){
+  const st=S.view.state;let inner;
+  if(st==='error')inner='<h1 class="sr">Anúncios mais recentes</h1>'+errBlock('page');
+  else{
+    const cc=mains().map(c=>'<li><a class="catcard" href="#/categoria/'+c.id+'"><span class="cico" style="--h:'+catHue(c.id)+'" aria-hidden="true">▣</span><span>'+esc(c.name)+'</span></a></li>').join('');
+    let recent;
+    if(st==='loading')recent=skGrid(12);
+    else{const l=published().sort(byRecent).slice(0,12);recent=(st==='empty'||!l.length)?'<p class="empty" role="status">Em breve teremos novos anúncios '+us('US-001-S05')+'</p>':adGrid(l,{t:['US-001-S01','US-005-S01']});}
+    inner='<section aria-labelledby="h-cats"><h2 id="h-cats">Categorias '+us('US-001-S01','US-001-S02')+'</h2><ul class="cats">'+cc+'</ul></section><section aria-labelledby="h-rec"><h1 id="h-rec">Anúncios mais recentes '+us('US-001-S01','US-001-S08')+'</h1>'+recent+'</section>';
+  }
+  return {html:pubLayout(inner),title:'Início',states:['empty','error','loading']};
+}
+function categoryPage(id){
+  const c=cat(id),st=S.view.state;
+  if(!c)return {html:pubLayout('<h1 data-autofocus tabindex="-1">Categoria não encontrada '+us('US-001-S07')+'</h1><p>Voltar para a <a href="#/">Página inicial</a> ou escolher uma categoria:</p>'+catChips()),title:'Categoria não encontrada',states:[]};
+  const cr=[{l:'Início',h:'#/'}];if(c.parent)cr.push({l:catName(c.parent),h:'#/categoria/'+c.parent});cr.push({l:c.name});
+  let inner=crumbs(cr);
+  if(st==='error')return {html:pubLayout(inner+'<h1 class="sr">'+esc(c.name)+'</h1>'+errBlock('page')),title:c.name,states:['empty','error','loading']};
+  const sub=(!c.parent&&kids(c.id).length)?'<p><strong>Subcategorias:</strong></p><ul class="chips">'+kids(c.id).map(k=>'<li><a href="#/categoria/'+k.id+'">'+esc(k.name)+'</a></li>').join('')+'</ul>'+us('US-001-S03'):'';
+  const list=published().filter(a=>descIds(id).indexOf(a.cat)>=0).sort(byRecent);
+  inner+='<h1'+((st==='empty'||!list.length)?' data-autofocus tabindex="-1"':'')+'>'+esc(c.name)+' '+us('US-001-S02','US-001-S03')+'</h1>'+sub;
+  if(st==='loading')inner+=skGrid(8);
+  else if(st==='empty'||!list.length)inner+='<p class="empty" role="status">Ainda não há anúncios nesta categoria '+us('US-001-S04')+'</p><p><strong>Veja outras categorias:</strong></p>'+catChips(id);
+  else inner+='<h2>Anúncios em '+esc(c.name)+'</h2>'+adGrid(list,{t:['US-001-S02','US-005-S01']})+'<p><a class="btn sec" href="#/busca?cat='+c.id+'">Filtrar e ordenar os anúncios desta categoria</a></p>';
+  return {html:pubLayout(inner),title:c.name,states:['empty','error','loading']};
+}
+
+/* ---- busca ---- */
+function parseFilters(q){const g=k=>q[k]||'';return {q:g('q'),cat:g('cat'),uf:g('uf'),city:g('city'),pmin:g('pmin'),pmax:g('pmax'),brand:g('brand'),model:g('model'),ymin:g('ymin'),ymax:g('ymax'),kmax:g('kmax'),amin:g('amin'),amax:g('amax'),sort:g('sort')||'recent',page:Math.max(1,parseInt(q.page||'1',10)||1)};}
+function searchAds(f){
+  let l=published();
+  if(f.q){const t=norm(f.q);l=l.filter(a=>norm(a.title+' '+a.desc).indexOf(t)>=0);}
+  if(f.cat){const ids=descIds(f.cat);l=l.filter(a=>ids.indexOf(a.cat)>=0);}
+  if(f.uf)l=l.filter(a=>a.uf===f.uf);if(f.city)l=l.filter(a=>a.city===f.city);
+  /* Provisório (A6): Serviços não têm preço — ficam fora da faixa de preço e no fim da ordenação por preço */
+  if(f.pmin!=='')l=l.filter(a=>hasPrice(a.cat)&&a.price>=+f.pmin);if(f.pmax!=='')l=l.filter(a=>hasPrice(a.cat)&&a.price<=+f.pmax);
+  const fi=f.cat?catFicha(f.cat):null;
+  if(fi==='vehicle'){if(f.brand)l=l.filter(a=>a.brand===f.brand);if(f.model)l=l.filter(a=>norm(a.model).indexOf(norm(f.model))>=0);if(f.ymin!=='')l=l.filter(a=>+a.year>=+f.ymin);if(f.ymax!=='')l=l.filter(a=>+a.year<=+f.ymax);if(f.kmax!=='')l=l.filter(a=>+a.km<=+f.kmax);}
+  if(fi==='land'){if(f.amin!=='')l=l.filter(a=>+a.area>=+f.amin);if(f.amax!=='')l=l.filter(a=>+a.area<=+f.amax);}
+  const np=a=>hasPrice(a.cat)?0:1;
+  if(f.sort==='price_asc')l.sort((a,b)=>np(a)-np(b)||a.price-b.price||byRecent(a,b));else if(f.sort==='price_desc')l.sort((a,b)=>np(a)-np(b)||b.price-a.price||byRecent(a,b));else l.sort(byRecent);
+  return l;
+}
+const searchHref=(f,over)=>{const o=Object.assign({},f,over||{});if(o.sort==='recent')o.sort='';if(o.page===1)o.page='';return '#/busca?'+Object.keys(o).filter(k=>o[k]!==''&&o[k]!=null).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(o[k])).join('&');};
+function filtersHtml(f){
+  const fi=f.cat?catFicha(f.cat):null,brands=Array.from(new Set(published().filter(a=>a.brand).map(a=>a.brand))).sort();
+  return '<form class="filters card" id="filters" data-form="filters" novalidate><button type="button" class="btn sec ftoggle" data-act="ftoggle" aria-expanded="'+S.filtersOpen+'" aria-controls="fbody">Filtros <span aria-hidden="true">▾</span></button>'+us('US-002-S12')+
+  '<div class="fbody" id="fbody"><h2 class="h3">Filtros</h2>'+
+  '<label for="s-cat">Categoria</label><select id="s-cat">'+catOptions(f.cat,'search','Todas as categorias')+'</select>'+us('US-002-S02')+
+  '<label for="s-uf">UF</label><select id="s-uf">'+ufOptions(f.uf,'Todas as UFs')+'</select>'+us('US-002-S02','US-002-S10')+
+  '<label for="s-city">Cidade</label><select id="s-city"'+(f.uf?'':' disabled')+'>'+cityOptions(f.uf,f.city,'Todas as cidades')+'</select>'+
+  '<fieldset><legend>Preço (R$)</legend><div class="row2 keep"><div><label for="s-pmin">Preço mínimo (R$)</label><input id="s-pmin" type="number" min="0" inputmode="numeric" value="'+esc(f.pmin)+'" aria-describedby="e-price"></div><div><label for="s-pmax">Preço máximo (R$)</label><input id="s-pmax" type="number" min="0" inputmode="numeric" value="'+esc(f.pmax)+'" aria-describedby="e-price"></div></div><div class="err" id="e-price" role="alert"></div><p class="hint">Serviços não têm preço: ficam fora da faixa de preço e no fim da ordenação por preço <span class="prov">provisório (A6)</span></p>'+us('US-002-S02','US-002-S08')+'</fieldset>'+
+  '<div data-only="vehicle"'+(fi==='vehicle'?'':' hidden')+'><fieldset><legend>Veículo</legend><label for="s-brand">Marca</label><select id="s-brand"><option value="">Todas as marcas</option>'+brands.map(b=>'<option'+(f.brand===b?' selected':'')+'>'+esc(b)+'</option>').join('')+'</select>'+
+  '<label for="s-model">Modelo</label><input id="s-model" type="text" value="'+esc(f.model)+'"><div class="row2 keep"><div><label for="s-ymin">Ano de</label><input id="s-ymin" type="number" inputmode="numeric" value="'+esc(f.ymin)+'"></div><div><label for="s-ymax">Ano até</label><input id="s-ymax" type="number" inputmode="numeric" value="'+esc(f.ymax)+'"></div></div>'+
+  '<label for="s-kmax">Quilometragem máxima (km)</label><input id="s-kmax" type="number" min="0" inputmode="numeric" value="'+esc(f.kmax)+'">'+us('US-002-S03')+'</fieldset></div>'+
+  '<div data-only="land"'+(fi==='land'?'':' hidden')+'><fieldset><legend>Terreno</legend><div class="row2 keep"><div><label for="s-amin">Área mínima (m²)</label><input id="s-amin" type="number" min="0" inputmode="numeric" value="'+esc(f.amin)+'"></div><div><label for="s-amax">Área máxima (m²)</label><input id="s-amax" type="number" min="0" inputmode="numeric" value="'+esc(f.amax)+'"></div></div>'+us('US-002-S04')+'</fieldset></div>'+
+  '<div class="actions"><button type="submit" class="btn">Aplicar filtros</button><button type="button" class="btn sec" data-act="clearfilters">Limpar filtros</button></div><p class="hint" role="status" id="filt-live" aria-live="polite"></p></div></form>';
+}
+function searchPage(q){
+  const f=parseFilters(q),st=S.view.state;
+  const cr=[{l:'Início',h:'#/'}];
+  if(f.cat){const c=cat(f.cat);if(c){if(c.parent)cr.push({l:catName(c.parent),h:'#/categoria/'+c.parent});cr.push({l:c.name});}}else cr.push({l:'Busca'});
+  let res;
+  if(st==='error')res=errBlock('search');
+  else if(st==='loading')res=skGrid(24);
+  else{
+    let list=searchAds(f);if(st==='empty'||st==='noresult')list=[];
+    const pages=Math.max(1,Math.ceil(list.length/24)),cur=Math.min(f.page,pages),slice=list.slice((cur-1)*24,cur*24);
+    const sortSel='<label>Ordenar por <select id="s-sort" data-fk="s-sort"><option value="recent"'+(f.sort==='recent'?' selected':'')+'>Mais recentes</option><option value="price_asc"'+(f.sort==='price_asc'?' selected':'')+'>Menor preço</option><option value="price_desc"'+(f.sort==='price_desc'?' selected':'')+'>Maior preço</option></select></label>'+us('US-002-S05');
+    if(!list.length)res='<div class="res-h"><p class="tot" role="status">0 anúncios encontrados</p>'+sortSel+'</div><p class="empty" role="status">Nenhum anúncio encontrado para esses filtros</p><p style="text-align:center"><button type="button" class="btn" data-act="clearfilters">Limpar filtros</button> '+us('US-002-S07')+'</p>';
+    else res='<div class="res-h"><p class="tot" role="status">'+(list.length===1?'1 anúncio encontrado':list.length+' anúncios encontrados')+' '+us('US-002-S01','US-002-S06')+'</p>'+sortSel+'</div>'+adGrid(slice,{t:['US-003-S01','US-005-S01']})+pager(cur,pages,p=>searchHref(f,{page:p}))+us('US-002-S06');
+  }
+  const inner=crumbs(cr)+'<h1 class="sr">Resultados da busca</h1><div class="srch">'+filtersHtml(f)+'<section class="results" aria-label="Resultados" aria-busy="'+(st==='loading')+'">'+res+'</section></div>';
+  return {html:pubLayout(inner,{q:f.q}),title:'Busca',states:['empty','noresult','error','loading'],after:()=>{if(S.filtersOpen){$('#filters').classList.add('open');}}};
+}
+
+/* ---- detalhe ---- */
+function galleryHtml(ad,idx){
+  const n=ad.photos.length,p=ad.photos[idx];
+  const main=p.broken?'<div class="gal-main gal-broken" role="img" aria-label="Foto indisponível">Foto indisponível</div>':'<button type="button" class="gal-main" data-act="zoom" aria-label="Ampliar foto '+(idx+1)+' de '+n+': '+esc(ad.title)+'">'+photoSvg(ad,idx)+'</button>';
+  let h='<div class="gal-stage">'+main+(n>1?'<button type="button" class="gal-nav p" data-act="gprev" aria-label="Foto anterior"><span aria-hidden="true">◀</span></button><button type="button" class="gal-nav n" data-act="gnext" aria-label="Próxima foto"><span aria-hidden="true">▶</span></button><div class="gal-count" role="status">'+(idx+1)+' de '+n+'</div>':'')+'</div>';
+  if(n>1)h+='<ul class="thumbs">'+ad.photos.map((ph,i)=>'<li><button type="button" data-act="gthumb" data-i="'+i+'" data-fk="th-'+i+'" aria-label="Foto '+(i+1)+' de '+n+(ph.broken?' (indisponível)':'')+'"'+(i===idx?' aria-current="true"':'')+'>'+(ph.broken?'<span aria-hidden="true">!</span>':photoSvg(ad,i))+'</button></li>').join('')+'</ul>';
+  return h+us('US-003-S01','US-003-S02','US-003-S03','US-003-S05','US-003-S07');
+}
+const galIdx=ad=>{if(!S.gal||S.gal.adId!==ad.id)S.gal={adId:ad.id,idx:0};return Math.min(S.gal.idx,ad.photos.length-1);};
+function contactBlock(){
+  const ph=S.d.phone;
+  return '<section class="contact card" aria-labelledby="h-ct"><h2 id="h-ct" class="h3">Fale com a Gazeta <span class="hint">(intermediária desta venda)</span></h2>'+
+   (ph?'<p class="phone">'+fmtPhone(ph)+' '+us('US-004-S03')+'</p><div class="cbtns"><a class="btn" href="#" data-act="call" aria-label="Ligar para '+fmtPhone(ph)+'">Ligar</a><a class="btn wa" href="#" data-act="wa" aria-label="Chamar no WhatsApp, abre em nova aba">Chamar no WhatsApp</a></div>'+us('US-004-S02','US-004-S01','US-004-S04','US-004-S05'):
+   '<div class="proto-box"><strong class="t">Somente no protótipo</strong>O telefone do site não está configurado. No site real isso não ocorre com anúncios publicados, porque o Administrador não consegue publicar sem o número (US-010-S08, US-015-S05).</div>')+'</section>';
+}
+function adBody(ad,o){o=o||{};const h=o.h||1,H='h'+h,H2='h'+(h+1);
+  const fi=catFicha(ad.cat);let spec='';
+  const areas=(ad.jobAreas||[]).join(', ');
+  const media=fi==='job'?'<div class="job-head"><p class="jk">Vaga de emprego</p>'+(areas?'<p>Área: '+esc(areas)+'</p>':'')+'<p><span class="prov">provisório (A4)</span></p></div>':'<div id="gallery">'+galleryHtml(ad,galIdx(ad))+'</div>';
+  const priceH=fi==='service'?'<p class="price">'+esc(ad.svcType||'Serviço')+'</p><p class="hint">Serviço sem preço <span class="prov">provisório (A6)</span></p>':'<p class="price">'+(fi==='job'?'<span class="ad-lbl">Salário </span>':'')+money(ad.price)+'</p>';
+  if(fi==='general'&&(ad.cond||ad.ptype))spec='<section class="card" aria-labelledby="h-car-'+ad.id+'"><'+H2+' id="h-car-'+ad.id+'">Características</'+H2+'><dl class="specs"><div><dt>Condição</dt><dd>'+esc(ad.cond||'—')+'</dd></div><div><dt>Tipo de produto</dt><dd>'+esc(ad.ptype||'—')+'</dd></div></dl></section>';
+  if(fi==='vehicle')spec='<section class="card" aria-labelledby="h-car-'+ad.id+'"><'+H2+' id="h-car-'+ad.id+'">Características do veículo</'+H2+'><dl class="specs"><div><dt>Marca</dt><dd>'+esc(ad.brand||'—')+'</dd></div><div><dt>Modelo</dt><dd>'+esc(ad.model||'—')+'</dd></div><div><dt>Ano</dt><dd>'+esc(ad.year||'—')+'</dd></div><div><dt>Quilometragem</dt><dd>'+(ad.km!==''?grp(ad.km)+' km':'—')+'</dd></div></dl></section>';
+  else if(fi==='land')spec='<section class="card" aria-labelledby="h-car-'+ad.id+'"><'+H2+' id="h-car-'+ad.id+'">Características do terreno</'+H2+'><dl class="specs"><div><dt>Área</dt><dd>'+(ad.area!==''?grp(ad.area)+' m²':'—')+'</dd></div></dl></section>';
+  const fav=isFav(ad.id);
+  return '<div class="det"><div>'+media+'</div><div><'+H+(o.focus?' data-autofocus tabindex="-1"':'')+' class="ad-title">'+esc(ad.title)+' '+us('US-003-S01')+'</'+H+'>'+priceH+'<p class="meta">'+esc(catName(ad.cat))+' · '+esc(ad.city||'—')+'/'+esc(ad.uf||'—')+'</p><p class="meta">'+(ad.pub?'Publicado em '+fmtDate(ad.pub):'Ainda não publicado')+'</p>'+contactBlock()+
+  (o.fav?'<button type="button" class="btn sec favbtn" data-act="fav" data-id="'+ad.id+'" data-fk="favd" aria-pressed="'+fav+'"><span aria-hidden="true">'+(fav?'♥':'♡')+'</span> '+(fav?'Favoritado':'Favoritar')+'</button>'+us('US-005-S02'):'')+'</div></div>'+
+  '<section class="card" aria-labelledby="h-desc-'+ad.id+'"><'+H2+' id="h-desc-'+ad.id+'">'+descLabel(ad.cat)+'</'+H2+'><p class="txt">'+esc(ad.desc||'—')+'</p></section>'+spec;
+}
+function detailPage(id){
+  const ad=findAd(+id),st=S.view.state;
+  if(st==='error')return {html:pubLayout(crumbs([{l:'Início',h:'#/'},{l:'Anúncio'}])+'<h1 class="sr">Anúncio</h1>'+errBlock('page')),title:'Anúncio',states:['error','loading']};
+  if(st==='loading')return {html:pubLayout('<p class="sr" role="status">Carregando…</p><div class="det" aria-busy="true"><div class="sk" style="aspect-ratio:4/3"></div><div><div class="sk" style="height:28px;width:70%;margin-bottom:10px"></div><div class="sk" style="height:24px;width:40%"></div></div></div>'),title:'Anúncio',states:['error','loading']};
+  if(!ad||ad.status!=='published'){
+    const back=ad&&ad.status==='archived'&&cat(ad.cat)?' ou ver mais anúncios de <a href="#/categoria/'+ad.cat+'">'+esc(catName(ad.cat))+'</a>':'';
+    return {html:pubLayout('<h1 data-autofocus tabindex="-1">Este anúncio não está mais disponível '+us('US-003-S06')+'</h1><p>Voltar para a <a href="#/">Página inicial</a>'+back+'.</p>'),title:'Anúncio indisponível',states:['error','loading']};
+  }
+  const c=cat(ad.cat),cr=[{l:'Início',h:'#/'}];if(c&&c.parent)cr.push({l:catName(c.parent),h:'#/categoria/'+c.parent});if(c)cr.push({l:c.name,h:'#/categoria/'+c.id});cr.push({l:ad.title});
+  return {html:pubLayout(crumbs(cr)+adBody(ad,{h:1,fav:true})),title:ad.title,states:['error','loading']};
+}
+function favPage(){
+  if(S.favGone==null){const ids=favRead(),pub=new Set(published().map(a=>a.id)),keep=ids.filter(i=>pub.has(i));S.favGone=ids.length-keep.length;if(S.favGone>0)favWrite(keep);}
+  const st=S.view.state;
+  const list=favRead().map(findAd).filter(a=>a&&a.status==='published');
+  const gone=S.favGone>0?alertBox('warn',S.favGone===1?'1 anúncio favoritado deixou de estar disponível e foi removido da sua lista.':S.favGone+' anúncios favoritados deixaram de estar disponíveis e foram removidos da sua lista.',{role:'status'})+us('US-005-S06','US-011-S04'):'';
+  let body;
+  if(st==='loading')body=skGrid(4);
+  else if(st==='empty'||!list.length)body='<p class="empty" role="status">Você ainda não favoritou nenhum anúncio '+us('US-005-S05')+'</p><p style="text-align:center"><a class="btn" href="#/">Ir para a página inicial</a></p>';
+  else body='<p class="tot" role="status">'+(list.length===1?'1 anúncio':list.length+' anúncios')+'</p>'+adGrid(list,{remove:true,t:['US-005-S04','US-005-S03']});
+  const inner='<h1>Meus favoritos</h1>'+alertBox('info','Seus favoritos ficam salvos apenas neste navegador.',{role:'note'})+us('US-005-S08')+gone+body;
+  return {html:pubLayout(inner),title:'Meus favoritos',states:['empty','loading']};
+}
+
+/* =====================================================================
+   7. Acesso da equipe
+   ===================================================================== */
+function pwMissing(p){const m=[];if(p.length<8)m.push('mínimo de 8 caracteres');if(!/[A-Z]/.test(p))m.push('letra maiúscula');if(!/[a-z]/.test(p))m.push('letra minúscula');if(!/[0-9]/.test(p))m.push('número');if(!/[^A-Za-z0-9]/.test(p))m.push('símbolo');return m;}
+const PWREQ='A senha precisa ter 8 caracteres ou mais, maiúscula, minúscula, número e símbolo.';
+function loginPage(){
+  const busy=S.view.state==='loading';
+  const creds='<div class="proto-box"><strong class="t">Somente no protótipo — contas fictícias</strong><table><tr><th>Administrador</th><td>marcos@exemplo.com.br<br>Prot0tipo!</td><td><button type="button" class="btn sec" data-act="cred" data-e="marcos@exemplo.com.br" data-p="Prot0tipo!">Usar</button></td></tr>'+
+   '<tr><th>Redatora</th><td>ana.souza@exemplo.com.br<br>Prot0tipo!</td><td><button type="button" class="btn sec" data-act="cred" data-e="ana.souza@exemplo.com.br" data-p="Prot0tipo!">Usar</button></td></tr>'+
+   '<tr><th>Primeiro acesso</th><td>carla.dias@exemplo.com.br<br>Provis0ria!</td><td><button type="button" class="btn sec" data-act="cred" data-e="carla.dias@exemplo.com.br" data-p="Provis0ria!">Usar</button></td></tr>'+
+   '<tr><th>Conta desativada</th><td>bruno.lima@exemplo.com.br<br>Prot0tipo!</td><td><button type="button" class="btn sec" data-act="cred" data-e="bruno.lima@exemplo.com.br" data-p="Prot0tipo!">Usar</button></td></tr></table>'+
+   '<p style="margin:6px 0 0">Para ver o bloqueio, erre a senha 5 vezes (o contador zera em “Reiniciar dados”). Estado atual: '+S.d.attempts+' falha(s).</p></div>';
+  const inner='<div class="card auth-card"><h1>Entrar '+us('US-006-S01','US-006-S02')+'</h1><form data-form="login" novalidate><div id="lg-msg"></div>'+
+   field('lg-email','E-mail',{type:'email',req:1,ac:'username'})+field('lg-pass','Senha',{type:'password',req:1,ac:'current-password'})+
+   '<button type="submit" class="btn block"'+(busy?' disabled':'')+'>'+(busy?'Entrando…':'Entrar')+'</button> '+us('US-006-S04','US-006-S05','US-006-S06','US-006-S07')+'</form><p style="margin-top:14px"><a href="#/equipe/esqueci">Esqueci minha senha</a>'+us('US-007-S01')+'</p></div>'+'<div class="auth-card">'+creds+'</div>';
+  return {html:authLayout(inner),title:'Entrar',states:['loading'],after:()=>{}};
+}
+function newPwdPage(){
+  if(!S.pending)return {redirect:'#/equipe/entrar'};
+  const inner='<div class="card auth-card"><h1>Defina sua nova senha '+us('US-006-S09')+'</h1><p>Você entrou com uma senha provisória. Escolha uma senha nova para continuar.</p><form data-form="newpwd" novalidate><div id="np-msg"></div>'+
+   field('np-new','Nova senha',{type:'password',req:1,ac:'new-password',hint:PWREQ})+field('np-conf','Confirmar nova senha',{type:'password',req:1,ac:'new-password'})+'<button type="submit" class="btn block">Salvar senha</button></form></div>';
+  return {html:authLayout(inner),title:'Defina sua nova senha',states:[]};
+}
+function forgotPage(){
+  const sent=S.fg&&S.fg.sent;let inner;
+  if(sent){
+    const u=S.d.users.find(x=>x.email.toLowerCase()===S.fg.email.toLowerCase()&&x.active);
+    inner='<div class="card auth-card"><h1>Esqueci minha senha</h1>'+alertBox('info','Se o e-mail estiver cadastrado, enviaremos as instruções',{focus:true})+us('US-007-S01','US-007-S03')+'<p><a href="#/equipe/entrar">Voltar para entrar</a></p></div>'+
+     '<div class="auth-card"><div class="proto-box"><strong class="t">Somente no protótipo</strong>'+(u?'No produto real, chegaria um e-mail com um link válido por 1 hora e de uso único. Simule abrindo o link:<br><a class="btn sec" href="#/equipe/redefinir?link=ok">Abrir o link (válido)</a><a class="btn sec" href="#/equipe/redefinir?link=expirado">Link com mais de 1 hora</a><a class="btn sec" href="#/equipe/redefinir?link=usado">Link já usado</a>':'Nenhum e-mail seria enviado (e-mail não cadastrado ou conta desativada). A tela mostra a mesma mensagem nos dois casos.')+'</div></div>';
+  }else inner='<div class="card auth-card"><h1>Esqueci minha senha '+us('US-007-S01')+'</h1><p>Informe o e-mail da sua conta. Enviaremos as instruções.</p><form data-form="forgot" novalidate>'+field('fg-email','E-mail',{type:'email',req:1,ac:'email'})+'<button type="submit" class="btn block"'+(S.view.state==='loading'?' disabled':'')+'>'+(S.view.state==='loading'?'Enviando…':'Enviar')+'</button></form><p style="margin-top:14px"><a href="#/equipe/entrar">Voltar para entrar</a></p></div>';
+  return {html:authLayout(inner),title:'Esqueci minha senha',states:['loading']};
+}
+function resetPage(q){
+  const link=q.link||'ok';
+  if(link==='expirado'||(link==='ok'&&false))return {html:authLayout('<div class="card auth-card"><h1 data-autofocus tabindex="-1">Este link expirou '+us('US-007-S04')+'</h1><a class="btn" href="#/equipe/esqueci">Pedir novo link</a></div>'),title:'Link vencido',states:[]};
+  if(link==='usado'||S.d.resetUsed)return {html:authLayout('<div class="card auth-card"><h1 data-autofocus tabindex="-1">Este link já foi usado '+us('US-007-S05')+'</h1><a class="btn" href="#/equipe/esqueci">Pedir novo link</a></div>'),title:'Link já usado',states:[]};
+  const inner='<div class="card auth-card"><h1>Definir nova senha '+us('US-007-S02')+'</h1><form data-form="reset" novalidate><div id="rp-msg"></div>'+field('rp-new','Nova senha',{type:'password',req:1,ac:'new-password',hint:PWREQ})+field('rp-conf','Confirmar nova senha',{type:'password',req:1,ac:'new-password'})+
+   '<button type="submit" class="btn block"'+(S.view.state==='loading'?' disabled':'')+'>'+(S.view.state==='loading'?'Enviando…':'Salvar senha')+'</button> '+us('US-007-S06','US-007-S07')+'</form><p style="margin-top:14px"><a href="#/equipe/entrar">Voltar para entrar</a></p></div>';
+  return {html:authLayout(inner),title:'Definir nova senha',states:['loading']};
+}
+
+/* =====================================================================
+   8. Painel: lista, fila, visualização
+   ===================================================================== */
+const scopeAds=()=>isAdmin()?S.d.ads.slice():S.d.ads.filter(a=>a.author===S.session.userId);
+function listFiltered(){let l=scopeAds();const {q,status}=S.panel;l=status?l.filter(a=>a.status===status):l.filter(a=>a.status!=='archived');if(q)l=l.filter(a=>norm(a.title).indexOf(norm(q))>=0);l.sort((a,b)=>(b.updated||'').localeCompare(a.updated||'')||b.id-a.id);return l;}
+function adTabs(active){const n=S.d.ads.filter(a=>a.status==='review').length;return '<nav aria-label="Abas de anúncios"><ul class="tabs"><li><a href="#/painel/fila"'+(active==='fila'?' aria-current="page"':'')+'>Fila de revisão ('+n+')</a></li><li><a href="#/painel/anuncios"'+(active==='todos'?' aria-current="page"':'')+'>Todos os anúncios</a></li></ul></nav>';}
+function listRegion(){
+  const st=S.view.state,adm=isAdmin();
+  if(st==='error')return alertBox('error','Não foi possível carregar os anúncios. Tente novamente.',{focus:true})+'<button type="button" class="btn" data-act="retry">Tentar novamente</button> '+us('US-012-S08');
+  if(st==='loading')return skRows(6);
+  const all=listFiltered();
+  if(st==='empty'||(!scopeAds().length))return '<p class="empty" role="status">Você ainda não criou anúncios '+us('US-012-S06')+'<br><a class="btn" href="#/painel/anuncios/novo">Novo anúncio</a></p>';
+  if(st==='noresult'||!all.length)return '<p class="tot" role="status">0 anúncios</p><p class="empty" role="status">Nenhum anúncio encontrado<br><button type="button" class="btn" data-act="lclear">Limpar filtros</button></p>';
+  const pages=Math.ceil(all.length/20),cur=Math.min(S.panel.page,pages),sl=all.slice((cur-1)*20,cur*20);
+  const rej=a=>a.status==='rejected'&&a.reason?'<div class="reason">Motivo da rejeição: '+esc(a.reason)+'</div>':'';
+  const tbl='<table class="tbl only-wide"><thead><tr><th scope="col">Título</th>'+(adm?'<th scope="col">Autor</th>':'')+'<th scope="col">Categoria</th><th scope="col">Situação</th><th scope="col">Alterado em</th></tr></thead><tbody>'+
+   sl.map(a=>'<tr><td><a href="#/painel/anuncios/'+a.id+'">'+esc(a.title)+'</a>'+rej(a)+'</td>'+(adm?'<td>'+esc(authorName(a))+'</td>':'')+'<td>'+esc(catName(a.cat))+'</td><td>'+statusPill(a.status)+'</td><td>'+fmtDate(a.updated)+'</td></tr>').join('')+'</tbody></table>';
+  const cards='<ul class="cards-list only-narrow">'+sl.map(a=>'<li><a href="#/painel/anuncios/'+a.id+'"><strong>'+esc(a.title)+'</strong></a><div>'+statusPill(a.status)+'</div><div class="k">'+esc(catName(a.cat))+(adm?' · Autor: '+esc(authorName(a)):'')+'</div><div class="k">Alterado em '+fmtDate(a.updated)+'</div>'+rej(a)+'</li>').join('')+'</ul>';
+  return '<p class="tot" role="status">'+(all.length===1?'1 anúncio':all.length+' anúncios')+' '+us('US-012-S03')+'</p>'+tbl+cards+pager(cur,pages,null,true)+us('US-012-S07');
+}
+function listPage(){
+  const adm=isAdmin(),st=S.panel.status;
+  const inner=(adm?adTabs('todos'):'')+'<div class="pt"><h1>'+(adm?'Anúncios':'Meus anúncios')+' '+us(adm?'US-012-S02':'US-012-S01')+'</h1><a class="btn" href="#/painel/anuncios/novo">Novo anúncio</a>'+us('US-008-S01')+'</div>'+
+   '<div class="filt"><div><label class="sr" for="l-q">Buscar por título</label><input id="l-q" type="search" placeholder="Buscar por título…" value="'+esc(S.panel.q)+'" autocomplete="off">'+us('US-012-S04')+'</div><div><label class="sr" for="l-st">Situação</label><select id="l-st"><option value="">Situação: Todas (exceto arquivados)</option>'+Object.keys(STATUS).map(k=>'<option value="'+k+'"'+(st===k?' selected':'')+'>'+STATUS[k]+'</option>').join('')+'</select>'+us('US-012-S03','US-011-S05')+'</div></div>'+
+   '<div id="list-region">'+listRegion()+'</div>'+us('US-012-S05');
+  return {html:panelLayout(inner,'ads'),title:adm?'Anúncios':'Meus anúncios',states:['empty','noresult','error','loading']};
+}
+function refreshList(){const r=$('#list-region');if(r)r.innerHTML=listRegion();else render({keep:true});}
+function filaPage(){
+  const st=S.view.state;let body;
+  const q=S.d.ads.filter(a=>a.status==='review').sort((a,b)=>(a.sent||'').localeCompare(b.sent||'')||a.id-b.id);
+  if(st==='error')body=alertBox('error','Não foi possível carregar os anúncios. Tente novamente.',{focus:true})+'<button type="button" class="btn" data-act="retry">Tentar novamente</button> '+us('US-012-S08');
+  else if(st==='loading')body=skRows(4);
+  else if(st==='empty'||!q.length)body='<p class="empty" role="status">Nenhum anúncio aguardando revisão '+us('US-010-S06')+'</p>';
+  else body='<p class="tot" role="status">'+(q.length===1?'1 anúncio aguardando revisão':q.length+' anúncios aguardando revisão')+', do mais antigo ao mais recente '+us('US-010-S01')+'</p>'+
+   '<table class="tbl only-wide"><thead><tr><th scope="col">Título</th><th scope="col">Autor</th><th scope="col">Categoria</th><th scope="col">Enviado em</th></tr></thead><tbody>'+q.map(a=>'<tr><td><a href="#/painel/anuncios/'+a.id+'">'+esc(a.title)+'</a></td><td>'+esc(authorName(a))+'</td><td>'+esc(catName(a.cat))+'</td><td>'+fmtDate(a.sent)+'</td></tr>').join('')+'</tbody></table>'+
+   '<ul class="cards-list only-narrow">'+q.map(a=>'<li><a href="#/painel/anuncios/'+a.id+'"><strong>'+esc(a.title)+'</strong></a><div class="k">Autor: '+esc(authorName(a))+'</div><div class="k">'+esc(catName(a.cat))+' · Enviado em '+fmtDate(a.sent)+'</div></li>').join('')+'</ul>'+us('US-010-S02');
+  return {html:panelLayout(adTabs('fila')+'<div class="pt"><h1>Fila de revisão</h1></div>'+body,'ads'),title:'Fila de revisão',states:['empty','error','loading']};
+}
+function viewPage(ad){
+  const u=me(),adm=isAdmin(),s=ad.status;
+  const back=s==='review'?['#/painel/fila','Fila de revisão']:(adm?['#/painel/anuncios','Todos os anúncios']:['#/painel/anuncios','Meus anúncios']);
+  let bar='',info='',bodyH;
+  if(adm){
+    const b=[];
+    if(s==='review')b.push('<button type="button" class="btn" data-act="publish">Publicar</button>'+us('US-010-S03','US-010-S08'),'<button type="button" class="btn sec" data-act="reject">Rejeitar</button>'+us('US-010-S04','US-010-S05'),'<button type="button" class="btn sec" data-act="editad" data-id="'+ad.id+'">Editar</button>','<button type="button" class="btn danger" data-act="archive" data-id="'+ad.id+'">Arquivar</button>'+us('US-011-S05'));
+    if(s==='published')b.push('<button type="button" class="btn sec" data-act="editad" data-id="'+ad.id+'">Editar</button>','<button type="button" class="btn sec" data-act="unpublish">Despublicar</button>'+us('US-011-S01'),'<button type="button" class="btn danger" data-act="archive" data-id="'+ad.id+'">Arquivar</button>'+us('US-011-S02','US-011-S03'));
+    bar=b.length?'<div class="actions">'+b.join('')+'</div>':'';
+    if(s==='review')info=alertBox('info','Pré-visualização — ainda não publicado',{role:'status'})+us('US-010-S02');
+    if(s==='archived')info=alertBox('info','Este anúncio está arquivado e é somente para leitura.',{role:'status'})+us('US-011-S06');
+    bodyH=(ad.locManual?'<p class="selo-wrap"><span class="selo">Cidade/UF informadas manualmente (CEP não conferido)</span> CEP '+esc(fmtCep(ad.cep)||'—')+' · '+esc(ad.city||'—')+'/'+esc(ad.uf||'—')+us('US-008-S14')+'</p>':'')+'<div class="prev-frame">'+adBody(ad,{h:2})+'<p class="hint">Autor: '+esc(authorName(ad))+(ad.sent?' · Enviado em '+fmtDate(ad.sent):'')+'</p></div>';
+  }else{
+    const msg=s==='review'?'Este anúncio está em revisão e não pode ser editado.':(s==='published'?'Este anúncio está publicado e é somente para leitura.':'Este anúncio está arquivado e é somente para leitura.');
+    info=alertBox('info',msg,{role:'status'})+us(s==='review'?'US-008-S12':'US-011-S07');
+    bodyH='<div class="card"><dl class="specs"><div><dt>Título</dt><dd>'+esc(ad.title)+'</dd></div>'+(hasPrice(ad.cat)?'<div><dt>'+(catFicha(ad.cat)==='job'?'Salário':'Preço')+'</dt><dd>'+money(ad.price)+'</dd></div>':'<div><dt>Tipo</dt><dd>'+esc(ad.svcType||'—')+'</dd></div>')+'<div><dt>Categoria</dt><dd>'+esc(catName(ad.cat))+'</dd></div><div><dt>CEP</dt><dd>'+esc(fmtCep(ad.cep)||'—')+'</dd></div><div><dt>Cidade/UF</dt><dd>'+esc(ad.city||'—')+'/'+esc(ad.uf||'—')+'</dd></div><div><dt>Fotos</dt><dd>'+(maxPhotos(ad.cat)?ad.photos.length:'Não se aplica')+'</dd></div></dl><h2 class="h3" style="margin-top:12px">'+descLabel(ad.cat)+'</h2><p class="txt">'+esc(ad.desc||'—')+'</p></div>';
+  }
+  const inner='<a class="back" href="'+back[0]+'"><span aria-hidden="true">◀&nbsp;</span>'+back[1]+'</a><div class="pt"><h1 data-autofocus tabindex="-1">'+esc(ad.title)+'</h1><span>Situação: '+statusPill(s)+'</span></div>'+info+bar+bodyH;
+  return {html:panelLayout(inner,'ads'),title:ad.title,states:[]};
+}
+
+/* =====================================================================
+   9. Formulário do anúncio (US-008 / US-009)
+   ===================================================================== */
+function ensureForm(key){
+  if(S.form&&S.form.key===key)return;
+  const a=key==='new'?null:findAd(+key);
+  S.form={key:key,id:a?a.id:null,title:a?a.title:'',desc:a?a.desc:'',priceCents:a&&a.price?Math.round(a.price*100):null,cat:a?a.cat:'',cep:a?fmtCep(a.cep):'',cepManual:a?!!a.locManual:false,uf:a?a.uf:'',city:a?a.city:'',brand:a?a.brand:'',model:a?a.model:'',year:a?String(a.year):'',km:a?String(a.km):'',area:a?String(a.area):'',
+    svcType:a&&a.svcType||'',jobAreas:a&&a.jobAreas?a.jobAreas.slice():[],cond:a&&a.cond||'',ptype:a&&a.ptype||'',
+    photos:a?clone(a.photos):[],pending:[],upMsgs:[],upNotes:[],msg:null,pend:null,sending:false};
+}
+function syncForm(){const f=S.form;if(!f)return;['title','desc','cat','cep','brand','model','year','km','area','cond','ptype'].forEach(k=>{const e=document.getElementById('f-'+k);if(e)f[k]=e.value;});
+  const sv=$('#f-svc');if(sv)f.svcType=sv.value;if($('#f-jobareas'))f.jobAreas=$$('input[name=f-jarea]:checked').map(x=>x.value);}
+function fichaHtml(f){
+  const fi=catFicha(f.cat);
+  if(fi==='vehicle')return '<fieldset class="ficha"><legend>Ficha do veículo</legend><p class="hint">Aparece porque a categoria é de Veículos.</p><div class="row2"><div>'+field('f-brand','Marca',{value:f.brand})+'</div><div>'+field('f-model','Modelo',{value:f.model})+'</div></div><div class="row2 keep"><div>'+field('f-year','Ano',{type:'number',value:f.year,attrs:'inputmode="numeric"'})+'</div><div>'+field('f-km','Quilometragem (km)',{type:'number',value:f.km,attrs:'inputmode="numeric" min="0"'})+'</div></div>'+us('US-008-S09')+'</fieldset>';
+  if(fi==='land')return '<fieldset class="ficha"><legend>Ficha do terreno</legend>'+field('f-area','Área (m²)',{type:'number',value:f.area,attrs:'inputmode="numeric" min="0"'})+us('US-008-S09')+'</fieldset>';
+  const opts=(list,sel,ph)=>'<option value="">'+ph+'</option>'+list.map(x=>'<option'+(sel===x?' selected':'')+'>'+esc(x)+'</option>').join('');
+  if(fi==='service')return '<fieldset class="ficha"><legend>Ficha do serviço</legend><label for="f-svc">Tipo *</label><select id="f-svc" aria-required="true" aria-describedby="e-f-svc req-legend">'+opts(SVC_TYPES,f.svcType,'Escolha o tipo de serviço')+'</select><div class="err" id="e-f-svc" role="alert"></div>'+us('US-008-S09')+'</fieldset>';
+  if(fi==='job')return '<fieldset class="ficha" id="f-jobareas"><legend>Área</legend><p class="hint">Opcional; marque uma ou mais.</p><div class="checks">'+JOB_AREAS.map((x,i)=>'<label><input type="checkbox" name="f-jarea" value="'+esc(x)+'"'+(f.jobAreas.indexOf(x)>=0?' checked':'')+'> '+esc(x)+'</label>').join('')+'</div>'+us('US-008-S09')+'</fieldset>';
+  if(fi==='general')return '<fieldset class="ficha"><legend>Ficha do produto</legend><div class="row2"><div><label for="f-cond">Condição *</label><select id="f-cond" aria-required="true" aria-describedby="e-f-cond req-legend">'+opts(CONDS,f.cond,'Escolha a condição')+'</select><div class="err" id="e-f-cond" role="alert"></div></div><div>'+field('f-ptype','Tipo de produto',{value:f.ptype})+'</div></div>'+us('US-008-S09')+'</fieldset>';
+  return '';
+}
+function photosHtml(f){
+  const mx=maxPhotos(f.cat);
+  if(!mx)return '<h2 id="photos-h" tabindex="-1" class="h3">Fotos</h2><p class="hint">Vagas de emprego não têm fotos.</p>'+us('US-008-S09');
+  const okN=f.photos.filter(p=>!p.failed).length;
+  const tiles=f.photos.map((p,i)=>{
+    let ov='';if(p.uploading)ov='<div class="pov"><span>Enviando… 60%</span><span class="bar"><i></i></span></div>';else if(p.failed)ov='<div class="pov fail"><span>Falha ao enviar</span><button type="button" class="btn sec" data-act="retryphoto" data-pid="'+p.id+'" data-fk="rt-'+p.id+'">Tentar de novo</button></div>';
+    const cover=i===0&&!p.failed&&!p.uploading;
+    return '<li class="ptile"><div class="pimg" role="img" aria-label="Foto '+(i+1)+' de '+f.photos.length+(cover?' (Capa)':'')+'">'+photoSvg({hue:p.hue||((i*41)%360),cat:f.cat||''},i)+ov+'</div>'+
+     (cover?'<span class="capa">CAPA</span>':(p.uploading||p.failed?'':'<button type="button" class="btn sec" data-act="cover" data-pid="'+p.id+'" data-fk="cv-'+p.id+'" aria-label="Tornar foto '+(i+1)+' capa">Tornar capa</button>'))+
+     (p.uploading?'':'<button type="button" class="btn sec" data-act="rmphoto" data-pid="'+p.id+'" data-fk="rm-'+p.id+'" aria-label="Remover foto '+(i+1)+'">Remover</button>')+'</li>';}).join('');
+  const pend=f.pending.length?'<p class="hint" role="status">'+f.pending.length+(f.pending.length===1?' arquivo selecionado: ':' arquivos selecionados: ')+esc(f.pending.map(x=>x.name).join(', '))+'</p>':'';
+  return '<h2 id="photos-h" tabindex="-1" class="h3">Fotos (<span role="status">'+okN+' de '+mx+'</span>) '+us('US-008-S02','US-008-S04')+'</h2><p class="hint">Formatos JPG, PNG, WebP, GIF ou HEIC · até 10 MB por foto · fotos HEIC são convertidas para JPG no envio, para aparecerem em todos os navegadores</p>'+
+   '<div class="pbar"><button type="button" class="btn sec" data-act="pick">Selecionar fotos</button><button type="button" class="btn" data-act="upload">Enviar fotos</button></div><input type="file" id="pfiles" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif" hidden>'+pend+
+   '<div class="proto-box"><strong class="t">Somente no protótipo: simular arquivos</strong><button type="button" class="btn sec" data-act="simfiles" data-v="ok">Selecionar 3 fotos válidas (uma HEIC)</button><button type="button" class="btn sec" data-act="simfiles" data-v="bad">Selecionar um PDF e uma foto de 15 MB</button><button type="button" class="btn sec" data-act="simfiles" data-v="fill">Completar com fotos até '+mx+'</button></div>'+
+   (f.photos.length?'<ul class="ptiles">'+tiles+'</ul>':'<p class="hint">Nenhuma foto enviada ainda.</p>')+us('US-008-S03','US-008-S06');
+}
+function renderPhotos(){const f=S.form;if(!f)return;const p=$('#photos');if(p)p.innerHTML=photosHtml(f);const m=$('#pmsgs');if(m)m.innerHTML=f.upNotes.map(x=>'<div class="hint">'+esc(x)+'</div>').join('')+f.upMsgs.map(x=>'<div class="err">'+esc(x)+'</div>').join('')+(f.upMsgs.length?us('US-008-S04','US-008-S05'):'');}
+/* Título, descrição e preço mudam conforme a categoria (SPEC US-008, Apêndice B) */
+function titleHtml(f){const job=catFicha(f.cat)==='job',mx=titleMax(f.cat);
+  return field('f-title','Título',{req:1,value:f.title,attrs:'maxlength="'+mx+'"',hint:job?'Sugerimos especificar a vaga com clareza. Ex.: Pizzaiolo com experiência, período integral':''})+(job?'<span class="cnt" id="c-f-title">'+f.title.length+'/'+mx+'</span>':'');}
+function descHtml(f){const lng=isLongDesc(f.cat),job=catFicha(f.cat)==='job';
+  return '<label for="f-desc">'+descLabel(f.cat)+' *</label><textarea id="f-desc" aria-required="true"'+(lng?' maxlength="'+LONG_MAX+'"':'')+(job?' placeholder="Escreva aqui por que você está anunciando esta vaga e informações que podem ajudar no processo seletivo."':'')+' aria-describedby="e-f-desc'+(job?' h-f-desc':'')+' req-legend">'+esc(f.desc)+'</textarea>'+
+   (job?'<div class="hint" id="h-f-desc">Inclua detalhes sobre o cargo, responsabilidades, remuneração, localização, ambiente de trabalho, etc</div>':'')+(lng?'<span class="cnt" id="c-f-desc">'+f.desc.length+'/'+LONG_MAX+'</span>':'')+'<div class="err" id="e-f-desc" role="alert"></div>';}
+function priceHtml(f){
+  if(!hasPrice(f.cat))return '<p class="hint" style="margin-top:40px">Serviços não têm preço.</p>';
+  const job=catFicha(f.cat)==='job';
+  return '<label for="f-price">Preço *</label><input id="f-price" name="f-price" type="text" inputmode="numeric" placeholder="R$ 0,00" maxlength="18" value="'+(f.priceCents?fmtCents(f.priceCents):'')+'" aria-required="true" aria-describedby="e-f-price h-f-price req-legend"><div class="hint" id="h-f-price">Digite só números; os dois últimos são os centavos.'+(job?' É o salário oferecido; no site aparece como “Salário”.':'')+'</div><div class="err" id="e-f-price" role="alert"></div>';}
+function formPage(key){
+  const u=me();ensureForm(key);const f=S.form,ad=f.id?findAd(f.id):null,s=ad?ad.status:'draft';
+  const saveLabel=s==='draft'?'Salvar rascunho':'Salvar',canSend=s==='draft'||s==='rejected';
+  const back=isAdmin()?['#/painel/anuncios','Todos os anúncios']:['#/painel/anuncios','Meus anúncios'];
+  const rej=s==='rejected'&&ad.reason?alertBox('error','<strong>Motivo da rejeição:</strong> '+esc(ad.reason)+'<br>Corrija o que for preciso, salve e envie de novo para revisão.')+us('US-008-S11'):'';
+  const inner='<a class="back" href="'+back[0]+'"><span aria-hidden="true">◀&nbsp;</span>'+back[1]+'</a><div class="pt"><h1>'+(ad?'Editar anúncio':'Novo anúncio')+' '+us('US-008-S01')+'</h1><span>Situação: '+statusPill(s)+'</span></div>'+rej+
+   '<div id="fmsg">'+(f.msg?alertBox('ok',esc(f.msg)):'')+'</div><div id="pendbox">'+(f.pend?pendHtml(f.pend):'')+'</div>'+
+   '<form id="adform" data-form="adform" class="card" novalidate>'+
+   '<p class="hint" id="req-legend">* obrigatório para enviar à revisão; o rascunho pode ser salvo só com o título</p>'+
+   titleHtml(f)+us('US-008-S07','US-008-S08')+
+   descHtml(f)+
+   '<div class="row2"><div>'+priceHtml(f)+'</div><div><label for="f-cat">Categoria *</label><select id="f-cat" data-fk="f-cat" aria-required="true" aria-describedby="e-f-cat"><option value="">Escolha uma categoria</option>'+catOptions(f.cat,'form')+'</select><div class="err" id="e-f-cat" role="alert"></div>'+us('US-008-S09')+'</div></div>'+
+   '<label for="f-cep">CEP *</label><div class="cep-row"><input id="f-cep" name="f-cep" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" value="'+esc(f.cep)+'" aria-required="true" aria-describedby="e-f-cep h-f-cep req-legend"><span id="cep-st" class="hint" role="status"></span></div><div class="hint" id="h-f-cep">Cidade e UF são preenchidas automaticamente a partir do CEP.</div><div class="err" id="e-f-cep" role="alert"></div>'+us('US-008-S01','US-009-S02')+
+   '<div id="cep-loc">'+locHtml(f)+'</div>'+
+   '<div class="proto-box"><strong class="t">Somente no protótipo: CEPs de teste</strong>01310-100 São Paulo/SP · 20040-020 Rio de Janeiro/RJ · 30130-010 Belo Horizonte/MG · 13015-100 Campinas/SP · 99999-999 não encontrado. Para testar o serviço fora do ar, marque "Simular CEP fora do ar" na barra (1 s aqui = 5 s reais por tentativa; um CEP já encontrado nesta sessão vem do cache, sem nova busca). Os demais CEPs de exemplo são fictícios. No site real, o servidor consulta o ViaCEP (ou serviço similar) e devolve Cidade e UF; ninguém digita a cidade.</div>'+
+   '<div id="ficha" aria-live="polite">'+fichaHtml(f)+'</div>'+
+   '<section id="photosec" aria-labelledby="photos-h" style="margin-top:14px"><div id="photos"></div><div id="pmsgs" aria-live="assertive"></div></section>'+
+   '<div class="formfoot">'+
+   (s==='published'||s==='review'?'':'')+
+   '<button type="button" class="btn sec" data-act="save">'+saveLabel+'</button>'+us('US-008-S01','US-008-S07','US-008-S11','US-008-S13')+
+   (canSend?'<button type="button" class="btn" data-act="sendreview" data-fk="sendreview">Enviar para revisão</button>'+us('US-009-S01','US-009-S02','US-009-S03','US-009-S04','US-009-S05'):'')+
+   (isAdmin()&&ad&&canSend?'<button type="button" class="btn danger" data-act="archive" data-id="'+ad.id+'">Arquivar</button>'+us('US-011-S05'):'')+'</div></form>';
+  return {html:panelLayout(inner,'ads'),title:ad?'Editar anúncio':'Novo anúncio',states:[],after:()=>{renderPhotos();}};
+}
+function pendHtml(list){return '<div class="alert error" role="alert" id="pend" tabindex="-1"><span class="ic" aria-hidden="true" data-c="!"></span><div><p>'+(list.length===1?'Falta 1 item':'Faltam '+list.length+' itens')+' para enviar este anúncio para revisão:</p><ul>'+list.map(p=>'<li><a href="#" data-act="gofield" data-t="'+p.t+'">'+esc(p.m)+'</a></li>').join('')+'</ul></div></div>'+us('US-009-S02','US-009-S03');}
+function pendencies(f){
+  const p=[];
+  if(!f.title.trim())p.push({t:'f-title',m:'Informe o título'});
+  if(!f.desc.trim())p.push({t:'f-desc',m:isLongDesc(f.cat)?'Informe as informações adicionais':'Informe a descrição'});
+  if(hasPrice(f.cat)&&!(f.priceCents>0))p.push({t:'f-price',m:'Informe um preço maior que zero'});
+  if(!f.cat)p.push({t:'f-cat',m:'Escolha a categoria'});
+  const cd=String(f.cep||'').replace(/\D/g,'');
+  if(!cd)p.push({t:'f-cep',m:'Informe o CEP'});
+  else if(cd.length<8)p.push({t:'f-cep',m:'Informe um CEP com 8 dígitos'});
+  else if(f.cepBusy)p.push({t:'f-cep',m:'Aguarde a busca do CEP terminar'});
+  else if(f.cepManual){if(!f.uf)p.push({t:'f-uf',m:'Escolha a UF'});if(!String(f.city||'').trim())p.push({t:'f-city',m:'Informe a cidade'});}
+  else if(!f.city)p.push({t:'f-cep',m:'Informe um CEP válido'});
+  const fi=f.cat?catFicha(f.cat):null,mx=maxPhotos(f.cat),okP=f.photos.filter(x=>!x.failed&&!x.uploading).length;
+  if(mx&&!okP)p.push({t:'photos-h',m:'Adicione ao menos 1 foto'});
+  if(mx&&okP>mx)p.push({t:'photos-h',m:'Remova fotos: esta categoria aceita no máximo '+mx});
+  if(fi==='service'&&!f.svcType)p.push({t:'f-svc',m:'Escolha o tipo de serviço'});
+  if(fi==='general'&&!f.cond)p.push({t:'f-cond',m:'Escolha a condição'});
+  if(fi==='vehicle'){if(!f.brand.trim())p.push({t:'f-brand',m:'Informe a marca'});if(!f.model.trim())p.push({t:'f-model',m:'Informe o modelo'});if(!f.year)p.push({t:'f-year',m:'Informe o ano'});if(f.km==='')p.push({t:'f-km',m:'Informe a quilometragem'});}
+  if(fi==='land'&&!(+f.area>0))p.push({t:'f-area',m:'Informe a área'});
+  return p;
+}
+function saveIntoAd(){
+  const f=S.form,me1=me();let ad=f.id?findAd(f.id):null;
+  if(!ad){ad={id:S.d.nid++,status:'draft',author:me1.id,brand:'',model:'',year:'',km:'',area:'',reason:'',pub:'',sent:'',broken:[],hue:(200+S.d.nid*31)%360,photos:[]};S.d.ads.push(ad);}
+  ad.title=f.title.trim();ad.desc=f.desc;ad.price=f.priceCents?f.priceCents/100:0;ad.cat=f.cat;ad.cep=String(f.cep||'').replace(/\D/g,'');ad.uf=f.uf;ad.city=f.cepManual?normCity(f.city,f.uf):f.city;ad.locManual=!!f.cepManual;
+  ad.brand=f.brand;ad.model=f.model;ad.year=f.year;ad.km=f.km;ad.area=f.area;
+  ad.svcType=f.svcType;ad.jobAreas=f.jobAreas.slice();ad.cond=f.cond;ad.ptype=f.ptype;if(!hasPrice(f.cat))ad.price=0;
+  ad.photos=maxPhotos(f.cat)?clone(f.photos.filter(p=>!p.failed&&!p.uploading)):[];ad.updated=TODAY;
+  f.id=ad.id;f.key=String(ad.id);persist();return ad;
+}
+
+/* =====================================================================
+   10. Categorias, usuários, configurações
+   ===================================================================== */
+function adCountOf(id){return S.d.ads.filter(a=>a.cat===id).length;}
+function catsPage(){
+  const st=S.view.state;let body;
+  if(st==='loading')body=skRows(8);
+  else if(st==='error')body=alertBox('error','Não foi possível carregar as categorias. Tente novamente.',{focus:true})+'<button type="button" class="btn" data-act="retry">Tentar novamente</button>';
+  else{
+    const row=(c,sibs,idx)=>'<div class="tr"><span class="nm">'+esc(c.name)+'</span><span><span class="sr">Anúncios: </span>'+adCountOf(c.id)+'</span><span class="ac"><button type="button" class="btn sec" data-act="catup" data-id="'+c.id+'" data-fk="up-'+c.id+'"'+(idx===0?' aria-disabled="true"':'')+' aria-label="Mover '+esc(c.name)+' para cima"><span aria-hidden="true">▲</span></button><button type="button" class="btn sec" data-act="catdown" data-id="'+c.id+'" data-fk="dn-'+c.id+'"'+(idx===sibs.length-1?' aria-disabled="true"':'')+' aria-label="Mover '+esc(c.name)+' para baixo"><span aria-hidden="true">▼</span></button><button type="button" class="btn sec" data-act="catedit" data-id="'+c.id+'" aria-label="Editar '+esc(c.name)+'">Editar</button><button type="button" class="btn sec" data-act="catdel" data-id="'+c.id+'" aria-label="Excluir '+esc(c.name)+'">Excluir</button></span></div>';
+    const ms=mains();
+    body='<div class="thead" aria-hidden="true"><span>Nome</span><span>Anúncios</span><span>Ações</span></div><ul class="tree" aria-label="Árvore de categorias">'+ms.map((m,i)=>{const ks=kids(m.id);return '<li>'+row(m,ms,i)+(ks.length?'<ul aria-label="Subcategorias de '+esc(m.name)+'">'+ks.map((k,j)=>'<li>'+row(k,ks,j)+'</li>').join('')+'</ul>':'')+'</li>';}).join('')+'</ul>'+us('US-013-S04','US-013-S05');
+  }
+  const inner='<div class="pt"><h1>Categorias</h1><button type="button" class="btn" data-act="catnew">Nova categoria</button>'+us('US-013-S01','US-013-S02')+'</div><div id="cmsg">'+(S.cmsg?alertBox('error',S.cmsg,{focus:true})+us('US-013-S08','US-013-S09','US-013-S10'):'')+'</div>'+body;
+  return {html:panelLayout(inner,'cats'),title:'Categorias',states:['error','loading']};
+}
+function usersPage(){
+  const st=S.view.state,u0=me();let body;
+  if(st==='loading')body=skRows(4);
+  else if(st==='error')body=alertBox('error','Não foi possível carregar os usuários. Tente novamente.',{focus:true})+'<button type="button" class="btn" data-act="retry">Tentar novamente</button>';
+  else{
+    const btns=u=>'<button type="button" class="btn sec" data-act="useredit" data-id="'+u.id+'" aria-label="Editar '+esc(u.name)+'">Editar</button> '+(u.active?'<button type="button" class="btn sec" data-act="userdeact" data-id="'+u.id+'" aria-label="Desativar '+esc(u.name)+'">Desativar</button>':'<button type="button" class="btn sec" data-act="userreact" data-id="'+u.id+'" aria-label="Reativar '+esc(u.name)+'">Reativar</button>');
+    body='<table class="tbl only-wide"><thead><tr><th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Papel</th><th scope="col">Situação</th><th scope="col">Ações</th></tr></thead><tbody>'+S.d.users.map(u=>'<tr><td>'+esc(u.name)+'</td><td>'+esc(u.email)+'</td><td>'+ROLE[u.role]+'</td><td>'+(u.active?'Ativa':'Desativada')+'</td><td>'+btns(u)+'</td></tr>').join('')+'</tbody></table>'+
+     '<ul class="cards-list only-narrow users">'+S.d.users.map(u=>'<li><strong>'+esc(u.name)+'</strong><div class="k">'+esc(u.email)+'</div><div>'+ROLE[u.role]+' · '+(u.active?'Ativa':'Desativada')+'</div><div class="actions">'+btns(u)+'</div></li>').join('')+'</ul>'+us('US-014-S03','US-014-S04');
+  }
+  const inner='<div class="pt"><h1>Usuários da equipe</h1><button type="button" class="btn" data-act="usernew">Novo usuário</button>'+us('US-014-S01')+'</div><div id="umsg">'+(S.umsg?alertBox(S.umsg.kind,S.umsg.html,S.umsg.kind==='error'?{focus:true}:{})+us('US-014-S08','US-014-S09'):'')+'</div>'+body;
+  return {html:panelLayout(inner,'users'),title:'Usuários da equipe',states:['error','loading']};
+}
+function settingsPage(){
+  const st=S.view.state,busy=st==='loading',ph=st==='empty'?'':S.d.phone;
+  const warn=!ph?alertBox('warn','O telefone/WhatsApp do site ainda não foi configurado. Sem ele, nenhum anúncio pode ser publicado.')+us('US-010-S08'):'';
+  let inner='<h1>Configurações</h1>';
+  if(st==='error')inner+=alertBox('error','Não foi possível carregar as configurações. Tente novamente.',{focus:true})+'<button type="button" class="btn" data-act="retry">Tentar novamente</button>';
+  else inner+=warn+'<form class="card" data-form="settings" novalidate>'+field('st-phone','Telefone/WhatsApp do site',{req:1,type:'tel',value:ph?fmtPhone(ph):'',ac:'tel',attrs:'inputmode="tel"',hint:'Esse número aparece em todos os anúncios publicados, nos botões “Ligar” e “Chamar no WhatsApp”. Informe DDD e número, por exemplo (11) 91234-5678.'})+us('US-015-S01','US-015-S02','US-015-S03','US-015-S04','US-015-S05')+
+    '<div class="formfoot"><button type="submit" class="btn"'+(busy?' disabled':'')+'>'+(busy?'Salvando…':'Salvar')+'</button></div></form>';
+  return {html:panelLayout(inner,'settings'),title:'Configurações',states:['empty','error','loading']};
+}
+
+/* =====================================================================
+   11. Roteamento
+   ===================================================================== */
+function parseHash(){
+  const h=location.hash.replace(/^#/,'')||'/';const i=h.indexOf('?');const p=i<0?h:h.slice(0,i),qs=i<0?'':h.slice(i+1);
+  const parts=p.split('/').filter(Boolean).map(x=>{try{return decodeURIComponent(x);}catch(e){return x;}});const query={};
+  qs.split('&').forEach(kv=>{if(!kv)return;const j=kv.indexOf('=');const k=j<0?kv:kv.slice(0,j),v=j<0?'':kv.slice(j+1);try{query[decodeURIComponent(k)]=decodeURIComponent(v.replace(/\+/g,' '));}catch(e){query[k]=v;}});
+  return {parts:parts,query:query};
+}
+function go(h){if(location.hash===h){render({focus:true});if(S.flash)S.flash.keep=false;}else location.hash=h;}
+function panelRoute(r){
+  const u=me();
+  if(!u){S.returnTo=location.hash;history.replaceState(null,'','#/equipe/entrar');S.view.state='normal';return loginPage();}
+  const [,b,c,d]=r.parts,adm=u.role==='admin';
+  if(b==='fila'||b==='categorias'||b==='usuarios'||b==='configuracoes'){
+    if(!adm)return deniedPage('page');
+    return b==='fila'?filaPage():b==='categorias'?catsPage():b==='usuarios'?usersPage():settingsPage();
+  }
+  if(b==='anuncios'||!b){
+    if(!c)return listPage();
+    if(c==='novo')return formPage('new');
+    const ad=findAd(+c);
+    if(!ad||(!adm&&ad.author!==u.id))return deniedPage('ad');
+    if(d==='editar'){if(ad.status==='archived'||(!adm&&ad.status!=='draft'&&ad.status!=='rejected'))return viewPage(ad);return formPage(String(ad.id));}
+    if((ad.status==='draft'||ad.status==='rejected'))return formPage(String(ad.id));
+    return viewPage(ad);
+  }
+  return deniedPage('page');
+}
+function routeView(r){
+  const a=r.parts[0],b=r.parts[1];
+  if(!a)return homePage();
+  if(a==='categoria')return categoryPage(b);
+  if(a==='busca')return searchPage(r.query);
+  if(a==='anuncio')return detailPage(b);
+  if(a==='favoritos')return favPage();
+  if(a==='equipe'){
+    if(b==='entrar'){if(me()){return {redirect:landing(me())};}return loginPage();}
+    if(b==='senha-nova')return newPwdPage();
+    if(b==='esqueci')return forgotPage();
+    if(b==='redefinir')return resetPage(r.query);
+  }
+  if(a==='painel')return panelRoute(r);
+  return {html:pubLayout('<h1 data-autofocus tabindex="-1">Página não encontrada</h1><p><a href="#/">Voltar para a página inicial</a></p>'),title:'Página não encontrada',states:[]};
+}
+const app=$('#app');
+function render(opts){
+  opts=opts||{};
+  const keepY=opts.keep?window.scrollY:null;
+  const ae=document.activeElement,fk=opts.keep&&ae&&ae.dataset?ae.dataset.fk:null;
+  if(S.form&&$('#adform'))syncForm();
+  const r=parseHash();
+  let pg;
+  try{pg=routeView(r);if(pg.redirect){history.replaceState(null,'',pg.redirect);pg=routeView(parseHash());}}
+  catch(err){console.error(err);pg={html:'<main id="main" tabindex="-1"><div class="alert error" role="alert">Erro interno do protótipo.</div></main>',title:'Erro',states:[]};}
+  if(pg.html.indexOf('id="adform"')<0)S.form=null;
+  app.innerHTML=pg.html;
+  document.title=(pg.title?pg.title+' — ':'')+'Protótipo GazetaMarketplace';
+  persist();syncToolbar();
+  if(pg.after)pg.after();
+  if(S.view.state!=='normal'&&pg.states&&pg.states.indexOf(S.view.state)<0)pstat('O estado “'+STATE_LABEL[S.view.state]+'” não se aplica a esta tela.');
+  if(keepY!=null)window.scrollTo(0,keepY);
+  if(fk){const el=app.querySelector('[data-fk="'+fk+'"]');if(el)el.focus({preventScroll:true});}
+  else if(opts.focus){const m=$('#main');const t=(m&&m.querySelector('[data-autofocus]'))||m;if(t)t.focus({preventScroll:true});window.scrollTo(0,0);}
+}
+window.addEventListener('hashchange',()=>{
+  if(S.flash&&S.flash.keep)S.flash.keep=false;else S.flash=null;
+  S.view.state='normal';S.filtersOpen=false;S.navOpen=false;S.gal=null;S.favGone=null;S.fg=null;S.cmsg=null;S.umsg=null;S.panel={q:'',status:'',page:1};
+  render({focus:true});
+});
+
+/* =====================================================================
+   12. Janelas (dialog nativo: foco preso, Esc fecha, foco volta ao gatilho)
+   ===================================================================== */
+let dn=0;
+function openDialog(o){
+  const opener=document.activeElement,id='dlg'+(++dn);
+  const d=document.createElement('dialog');d.className='dlg'+(o.big?' big':'');d.setAttribute('role',o.role||'dialog');d.setAttribute('aria-labelledby',id+'t');d.setAttribute('aria-describedby',id+'d');
+  d.innerHTML='<form class="dlg-form" novalidate><div class="dlg-h"><h2 id="'+id+'t">'+o.title+'</h2></div><div class="dlg-b" id="'+id+'d">'+o.html+'</div><div class="dlg-f">'+o.actions.map(a=>'<button type="'+(a.key==='ok'?'submit':'button')+'" class="btn '+(a.cls||'')+'" data-k="'+a.key+'"'+(a.autofocus?' autofocus':'')+'>'+a.label+'</button>').join('')+'</div></form>';
+  $('#dlg-root').appendChild(d);
+  const form=d.querySelector('form');
+  form.addEventListener('submit',e=>{e.preventDefault();const b=form.querySelector('[data-k=ok]');if(b&&!b.disabled)o.on('ok',d,b);});
+  d.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b&&b.dataset.k!=='ok')o.on(b.dataset.k,d,b);});
+  let done=false;
+  const cleanup=()=>{if(done)return;done=true;d.remove();const t=(opener&&opener!==document.body&&document.contains(opener))?opener:$('#main');if(t&&t.focus)t.focus();if(o.onClose)o.onClose();};
+  const nativeClose=d.close.bind(d);
+  d.close=()=>{nativeClose();cleanup();};      /* fechar por botão limpa na hora */
+  d.addEventListener('close',cleanup);          /* Esc (fechamento nativo) também limpa e devolve o foco */
+  d.showModal();if(o.onOpen)o.onOpen(d);return d;
+}
+function confirmDlg(o){
+  return openDialog({title:o.title,role:'alertdialog',html:'<p>'+o.text+'</p>',actions:[{key:'cancel',label:'Cancelar',cls:'sec',autofocus:true},{key:'ok',label:o.ok,cls:o.danger?'danger':''}],
+    on:(k,d,b)=>{if(k==='cancel')d.close();else if(k==='ok')o.onOk(d,b);}});
+}
+
+/* =====================================================================
+   13. Ações (clique)
+   ===================================================================== */
+function toggleFav(id){
+  const list=favRead(),i=list.indexOf(id),next=i>=0?list.filter(x=>x!==id):list.concat([id]);
+  if(!favWrite(next)){S.flash={kind:'error',html:'Não foi possível salvar seus favoritos neste navegador.'};render({keep:true});return;}
+  S.flash=null;announce('Favoritos: '+favCount());render({keep:true});
+}
+function galSet(i,fk){const ad=findAd(S.gal.adId);const n=ad.photos.length;S.gal.idx=(i+n)%n;$('#gallery').innerHTML=galleryHtml(ad,S.gal.idx);const t=fk&&$('[data-fk="th-'+S.gal.idx+'"]');if(t)t.focus({preventScroll:true});else if(fk==='nav'){}announce('Foto '+(S.gal.idx+1)+' de '+n);}
+function decide(ad,kind,reason){
+  if(S.flags.conflict){S.flags.conflict=false;ad.status='published';ad.pub=TODAY;ad.updated=TODAY;S.flash={kind:'error',html:'Este anúncio já foi publicado por outro administrador',keep:true};persist();go('#/painel/anuncios/'+ad.id);return;}
+  if(kind==='publish'){ad.status='published';ad.pub=TODAY;ad.updated=TODAY;ad.pubBy=me().id;S.flash={kind:'ok',html:'Anúncio publicado. Ele já aparece no site e na busca.',keep:true};}
+  else{ad.status='rejected';ad.reason=reason;ad.updated=TODAY;S.flash={kind:'ok',html:'Anúncio rejeitado. O motivo fica visível para o autor.',keep:true};}
+  persist();go('#/painel/fila');
+}
+const A={
+  skip(){const m=$('#main');if(m)m.focus();},
+  retry(){S.view.state='normal';render({keep:true});announce('Carregado');},
+  fav(el){toggleFav(+el.dataset.id);},
+  call(){const ph=fmtPhone(S.d.phone);openDialog({title:'Simulação: Ligar',html:'<p>No produto real, o aplicativo de telefone abriria com <strong>'+ph+'</strong> pronto para discar.</p><p class="hint">Neste protótipo nenhum link real é aberto.</p>',actions:[{key:'close',label:'Fechar',autofocus:true}],on:(k,d)=>d.close()});},
+  wa(){
+    const ad=findAd(S.gal?S.gal.adId:0);const t=ad?ad.title:'anúncio';
+    openDialog({title:'Simulação: Chamar no WhatsApp',html:'<p>No produto real, o WhatsApp abriria uma conversa com <strong>'+fmtPhone(S.d.phone)+'</strong> e a mensagem já preenchida:</p><blockquote>Olá! Tenho interesse no anúncio:\n'+esc(t)+'\nwww.gazetamarketplace.exemplo.br/anuncio/'+(ad?ad.id:'')+'</blockquote><fieldset><legend>Onde a pessoa está</legend><div class="radios"><label><input type="radio" name="wa-mode" value="app" checked> Celular ou computador com o aplicativo</label><label><input type="radio" name="wa-mode" value="web"> Computador sem o aplicativo</label></div></fieldset><p id="wa-explain" class="hint" role="status">Abre o aplicativo do WhatsApp com a conversa pronta. A página do anúncio continua aberta.</p><p class="hint">Título, acentos, aspas e “&amp;” seguem exatamente como no anúncio. Neste protótipo nenhum link real é aberto.</p>',
+      actions:[{key:'close',label:'Fechar',autofocus:true}],on:(k,d)=>d.close(),
+      onOpen:d=>{$$('input[name=wa-mode]',d).forEach(r=>r.addEventListener('change',()=>{$('#wa-explain',d).textContent=r.value==='web'?'Abre o WhatsApp Web em uma nova aba, com a conversa e a mensagem prontas. A página do anúncio continua aberta na aba anterior.':'Abre o aplicativo do WhatsApp com a conversa pronta. A página do anúncio continua aberta.';}));}});
+  },
+  gprev(){galSet(S.gal.idx-1,'nav');},gnext(){galSet(S.gal.idx+1,'nav');},
+  gthumb(el){galSet(+el.dataset.i,'th');},
+  zoom(){const ad=findAd(S.gal.adId),i=S.gal.idx,n=ad.photos.length;openDialog({title:'Foto '+(i+1)+' de '+n,big:true,html:'<div class="bigph" role="img" aria-label="Foto ampliada '+(i+1)+' de '+n+': '+esc(ad.title)+'">'+photoSvg(ad,i)+'</div><p class="hint">Esc também fecha e devolve o foco à foto de origem.</p>',actions:[{key:'close',label:'Fechar',autofocus:true}],on:(k,d)=>d.close()});},
+  ftoggle(el){S.filtersOpen=!S.filtersOpen;$('#filters').classList.toggle('open',S.filtersOpen);el.setAttribute('aria-expanded',String(S.filtersOpen));},
+  clearfilters(){go('#/busca');},
+  logout(){S.session.userId=null;S.gal=null;S.form=null;go('#/equipe/entrar');},
+  menu(el){S.navOpen=!S.navOpen;$('#pan-nav').classList.toggle('open',S.navOpen);el.setAttribute('aria-expanded',String(S.navOpen));},
+  lpage(el){S.panel.page=+el.dataset.p;refreshList();},
+  lclear(){S.panel={q:'',status:'',page:1};if(S.view.state==='noresult'){S.view.state='normal';}render({keep:true});},
+  cred(el){const f=$('[data-form=login]');if(!f)return;f.elements['lg-email'].value=el.dataset.e;f.elements['lg-pass'].value=el.dataset.p;f.elements['lg-pass'].focus();},
+  editad(el){go('#/painel/anuncios/'+el.dataset.id+'/editar');},
+  publish(){
+    const ad=findAd(+parseHash().parts[2]);
+    if(!S.d.phone){S.flash={kind:'error',html:'Configure o telefone/WhatsApp do site antes de publicar. <a href="#/painel/configuracoes">Configurações</a>'};render({keep:true});const a=$('#main .alert a');if(a)a.focus();return;}
+    confirmDlg({title:'Publicar este anúncio?',text:'Ele passa a aparecer no site para todos os visitantes.',ok:'Publicar',onOk:d=>{d.close();decide(ad,'publish');}});
+  },
+  reject(){
+    const ad=findAd(+parseHash().parts[2]);
+    openDialog({title:'Rejeitar anúncio',html:'<label for="rj-reason">Motivo da rejeição *</label><textarea id="rj-reason" aria-required="true" aria-describedby="e-rj-reason h-rj"></textarea><div class="err" id="e-rj-reason" role="alert"></div><div class="hint" id="h-rj">O motivo fica visível para quem cadastrou o anúncio.</div>',
+      actions:[{key:'cancel',label:'Cancelar',cls:'sec'},{key:'ok',label:'Rejeitar anúncio',cls:'danger'}],
+      on:(k,d)=>{if(k==='cancel'){d.close();return;}const v=$('#rj-reason',d).value.trim();if(!v){setErr('rj-reason','Informe o motivo da rejeição');$('#rj-reason',d).focus();return;}d.close();decide(ad,'reject',v);}});
+  },
+  unpublish(){const ad=findAd(+parseHash().parts[2]);confirmDlg({title:'Despublicar este anúncio?',text:'Ele sai do site agora e volta a Rascunho. Você poderá corrigi-lo e enviá-lo de novo para revisão.',ok:'Despublicar',onOk:d=>{d.close();ad.status='draft';ad.updated=TODAY;persist();S.flash={kind:'ok',html:'Anúncio despublicado. A situação agora é Rascunho.',keep:true};go('#/painel/anuncios/'+ad.id);}});},
+  archive(el){
+    const ad=findAd(+el.dataset.id);
+    confirmDlg({title:'Arquivar este anúncio?',text:'O anúncio sairá do site e não poderá ser reativado.',ok:'Arquivar',danger:true,onOk:d=>{d.close();ad.status='archived';ad.updated=TODAY;persist();S.flash={kind:'ok',html:'Anúncio arquivado.',keep:true};go('#/painel/anuncios');}});
+  },
+  /* formulário do anúncio */
+  pick(){const i=$('#pfiles');if(i)i.click();},
+  simfiles(el){
+    const f=S.form,v=el.dataset.v;
+    if(v==='ok')f.pending=[{name:'foto-frente.jpg',size:2e6,type:'image/jpeg'},{name:'foto-iphone.heic',size:3e6,type:'image/heic'},{name:'foto-interior.webp',size:1e6,type:'image/webp'}];
+    else if(v==='bad')f.pending=[{name:'contrato.pdf',size:4e5,type:'application/pdf'},{name:'foto-grande.jpg',size:15*1048576,type:'image/jpeg'}];
+    else{while(f.photos.length<maxPhotos(f.cat)){f.photos.push({id:'p'+(S.d.pid++),hue:(S.d.pid*37)%360});}f.upMsgs=[];}
+    renderPhotos();announce(v==='fill'?'Anúncio com '+maxPhotos(f.cat)+' fotos':f.pending.length+' arquivos selecionados. Clique em Enviar fotos.');
+  },
+  upload(){
+    const f=S.form;if(!f.pending.length){f.upMsgs=['Selecione ao menos uma foto antes de enviar.'];renderPhotos();return;}
+    const files=f.pending;f.pending=[];const msgs=[],notes=[],mx=maxPhotos(f.cat),lim='Cada anúncio '+(catFicha(f.cat)==='service'?'de Serviços ':'')+'pode ter no máximo '+mx+' fotos';
+    files.forEach(file=>{
+      const heic=/^image\/hei[cf]$/.test(file.type)||/\.hei[cf]$/i.test(file.name);
+      if(!heic&&!/^image\/(jpeg|png|webp|gif)$/.test(file.type)){msgs.push(file.name+': Formato não aceito. Use JPG, PNG, WebP, GIF ou HEIC');return;}
+      if(file.size>10*1048576){msgs.push(file.name+': A foto excede o limite de 10 MB');return;}
+      if(f.photos.length>=mx){if(msgs.indexOf(lim)<0)msgs.push(lim);return;}
+      if(heic)notes.push(file.name+': convertida para JPG no envio (HEIC não aparece em todos os navegadores)');
+      const p={id:'p'+(S.d.pid++),hue:(S.d.pid*37)%360,uploading:true};if(S.flags.upfail){p.willFail=true;S.flags.upfail=false;syncToolbar();}f.photos.push(p);
+    });
+    f.upMsgs=msgs;f.upNotes=notes;renderPhotos();if(msgs.length||notes.length)announce(notes.concat(msgs).join('. '));
+    setTimeout(()=>{if(S.form!==f)return;f.photos.forEach(p=>{if(p.uploading){p.uploading=false;if(p.willFail){p.failed=true;delete p.willFail;}}});renderPhotos();},700);
+  },
+  retryphoto(el){const f=S.form,p=f.photos.find(x=>x.id===el.dataset.pid);if(p){p.failed=false;}renderPhotos();announce('Foto reenviada');},
+  cover(el){const f=S.form,i=f.photos.findIndex(x=>x.id===el.dataset.pid);if(i>0){const p=f.photos.splice(i,1)[0];f.photos.unshift(p);}renderPhotos();announce('Foto definida como capa');const b=$('[data-fk="rm-'+el.dataset.pid+'"]');if(b)b.focus();},
+  rmphoto(el){const f=S.form,pid=el.dataset.pid;confirmDlg({title:'Remover esta foto?',text:'Ela deixa de fazer parte do anúncio.',ok:'Remover',danger:true,onOk:d=>{f.photos=f.photos.filter(x=>x.id!==pid);d.close();renderPhotos();announce('Foto removida');const h=$('#photos-h');if(h)h.focus();}});},
+  save(){
+    syncForm();const f=S.form;clearErrs($('#adform'));
+    if(!f.title.trim()){setErr('f-title','Informe um título');$('#f-title').focus();return;}
+    const isNew=!f.id,ad=saveIntoAd();f.pend=null;
+    f.msg=ad.status==='draft'?'Rascunho salvo':'Anúncio salvo';
+    announce(f.msg);
+    if(isNew)go('#/painel/anuncios/'+ad.id);else render({keep:false});
+    const m=$('#fmsg');if(m)m.scrollIntoView({block:'nearest'});
+  },
+  sendreview(){
+    syncForm();const f=S.form;clearErrs($('#adform'));f.msg=null;
+    const p=pendencies(f);
+    if(p.length){p.forEach(x=>{if(x.t!=='photos-h')setErr(x.t,x.m);});f.pend=p;$('#fmsg').innerHTML='';$('#pendbox').innerHTML=pendHtml(p);const b=$('#pend');if(b){b.focus();b.scrollIntoView({block:'nearest'});}return;}
+    f.pend=null;$('#pendbox').innerHTML='';
+    openDialog({title:'Enviar para revisão?',role:'alertdialog',html:'<p>Depois de enviado, o anúncio fica somente para leitura até um Administrador decidir.</p>',
+      actions:[{key:'cancel',label:'Cancelar',cls:'sec',autofocus:true},{key:'ok',label:'Enviar para revisão'}],
+      on:(k,d,b)=>{if(k==='cancel'){d.close();return;}if(f.sending)return;f.sending=true;b.disabled=true;b.textContent='Enviando…';
+        const ad=saveIntoAd();ad.status='review';ad.sent=TODAY;ad.updated=TODAY;persist();d.close();
+        S.flash={kind:'ok',html:'Anúncio enviado para revisão',keep:true};go('#/painel/anuncios');}});
+  },
+  gofield(el){const t=document.getElementById(el.dataset.t);if(t){t.focus();t.scrollIntoView({block:'center'});}},
+  /* categorias */
+  catnew(){catDialog(null);},catedit(el){catDialog(el.dataset.id);},
+  catup(el){moveCat(el.dataset.id,-1);},catdown(el){moveCat(el.dataset.id,1);},
+  catdel(el){
+    const c=cat(el.dataset.id);
+    confirmDlg({title:'Confirmar exclusão',text:'Excluir a categoria “'+esc(c.name)+'”? Essa ação não pode ser desfeita.',ok:'Excluir',danger:true,onOk:d=>{
+      d.close();const n=adCountOf(c.id),ks=kids(c.id);let m='';
+      if(c.locked)m='Esta categoria é usada pelos campos específicos e não pode ser excluída. Você pode renomeá-la.';
+      else if(ks.length)m='Exclua ou mova antes as subcategorias desta categoria';
+      else if(n>0)m='Não é possível excluir: '+n+(n===1?' anúncio usa':' anúncios usam')+' esta categoria';
+      else if(catFicha(c.id))m='Esta categoria é usada pelos campos específicos e não pode ser excluída. Você pode renomeá-la.';
+      if(m){S.cmsg=m;render({keep:true});return;}
+      S.d.cats=S.d.cats.filter(x=>x.id!==c.id);S.cmsg=null;persist();render({keep:true});announce('Categoria excluída');}});
+  },
+  /* usuários */
+  usernew(){userDialog(null);},useredit(el){userDialog(el.dataset.id);},
+  userdeact(el){
+    const u=user(el.dataset.id);
+    if(u.id===S.session.userId){S.umsg={kind:'error',html:'Você não pode desativar a sua própria conta'};render({keep:true});return;}
+    confirmDlg({title:'Confirmar desativação',text:'Desativar '+esc(u.name)+'? Ela deixa de entrar no painel. Os anúncios dela continuam existindo com o nome dela como autora.',ok:'Desativar',danger:true,onOk:d=>{d.close();u.active=false;S.umsg={kind:'ok',html:esc(u.name)+' foi desativada.'};persist();render({keep:true});}});
+  },
+  userreact(el){const u=user(el.dataset.id);u.active=true;S.umsg={kind:'ok',html:esc(u.name)+' foi reativada.'};persist();render({keep:true});}
+};
+function moveCat(id,dir){
+  const c=cat(id),sibs=S.d.cats.filter(x=>x.parent===c.parent),i=sibs.indexOf(c),j=i+dir;
+  if(j<0||j>=sibs.length){announce(dir<0?'Já é o primeiro do grupo':'Já é o último do grupo');return;}
+  const o=sibs[j],ia=S.d.cats.indexOf(c),ib=S.d.cats.indexOf(o);S.d.cats[ia]=o;S.d.cats[ib]=c;persist();
+  render({keep:true});announce(dir<0?c.name+' agora está antes de '+o.name:c.name+' agora está depois de '+o.name);
+}
+function catDialog(id){
+  const c=id?cat(id):null;
+  openDialog({title:c?'Editar categoria (renomear)':'Nova categoria',html:field('cf-name','Nome',{req:1,value:c?c.name:''})+(c?'':'<label for="cf-parent">Categoria pai</label><select id="cf-parent"><option value="">— Nenhuma (categoria principal) —</option>'+catOptions('','parent')+'</select><div class="hint">Só há dois níveis: a lista mostra apenas categorias principais.</div>'+us('US-013-S11')),
+    actions:[{key:'cancel',label:'Cancelar',cls:'sec'},{key:'ok',label:'Salvar'}],
+    on:(k,d)=>{
+      if(k==='cancel'){d.close();return;}
+      clearErrs(d);const name=$('#cf-name',d).value.trim(),par=c?c.parent:($('#cf-parent',d).value||null);
+      if(!name){setErr('cf-name','Informe o nome da categoria');$('#cf-name',d).focus();return;}
+      if(S.d.cats.some(x=>x.parent===par&&x.id!==(c&&c.id)&&norm(x.name)===norm(name))){setErr('cf-name','Já existe uma categoria com esse nome neste grupo');$('#cf-name',d).focus();return;}
+      if(c)c.name=name;else S.d.cats.push({id:'c'+(S.d.cid++),name:name,parent:par});
+      S.cmsg=null;persist();d.close();render({keep:true});announce(c?'Categoria renomeada':'Categoria criada');
+    }});
+}
+function userDialog(id){
+  const u=id?user(id):null;
+  const roleRadios='<fieldset><legend>Papel *</legend><div class="radios" role="radiogroup" aria-label="Papel"><label><input type="radio" name="uf-role" value="writer"'+((!u||u.role==='writer')?' checked':'')+'> Redator</label><label><input type="radio" name="uf-role" value="admin"'+((u&&u.role==='admin')?' checked':'')+'> Administrador</label></div><div class="err" id="e-uf-role" role="alert"></div></fieldset>';
+  openDialog({title:u?'Editar usuário (mudar o papel)':'Novo usuário',
+    html:(u?'<p><strong>Nome:</strong> '+esc(u.name)+'<br><strong>E-mail:</strong> '+esc(u.email)+'</p>':field('uf-name','Nome',{req:1})+field('uf-email','E-mail',{type:'email',req:1,ac:'off'}))+roleRadios+(u?'':field('uf-pass','Senha provisória',{type:'password',req:1,ac:'new-password',hint:'Informe a senha à pessoa fora do sistema. Ela precisará trocá-la no primeiro acesso. Requisitos: 8 caracteres ou mais, maiúscula, minúscula, número e símbolo.'})+'<div id="uf-req"></div>'),
+    actions:[{key:'cancel',label:'Cancelar',cls:'sec'},{key:'ok',label:'Salvar'}],
+    on:(k,d)=>{
+      if(k==='cancel'){d.close();return;}
+      clearErrs(d);$('#uf-req',d)&&($('#uf-req',d).innerHTML='');
+      const role=$('input[name=uf-role]:checked',d).value;
+      if(u){
+        const admins=S.d.users.filter(x=>x.role==='admin'&&x.active);
+        if(u.role==='admin'&&role!=='admin'&&admins.length===1&&admins[0].id===u.id){setErr('uf-role','Deve existir ao menos um administrador ativo');return;}
+        u.role=role;S.umsg={kind:'ok',html:'Papel de '+esc(u.name)+' alterado para '+ROLE[role]+'. Vale no próximo acesso.'};persist();d.close();render({keep:true});return;
+      }
+      const name=$('#uf-name',d).value.trim(),email=$('#uf-email',d).value.trim(),pass=$('#uf-pass',d).value;let bad=false;
+      if(!name){setErr('uf-name','Informe o nome');bad=true;}
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErr('uf-email','Informe um e-mail válido');bad=true;}
+      else if(S.d.users.some(x=>x.email.toLowerCase()===email.toLowerCase())){setErr('uf-email','Já existe um usuário com este e-mail');bad=true;}
+      const miss=pwMissing(pass);
+      if(miss.length){$('#uf-req',d).innerHTML=alertBox('error','<p>A senha provisória não cumpre os requisitos. Falta:</p><ul>'+miss.map(x=>'<li>'+x+'</li>').join('')+'</ul>');bad=true;}
+      if(bad){const first=$('[aria-invalid=true]',d)||$('#uf-pass',d);first.focus();return;}
+      S.d.users.push({id:'u'+(S.d.uid++),name:name,email:email,role:role,active:true,pass:pass,mustChange:true});
+      S.umsg={kind:'ok',html:'Usuário criado: '+esc(name)+' ('+ROLE[role]+', Ativa). No primeiro acesso ela define uma nova senha.'};persist();d.close();render({keep:true});
+    }});
+}
+
+/* =====================================================================
+   14. Formulários e eventos
+   ===================================================================== */
+document.addEventListener('click',e=>{
+  /* sessão expirada: o próximo clique dentro do painel leva à entrada (US-006-S08) */
+  if(S.flags.expire&&S.session.userId&&e.target.closest('.pan')){
+    e.preventDefault();e.stopPropagation();S.flags.expire=false;S.session.userId=null;S.form=null;
+    S.flash={kind:'info',html:'Sua sessão expirou. Entre novamente.',keep:true};go('#/equipe/entrar');return;
+  }
+  const el=e.target.closest('[data-act]');if(!el||!app.contains(el))return;
+  const act=A[el.dataset.act];if(!act)return;
+  if(el.tagName==='A')e.preventDefault();
+  if(el.getAttribute('aria-disabled')==='true'&&(el.dataset.act==='catup'||el.dataset.act==='catdown')){announce(el.dataset.act==='catup'?'Já é o primeiro do grupo':'Já é o último do grupo');return;}
+  act(el,e);
+},true);
+document.addEventListener('submit',e=>{
+  const f=e.target.closest('[data-form]');if(!f||!app.contains(f))return;e.preventDefault();
+  const n=f.dataset.form;
+  if(n==='search'){const q=$('#q').value.trim();go('#/busca'+(q?'?q='+encodeURIComponent(q):''));}
+  else if(n==='filters')applyFilters();
+  else if(n==='login')doLogin(f);
+  else if(n==='newpwd')doNewPwd(f);
+  else if(n==='forgot')doForgot(f);
+  else if(n==='reset')doReset(f);
+  else if(n==='settings')doSettings(f);
+  else if(n==='adform')A.save();
+});
+function applyFilters(){
+  clearErrs($('#filters'));
+  const g=id=>{const e=$('#'+id);return e?e.value.trim():'';};
+  const pmin=g('s-pmin'),pmax=g('s-pmax');
+  if(pmin!==''&&pmax!==''&&+pmin>+pmax){setErr('s-pmin','');const er=$('#e-price');er.textContent='O preço mínimo não pode ser maior que o máximo';$('#s-pmin').setAttribute('aria-invalid','true');$('#s-pmax').setAttribute('aria-invalid','true');$('#s-pmin').focus();return;}
+  const cur=parseFilters(parseHash().query),catId=g('s-cat'),fi=catId?catFicha(catId):null;
+  const o={q:$('#q').value.trim(),cat:catId,uf:g('s-uf'),city:g('s-uf')?g('s-city'):'',pmin:pmin,pmax:pmax,sort:cur.sort,brand:'',model:'',ymin:'',ymax:'',kmax:'',amin:'',amax:'',page:1};
+  if(fi==='vehicle'){o.brand=g('s-brand');o.model=g('s-model');o.ymin=g('s-ymin');o.ymax=g('s-ymax');o.kmax=g('s-kmax');}
+  if(fi==='land'){o.amin=g('s-amin');o.amax=g('s-amax');}
+  go(searchHref(cur,o));
+}
+function doLogin(form){
+  clearErrs(form);$('#lg-msg').innerHTML='';
+  const email=form.elements['lg-email'].value.trim(),pass=form.elements['lg-pass'].value;let bad=false;
+  if(!email){setErr('lg-email','Informe o e-mail');bad=true;}if(!pass){setErr('lg-pass','Informe a senha');bad=true;}
+  if(bad){$('[aria-invalid=true]',form).focus();return;}
+  const box=$('#lg-msg');
+  if(S.d.attempts>=5){box.innerHTML=alertBox('error','Muitas tentativas. Tente novamente em alguns minutos.',{focus:true});$('.alert',box).focus();return;}
+  const u=S.d.users.find(x=>x.email.toLowerCase()===email.toLowerCase());
+  if(!u||!u.active||u.pass!==pass){S.d.attempts++;persist();form.elements['lg-pass'].value='';box.innerHTML=alertBox('error','E-mail ou senha inválidos, ou conta desativada',{focus:true});$('.alert',box).focus();return;}
+  S.d.attempts=0;
+  if(u.mustChange){S.pending=u.id;go('#/equipe/senha-nova');return;}
+  S.session.userId=u.id;const to=S.returnTo;S.returnTo=null;go(to&&to.indexOf('#/painel')===0?to:landing(u));
+}
+function pwValidate(form,idNew,idConf,boxId){
+  clearErrs(form);$(boxId).innerHTML='';const a=form.elements[idNew].value,b=form.elements[idConf].value;
+  const miss=pwMissing(a);
+  if(miss.length){$(boxId).innerHTML=alertBox('error','<p>A senha não cumpre os requisitos. Falta:</p><ul>'+miss.map(x=>'<li>'+x+'</li>').join('')+'</ul>',{focus:true})+us('US-007-S06');$('.alert',$(boxId)).focus();return null;}
+  if(a!==b){setErr(idConf,'As senhas não coincidem');$('#'+idConf).focus();return null;}
+  return a;
+}
+function doNewPwd(form){
+  const p=pwValidate(form,'np-new','np-conf','#np-msg');if(p==null)return;
+  const u=user(S.pending);u.pass=p;u.mustChange=false;S.session.userId=u.id;S.pending=null;persist();go(landing(u));
+}
+function doForgot(form){
+  clearErrs(form);const em=form.elements['fg-email'].value.trim();
+  if(!em){setErr('fg-email','Informe o e-mail');$('#fg-email').focus();return;}
+  S.d.resetUsed=false;S.resetEmail=em;S.fg={sent:true,email:em};persist();render({focus:true});
+}
+function doReset(form){
+  const p=pwValidate(form,'rp-new','rp-conf','#rp-msg');if(p==null)return;
+  const u=S.d.users.find(x=>x.email.toLowerCase()===(S.resetEmail||'ana.souza@exemplo.com.br').toLowerCase())||user('u2');
+  u.pass=p;S.d.resetUsed=true;persist();S.flash={kind:'info',html:'Senha alterada. Entre com a nova senha.',keep:true};go('#/equipe/entrar');
+}
+function doSettings(form){
+  clearErrs(form);const raw=form.elements['st-phone'].value.trim(),digits=raw.replace(/\D/g,'');
+  if(!raw){setErr('st-phone','O telefone é obrigatório');$('#st-phone').focus();return;}
+  if(/[A-Za-zÀ-ÿ]/.test(raw)||!(/^[1-9][1-9]\d{8,9}$/.test(digits)&&(digits.length===10||digits[2]==='9'))){setErr('st-phone','Informe um número com DDD, por exemplo (11) 91234-5678');$('#st-phone').focus();return;}
+  S.d.phone=digits;persist();S.flash={kind:'ok',html:'Configurações salvas'};announce('Configurações salvas');render({keep:false});
+}
+
+/* eventos de campos (delegados) */
+document.addEventListener('change',e=>{
+  const t=e.target;if(!app.contains(t)&&!t.closest('dialog'))return;
+  if(t.id==='s-uf'){const c=$('#s-city');c.innerHTML=cityOptions(t.value,'','Todas as cidades');c.disabled=!t.value;const l=$('#filt-live');if(l)l.textContent=t.value?'A cidade voltou para Todas as cidades. A lista mostra só cidades de '+t.value+'.':'A cidade voltou para Todas as cidades.';}
+  else if(t.id==='s-cat'){const fi=t.selectedOptions[0]?t.selectedOptions[0].dataset.f:'';$$('[data-only]',$('#filters')).forEach(x=>{x.hidden=x.dataset.only!==fi;});}
+  else if(t.id==='s-sort'){const cur=parseFilters(parseHash().query);go(searchHref(cur,{sort:t.value,page:1}));}
+  else if(t.id==='l-st'){S.panel.status=t.value;S.panel.page=1;refreshList();}
+  else if(t.id==='f-cat'){syncForm();render({keep:true});renderPhotos();announce('Campos atualizados para a categoria '+(catName(t.value)||'escolhida'));}
+  else if(t.id==='pfiles'){const f=S.form;f.pending=Array.from(t.files).map(x=>({name:x.name,size:x.size,type:x.type}));t.value='';renderPhotos();announce(f.pending.length+' arquivo(s) selecionado(s)');}
+});
+/* Contadores de caracteres (Título em Vagas; Informações adicionais em Serviços e Vagas) */
+document.addEventListener('input',e=>{const t=e.target;if((t.id!=='f-title'&&t.id!=='f-desc')||!S.form)return;const c=$('#c-'+t.id);if(c)c.textContent=t.value.length+'/'+t.maxLength;});
+/* Preço: máscara R$ estilo banco — dígitos entram pelos centavos; sem negativo; teto de 10 dígitos */
+document.addEventListener('input',e=>{const t=e.target;if(t.id!=='f-price'||!S.form)return;
+  const d=t.value.replace(/\D/g,'').replace(/^0+/,'').slice(0,PRICE_MAX_DIGITS);
+  S.form.priceCents=d?+d:null;t.value=d?fmtCents(+d):'';
+  try{t.setSelectionRange(t.value.length,t.value.length);}catch(x){}
+  const er=$('#e-f-price');if(er)er.textContent='';t.removeAttribute('aria-invalid');
+});
+/* CEP: máscara 00000-000 + busca simulada (no site real: servidor → ViaCEP, NFR-24) */
+function cepFill(f,city,uf){f.city=city;f.uf=uf;if(f.cepManual)return;const c=$('#f-city'),u=$('#f-uf');if(c)c.value=city;if(u)u.value=uf;}
+function cityCtl(f){
+  if(!f.uf)return '<label for="f-city">Cidade *</label><select id="f-city" disabled aria-describedby="e-f-city"><option value="">Escolha a UF primeiro</option></select><div class="err" id="e-f-city" role="alert"></div>';
+  if(UFS[f.uf])return '<label for="f-city">Cidade *</label><select id="f-city" aria-required="true" aria-describedby="e-f-city">'+cityOptions(f.uf,f.city,'Escolha uma cidade')+'</select><div class="err" id="e-f-city" role="alert"></div>';
+  return '<label for="f-city">Cidade *</label><input id="f-city" type="text" maxlength="80" value="'+esc(f.city)+'" aria-required="true" aria-describedby="e-f-city h-f-city"><div class="hint" id="h-f-city">Sem lista de cidades para esta UF no protótipo: o nome é padronizado ao salvar.</div><div class="err" id="e-f-city" role="alert"></div>';
+}
+function locHtml(f){
+  if(!f.cepManual)return '<div class="row2 keep"><div><label for="f-city">Cidade (automático)</label><input id="f-city" type="text" readonly value="'+esc(f.city)+'" aria-describedby="h-f-cep"></div><div><label for="f-uf">UF (automático)</label><input id="f-uf" type="text" readonly value="'+esc(f.uf)+'" aria-describedby="h-f-cep"></div></div>';
+  return alertBox('warn','Não foi possível buscar o CEP. Preencha Cidade e UF manualmente.')+us('US-008-S14')+
+    '<div class="row2 keep"><div><label for="f-uf">UF *</label><select id="f-uf" aria-required="true" aria-describedby="e-f-uf"><option value="">Escolha a UF</option>'+UF_ALL.map(u=>'<option value="'+u+'"'+(f.uf===u?' selected':'')+'>'+u+'</option>').join('')+'</select><div class="err" id="e-f-uf" role="alert"></div></div>'+
+    '<div id="city-wrap">'+cityCtl(f)+'</div></div>';
+}
+function setLocManual(f,on){if(on){f.uf='';f.city='';}f.cepManual=on;const b=$('#cep-loc');if(b)b.innerHTML=locHtml(f);}
+function cepDone(){const st=$('#cep-st'),i=$('#f-cep');if(st)st.textContent='';if(i)i.removeAttribute('aria-busy');}
+function cepLookup(d){
+  const f=S.form,key=fmtCep(d);
+  if(f.cepManual)setLocManual(f,false);
+  if(cepCache.has(key)){const r=cepCache.get(key);cepSeq++;f.cepBusy=false;cepDone();cepFill(f,r[0],r[1]);announce('Cidade: '+r[0]+', '+r[1]);return;}
+  const tok=++cepSeq,st=$('#cep-st'),inp=$('#f-cep');
+  f.cepBusy=true;cepFill(f,'','');if(st)st.textContent='Buscando…';if(inp)inp.setAttribute('aria-busy','true');
+  const attempt=n=>setTimeout(()=>{
+    if(tok!==cepSeq||S.form!==f)return;
+    if(S.flags.cepdown){ /* falha do serviço: 1 nova tentativa, depois preenchimento manual (NFR-24) */
+      if(n<2){const s2=$('#cep-st');if(s2)s2.textContent='Buscando… (tentativa 2 de 2)';attempt(2);return;}
+      f.cepBusy=false;cepDone();setLocManual(f,true);return;}
+    f.cepBusy=false;cepDone();const i2=$('#f-cep');
+    const r=CEP_MOCK[key];
+    if(r){cepCache.set(key,r);cepFill(f,r[0],r[1]);const e=$('#e-f-cep');if(e)e.textContent='';if(i2)i2.removeAttribute('aria-invalid');announce('Cidade: '+r[0]+', '+r[1]);}
+    else{cepFill(f,'','');setErr('f-cep','CEP não encontrado. Confira os números.');} /* não encontrado não é falha: sem nova tentativa */
+  },S.flags.cepdown?1000:600);
+  attempt(1);
+}
+document.addEventListener('input',e=>{const t=e.target;if(t.id!=='f-cep'||!S.form)return;
+  const f=S.form,d=t.value.replace(/\D/g,'').slice(0,8);t.value=fmtCep(d);f.cep=t.value;
+  const er=$('#e-f-cep');if(er)er.textContent='';t.removeAttribute('aria-invalid');
+  if(d.length===8)cepLookup(d);else{cepSeq++;f.cepBusy=false;cepDone();if(f.cepManual)setLocManual(f,false);cepFill(f,'','');}
+});
+document.addEventListener('focusout',e=>{const t=e.target;if(t.id!=='f-cep'||!S.form)return;
+  const d=t.value.replace(/\D/g,'');if(d.length>0&&d.length<8){cepFill(S.form,'','');setErr('f-cep','Informe um CEP com 8 dígitos');}
+});
+/* preenchimento manual: UF (27) → cidade em lista quando existe */
+document.addEventListener('change',e=>{const t=e.target,f=S.form;if(!f||!f.cepManual)return;
+  if(t.id==='f-uf'){f.uf=t.value;f.city='';const w=$('#city-wrap');if(w)w.innerHTML=cityCtl(f);const er=$('#e-f-uf');if(er)er.textContent='';t.removeAttribute('aria-invalid');}
+  else if(t.id==='f-city'){f.city=t.value;const er=$('#e-f-city');if(er)er.textContent='';t.removeAttribute('aria-invalid');}
+});
+document.addEventListener('input',e=>{const t=e.target,f=S.form;if(!f||!f.cepManual||t.id!=='f-city'||t.tagName!=='INPUT')return;f.city=t.value;});
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='l-q'){S.panel.q=t.value;S.panel.page=1;refreshList();}});
+document.addEventListener('keydown',e=>{
+  const g=e.target.closest&&e.target.closest('#gallery');
+  if(g&&S.gal&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){const ad=findAd(S.gal.adId);if(ad&&ad.photos.length>1){e.preventDefault();galSet(S.gal.idx+(e.key==='ArrowRight'?1:-1),'th');}}
+});
+let tx=null;
+document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#gallery'))tx=e.touches[0].clientX;},{passive:true});
+document.addEventListener('touchend',e=>{if(tx==null||!S.gal)return;const dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)>40){const ad=findAd(S.gal.adId);if(ad&&ad.photos.length>1)galSet(S.gal.idx+(dx<0?1:-1),'th');}},{passive:true});
+
+/* =====================================================================
+   15. Barra do protótipo
+   ===================================================================== */
+const tJump=$('#t-jump'),tRole=$('#t-role'),tState=$('#t-state');
+function syncToolbar(){
+  tRole.value=S.session.userId&&$('option[value="'+S.session.userId+'"]',tRole)?S.session.userId:'guest';
+  tState.value=S.view.state;
+  $('#f-nophone').checked=!S.d.phone;$('#f-storage').checked=S.flags.storage;$('#f-conflict').checked=S.flags.conflict;$('#f-upfail').checked=S.flags.upfail;$('#f-cepdown').checked=S.flags.cepdown;
+  const h=location.hash||'#/';tJump.value=$('option[value="'+h+'"]',tJump)?h:'';
+}
+tJump.addEventListener('change',()=>{
+  const o=tJump.selectedOptions[0];if(!o||!o.value)return;
+  if(o.dataset.pending)S.pending=o.dataset.pending;
+  if(o.dataset.need&&!S.session.userId){S.session.userId=o.dataset.need;pstat('Você entrou como '+user(o.dataset.need).name+' para ver esta tela.');}
+  if(S.session.userId&&o.value.indexOf('#/equipe/')===0&&o.value!=='#/equipe/senha-nova'&&o.value.indexOf('redefinir')<0&&o.value!=='#/equipe/esqueci'){/* entrar com sessão ativa cai no painel */}
+  go(o.value);
+});
+tRole.addEventListener('change',()=>{
+  const v=tRole.value;
+  if(v==='guest'){S.session.userId=null;S.form=null;}
+  else{const u=user(v);if(!u||!u.active){pstat('Essa conta está desativada. Use a tela de entrada.');syncToolbar();return;}S.session.userId=v;}
+  const r=parseHash();
+  if(r.parts[0]==='equipe'&&v!=='guest'&&r.parts[1]==='entrar'){go(landing(user(v)));return;}
+  if(r.parts[0]==='painel'&&v==='guest'){go('#/equipe/entrar');return;}
+  render({focus:true});
+});
+tState.addEventListener('change',()=>{S.view.state=tState.value;render({keep:true});});
+$('#t-desktop').addEventListener('click',()=>setDevice(false));
+$('#t-mobile').addEventListener('click',()=>setDevice(true));
+function setDevice(m){document.body.classList.toggle('mobile',m);document.body.classList.toggle('desktop',!m);$('#t-mobile').setAttribute('aria-pressed',String(m));$('#t-desktop').setAttribute('aria-pressed',String(!m));}
+$('#t-us').addEventListener('click',e=>{const on=!document.body.classList.contains('show-us');document.body.classList.toggle('show-us',on);e.currentTarget.setAttribute('aria-pressed',String(on));});
+$('#f-nophone').addEventListener('change',e=>{S.d.phone=e.target.checked?'':'11912345678';persist();render({keep:true});});
+$('#f-storage').addEventListener('change',e=>{S.flags.storage=e.target.checked;});
+$('#f-conflict').addEventListener('change',e=>{S.flags.conflict=e.target.checked;});
+$('#f-upfail').addEventListener('change',e=>{S.flags.upfail=e.target.checked;});
+$('#f-cepdown').addEventListener('change',e=>{S.flags.cepdown=e.target.checked;});
+$('#t-expire').addEventListener('click',()=>{if(!S.session.userId){pstat('Entre no painel primeiro (use “Entrar como”).');return;}S.flags.expire=true;pstat('Sessão marcada para expirar: clique em qualquer opção do painel.');});
+$('#t-reset').addEventListener('click',()=>{
+  try{sessionStorage.removeItem(STORE_KEY);localStorage.removeItem(FAV_KEY);}catch(e){}
+  S.d=withCep(seed());S.session.userId=null;S.pending=null;S.form=null;S.flash=null;S.panel={q:'',status:'',page:1};S.view.state='normal';S.flags={storage:false,conflict:false,upfail:false,expire:false,cepdown:false};
+  history.replaceState(null,'','#/');render({focus:true});pstat('Dados reiniciados.');announce('Dados reiniciados');
+});
+
+/* =====================================================================
+   16. Início
+   ===================================================================== */
+load();
+if(!location.hash)history.replaceState(null,'','#/');
+render({});
+})();
+</script>
+</body>
+</html>

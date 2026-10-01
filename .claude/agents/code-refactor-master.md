@@ -19,7 +19,7 @@ The user has identified a pattern that violates best practices, so use the code-
 </example>
 <example>
 Context: The user wants to break down a large component file into smaller, more manageable pieces.
-user: "The Dashboard.tsx file is over 2000 lines and becoming unmaintainable"
+user: "The dashboard.js module is over 2000 lines and becoming unmaintainable"
 assistant: "I'll use the code-refactor-master agent to analyze the Dashboard component and extract it into smaller, focused components."
 <commentary>
 The user needs help breaking down a large component, which requires careful analysis of dependencies and proper extraction - perfect for the code-refactor-master agent.
