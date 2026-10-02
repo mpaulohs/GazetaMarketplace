@@ -335,3 +335,8 @@ $RECYCLE.BIN/
 .claude/hooks/package-lock.json
 .claude/state/
 
+
+# Segredos e configuração local (ADR-011)
+appsettings.Development.json
+web.Production.config
+*.pubxml.user

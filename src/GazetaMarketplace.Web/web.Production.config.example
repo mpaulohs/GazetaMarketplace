@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ATENÇÃO: este é só um EXEMPLO, sem valores reais.
+  O arquivo real (web.Production.config) NUNCA vai para o git: ele fica no cofre de senhas
+  e na máquina de quem publica. Copie este arquivo para web.Production.config e troque cada
+  valor entre parênteses. Veja ADR-011 e ARCHITECTURE.md seção 9.
+-->
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+  <location>
+    <system.webServer>
+      <aspNetCore>
+        <environmentVariables xdt:Transform="InsertIfMissing">
+          <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="ConnectionStrings__DefaultConnection" value="(cadeia de conexão do banco)" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="PhotoStorage__BasePath" value="(pasta de fotos fora da raiz do site)" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="Logging__FileDirectory" value="(pasta de logs fora da raiz do site)" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="DataProtection__KeysDirectory" value="(pasta das chaves fora da raiz do site)" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="SendGrid__ApiKey" value="(chave do SendGrid)" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="SendGrid__FromEmail" value="(e-mail remetente validado no SendGrid)" xdt:Transform="InsertIfMissing" />
+          <!-- Só na primeira publicação; remova as duas linhas em seguida (ADR-003, RC-19) -->
+          <environmentVariable name="Bootstrap__AdminEmail" value="(e-mail do primeiro Administrador)" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="Bootstrap__AdminPassword" value="(senha provisória do primeiro Administrador)" xdt:Transform="InsertIfMissing" />
+        </environmentVariables>
+      </aspNetCore>
+    </system.webServer>
+  </location>
+</configuration>

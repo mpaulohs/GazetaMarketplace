@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <UserSecretsId>84ac4215-7eba-4894-a153-6736fb6d7da4</UserSecretsId>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\GazetaMarketplace.Core\GazetaMarketplace.Core.csproj" />
     <ProjectReference Include="..\GazetaMarketplace.Infrastructure\GazetaMarketplace.Infrastructure.csproj" />
