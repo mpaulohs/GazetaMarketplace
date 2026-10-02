@@ -1,7 +1,15 @@
+using GazetaMarketplace.Core;
+using GazetaMarketplace.Infrastructure;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container..
 builder.Services.AddControllersWithViews();
+builder.Services.AddCore();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 

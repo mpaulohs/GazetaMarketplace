@@ -9,4 +9,9 @@
     <PackageReference Include="MSTest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GazetaMarketplace.Core\GazetaMarketplace.Core.csproj" />
+    <ProjectReference Include="..\..\src\GazetaMarketplace.Infrastructure\GazetaMarketplace.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

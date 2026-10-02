@@ -3,7 +3,7 @@
 > Projeção de `plans/plan.md`: cada linha repete o id e o título da tarefa. O `/build` marca `- [x]` ao concluir; nada de escopo novo entra aqui.
 
 ## Fase 0 — Fundação
-- [ ] Task 0.1: Estruturar a solução em Web, Core e Infrastructure
+- [x] Task 0.1: Estruturar a solução em Web, Core e Infrastructure
 - [ ] Task 0.2: Configuração tipada, segredos fora do repositório e ambiente de desenvolvimento
 - [ ] Task 0.3: Logs estruturados, correlação e contrato de erros
 - [ ] Task 0.4: Segurança HTTP: cabeçalhos, antiforgery, limites de requisição e HTTPS

@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/GazetaMarketplace.Core/GazetaMarketplace.Core.csproj" />
+    <Project Path="src/GazetaMarketplace.Infrastructure/GazetaMarketplace.Infrastructure.csproj" />
     <Project Path="src/GazetaMarketplace.Web/GazetaMarketplace.Web.csproj" Id="a24c3387-1587-429d-ac65-9252f0ec8816" />
   </Folder>
   <Folder Name="/tests/">
