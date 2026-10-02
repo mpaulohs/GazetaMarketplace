@@ -19,12 +19,14 @@ internal sealed class FabricaWeb : WebApplicationFactory<Program>
 {
     public const string CabecalhoIpRemoto = "X-Test-Remote-IP";
 
+    private readonly Action<IServiceCollection> _servicos;
     private readonly string _ambiente;
     private readonly Dictionary<string, string> _configuracao;
     private readonly string _pastaDeLogs = Path.Combine(Path.GetTempPath(), "gazeta-web-" + Guid.NewGuid().ToString("N"));
 
-    public FabricaWeb(string ambiente = "Testing", Dictionary<string, string> configuracao = null)
+    public FabricaWeb(string ambiente = "Testing", Dictionary<string, string> configuracao = null, Action<IServiceCollection> servicos = null)
     {
+        _servicos = servicos;
         _ambiente = ambiente;
         _configuracao = configuracao ?? [];
         // O TestServer atende em HTTP por padrão; o site exige HTTPS
@@ -56,6 +58,7 @@ internal sealed class FabricaWeb : WebApplicationFactory<Program>
             services.AddControllersWithViews().AddApplicationPart(typeof(ApiTesteController).Assembly);
             services.AddSingleton<ILogEventSink>(Logs);
             services.AddSingleton<IStartupFilter, IpRemotoDeTeste>();
+            _servicos?.Invoke(services);
         });
     }
 

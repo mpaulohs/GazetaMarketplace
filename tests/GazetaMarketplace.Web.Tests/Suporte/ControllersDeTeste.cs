@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GazetaMarketplace.Core.Excecoes;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Antiforgery;
@@ -32,6 +33,14 @@ public sealed class ApiTesteController(ILogger<ApiTesteController> logger) : Con
     [HttpGet("auth")]
     [EnableRateLimiting("auth")]
     public IActionResult Autenticacao() => Ok();
+
+    [HttpGet("cultura")]
+    public IActionResult Cultura() => Ok(new
+    {
+        cultura = CultureInfo.CurrentCulture.Name,
+        ui = CultureInfo.CurrentUICulture.Name,
+        numero = 1234.5m.ToString(CultureInfo.CurrentCulture)
+    });
 
     [HttpGet("ip")]
     public IActionResult Ip() => Ok(new { ip = HttpContext.Connection.RemoteIpAddress?.ToString() });

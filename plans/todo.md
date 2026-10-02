@@ -8,7 +8,7 @@
 - [x] Task 0.3: Logs estruturados, correlação e contrato de erros
 - [x] Task 0.3b: Migrar pacotes Microsoft de rc.2/preview para GA 10.0.12
 - [x] Task 0.4: Segurança HTTP: cabeçalhos, antiforgery, limites de requisição e HTTPS
-- [ ] Task 0.5: Verificações de saúde, cultura pt-BR e fuso
+- [x] Task 0.5: Verificações de saúde, cultura pt-BR e fuso
 - [ ] Task 0.6: Persistência base: DbContext, Dapper, auditoria, concorrência e script de migrations
 - [ ] Task 0.7: Layout base, tokens do design system e componentes de estado de página
 

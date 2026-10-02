@@ -6,6 +6,10 @@ using GazetaMarketplace.Infrastructure.Logging;
 using GazetaMarketplace.Web.Filters;
 using GazetaMarketplace.Web.Middleware;
 using GazetaMarketplace.Web.Seguranca;
+using System.Globalization;
+using GazetaMarketplace.Web.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +24,11 @@ using Serilog.Core;
 using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Cultura fixa pt-BR (NFR-20): R$, vírgula decimal e dd/mm/aaaa em qualquer servidor
+CultureInfo ptBr = new("pt-BR");
+CultureInfo.DefaultThreadCurrentCulture = ptBr;
+CultureInfo.DefaultThreadCurrentUICulture = ptBr;
 
 // preserveStaticLogger: o logger vive só no host (testes em paralelo não disputam o Log.Logger)
 builder.Host.UseSerilog(
@@ -48,6 +57,8 @@ builder.Services.AddHttpsRedirection(opcoes => opcoes.RedirectStatusCode = Statu
 // Porta HTTPS: em Production o padrão é 443; em desenvolvimento, a do launchSettings (detecção automática)
 builder.Services.AddOptions<HttpsRedirectionOptions>().Configure<IConfiguration, IHostEnvironment>((opcoes, configuracao, ambiente) =>
     opcoes.HttpsPort = configuracao.GetValue<int?>("HttpsRedirection:HttpsPort") ?? (ambiente.IsProduction() ? 443 : null));
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseAndMigrationHealthCheck>("banco", tags: ["ready"]);
 builder.Services.AddLimitadores();
 builder.Services.AddEncaminhamentoSeguro();
 // Nenhuma política CORS: site e endpoints JSON são da mesma origem (ARCHITECTURE.md §7)
@@ -69,6 +80,15 @@ app.UseWhen(
     paginas => paginas.UseExceptionHandler("/Home/Error"));
 
 app.UseHttpsRedirection();
+// Sem providers: ignora Accept-Language e cookies, a cultura é sempre pt-BR
+RequestLocalizationOptions localizacao = new()
+{
+    DefaultRequestCulture = new RequestCulture(ptBr),
+    SupportedCultures = [ptBr],
+    SupportedUICultures = [ptBr]
+};
+localizacao.RequestCultureProviders.Clear();
+app.UseRequestLocalization(localizacao);
 app.UseRouting();
 app.UseMiddleware<LimiteCorpoMiddleware>();
 app.UseRateLimiter();
@@ -76,6 +96,10 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+// Vivo = processo respondendo, sem tocar em nada; pronto = banco acessível e migration em dia (ADR-010)
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = registro => registro.Tags.Contains("ready") });
 
 app.MapControllerRoute(
     name: "default",

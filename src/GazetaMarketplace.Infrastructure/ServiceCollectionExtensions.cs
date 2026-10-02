@@ -1,6 +1,9 @@
 using System;
+using GazetaMarketplace.Core.Interfaces;
+using GazetaMarketplace.Infrastructure.Dados;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GazetaMarketplace.Infrastructure;
 
@@ -12,6 +15,9 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
+
+        // Provisória até a tarefa 0.6; TryAdd deixa a implementação real substituí-la
+        services.TryAddSingleton<IProntidaoDoBanco, ProntidaoDoBancoProvisoria>();
 
         return services;
     }
