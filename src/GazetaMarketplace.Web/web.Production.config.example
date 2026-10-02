@@ -17,6 +17,9 @@
           <environmentVariable name="DataProtection__KeysDirectory" value="(pasta das chaves fora da raiz do site)" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="SendGrid__ApiKey" value="(chave do SendGrid)" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="SendGrid__FromEmail" value="(e-mail remetente validado no SendGrid)" xdt:Transform="InsertIfMissing" />
+          <!-- IP do proxy do SmarterASP (SEC-01, pendente). Sem este valor o site ignora X-Forwarded-For
+               e todos os visitantes dividem o mesmo limite de requisições. Exemplo de nome:
+               ForwardedHeaders__KnownProxies__0 -->
           <!-- Só na primeira publicação; remova as duas linhas em seguida (ADR-003, RC-19) -->
           <environmentVariable name="Bootstrap__AdminEmail" value="(e-mail do primeiro Administrador)" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="Bootstrap__AdminPassword" value="(senha provisória do primeiro Administrador)" xdt:Transform="InsertIfMissing" />

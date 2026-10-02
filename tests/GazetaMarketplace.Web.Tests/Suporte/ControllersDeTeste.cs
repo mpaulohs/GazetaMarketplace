@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
 using GazetaMarketplace.Core.Excecoes;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 
 namespace GazetaMarketplace.Web.Tests.Suporte;
@@ -16,6 +20,39 @@ public sealed class ApiTesteController(ILogger<ApiTesteController> logger) : Con
     {
         logger.LogInformation("Linha de teste");
         return Ok();
+    }
+
+    [HttpGet("token")]
+    public IActionResult Token([FromServices] IAntiforgery antiforgery) =>
+        Ok(new { token = antiforgery.GetAndStoreTokens(HttpContext).RequestToken });
+
+    [HttpPost("escrita")]
+    public IActionResult Escrita() => Ok();
+
+    [HttpGet("auth")]
+    [EnableRateLimiting("auth")]
+    public IActionResult Autenticacao() => Ok();
+
+    [HttpGet("ip")]
+    public IActionResult Ip() => Ok(new { ip = HttpContext.Connection.RemoteIpAddress?.ToString() });
+
+    [HttpPost("corpo")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> Corpo()
+    {
+        using MemoryStream copia = new();
+        await Request.Body.CopyToAsync(copia);
+        return Ok(new { bytes = copia.Length });
+    }
+
+    [HttpPost("foto")]
+    [IgnoreAntiforgeryToken]
+    [RequestSizeLimit(11 * 1024 * 1024)]
+    public async Task<IActionResult> Foto()
+    {
+        using MemoryStream copia = new();
+        await Request.Body.CopyToAsync(copia);
+        return Ok(new { bytes = copia.Length });
     }
 
     [HttpGet("erro/{tipo}")]
@@ -38,6 +75,9 @@ public sealed class ApiTesteController(ILogger<ApiTesteController> logger) : Con
 [Route("teste")]
 public sealed class PaginaTesteController : Controller
 {
+    [HttpPost("formulario")]
+    public IActionResult Formulario() => Content("ok");
+
     [HttpGet("pagina-erro")]
     public IActionResult Erro() => throw new InvalidOperationException("segredo-interno-123");
 }

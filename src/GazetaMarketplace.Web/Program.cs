@@ -3,9 +3,14 @@ using GazetaMarketplace.Core;
 using GazetaMarketplace.Infrastructure;
 using GazetaMarketplace.Infrastructure.Configuracao;
 using GazetaMarketplace.Infrastructure.Logging;
+using GazetaMarketplace.Web.Filters;
 using GazetaMarketplace.Web.Middleware;
+using GazetaMarketplace.Web.Seguranca;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -26,7 +31,26 @@ builder.Host.UseSerilog(
     preserveStaticLogger: true);
 
 // Add services to the container..
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(opcoes =>
+{
+    // Antiforgery em toda escrita (NFR-11): páginas pelo filtro do MVC, JSON pelo cabeçalho (ADR-003)
+    opcoes.Filters.Add(new AntiforgeryJsonFilter());
+    opcoes.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
+builder.Services.AddAntiforgery(opcoes =>
+{
+    opcoes.HeaderName = "RequestVerificationToken";
+    opcoes.Cookie.HttpOnly = true;
+    opcoes.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    opcoes.Cookie.SameSite = SameSiteMode.Strict;
+});
+builder.Services.AddHttpsRedirection(opcoes => opcoes.RedirectStatusCode = StatusCodes.Status308PermanentRedirect);
+// Porta HTTPS: em Production o padrão é 443; em desenvolvimento, a do launchSettings (detecção automática)
+builder.Services.AddOptions<HttpsRedirectionOptions>().Configure<IConfiguration, IHostEnvironment>((opcoes, configuracao, ambiente) =>
+    opcoes.HttpsPort = configuracao.GetValue<int?>("HttpsRedirection:HttpsPort") ?? (ambiente.IsProduction() ? 443 : null));
+builder.Services.AddLimitadores();
+builder.Services.AddEncaminhamentoSeguro();
+// Nenhuma política CORS: site e endpoints JSON são da mesma origem (ARCHITECTURE.md §7)
 builder.Services.AddOpcoes(builder.Configuration, builder.Environment.IsProduction());
 builder.Services.AddCore();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -34,21 +58,20 @@ builder.Services.AddInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseEncaminhamentoSeguro(app.Configuration);
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>(app.Environment.IsProduction());
 app.UseWhen(
     contexto => contexto.Request.Path.StartsWithSegments("/api"),
     api => api.UseMiddleware<ExceptionHandlingMiddleware>());
 app.UseWhen(
     contexto => !contexto.Request.Path.StartsWithSegments("/api"),
     paginas => paginas.UseExceptionHandler("/Home/Error"));
-if (!app.Environment.IsDevelopment())
-{
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseMiddleware<LimiteCorpoMiddleware>();
+app.UseRateLimiter();
 
 app.UseAuthorization();
 
