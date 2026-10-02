@@ -6,6 +6,7 @@
 - [x] Task 0.1: Estruturar a solução em Web, Core e Infrastructure
 - [x] Task 0.2: Configuração tipada, segredos fora do repositório e ambiente de desenvolvimento
 - [x] Task 0.3: Logs estruturados, correlação e contrato de erros
+- [x] Task 0.3b: Migrar pacotes Microsoft de rc.2/preview para GA 10.0.12
 - [ ] Task 0.4: Segurança HTTP: cabeçalhos, antiforgery, limites de requisição e HTTPS
 - [ ] Task 0.5: Verificações de saúde, cultura pt-BR e fuso
 - [ ] Task 0.6: Persistência base: DbContext, Dapper, auditoria, concorrência e script de migrations

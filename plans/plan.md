@@ -52,6 +52,7 @@
 | 0.1 | Estruturar a solução em Web, Core e Infrastructure | Foundation | M | 0 |
 | 0.2 | Configuração tipada, segredos fora do repositório e ambiente de desenvolvimento | Foundation | M | 0 |
 | 0.3 | Logs estruturados, correlação e contrato de erros | Foundation | L | 0 |
+| 0.3b | Migrar pacotes Microsoft de rc.2/preview para GA 10.0.12 | Foundation | S | 0 |
 | 0.4 | Segurança HTTP: cabeçalhos, antiforgery, limites de requisição e HTTPS | Foundation | M | 0 |
 | 0.5 | Verificações de saúde, cultura pt-BR e fuso | Foundation | S | 0 |
 | 0.6 | Persistência base: DbContext, Dapper, auditoria, concorrência e script de migrations | Foundation | M | 0 |
@@ -213,6 +214,34 @@
 **Verification**: Done when every test under "Tests to add" passes, plus manual check: Provocar um erro 500 e achar a linha no arquivo de log pelo código de referência mostrado na tela.
 
 **Estimate**: L
+
+### Task 0.3b: Migrar pacotes Microsoft de rc.2/preview para GA 10.0.12
+
+**User stories**: **Foundation** — Fundação: o SDK e o runtime são GA; pacotes em rc.2 geram conflitos de versão (NU1109) a cada pacote novo.
+
+**Scenarios covered**: — (nenhum; tarefa de fundação ou de sustentação)
+
+**NFRs covered**: `NFR-22`
+
+**References**: —
+
+**Objective**: Levar para a versão GA (10.0.12) os pacotes Microsoft do `Directory.Packages.props`, MSTest para 4.4.1 e Playwright MSTest para 1.63.0, sem pré-lançamento no grafo de dependências.
+
+**Files to modify**:
+- Directory.Packages.props
+
+**Acceptance Criteria**:
+- [ ] Nenhum pacote em `rc`, `preview`, `beta` ou `alpha` no grafo resolvido (`dotnet list package --include-transitive`)
+- [ ] `dotnet build` (Debug e Release) sem avisos e `dotnet test` sem regressão em relação à 0.3
+
+**Tests to add**:
+- — (a suíte existente é a prova)
+
+**Dependencies**: 0.3
+
+**Verification**: Done when `dotnet build -c Release` e `dotnet test` passam como antes da migração.
+
+**Estimate**: S
 
 ### Task 0.4: Segurança HTTP: cabeçalhos, antiforgery, limites de requisição e HTTPS
 
