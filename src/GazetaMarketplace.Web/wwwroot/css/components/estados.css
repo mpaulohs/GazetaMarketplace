@@ -1,0 +1,50 @@
+/* Estados de página: esqueleto de carregamento com a altura do conteúdo final (NFR-03)
+   e bloco de mídia reservada. Alturas só por classe: a CSP (style-src 'self') bloqueia atributo style. */
+
+.esqueleto {
+  background: var(--app-skeleton-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+}
+
+.esqueleto-linha {
+  height: 3rem;
+}
+
+.esqueleto-card__midia {
+  aspect-ratio: var(--app-media-ratio);
+  background: var(--bs-secondary-bg);
+}
+
+.esqueleto-card__texto {
+  height: 1rem;
+  margin-bottom: .5rem;
+  background: var(--bs-secondary-bg);
+  border-radius: var(--bs-border-radius-sm);
+}
+
+.esqueleto-card__texto--curto {
+  width: 60%;
+}
+
+/* Foto ausente ou indisponível, e bloco "Vaga de emprego": mesmo tamanho da foto */
+.media-reservada {
+  aspect-ratio: var(--app-media-ratio);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--app-media-placeholder-bg);
+  color: var(--app-media-placeholder-color);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .esqueleto {
+    animation: esqueleto-pulso 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes esqueleto-pulso {
+  50% { opacity: .6; }
+}

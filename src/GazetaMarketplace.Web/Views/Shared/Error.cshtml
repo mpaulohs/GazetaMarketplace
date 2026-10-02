@@ -1,15 +1,6 @@
-@model ErrorViewModel
+@model EstadoPaginaViewModel
 @{
     ViewData["Title"] = "Algo deu errado";
 }
 
-<h1>Algo deu errado</h1>
-<p>Não foi possível concluir o que você pediu. Tente de novo em alguns instantes.</p>
-
-@if (Model.ShowRequestId)
-{
-    <p>
-        Se o problema continuar, informe o código de referência à equipe:
-        <strong>Código de referência:</strong> <code>@Model.RequestId</code>
-    </p>
-}
+@await Html.PartialAsync("_EstadoErro", Model)

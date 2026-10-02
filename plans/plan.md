@@ -405,12 +405,12 @@
 - `src/GazetaMarketplace.Web/Views/Shared/_EstadoVazio.cshtml, _EstadoErro.cshtml, _Esqueleto.cshtml`
 
 **Acceptance Criteria**:
-- [ ] `base.css` contém os tokens e os três ajustes de acessibilidade de `architecture/design-system.md` §2.1 e nenhum arquivo externo (CDN, fonte, ícones) é carregado
-- [ ] Layouts com `lang="pt-BR"`, link "Ir para o conteúdo", `nav` com `aria-current`, `main` com foco programático e menu recolhível que funciona sem JavaScript
-- [ ] Nenhum `Html.Raw` com texto de usuário; scripts só como módulos externos (nenhum script ou evento inline)
-- [ ] Estados de página: vazio, erro com código de referência e "Tentar novamente", sem resultado com "Limpar filtros" e esqueleto com altura reservada
-- [ ] `api.js` trata ProblemDetails e envia o token antiforgery em escritas
-- [ ] **RC-17:** nenhum módulo de `wwwroot/js` usa `innerHTML`, `outerHTML` ou `insertAdjacentHTML` com texto vindo do servidor; cards e mensagens são montados com `textContent` ou `<template>`
+- [x] `base.css` contém os tokens e os três ajustes de acessibilidade de `architecture/design-system.md` §2.1 e nenhum arquivo externo (CDN, fonte, ícones) é carregado
+- [x] Layouts com `lang="pt-BR"`, link "Ir para o conteúdo", `nav` com `aria-current`, `main` com foco programático e menu recolhível que funciona sem JavaScript
+- [x] Nenhum `Html.Raw` com texto de usuário; scripts só como módulos externos (nenhum script ou evento inline)
+- [x] Estados de página: vazio, erro com código de referência e "Tentar novamente", sem resultado com "Limpar filtros" e esqueleto com altura reservada
+- [x] `api.js` trata ProblemDetails e envia o token antiforgery em escritas
+- [x] **RC-17:** nenhum módulo de `wwwroot/js` usa `innerHTML`, `outerHTML` ou `insertAdjacentHTML` com texto vindo do servidor; cards e mensagens são montados com `textContent` ou `<template>`
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Layout/LayoutTests.Html_TemLangPtBr_SkipLink_E_MainComFoco`

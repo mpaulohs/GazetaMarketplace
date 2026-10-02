@@ -10,7 +10,7 @@
 - [x] Task 0.4: Segurança HTTP: cabeçalhos, antiforgery, limites de requisição e HTTPS
 - [x] Task 0.5: Verificações de saúde, cultura pt-BR e fuso
 - [x] Task 0.6: Persistência base: DbContext, Dapper, auditoria, concorrência e script de migrations
-- [ ] Task 0.7: Layout base, tokens do design system e componentes de estado de página
+- [x] Task 0.7: Layout base, tokens do design system e componentes de estado de página
 
 ## Checkpoint 0 — Fundação completa
 

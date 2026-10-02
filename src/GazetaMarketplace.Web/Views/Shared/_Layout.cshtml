@@ -1,47 +1,46 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@using GazetaMarketplace.Web.Navegacao
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - GazetaMarketplace.Web</title>
-    <script type="importmap"></script>
+    <title>@(ViewData["Title"] is string titulo ? titulo + " · " : "")GazetaMarketplace</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/estados.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">GazetaMarketplace.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
+    <a class="visually-hidden-focusable" href="#conteudo">Ir para o conteúdo</a>
+    <header class="border-bottom bg-body">
+        <div class="container py-2 d-flex flex-wrap align-items-center gap-2">
+            <a class="fs-5 fw-bold text-body alvo-toque d-inline-flex align-items-center" asp-controller="Home" asp-action="Index">GazetaMarketplace</a>
+            <a class="ms-auto order-md-3 alvo-toque d-inline-flex align-items-center" href="@RotasPublicas.Favoritos"><span aria-hidden="true">♡&nbsp;</span>Favoritos (<span data-favoritos-contagem>0</span>)</a>
+            <form class="d-flex flex-grow-1 gap-2 order-md-2" role="search" method="get" action="@RotasPublicas.Busca">
+                <label class="visually-hidden" for="busca-q">Buscar anúncios</label>
+                <input class="form-control" id="busca-q" name="q" type="search" placeholder="Buscar anúncios…" autocomplete="off" />
+                <button class="btn btn-primary alvo-toque" type="submit">Buscar</button>
+            </form>
+        </div>
     </header>
+    <div class="container mt-3">
+        <div id="avisos-globais" class="alert alert-danger" role="alert" hidden></div>
+    </div>
     <div class="container">
-        <main role="main" class="pb-3">
+        <main id="conteudo" tabindex="-1" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - GazetaMarketplace.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top mt-4 py-3 small text-body-secondary">
+        <div class="container d-flex flex-wrap justify-content-between gap-2">
+            <span>&copy; @DateTime.UtcNow.Year GazetaMarketplace</span>
+            <a href="@RotasDoPainel.Entrar">Área da equipe</a>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="~/js/pages/layout.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

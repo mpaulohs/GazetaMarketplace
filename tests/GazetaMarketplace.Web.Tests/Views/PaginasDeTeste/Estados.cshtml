@@ -1,0 +1,8 @@
+@using GazetaMarketplace.Web.Models
+@{
+    ViewData["Title"] = "Estados de teste";
+}
+@await Html.PartialAsync("_EstadoVazio", new EstadoPaginaViewModel { Titulo = "Você ainda não criou anúncios", Mensagem = "Crie o primeiro anúncio.", AcaoTexto = "Criar anúncio", AcaoUrl = "/painel/anuncios" })
+@await Html.PartialAsync("_EstadoSemResultado", new EstadoPaginaViewModel { Titulo = "Nenhum anúncio encontrado", Mensagem = "Tente outros filtros.", AcaoUrl = "/busca" })
+@await Html.PartialAsync("_EstadoErro", new EstadoPaginaViewModel { Titulo = "Algo deu errado", Mensagem = "Tente de novo.", AcaoUrl = "/busca", CodigoReferencia = "ref-123" })
+@await Html.PartialAsync("_Esqueleto", new EsqueletoViewModel { Variante = "card", Quantidade = 4 })

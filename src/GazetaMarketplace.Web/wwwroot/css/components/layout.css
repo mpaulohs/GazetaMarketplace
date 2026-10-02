@@ -1,0 +1,7 @@
+/* Peças do layout que o Bootstrap não cobre. */
+
+/* Alvo de toque mínimo (design-system §7) */
+.alvo-toque {
+  min-height: var(--app-touch-target);
+  min-width: var(--app-touch-target);
+}

@@ -1,0 +1,60 @@
+@using GazetaMarketplace.Core.Equipe
+@using GazetaMarketplace.Web.Navegacao
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    bool logado = User.Identity?.IsAuthenticated == true;
+    string papel = User.IsInRole(Papeis.Administrador) ? Papeis.Administrador : User.IsInRole(Papeis.Redator) ? Papeis.Redator : null;
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@(ViewData["Title"] is string titulo ? titulo + " · " : "")Painel · GazetaMarketplace</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/estados.css" asp-append-version="true" />
+    <noscript><link rel="stylesheet" href="~/css/sem-js.css" asp-append-version="true" /></noscript>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <a class="visually-hidden-focusable" href="#conteudo">Ir para o conteúdo</a>
+    <header class="border-bottom bg-body">
+        <nav class="navbar navbar-expand-md" aria-label="Menu do painel">
+            <div class="container">
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">Gazeta · Painel</a>
+                @if (logado)
+                {
+                    <button class="navbar-toggler alvo-toque" type="button" data-bs-toggle="collapse" data-bs-target="#menu-painel" aria-controls="menu-painel" aria-expanded="false">
+                        Menu
+                    </button>
+                    <div class="collapse navbar-collapse" id="menu-painel">
+                        @await Component.InvokeAsync("MenuPainel")
+                        <div class="ms-md-auto d-flex flex-column flex-md-row align-items-md-center gap-2 mt-2 mt-md-0">
+                            <span>@User.Identity.Name@(papel is null ? "" : " (" + papel + ")")</span>
+                            <form method="post" action="@RotasDoPainel.Sair">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-outline-secondary alvo-toque" type="submit">Sair</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </nav>
+    </header>
+    <div class="container mt-3">
+        <div id="avisos-globais" class="alert alert-danger" role="alert" hidden></div>
+    </div>
+    <div class="container">
+        <main id="conteudo" tabindex="-1" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="~/js/pages/layout.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

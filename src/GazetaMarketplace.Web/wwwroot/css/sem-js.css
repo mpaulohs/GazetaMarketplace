@@ -1,0 +1,9 @@
+/* Carregado só dentro de <noscript>: sem JavaScript o menu recolhível do Bootstrap não abre,
+   então os itens ficam sempre visíveis abaixo do cabeçalho e o botão "Menu" some. */
+.navbar-expand-md .navbar-collapse.collapse:not(.show) {
+  display: block;
+}
+
+.navbar-toggler {
+  display: none;
+}

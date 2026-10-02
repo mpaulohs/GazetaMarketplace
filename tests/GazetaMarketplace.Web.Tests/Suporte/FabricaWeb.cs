@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -18,6 +19,7 @@ namespace GazetaMarketplace.Web.Tests.Suporte;
 internal sealed class FabricaWeb : WebApplicationFactory<Program>
 {
     public const string CabecalhoIpRemoto = "X-Test-Remote-IP";
+    public const string CabecalhoPapel = "X-Test-Papel";
 
     private readonly Action<IServiceCollection> _servicos;
     private readonly string _ambiente;
@@ -58,6 +60,7 @@ internal sealed class FabricaWeb : WebApplicationFactory<Program>
             services.AddControllersWithViews().AddApplicationPart(typeof(ApiTesteController).Assembly);
             services.AddSingleton<ILogEventSink>(Logs);
             services.AddSingleton<IStartupFilter, IpRemotoDeTeste>();
+            services.AddSingleton<IStartupFilter, PapelDeTeste>();
             _servicos?.Invoke(services);
         });
     }
@@ -88,6 +91,27 @@ internal sealed class FabricaWeb : WebApplicationFactory<Program>
                 if (contexto.Request.Headers.TryGetValue(CabecalhoIpRemoto, out Microsoft.Extensions.Primitives.StringValues valor))
                 {
                     contexto.Connection.RemoteIpAddress = IPAddress.Parse(valor.ToString());
+                }
+
+                return proximo();
+            });
+            next(app);
+        };
+    }
+
+    /// <summary>Simula uma pessoa da equipe autenticada a partir de um cabeçalho de teste (o Identity só chega na tarefa 1.1).</summary>
+    private sealed class PapelDeTeste : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+        {
+            app.Use((HttpContext contexto, Func<Task> proximo) =>
+            {
+                if (contexto.Request.Headers.TryGetValue(CabecalhoPapel, out Microsoft.Extensions.Primitives.StringValues papel))
+                {
+                    ClaimsIdentity identidade = new(
+                        [new Claim(ClaimTypes.Name, "Ana Souza"), new Claim(ClaimTypes.Role, papel.ToString())],
+                        "Teste");
+                    contexto.User = new ClaimsPrincipal(identidade);
                 }
 
                 return proximo();
