@@ -332,27 +332,28 @@
 
 **References**: ADR-004
 
-**Objective**: Criar o `AppDbContext` (escrita e migrations), o acesso Dapper para leitura complexa (`IDbConnection`, `SqlBuilder`), as convenções do projeto, as colunas de auditoria, `rowversion`, a tabela de auditoria de ações e o processo de geração do script idempotente.
+**Objective**: Criar o `AppDbContext` (escrita e migrations), o acesso Dapper para leitura complexa (`IDbConnection`, `SqlBuilder`), as convenções do projeto, as colunas de auditoria, `rowversion`, a tabela de auditoria de ações e o processo de geração do script idempotente. **A migration inicial cria só `AuditEntries`; cada tarefa seguinte adiciona a sua** (Identity na 1.1, categorias na 2.x, anúncios e catálogo na 3.x), uma migration por mudança lógica.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Infrastructure/Data/AppDbContext.cs`
-- `src/GazetaMarketplace.Infrastructure/Data/Configurations/*.cs`
 - `src/GazetaMarketplace.Core/Entidades/BaseEntity.cs`
 - `src/GazetaMarketplace.Core/Entidades/AuditEntry.cs`
-- src/GazetaMarketplace.Infrastructure/Data/Migrations/ (migration inicial)
-- db/scripts/ (script idempotente gerado)
-- tests/GazetaMarketplace.Web.Tests/Suporte/BancoDeTestes.cs (fixture InMemory)
-- src/GazetaMarketplace.Infrastructure/Data/DapperConfiguration.cs (`IDbConnection` scoped com a cadeia do EF Core)
-- src/GazetaMarketplace.Infrastructure/Data/SqlBuilder.cs (fragmentos fixos, parâmetros nomeados, ordenação só por colunas permitidas)
-- src/GazetaMarketplace.Infrastructure/Data/SqlFragments.cs (fragmento único do somente-publicados)
-- Directory.Packages.props (Dapper 2.1.89) e referência no projeto Infrastructure
-- src/GazetaMarketplace.Infrastructure/Data/DapperConfiguration.cs (`IDbConnection` scoped com a cadeia do EF Core)
-- src/GazetaMarketplace.Infrastructure/Data/SqlBuilder.cs (fragmentos fixos, parâmetros nomeados, ordenação só por colunas permitidas)
-- src/GazetaMarketplace.Infrastructure/Data/SqlFragments.cs (fragmento único do somente-publicados)
-- Directory.Packages.props (Dapper 2.1.89) e referência no projeto Infrastructure
+- `src/GazetaMarketplace.Core/Interfaces/IAuditLog.cs`, `IUsuarioAtual.cs`
+- `src/GazetaMarketplace.Infrastructure/Data/AppDbContext.cs`
+- `src/GazetaMarketplace.Infrastructure/Data/Configurations/*.cs`
+- `src/GazetaMarketplace.Infrastructure/Data/AuditLog.cs`
+- `src/GazetaMarketplace.Infrastructure/Data/ProntidaoDoBancoEf.cs` (substitui a provisória da 0.5)
+- `src/GazetaMarketplace.Infrastructure/Data/AppDbContextFactory.cs` (design-time, cadeia fictícia)
+- `src/GazetaMarketplace.Infrastructure/Data/Migrations/` (migration inicial `CriarAuditEntries`)
+- `src/GazetaMarketplace.Infrastructure/Data/DapperConfiguration.cs` (`IDbConnection` scoped com a cadeia do EF Core; conexão e transação do `DbContext` para escrita atômica)
+- `src/GazetaMarketplace.Infrastructure/Data/SqlBuilder.cs` (fragmentos fixos, parâmetros nomeados, ordenação só por colunas permitidas)
+- `src/GazetaMarketplace.Infrastructure/Data/SqlFragments.cs` (fragmento único do somente-publicados)
+- `src/GazetaMarketplace.Web/Seguranca/UsuarioAtualHttp.cs`
+- `db/scripts/gazeta-idempotente.sql` (script único e cumulativo, regenerado a cada migration)
+- `tests/GazetaMarketplace.Web.Tests/Suporte/BancoDeTestes.cs` (fixture SQLite em memória; `rowversion` por trigger)
+- Directory.Packages.props (Dapper 2.1.89 já aprovado) e referências no projeto Infrastructure (EF Core SqlServer, Design com `PrivateAssets="all"`, Dapper)
 
 **Acceptance Criteria**:
-- [ ] `SaveChangesAsync` preenche `CreatedAt/By` e `UpdatedAt/By` em UTC
+- [ ] `SaveChangesAsync` preenche `CreatedAt/By` e `UpdatedAt/By` em UTC (`By` é `int?`, nulo para ações do sistema)
 - [ ] Entidades editáveis têm `RowVersion`; conflito vira `ConflictException`
 - [ ] `AuditEntries` registra quem fez o quê e quando por um serviço único (`IAuditLog`)
 - [ ] `dotnet ef migrations script --idempotent` gera o script sem erro e pode ser aplicado duas vezes
@@ -361,28 +362,21 @@
 - [ ] `SqlBuilder` só aceita fragmentos fixos e parâmetros nomeados; coluna ou direção de ordenação fora da lista permitida é ignorada, nunca concatenada
 - [ ] Toda escrita Dapper (`Execute*` com `INSERT`, `UPDATE`, `DELETE` ou `MERGE`) tem um comentário `// Dapper: <motivo>` no código (ADR-004)
 - [ ] Escrita Dapper em tabela com `RowVersion` confere a versão no `WHERE` e preenche as colunas de auditoria
-- [ ] `IDbConnection` fica registrado como *scoped* com a mesma cadeia de conexão; uma escrita Dapper que precisa ser atômica com o EF usa a conexão e a transação do `DbContext`
-- [ ] `SqlBuilder` só aceita fragmentos fixos e parâmetros nomeados; coluna ou direção de ordenação fora da lista permitida é ignorada, nunca concatenada
-- [ ] Toda escrita Dapper (`Execute*` com `INSERT`, `UPDATE`, `DELETE` ou `MERGE`) tem um comentário `// Dapper: <motivo>` no código (ADR-004)
-- [ ] Escrita Dapper em tabela com `RowVersion` confere a versão no `WHERE` e preenche as colunas de auditoria
-- [ ] **RC-16:** `IAuditLog` só tem operação de acrescentar; nenhuma tela, endpoint ou serviço edita ou apaga entradas
+- [ ] **RC-16:** `IAuditLog` só tem operação de acrescentar; nenhuma tela, endpoint ou serviço edita ou apaga entradas (o `SaveChanges` recusa alterar ou apagar uma `AuditEntry`)
+- [ ] `/health/ready` usa a implementação real: banco acessível e nenhuma migration pendente
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Persistencia/AuditoriaTests.Salvar_PreencheCriacaoEAlteracao`
 - `tests/GazetaMarketplace.Web.Tests/Persistencia/ConcorrenciaTests.DuasEdicoes_DaMesmaLinha_GeramConflito`
 - `tests/GazetaMarketplace.Web.Tests/Persistencia/AuditLogTests.Registra_AtorAcaoAlvoEData`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/MigrationsTests.Script_Idempotente_PodeSerAplicadoDuasVezes (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Arquitetura/JustificativaDapperTests.TodaEscritaDapper_TemComentarioComOMotivo`
-- `tests/GazetaMarketplace.Web.Tests/Arquitetura/DapperTests.ReadRepositories_ImplementamInterfacesDoCore`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.Valores_SempreViramParametros`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.FragmentoSomentePublicados_E_UnicoEReutilizado`
-- `tests/GazetaMarketplace.Web.Tests/Arquitetura/JustificativaDapperTests.TodaEscritaDapper_TemComentarioComOMotivo`
-- `tests/GazetaMarketplace.Web.Tests/Arquitetura/DapperTests.ReadRepositories_ImplementamInterfacesDoCore`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.Valores_SempreViramParametros`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.FragmentoSomentePublicados_E_UnicoEReutilizado`
 - `tests/GazetaMarketplace.Web.Tests/Persistencia/AuditLogTests.NaoExisteOperacaoParaEditarOuApagarEntradas`
+- `tests/GazetaMarketplace.Web.Tests/Persistencia/MigrationsTests.Script_Idempotente_PodeSerAplicadoDuasVezes (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Persistencia/ConcorrenciaSqlServerTests.RowVersionReal_GeraConflito (TestContainers, roda no /test; no /build o rowversion é simulado por trigger no SQLite)`
+- `tests/GazetaMarketplace.Web.Tests/Arquitetura/JustificativaDapperTests.TodaEscritaDapper_TemComentarioComOMotivo`
+- `tests/GazetaMarketplace.Web.Tests/Arquitetura/DapperTests.ReadRepositories_ImplementamInterfacesDoCore`
+- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`
+- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.Valores_SempreViramParametros`
+- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.FragmentoSomentePublicados_E_UnicoEReutilizado`
 
 **Dependencies**: 0.1, 0.2
 
@@ -461,7 +455,7 @@
 **Objective**: Autenticar a equipe com Identity e cookie, com políticas de papel, bloqueio por tentativas e sessão de 30 minutos.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Infrastructure/Identidade/AppUser.cs`
+- `src/GazetaMarketplace.Infrastructure/Identidade/UsuarioIdentity.cs` (`IdentityUser<int>`) e `PapelIdentity.cs` (`IdentityRole<int>`), conforme ADR-003
 - `src/GazetaMarketplace.Infrastructure/Identidade/IdentityConfiguration.cs`
 - `src/GazetaMarketplace.Web/Areas/Painel/Controllers/ContaController.cs`
 - `src/GazetaMarketplace.Web/Areas/Painel/Views/Conta/Entrar.cshtml`

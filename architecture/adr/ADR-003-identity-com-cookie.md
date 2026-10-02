@@ -34,7 +34,7 @@ Revisit this decision when **any** of the following becomes true:
 - A Gazeta exigir login único com outro sistema da empresa (SSO).
 
 ## Implementation Notes
-- Pacote `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (aprovação: AR-06); usuário estendido com `FullName`, `IsActive`, `MustChangePassword`.
+- Pacote `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (aprovação: AR-06); usuário estendido com `FullName`, `IsActive`, `MustChangePassword`. **Chave `int`** (decisão do Product Owner, 2026-10-02): `UsuarioIdentity : IdentityUser<int>` e `PapelIdentity : IdentityRole<int>`, por consistência com as demais tabelas (`int IDENTITY`), FKs mais simples e índice clustered mais estreito. Por isso `CreatedBy`, `UpdatedBy` e `ActorId` das auditorias são `int` nulos (nulo = ação do sistema).
 - Senha (NFR-07): `RequiredLength = 8`, `RequireUppercase`, `RequireLowercase`, `RequireDigit`, `RequireNonAlphanumeric`; hash padrão do Identity.
 - Bloqueio (NFR-06): `MaxFailedAccessAttempts = 5`, `DefaultLockoutTimeSpan = 15 min`, mais o limitador por IP na rota de login (5 por 15 min, `ARCHITECTURE.md` §7).
 - Sessão (NFR-08): cookie `HttpOnly`, `Secure`, `SameSite=Lax`, `ExpireTimeSpan = 30 min`, `SlidingExpiration = true`; `SecurityStampValidatorOptions.ValidationInterval = 5 min` (usuário desativado perde o acesso em até 5 min).

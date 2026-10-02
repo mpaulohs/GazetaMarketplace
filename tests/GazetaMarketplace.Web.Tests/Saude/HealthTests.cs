@@ -75,9 +75,9 @@ public sealed class HealthTests
     }
 
     [TestMethod]
-    public async Task Ready_SemImplementacaoRealDoBanco_Responde503()
+    public async Task Ready_SemBancoConfigurado_Responde503()
     {
-        // Até a tarefa 0.6, a implementação provisória nunca declara o banco pronto
+        // Sem cadeia de conexão (Testing), a implementação real não consegue verificar e declara não pronto
         using FabricaWeb fabrica = new();
         using HttpClient cliente = fabrica.CreateClient();
 

@@ -1,0 +1,63 @@
+using System;
+using System.IO;
+using System.Linq;
+using GazetaMarketplace.Infrastructure.Data;
+using GazetaMarketplace.Web.Tests.Suporte;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace GazetaMarketplace.Web.Tests.Persistencia;
+
+[TestClass]
+#pragma warning disable CA1515 // Test classes must be public for MSTest
+public sealed class MigrationsTests
+#pragma warning restore CA1515
+{
+    private static string Script() => File.ReadAllText(RepositorioHelper.Projeto("db/scripts/gazeta-idempotente.sql"));
+
+    [TestMethod]
+    public void Script_IncluiTodasAsMigrationsDoCodigo_ComGuardaDeIdempotencia()
+    {
+        using AppDbContext contexto = new(
+            new DbContextOptionsBuilder<AppDbContext>().UseSqlServer("Server=(local);Database=Nenhum").Options,
+            new UsuarioFalso(), new RelogioFalso());
+        string[] migrations = contexto.Database.GetMigrations().ToArray();
+        string script = Script();
+
+        Assert.IsNotEmpty(migrations);
+        foreach (string migration in migrations)
+        {
+            string guarda = @"IF NOT EXISTS \(\s*SELECT \* FROM \[__EFMigrationsHistory\]\s*WHERE \[MigrationId\] = N'" + migration + @"'\s*\)";
+            Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(script, guarda),
+                "Script desatualizado: regenere com 'dotnet tool run dotnet-ef migrations script --idempotent'. Falta " + migration);
+        }
+
+        StringAssert.Contains(script, "IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL");
+    }
+
+    [TestMethod]
+    public void MigrationInicial_CriaSoAAuditEntries()
+    {
+        string script = Script();
+
+        StringAssert.Contains(script, "CREATE TABLE [AuditEntries]");
+        Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(script, @"CREATE TABLE \[(?!__EFMigrationsHistory)").Count);
+    }
+
+    [TestMethod]
+    public void Codigo_NaoUsaDatabaseMigrate()
+    {
+        foreach (string arquivo in Directory.EnumerateFiles(RepositorioHelper.Projeto("src"), "*.cs", SearchOption.AllDirectories))
+        {
+            if (arquivo.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar))
+            {
+                continue;
+            }
+
+            string texto = File.ReadAllText(arquivo);
+            Assert.IsFalse(texto.Contains("Database.Migrate(", StringComparison.Ordinal)
+                || texto.Contains("Database.MigrateAsync(", StringComparison.Ordinal),
+                Path.GetFileName(arquivo) + " aplica migrations na partida (ADR-004)");
+        }
+    }
+}

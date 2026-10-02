@@ -1,5 +1,6 @@
 using System;
 using GazetaMarketplace.Core;
+using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Infrastructure;
 using GazetaMarketplace.Infrastructure.Configuracao;
 using GazetaMarketplace.Infrastructure.Logging;
@@ -63,6 +64,8 @@ builder.Services.AddLimitadores();
 builder.Services.AddEncaminhamentoSeguro();
 // Nenhuma política CORS: site e endpoints JSON são da mesma origem (ARCHITECTURE.md §7)
 builder.Services.AddOpcoes(builder.Configuration, builder.Environment.IsProduction());
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUsuarioAtual, UsuarioAtualHttp>();
 builder.Services.AddCore();
 builder.Services.AddInfrastructure(builder.Configuration);
 
