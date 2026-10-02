@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GazetaMarketplace.Core\GazetaMarketplace.Core.csproj" />
     <ProjectReference Include="..\GazetaMarketplace.Infrastructure\GazetaMarketplace.Infrastructure.csproj" />
   </ItemGroup>

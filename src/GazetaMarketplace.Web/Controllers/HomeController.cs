@@ -1,5 +1,6 @@
-using System.Diagnostics;
+using GazetaMarketplace.Core.Excecoes;
 using GazetaMarketplace.Web.Models;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GazetaMarketplace.Web.Controllers
@@ -19,7 +20,15 @@ namespace GazetaMarketplace.Web.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            // Erro esperado lançado numa página mantém o seu status (404, 403...); o resto fica 500
+            IExceptionHandlerFeature erro = HttpContext.Features.Get<IExceptionHandlerFeature>();
+            if (erro?.Error is AppException esperado)
+            {
+                Response.StatusCode = esperado.StatusCode;
+            }
+
+            // O código de referência é o CorrelationId (HttpContext.TraceIdentifier), o mesmo traceId do log
+            return View(new ErrorViewModel { RequestId = HttpContext.TraceIdentifier });
         }
     }
 }

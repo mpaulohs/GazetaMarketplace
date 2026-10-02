@@ -5,6 +5,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Formatting.Compact" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GazetaMarketplace.Core\GazetaMarketplace.Core.csproj" />
   </ItemGroup>
 
