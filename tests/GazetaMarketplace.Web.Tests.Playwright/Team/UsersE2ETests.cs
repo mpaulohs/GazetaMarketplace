@@ -61,7 +61,8 @@ public class UsersE2ETests : SitePage
         await Expect(Page.Locator("tr", new() { HasText = name })).ToContainTextAsync("Conta desativada").ConfigureAwait(false);
 
         // A pessoa desativada não entra, mesmo com os dados certos
-        IPage other = await Context.NewPageAsync().ConfigureAwait(false);
+        IBrowserContext separate = await Browser.NewContextAsync(ContextOptions()).ConfigureAwait(false);
+        IPage other = await separate.NewPageAsync().ConfigureAwait(false);
         await SignInAsync(other, email, Provisional).ConfigureAwait(false);
         await Expect(other.GetByText("E-mail ou senha inválidos, ou conta desativada")).ToBeVisibleAsync().ConfigureAwait(false);
     }
@@ -79,7 +80,8 @@ public class UsersE2ETests : SitePage
         await Expect(Page.GetByRole(AriaRole.Status)).ToContainTextAsync($"Senha de {name} redefinida. Informe a senha provisória a ela fora do sistema.").ConfigureAwait(false);
 
         // A senha anterior não vale; a nova leva à tela "Defina sua nova senha"
-        IPage other = await Context.NewPageAsync().ConfigureAwait(false);
+        IBrowserContext separate = await Browser.NewContextAsync(ContextOptions()).ConfigureAwait(false);
+        IPage other = await separate.NewPageAsync().ConfigureAwait(false);
         await SignInAsync(other, email, Provisional).ConfigureAwait(false);
         await Expect(other.GetByText("E-mail ou senha inválidos, ou conta desativada")).ToBeVisibleAsync().ConfigureAwait(false);
         await SignInAsync(other, email, NewProvisional).ConfigureAwait(false);

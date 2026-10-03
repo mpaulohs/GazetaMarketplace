@@ -36,6 +36,16 @@ public sealed class MigrationsTests
     }
 
     [TestMethod]
+    public void Script_LigaQuotedIdentifierNoTopo_AntesDeQualquerComando()
+    {
+        // Os índices filtrados exigem QUOTED_IDENTIFIER ON; sem o SET o sqlcmd (sem -I) falha com o erro 1934
+        string[] code = [.. Script().TrimStart('\uFEFF').Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0 && !l.StartsWith("--", StringComparison.Ordinal))];
+
+        Assert.AreEqual("SET QUOTED_IDENTIFIER ON;", code[0]);
+        Assert.AreEqual("GO", code[1]);
+    }
+
+    [TestMethod]
     public void MigrationInicial_CriaSoAAuditEntries()
     {
         string section = MigrationSection("20261002230057_CreateAuditEntries");

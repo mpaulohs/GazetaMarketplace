@@ -28,7 +28,7 @@ Um contêiner para a suíte inteira; cada teste cria o próprio banco com nome �
 
 ## Site para os E2E (Production, HTTPS, SQL Server em contêiner)
 
-1. Subir o SQL Server e criar o banco com o script do repositório. **O `sqlcmd` precisa da opção `-I`** (identificadores entre aspas ligados): sem ela, o script falha em `CREATE INDEX ... WHERE` (índices filtrados).
+1. Subir o SQL Server e criar o banco com o script do repositório. O script já começa com `SET QUOTED_IDENTIFIER ON;` (gerado por `db/scripts/gerar-script.sh`), então roda sozinho; **a opção `-I` do `sqlcmd` continua sendo uma redundância defensiva** e deve ser mantida: sem o `SET` e sem o `-I`, o `sqlcmd` falha com o erro 1934 em `CREATE INDEX ... WHERE` (índices filtrados).
 
 ```bash
 docker run -d --name gazeta-e2e-sql -p 14330:1433 -e ACCEPT_EULA=Y -e 'MSSQL_SA_PASSWORD=<senha-forte>' mcr.microsoft.com/mssql/server:2022-latest
@@ -52,7 +52,7 @@ export Authentication__SessionMinutes=1        # só para o teste de sessão exp
 cd /caminho/publish && dotnet GazetaMarketplace.Web.dll
 ```
 
-3. O Administrador criado pela partida nasce com troca de senha obrigatória; para os E2E, desligue a exigência (o `-I` vale aqui também):
+3. O Administrador criado pela partida nasce com troca de senha obrigatória; para os E2E, desligue a exigência (use `-I` aqui também):
 
 ```bash
 docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -I -Q "UPDATE AspNetUsers SET MustChangePassword = 0"
@@ -69,3 +69,24 @@ dotnet run --project tests/GazetaMarketplace.Web.Tests.Playwright
 ```
 
 Sem as variáveis, os testes que dependem delas ficam ignorados. `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**.
+
+## Regenerar o script das migrations
+
+Depois de criar uma migration, rode `db/scripts/gerar-script.sh`. Ele chama `dotnet ef migrations script --idempotent` e põe no topo o `SET QUOTED_IDENTIFIER ON;` que o EF não emite. O teste `Script_LigaQuotedIdentifierNoTopo_AntesDeQualquerComando` e o teste de integração com a sessão em `QUOTED_IDENTIFIER OFF` falham se o `SET` faltar.
+
+## Publicação (para o runbook de implantação)
+
+- **Script de banco:** aplicar `db/scripts/gazeta-idempotente.sql` com `sqlcmd -I` (redundância defensiva; o script já liga o `QUOTED_IDENTIFIER`).
+- **Arquivos estáticos:** em Production, os arquivos estáticos só saem da saída publicada. Rodar os testes de CSS contra a pasta publicada, nunca contra o código-fonte.
+
+## Desligar e religar o ambiente de E2E
+
+```bash
+# Desligar (libera memória e a porta 5443)
+kill "$(pgrep -f 'GazetaMarketplace.Web.dll' | head -1)"      # por PID; evite `pkill -f`, que pode matar o próprio shell
+docker stop gazeta-e2e-sql
+
+# Religar
+docker start gazeta-e2e-sql                                    # o banco e os dados continuam no contêiner
+setsid nohup bash /caminho/run-site.sh > /caminho/site.log 2>&1 &   # as variáveis do passo 2 ficam dentro do run-site.sh
+```

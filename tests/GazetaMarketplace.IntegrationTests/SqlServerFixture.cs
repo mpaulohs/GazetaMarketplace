@@ -64,11 +64,20 @@ public static class SqlServerFixture
         new(new DbContextOptionsBuilder<AppDbContext>().UseSqlServer(connectionString).Options, new FakeCurrentUser(), TimeProvider.System);
 
     /// <summary>Aplica o script idempotente do repositório (<c>db/scripts/gazeta-idempotente.sql</c>) lote a lote, como o sqlcmd.</summary>
-    public static async Task ApplyScriptAsync(string connectionString)
+    /// <param name="connectionString">Banco que recebe o script.</param>
+    /// <param name="quotedIdentifierOff">Começa a sessão com <c>QUOTED_IDENTIFIER OFF</c>, como o sqlcmd sem <c>-I</c>: o script tem de ligar por conta própria.</param>
+    public static async Task ApplyScriptAsync(string connectionString, bool quotedIdentifierOff = false)
     {
         string script = await File.ReadAllTextAsync(RepositoryPath("db", "scripts", "gazeta-idempotente.sql"));
         await using SqlConnection connection = new(connectionString);
         await connection.OpenAsync();
+        if (quotedIdentifierOff)
+        {
+            await using SqlCommand off = connection.CreateCommand();
+            off.CommandText = "SET QUOTED_IDENTIFIER OFF";
+            await off.ExecuteNonQueryAsync();
+        }
+
         foreach (string batch in Regex.Split(script, @"^\s*GO\s*$", RegexOptions.Multiline).Where(b => !string.IsNullOrWhiteSpace(b)))
         {
             await using SqlCommand command = connection.CreateCommand();

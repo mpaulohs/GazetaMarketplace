@@ -22,16 +22,22 @@ public sealed class ConcurrencyTests
 {
     private const string Password = "Senha@Forte1";
 
-    private static async Task<UserManagementResult> ChangeRoleAsync(IntegrationWebFactory factory, int id, string role)
+    // Cada participante prepara o escopo e o serviço, espera o outro na barreira e só então dispara: as duas operações entram juntas,
+    // e não uma depois da outra por acaso do agendador de tarefas.
+    private static async Task<UserManagementResult> ChangeRoleAsync(IntegrationWebFactory factory, Barrier start, int id, string role)
     {
         using IServiceScope scope = factory.Services.CreateScope();
-        return await scope.ServiceProvider.GetRequiredService<IUserManagement>().ChangeRoleAsync(id, role, CancellationToken.None);
+        IUserManagement management = scope.ServiceProvider.GetRequiredService<IUserManagement>();
+        start.SignalAndWait();
+        return await management.ChangeRoleAsync(id, role, CancellationToken.None);
     }
 
-    private static async Task<UserManagementResult> DeactivateAsync(IntegrationWebFactory factory, int id)
+    private static async Task<UserManagementResult> DeactivateAsync(IntegrationWebFactory factory, Barrier start, int id)
     {
         using IServiceScope scope = factory.Services.CreateScope();
-        return await scope.ServiceProvider.GetRequiredService<IUserManagement>().DeactivateAsync(id, CancellationToken.None);
+        IUserManagement management = scope.ServiceProvider.GetRequiredService<IUserManagement>();
+        start.SignalAndWait();
+        return await management.DeactivateAsync(id, CancellationToken.None);
     }
 
     private static async Task<int> ActiveAdministratorsAsync(IntegrationWebFactory factory)
@@ -54,9 +60,10 @@ public sealed class ConcurrencyTests
             // Os Administradores das rodadas anteriores saem do caminho, para só estes dois estarem ativos
             await DeactivateOthersAsync(factory, a.Id, b.Id);
 
+            using Barrier start = new(2);
             UserManagementResult[] results = await Task.WhenAll(
-                Task.Run(() => ChangeRoleAsync(factory, a.Id, RoleNames.Writer)),
-                Task.Run(() => ChangeRoleAsync(factory, b.Id, RoleNames.Writer)));
+                Task.Run(() => ChangeRoleAsync(factory, start, a.Id, RoleNames.Writer)),
+                Task.Run(() => ChangeRoleAsync(factory, start, b.Id, RoleNames.Writer)));
 
             Assert.AreEqual(1, results.Count(r => r.Succeeded), $"rodada {round}: exatamente um dos dois consegue");
             Assert.AreEqual(1, results.Count(r => !r.Succeeded && r.Errors.Any(e => e.Message == UserManagementMessages.LastAdministrator)));
@@ -76,9 +83,10 @@ public sealed class ConcurrencyTests
             AppUser b = await factory.CreateUserAsync($"b{round}@exemplo.com.br", "Admin B " + round, Password, RoleNames.Administrator);
             await DeactivateOthersAsync(factory, a.Id, b.Id);
 
+            using Barrier start = new(2);
             UserManagementResult[] results = await Task.WhenAll(
-                Task.Run(() => DeactivateAsync(factory, a.Id)),
-                Task.Run(() => DeactivateAsync(factory, b.Id)));
+                Task.Run(() => DeactivateAsync(factory, start, a.Id)),
+                Task.Run(() => DeactivateAsync(factory, start, b.Id)));
 
             Assert.AreEqual(1, results.Count(r => r.Succeeded), $"rodada {round}: exatamente um dos dois consegue");
             Assert.AreEqual(1, await ActiveAdministratorsAsync(factory), $"rodada {round}: sobra um Administrador ativo");

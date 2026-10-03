@@ -1,4 +1,8 @@
-﻿IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+-- Script idempotente das migrations do GazetaMarketplace (gerado por db/scripts/gerar-script.sh; não edite à mão).
+SET QUOTED_IDENTIFIER ON;
+GO
+
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
 BEGIN
     CREATE TABLE [__EFMigrationsHistory] (
         [MigrationId] nvarchar(150) NOT NULL,

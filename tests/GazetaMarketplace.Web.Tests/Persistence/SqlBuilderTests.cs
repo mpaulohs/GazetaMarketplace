@@ -110,7 +110,7 @@ public sealed class SqlBuilderTests
 
         StringAssert.Contains(search.Sql, SqlFragments.OnlyPublished);
         StringAssert.Contains(list.Sql, SqlFragments.OnlyPublished);
-        Assert.AreEqual(3, search.Parameters.Get<byte>("StatusPublicado"));
+        Assert.AreEqual(3, search.Parameters.Get<byte>("PublishedStatus"));
 
         // o filtro de situação existe num único arquivo da Infrastructure: nenhuma consulta o reescreve
         string folder = RepositoryHelper.Project("src/GazetaMarketplace.Infrastructure");

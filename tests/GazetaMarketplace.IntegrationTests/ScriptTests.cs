@@ -36,6 +36,18 @@ public sealed class ScriptTests
 
     [TestMethod]
     [TestCategory("Integration")]
+    public async Task ScriptIdempotente_ComSessaoQuotedIdentifierOff_LigaPorContaPropria_ENaoFalhaNosIndicesFiltrados()
+    {
+        // O sqlcmd sem -I abre a sessão com QUOTED_IDENTIFIER OFF e os índices filtrados falham com o erro 1934
+        string connectionString = await SqlServerFixture.CreateEmptyDatabaseAsync();
+
+        await SqlServerFixture.ApplyScriptAsync(connectionString, quotedIdentifierOff: true);
+
+        Assert.AreEqual(2, (await QueryAsync(connectionString, "SELECT MigrationId FROM __EFMigrationsHistory")).Count);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
     public async Task MigrationsDoEf_EScript_DaoOMesmoEsquema_ENosMesmosDados()
     {
         string byMigrations = await SqlServerFixture.CreateMigratedDatabaseAsync();
