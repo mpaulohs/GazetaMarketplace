@@ -347,24 +347,7 @@ src/GazetaMarketplace.Web/wwwroot/lib/autolist/**/gulpfile.js
 # Autolist Template
 # ============================================================
 
-# Ignorar tudo por padrão
-src/GazetaMarketplace.Web/wwwroot/lib/autolist/
-
-# Exceto: assets que o site usa
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/css/
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/fonts/
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/iconfonts/
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/images/
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/js/
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/switcher/
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/video/
-
-# Exceto: plugins realmente necessários (só o Bootstrap por ora)
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/plugins/
-!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/plugins/bootstrap/
-
-# Ignorar lixo de desenvolvimento
+# Ignorar lixo de desenvolvimento (dentro do autolist)
 src/GazetaMarketplace.Web/wwwroot/lib/autolist/**/scss/
 src/GazetaMarketplace.Web/wwwroot/lib/autolist/**/*.map
 src/GazetaMarketplace.Web/wwwroot/lib/autolist/**/node_modules/
@@ -376,3 +359,7 @@ src/GazetaMarketplace.Web/wwwroot/lib/autolist/**/*.eps
 src/GazetaMarketplace.Web/wwwroot/lib/autolist/**/license/
 src/GazetaMarketplace.Web/wwwroot/lib/autolist/**/readme.md
 src/GazetaMarketplace.Web/wwwroot/lib/autolist/**/README.md
+
+# Ignorar plugins não usados (manter só o bootstrap)
+src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/plugins/*
+!src/GazetaMarketplace.Web/wwwroot/lib/autolist/assets/plugins/bootstrap/
