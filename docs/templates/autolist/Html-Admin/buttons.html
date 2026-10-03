@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="msapplication-TileColor" content="#162946">
+		<meta name="theme-color" content="#e67605">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="HandheldFriendly" content="True">
+		<meta name="MobileOptimized" content="320">
+		<link rel="icon" href="favicon.ico" type="image/x-icon"/>
+		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+
+		<!-- Title -->
+		<title>Car Listing,Dealer,Rental Auto Classifieds Bootstrap Modern Responsive Clean HTML Template</title>
+
+		<!-- Bootstrap Css -->
+		<link  id="style"  href="../assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+
+		<!-- Dashboard Css -->
+		<link href="../assets/css/style.css" rel="stylesheet" />
+		<link href="../assets/css/plugins.css" rel="stylesheet" />
+		<link href="../assets/css/admin-custom.css" rel="stylesheet" />
+
+		<!---Font icons-->
+		<link href="../assets/css/icons.css" rel="stylesheet"/>
+	</head>
+	<body class="app sidebar-mini">
+
+		<!--Loader-->
+		<div id="global-loader">
+			<img src="../assets/images/loader.svg" class="loader-img " alt="">
+		</div>
+		<!--/Loader-->
+
+		<!--Page-->
+		<div class="page">
+			<div class="page-main">
+
+				<!--Header-->
+				<div class="app-header1 header py-1 d-flex">
+					<div class="container-fluid">
+						<div class="d-flex">
+							<a class="header-brand" href="index.html">
+								<img src="../assets/images/brand/logo.png" class="header-brand-img" alt="Claylist logo">
+								<img src="../assets/images/brand/logo1.png" class="header-brand-img1" alt="Claylist logo">
+							</a>
+							<a aria-label="Hide Sidebar" class="app-sidebar__toggle" data-bs-toggle="sidebar" href="javascript:void(0);"></a>
+							<div class="header-navsearch">
+								<a href="javascript:void(0);" class=" "></a>
+								<form class="form-inline me-auto">
+									<div class="nav-search">
+										<input type="search" class="form-control header-search" placeholder="Search…" aria-label="Search" >
+										<button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+									</div>
+								</form>
+							</div>
+							<div class="d-flex ms-md-auto header-right">
+								<button class="navbar-toggler navresponsive-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent-4" aria-controls="navbarSupportedContent-4" aria-expanded="false" aria-label="Toggle navigation">
+									<i class="fe fe-more-vertical header-icons navbar-toggler-icon"></i>
+								</button>
+
+								<div class="p-0 mb-0 navbar navbar-expand-lg  responsive-navbar navbar-dark  ">
+									<div class="navbar-collapse collapse" id="navbarSupportedContent-4">
+
+										<div class="d-flex">
+											<div class="header-navicon">
+												<a href="javascript:void(0);" data-bs-toggle="search" class="nav-link d-lg-none navsearch-icon">
+													<i class="fa fa-search"></i>
+												</a>
+											</div>
+											<div class="dropdown d-md-flex" >
+												<a  class="nav-link icon layout-setting">
+													<span class="dark-layout fs-0">
+														<i class="fa fa-moon-o"></i>
+													</span>
+													<span class="light-layout fs-0">
+														<i class="fa fa-sun-o"></i>
+													</span>
+												</a>
+											</div>
+											<div class="dropdown  d-flex" >
+												<a  class="nav-link icon full-screen-link">
+													<i class="fe fe-maximize-2"  id="fullscreen-button"></i>
+												</a>
+											</div>
+											<div class="dropdown d-flex country-selector">
+												<a href="javascript:void(0);" class="d-flex nav-link leading-none" data-bs-toggle="dropdown">
+													<img src="../assets/images/flags/us_flag.jpg" alt="img" class="avatar avatar-xs me-1 align-self-center">
+													<div>
+														<strong class="text-dark">English</strong>
+													</div>
+												</a>
+												<div class="language-width dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<img src="../assets/images/flags/french_flag.jpg"  alt="flag-img" class="avatar  me-3 align-self-center" >
+														<div>
+															<strong>French</strong>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<img src="../assets/images/flags/germany_flag.jpg"  alt="flag-img" class="avatar  me-3 align-self-center" >
+														<div>
+															<strong>Germany</strong>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<img src="../assets/images/flags/italy_flag.jpg"  alt="flag-img" class="avatar  me-3 align-self-center" >
+														<div>
+															<strong>Italy</strong>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<img src="../assets/images/flags/russia_flag.jpg"  alt="flag-img" class="avatar  me-3 align-self-center" >
+														<div>
+															<strong>Russia</strong>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<img src="../assets/images/flags/spain_flag.jpg"  alt="flag-img" class="avatar  me-3 align-self-center" >
+														<div>
+															<strong>Spain</strong>
+														</div>
+													</a>
+												</div>
+											</div>
+											<div class="dropdown  d-flex">
+												<a class="nav-link icon" data-bs-toggle="dropdown">
+													<i class="fa fa-bell-o"></i>
+													<span class=" nav-unread badge badge-danger  badge-pill">4</span>
+												</a>
+												<div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+													<a href="javascript:void(0);" class="dropdown-item text-center">You have 4 notification</a>
+													<div class="dropdown-divider"></div>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<div class="notifyimg">
+															<i class="fa fa-envelope-o"></i>
+														</div>
+														<div>
+															<strong>2 new Messages</strong>
+															<div class="small text-muted">17:50 Pm</div>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<div class="notifyimg">
+															<i class="fa fa-calendar"></i>
+														</div>
+														<div>
+															<strong> 1 Event Soon</strong>
+															<div class="small text-muted">19-10-2019</div>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<div class="notifyimg">
+															<i class="fa fa-comment-o"></i>
+														</div>
+														<div>
+															<strong> 3 new Comments</strong>
+															<div class="small text-muted">05:34 Am</div>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<div class="notifyimg">
+															<i class="fa fa-exclamation-triangle"></i>
+														</div>
+														<div>
+															<strong> Application Error</strong>
+															<div class="small text-muted">13:45 Pm</div>
+														</div>
+													</a>
+													<div class="dropdown-divider"></div>
+													<a href="javascript:void(0);" class="dropdown-item text-center">See all Notification</a>
+												</div>
+											</div>
+											<div class="dropdown d-flex">
+												<a class="nav-link icon" data-bs-toggle="dropdown">
+													<i class="fa fa-envelope-o"></i>
+													<span class=" nav-unread badge badge-warning  badge-pill">3</span>
+												</a>
+												<div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<img src="../assets/images/faces/male/41.jpg" alt="avatar-img" class="avatar brround me-3 align-self-center">
+														<div>
+															<strong>Blake</strong> I've finished it! See you so.......
+															<div class="small text-muted">30 mins ago</div>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<img src="../assets/images/faces/female/1.jpg" alt="avatar-img" class="avatar brround me-3 align-self-center">
+														<div>
+															<strong>Caroline</strong> Just see the my Admin....
+															<div class="small text-muted">12 mins ago</div>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<img src="../assets/images/faces/male/18.jpg" alt="avatar-img" class="avatar brround me-3 align-self-center">
+														<div>
+															<strong>Jonathan</strong> Hi! I'am singer......
+															<div class="small text-muted">1 hour ago</div>
+														</div>
+													</a>
+													<a href="javascript:void(0);" class="dropdown-item d-flex pb-3">
+														<img src="../assets/images/faces/female/18.jpg" alt="avatar-img" class="avatar brround me-3 align-self-center">
+														<div>
+															<strong>Emily</strong> Just a reminder that you have.....
+															<div class="small text-muted">45 mins ago</div>
+														</div>
+													</a>
+													<div class="dropdown-divider"></div>
+													<a href="javascript:void(0);" class="dropdown-item text-center">View all Messages</a>
+												</div>
+											</div>
+											<div class="dropdown d-sm-block d-none">
+												<a class="nav-link icon" data-bs-toggle="dropdown">
+													<i class="fe fe-grid"></i>
+												</a>
+												<div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow  app-selector">
+													<ul class="drop-icon-wrap">
+														<li>
+															<a href="javascript:void(0);" class="drop-icon-item">
+																<i class="icon icon-speech text-dark"></i>
+																<span class="block"> E-mail</span>
+															</a>
+														</li>
+														<li>
+															<a href="javascript:void(0);" class="drop-icon-item">
+																<i class="icon icon-map text-dark"></i>
+																<span class="block">map</span>
+															</a>
+														</li>
+														<li>
+															<a href="javascript:void(0);" class="drop-icon-item">
+																<i class="icon icon-bubbles text-dark"></i>
+																<span class="block">Messages</span>
+															</a>
+														</li>
+														<li>
+															<a href="javascript:void(0);" class="drop-icon-item">
+																<i class="icon icon-user-follow text-dark"></i>
+																<span class="block">Followers</span>
+															</a>
+														</li>
+														<li>
+															<a href="javascript:void(0);" class="drop-icon-item">
+																<i class="icon icon-picture text-dark"></i>
+																<span class="block">Photos</span>
+															</a>
+														</li>
+														<li>
+															<a href="javascript:void(0);" class="drop-icon-item">
+																<i class="icon icon-settings text-dark"></i>
+																<span class="block">Settings</span>
+															</a>
+														</li>
+													</ul>
+													<div class="dropdown-divider"></div>
+													<a href="javascript:void(0);" class="dropdown-item text-center">View all</a>
+												</div>
+											</div>
+											<div class="dropdown ">
+												<a href="javascript:void(0);" class="nav-link pe-0 leading-none user-img" data-bs-toggle="dropdown">
+													<img src="../assets/images/faces/male/25.jpg" alt="profile-img" class="avatar avatar-md brround">
+												</a>
+												<div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow ">
+													<a class="dropdown-item" href="profile.html">
+														<i class="dropdown-icon icon icon-user"></i> My Profile
+													</a>
+													<a class="dropdown-item" href="emailservices.html">
+														<i class="dropdown-icon icon icon-speech"></i> Inbox
+													</a>
+													<a class="dropdown-item" href="editprofile.html">
+														<i class="dropdown-icon  icon icon-settings"></i> Account Settings
+													</a>
+													<a class="dropdown-item" href="login.html">
+														<i class="dropdown-icon icon icon-power"></i> Log out
+													</a>
+												</div>
+											</div>
+										</div>
+
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--/Header-->
+
+				<!-- Sidebar menu-->
+				<div class="app-sidebar__overlay" data-bs-toggle="sidebar"></div>
+				<aside class="app-sidebar doc-sidebar">
+					<div class="app-sidebar__user clearfix">
+						<div class="dropdown user-pro-body">
+							<div>
+								<img src="../assets/images/faces/male/25.jpg" alt="user-img" class="avatar avatar-lg brround">
+								<a href="editprofile.html" class="profile-img">
+									<span class="fa fa-pencil" aria-hidden="true"></span>
+								</a>
+							</div>
+							<div class="user-info">
+								<h2>Rubin Carmody</h2>
+								<span>Web Designer</span>
+							</div>
+						</div>
+					</div>
+					<ul class="side-menu">
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-home"></i><span class="side-menu__label">Dashboard</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li><a class="slide-item" href="index.html">Dashboard 1</a></li>
+								<li><a class="slide-item" href="index2.html">Dashboard 2</a></li>
+								<li><a class="slide-item" href="index3.html">Dashboard 3</a></li>
+								<li><a class="slide-item" href="index4.html">Dashboard 4</a></li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-panel"></i><span class="side-menu__label">Admin settings</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li><a class="slide-item" href="admin-pricing.html">Admin Pricing</a></li>
+								<li><a class="slide-item" href="ads.html">Ads List</a></li>
+								<li><a class="slide-item" href="comments.html">Comments</a></li>
+								<li><a class="slide-item" href="email-users.html">Email-Users</a></li>
+								<li><a class="slide-item" href="media-gallery.html">Media Gallery</a></li>
+								<li><a class="slide-item" href="newad.html">New Ad</a></li>
+								<li><a class="slide-item" href="newuser.html">New User</a></li>
+								<li><a class="slide-item" href="favourite-ads.html">Favourite-Ads</a></li>
+								<li><a class="slide-item" href="payment-orders.html">Payment Orders</a></li>
+								<li><a class="slide-item" href="payments-adpacks.html">Payment Adpacks</a></li>
+								<li><a class="slide-item" href="payment-settings.html">Payment Settings</a></li>
+								<li><a class="slide-item" href="payments-membership.html">Payment Membership</a></li>
+								<li><a class="slide-item" href="profile-admin.html">Profile Admin</a></li>
+								<li><a class="slide-item" href="settings.html">Settings</a></li>
+								<li><a class="slide-item" href="users-all.html">All Users</a></li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-rocket"></i><span class="side-menu__label">Apps</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="cards.html" class="slide-item">Cards design</a>
+								</li>
+								<li>
+									<a href="chat.html" class="slide-item">Default Chat</a>
+								</li>
+								<li>
+									<a href="notify.html" class="slide-item">Notifications</a>
+								</li>
+								<li>
+									<a href="email.html" class="slide-item">Email</a>
+								</li>
+								<li>
+									<a href="emailservices.html" class="slide-item">Email Inbox</a>
+								</li>
+								<li>
+									<a href="sweetalert.html" class="slide-item">Sweet alerts</a>
+								</li>
+								<li>
+									<a href="rangeslider.html" class="slide-item">Range slider</a>
+								</li>
+								<li>
+									<a href="scroll.html" class="slide-item">Content Scroll bar</a>
+								</li>
+								<li>
+									<a href="counters.html" class="slide-item">Counters</a>
+								</li>
+								<li>
+									<a href="loaders.html" class="slide-item">Loaders</a>
+								</li>
+								<li>
+									<a href="time-line.html" class="slide-item">Time Line</a>
+								</li>
+								<li>
+									<a href="rating.html" class="slide-item">Rating </a>
+								</li>
+								<li>
+									<a href="users-list.html" class="slide-item">User List</a>
+								</li>
+								<li>
+									<a href="search.html" class="slide-item">Search page</a>
+								</li>
+								<li>
+									<a href="crypto-currencies.html" class="slide-item">Crypto-currencies</a>
+								</li>
+							</ul>
+						</li>
+						<li>
+							<a class="side-menu__item slide-show" href="widgets.html"><i class="side-menu__icon ti-package"></i><span class="side-menu__label">Widget</span></a>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon fa fa-calendar"></i><span class="side-menu__label">Calendar</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="calendar.html" class="slide-item">Default calendar</a>
+								</li>
+								<li>
+									<a href="calendar2.html" class="slide-item">Full calendar</a>
+								</li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-bar-chart"></i><span class="side-menu__label">Charts</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="chart-chartist.html" class="slide-item">Chartjs Charts </a>
+								</li>
+								<li>
+									<a href="chart-dygraph.html" class="slide-item">Dygraph Charts</a>
+								</li>
+								<li>
+									<a href="chart-echart.html" class="slide-item">Echart Charts</a>
+								</li>
+								<li>
+									<a href="chart-flot.html" class="slide-item">Flot Charts</a>
+								</li>
+								<li>
+									<a href="chart-nvd3.html" class="slide-item">Nvd3 Charts</a>
+								</li>
+								<li>
+									<a href="sparklinechart.html" class="slide-item">Sparkline Chart</a>
+								</li>
+								<li>
+									<a href="chart-morris.html" class="slide-item">Morris Charts</a>
+								</li>
+								<li>
+									<a href="charts.html" class="slide-item">C3 Bar Charts</a>
+								</li>
+								<li>
+									<a href="chart-line.html" class="slide-item">C3 Line Charts</a>
+								</li>
+								<li>
+									<a href="chart-donut.html" class="slide-item">C3 Donut Charts</a>
+								</li>
+								<li>
+									<a href="chart-pie.html" class="slide-item">C3 Pie charts</a>
+								</li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-layers"></i><span class="side-menu__label"> Elements</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="alerts.html" class="slide-item">Alerts</a>
+								</li>
+								<li>
+									<a href="buttons.html" class="slide-item">Buttons</a>
+								</li>
+								<li>
+									<a href="colors.html" class="slide-item">Colors</a>
+								</li>
+								<li>
+									<a href="avatars.html" class="slide-item">Avatar-Square</a>
+								</li>
+								<li>
+									<a href="avatar-round.html" class="slide-item">Avatar-Rounded</a>
+								</li>
+								<li>
+									<a href="avatar-radius.html" class="slide-item">Avatar-Radius</a>
+								</li>
+								<li>
+									<a href="dropdown.html" class="slide-item">Drop downs</a>
+								</li>
+								<li>
+									<a href="thumbnails.html" class="slide-item">Thumbnails</a>
+								</li>
+								<li>
+									<a href="mediaobject.html" class="slide-item">Media Object</a>
+								</li>
+								<li>
+									<a href="list.html" class="slide-item">List</a>
+								</li>
+								<li>
+									<a href="tags.html" class="slide-item">Tags</a>
+								</li>
+								<li>
+									<a href="pagination.html" class="slide-item">Pagination</a>
+								</li>
+								<li>
+									<a href="navigation.html" class="slide-item">Navigation</a>
+								</li>
+								<li>
+									<a href="typography.html" class="slide-item">Typography</a>
+								</li>
+								<li>
+									<a href="breadcrumbs.html" class="slide-item">Breadcrumbs</a>
+								</li>
+								<li>
+									<a href="badge.html" class="slide-item">Badges</a>
+								</li>
+								<li>
+									<a href="panels.html" class="slide-item">Panels</a>
+								</li>
+								<li>
+									<a href="modal.html" class="slide-item">Modal</a>
+								</li>
+								<li>
+									<a href="tooltipandpopover.html" class="slide-item">Tooltip and popover</a>
+								</li>
+								<li>
+									<a href="progress.html" class="slide-item">Progress</a>
+								</li>
+								<li>
+									<a href="carousel.html" class="slide-item">Carousels</a>
+								</li>
+								<li>
+									<a href="accordion.html" class="slide-item">Accordions</a>
+								</li>
+								<li>
+									<a href="tabs.html" class="slide-item">Tabs</a>
+								</li>
+								<li>
+									<a href="headers.html" class="slide-item">Headers</a>
+								</li>
+								<li>
+									<a href="footers.html" class="slide-item">Footers</a>
+								</li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-receipt"></i><span class="side-menu__label">Forms</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="form-elements.html" class="slide-item">Form Elements</a>
+								</li>
+								<li>
+									<a href="form-wizard.html" class="slide-item">Form-wizard Elements</a>
+								</li>
+								<li>
+									<a href="wysiwyag.html" class="slide-item">Text Editor</a>
+								</li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-clipboard"></i><span class="side-menu__label">Tables</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="tables.html" class="slide-item">Default table</a>
+								</li>
+								<li>
+									<a href="datatable.html" class="slide-item">Data Table</a>
+								</li>
+							</ul>
+						</li>
+						<li>
+							<a class="side-menu__item slide-show" href="maps.html"><i class="side-menu__icon ti-map-alt"></i><span class="side-menu__label"> Maps</span></a>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-shield"></i><span class="side-menu__label">Icons</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="icons.html" class="slide-item">Font Awesome</a>
+								</li>
+								<li>
+									<a href="icons2.html" class="slide-item">Material Design Icons</a>
+								</li>
+								<li>
+									<a href="icons3.html" class="slide-item">Simple Line Iocns</a>
+								</li>
+								<li>
+									<a href="icons4.html" class="slide-item">Feather Icons</a>
+								</li>
+								<li>
+									<a href="icons5.html" class="slide-item">Ionic Icons</a>
+								</li>
+								<li>
+									<a href="icons6.html" class="slide-item">Flag Icons</a>
+								</li>
+								<li>
+									<a href="icons7.html" class="slide-item">pe7 Icons</a>
+								</li>
+								<li>
+									<a href="icons8.html" class="slide-item">Themify Icons</a>
+								</li>
+								<li>
+									<a href="icons9.html" class="slide-item">Typicons Icons</a>
+								</li>
+								<li>
+									<a href="icons10.html" class="slide-item">Weather Icons</a>
+								</li>
+								<li>
+									<a href="icons11.html" class="slide-item">Car Icons</a>
+								</li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-files"></i><span class="side-menu__label">Pages</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="profile.html" class="slide-item">Profile</a>
+								</li>
+								<li>
+									<a href="editprofile.html" class="slide-item">Edit Profile</a>
+								</li>
+								<li>
+									<a href="gallery.html" class="slide-item">Gallery</a>
+								</li>
+								<li>
+									<a href="about.html" class="slide-item">About Company</a>
+								</li>
+								<li>
+									<a href="company-history.html" class="slide-item">Company History</a>
+								</li>
+								<li>
+									<a href="services.html" class="slide-item">Services</a>
+								</li>
+								<li>
+									<a href="faq.html" class="slide-item">FAQS</a>
+								</li>
+								<li>
+									<a href="terms.html" class="slide-item">Terms and Conditions</a>
+								</li>
+								<li>
+									<a href="empty.html" class="slide-item">Empty Page</a>
+								</li>
+								<li>
+									<a href="construction.html" class="slide-item">Under Construction</a>
+								</li>
+								<li>
+									<a href="blog.html" class="slide-item">Blog</a>
+								</li>
+								<li>
+									<a href="invoice.html" class="slide-item">Invoice</a>
+								</li>
+								<li>
+									<a href="pricing.html" class="slide-item">Pricing Tables</a>
+								</li>
+								<li>
+									<a href="switcher.html" class="slide-item">Switcher</a>
+								</li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-shopping-cart"></i><span class="side-menu__label">E-commerce</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="shop.html" class="slide-item">Products</a>
+								</li>
+								<li>
+									<a href="shop-des.html" class="slide-item">Product Details</a>
+								</li>
+								<li>
+									<a href="cart.html" class="slide-item">Shopping Cart</a>
+								</li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon fe fe-folder-plus"></i><span class="side-menu__label">Submenu 01</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li><a href="javascript:void(0);" class="slide-item">Sub menu 01</a></li>
+								<li class="sub-slide">
+									<a class="slide-item sub-slide-item" data-bs-toggle="sub-slide" href="javascript:void(0);"><span class="side-menu__label ms-0">Submenu 02</span> <i class="sub-angle fa fa-angle-right"></i></a>
+									<ul class="sub-slide-menu">
+										<li><a href="javascript:void(0);" class="slide-item">Submenu 01</a></li>
+										<li><a href="javascript:void(0);" class="slide-item">Submenu 02</a></li>
+										<li class="sub-slide2">
+											<a class="slide-item sub-slide-item2" data-bs-toggle="sub-slide2" href="javascript:void(0);"><span class="side-menu__label ms-0">Submenu 03</span> <i class="sub-angle2 fa fa-angle-right"></i></a>
+											<ul class="sub-slide-menu2">
+												<li><a href="javascript:void(0);" class="slide-item">Submenu 01</a></li>
+												<li><a href="javascript:void(0);" class="slide-item">Submenu 02</a></li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-settings"></i><span class="side-menu__label">Custom  Pages</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="login.html" class="slide-item">Login</a>
+								</li>
+								<li>
+									<a href="register.html" class="slide-item">Register</a>
+								</li>
+								<li>
+									<a href="forgot-password.html" class="slide-item">Forgot password</a>
+								</li>
+								<li>
+									<a href="lockscreen.html" class="slide-item">Lock screen</a>
+								</li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item slide-show" data-bs-toggle="slide" href="javascript:void(0);"><i class="side-menu__icon ti-info-alt"></i><span class="side-menu__label">Error pages</span><i class="angle fa fa-angle-right"></i></a>
+							<ul class="slide-menu">
+								<li>
+									<a href="400.html" class="slide-item">400 Error</a>
+								</li>
+								<li>
+									<a href="401.html" class="slide-item">401 Error</a>
+								</li>
+								<li>
+									<a href="403.html" class="slide-item">403 Error</a>
+								</li>
+								<li>
+									<a href="404.html" class="slide-item">404 Error</a>
+								</li>
+								<li>
+									<a href="500.html" class="slide-item">500 Error</a>
+								</li>
+								<li>
+									<a href="503.html" class="slide-item">503 Error</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</aside>
+				<!--/Sidebar menu-->
+
+				<!--App-Content-->
+				<div class="app-content">
+					<div class="side-app">
+						<div class="page-header">
+							<h4 class="page-title">Buttons</h4>
+							<ol class="breadcrumb">
+								<li class="breadcrumb-item"><a href="javascript:void(0);">Elements</a></li>
+								<li class="breadcrumb-item active" aria-current="page">Buttons</li>
+							</ol>
+						</div>
+
+						<div class="row">
+							<div class="col-md-12 col-lg-6">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">Default Button</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wrap">
+											<div class="">
+												<div class="btn-list">
+													<a href="javascript:void(0);" class="btn btn-primary">Primary</a>
+													<a href="javascript:void(0);" class="btn btn-secondary">Secondary</a>
+													<a href="javascript:void(0);" class="btn btn-success">Success</a>
+													<a href="javascript:void(0);" class="btn btn-info">Info</a>
+													<a href="javascript:void(0);" class="btn btn-warning">Warning</a>
+													<a href="javascript:void(0);" class="btn btn-danger">Danger</a>
+													<a href="javascript:void(0);" class="btn btn-link">Link</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">Disabled buttons</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wrap">
+											<div class="">
+												<div class="btn-list">
+													<a href="javascript:void(0);" class="btn btn-primary disabled">Primary</a>
+													<a href="javascript:void(0);" class="btn btn-secondary disabled">Secondary</a>
+													<a href="javascript:void(0);" class="btn btn-success disabled">Success</a>
+													<a href="javascript:void(0);" class="btn btn-info disabled">Info</a>
+													<a href="javascript:void(0);" class="btn btn-warning disabled">Warning</a>
+													<a href="javascript:void(0);" class="btn btn-danger disabled">Danger</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-12 col-lg-6 ">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">Square buttons</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wrap">
+											<div class="">
+												<div class="btn-list">
+													<a href="javascript:void(0);" class="btn btn-square btn-primary">Primary</a>
+													<a href="javascript:void(0);" class="btn btn-square btn-secondary">Secondary</a>
+													<a href="javascript:void(0);" class="btn btn-square btn-success">Success</a>
+													<a href="javascript:void(0);" class="btn btn-square btn-info">Info</a>
+													<a href="javascript:void(0);" class="btn btn-square btn-warning">Warning</a>
+													<a href="javascript:void(0);" class="btn btn-square btn-danger">Danger</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-12 col-lg-6">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">Rounded buttons</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wra">
+											<div class="">
+												<div class="btn-list">
+													<a href="javascript:void(0);" class="btn btn-pill btn-primary">Primary</a>
+													<a href="javascript:void(0);" class="btn btn-pill btn-secondary">Secondary</a>
+													<a href="javascript:void(0);" class="btn btn-pill btn-success">Success</a>
+													<a href="javascript:void(0);" class="btn btn-pill btn-info">Info</a>
+													<a href="javascript:void(0);" class="btn btn-pill btn-warning">Warning</a>
+													<a href="javascript:void(0);" class="btn btn-pill btn-danger">Danger</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-12 col-lg-6">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Border buttons</h3>
+										</div>
+										<div class="card-body">
+											<div class="text-wrap">
+												<div class="">
+													<div class="btn-list">
+														<a href="javascript:void(0);" class="btn btn-outline-primary">Primary</a>
+														<a href="javascript:void(0);" class="btn btn-outline-secondary">Secondary</a>
+														<a href="javascript:void(0);" class="btn btn-outline-success">Success</a>
+														<a href="javascript:void(0);" class="btn btn-outline-info">Info</a>
+														<a href="javascript:void(0);" class="btn btn-outline-warning">Warning</a>
+														<a href="javascript:void(0);" class="btn btn-outline-danger">Danger</a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12 col-lg-6">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Border Outline-buttons</h3>
+										</div>
+										<div class="card-body">
+											<div class="text-wrap">
+												<div class="">
+													<div class="btn-list">
+														<a href="javascript:void(0);" class="btn btn-outline-primary btn-pill">Primary</a>
+														<a href="javascript:void(0);" class="btn btn-outline-secondary btn-pill">Secondary</a>
+														<a href="javascript:void(0);" class="btn btn-outline-success btn-pill">Success</a>
+														<a href="javascript:void(0);" class="btn btn-outline-info btn-pill">Info</a>
+														<a href="javascript:void(0);" class="btn btn-outline-warning btn-pill">Warning</a>
+														<a href="javascript:void(0);" class="btn btn-outline-danger btn-pill">Danger</a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div><div class="col-md-12 col-lg-6">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Light Icon buttons</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<button type="button" class="btn bg-primary-transparent text-primary"><i class="fe fe-plus"></i></button>
+												<button type="button" class="btn bg-warning-transparent text-warning"><i class="fe fe-heart"></i></button>
+												<button type="button" class="btn bg-success-transparent text-success"><i class="fe fe-check"></i></button>
+												<button type="button" class="btn bg-danger-transparent text-danger"><i class="fe fe-link"></i></button>
+												<button type="button" class="btn bg-info-transparent text-info"><i class="fe fe-message-circle"></i></button>
+												<button type="button" class="btn bg-dark-transparent text-dark"><i class="fe fe-upload"></i></button>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12 col-lg-6">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Toggle buttons</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<button type="button" class="btn btn-primary" data-bs-toggle="button" autocomplete="off">Toggle button</button>
+												<button type="button" class="btn btn-primary active" data-bs-toggle="button" autocomplete="off" aria-pressed="true">Active toggle button</button>
+												<button type="button" class="btn btn-primary" disabled data-bs-toggle="button" autocomplete="off">Disabled toggle button</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12 col-lg-4">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Radio buttons</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+													<input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
+													<label class="btn btn-outline-primary" for="btnradio1">Radio 1</label>
+
+													<input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+													<label class="btn btn-outline-primary" for="btnradio2">Radio 2</label>
+
+													<input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
+													<label class="btn btn-outline-primary" for="btnradio3">Radio 3</label>
+													</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12 col-lg-4">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Checkbox buttons</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
+													<input type="checkbox" class="btn-check" id="btncheck1" autocomplete="off">
+													<label class="btn btn-outline-primary" for="btncheck1">Checkbox 1</label>
+
+													<input type="checkbox" class="btn-check" id="btncheck2" autocomplete="off">
+													<label class="btn btn-outline-primary" for="btncheck2">Checkbox 2</label>
+
+													<input type="checkbox" class="btn-check" id="btncheck3" autocomplete="off">
+													<label class="btn btn-outline-primary" for="btncheck3">Checkbox 3</label>
+													</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12 col-lg-4">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Button Toolbar</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+													<div class="btn-group me-2" role="group" aria-label="First group">
+														<button type="button" class="btn btn-primary">1</button>
+														<button type="button" class="btn btn-primary">2</button>
+														<button type="button" class="btn btn-primary">3</button>
+														<button type="button" class="btn btn-primary">4</button>
+													</div>
+													<div class="btn-group me-2" role="group" aria-label="Second group">
+														<button type="button" class="btn btn-primary">5</button>
+														<button type="button" class="btn btn-primary">6</button>
+														<button type="button" class="btn btn-primary">7</button>
+													</div>
+													<div class="btn-group" role="group" aria-label="Third group">
+														<button type="button" class="btn btn-primary">8</button>
+													</div>
+													</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div><!--Row-->
+							<div class="row">
+								<div class="col-md-12 col-lg-6">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Button with icon</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list btn-icon-list">
+												<button type="button" class="btn btn-primary"><i class="fe fe-plus me-2"></i>More</button>
+												<button type="button" class="btn btn-teal"><i class="fe fe-upload me-2"></i>Upload</button>
+												<button type="button" class="btn btn-warning"><i class="fe fe-heart me-2"></i>I like</button>
+												<button type="button" class="btn btn-success"><i class="fe fe-check me-2"></i>I agree</button>
+												<button type="button" class="btn btn-danger"><i class="fe fe-link me-2"></i>Link</button>
+												<button type="button" class="btn btn-info"><i class="fe fe-message-circle me-2"></i>Comment</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12 col-lg-6">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Button with Svg icon</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<button type="button" class="btn btn-primary btn-svgs btn-svg-white"><svg class="svg-icon" xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M16.5 5c-1.54 0-3.04.99-3.56 2.36h-1.87C10.54 5.99 9.04 5 7.5 5 5.5 5 4 6.5 4 8.5c0 2.89 3.14 5.74 7.9 10.05l.1.1.1-.1C16.86 14.24 20 11.39 20 8.5c0-2-1.5-3.5-3.5-3.5z" opacity=".3"></path><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"></path></svg> <span class="btn-svg-text">Like</span></button>
+												<button type="button" class="btn btn-dark btn-svgs btn-svg-white"><svg class="svg-icon" xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M13 4H6v16h12V9h-5V4zm3 14H8v-2h8v2zm0-6v2H8v-2h8z" opacity=".3"></path><path d="M8 16h8v2H8zm0-4h8v2H8zm6-10H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"></path></svg><span class="btn-svg-text">File</span></button>
+												<button type="button" class="btn btn-warning btn-svgs btn-svg-white"><svg class="svg-icon" xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M5 19h14V8H5v11zm5.55-6v-3h2.91v3H16l-4 4-4-4h2.55z" opacity=".3"></path><path d="M16 13h-2.55v-3h-2.9v3H8l4 4zm4.54-7.77l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.81.97H5.44l.8-.97zM19 19H5V8h14v11z"></path></svg> <span class="btn-svg-text">Download</span></button>
+												<button type="button" class="btn btn-success btn-svgs btn-svg-white"><svg class="svg-icon" xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M5 8h14V6H5z" opacity=".3"></path><path d="M7 11h2v2H7zm12-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-4 3h2v2h-2zm-4 0h2v2h-2z"></path></svg> <span class="btn-svg-text">Calendar</span></button>
+												<button type="button" class="btn btn-danger  btn-svgs btn-svg-white"><svg class="svg-icon" xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"></path><circle cx="18" cy="5" opacity=".3" r="1"></circle><circle cx="6" cy="12" opacity=".3" r="1"></circle><circle cx="18" cy="19.02" opacity=".3" r="1"></circle><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92zM18 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 13c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm12 7.02c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"></path></svg><span class="btn-svg-text"> Share</span></button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!--End Row-->
+
+							<!--Row-->
+							<div  class="row">
+								<div class="col-md-12 col-lg-6">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Button sizes</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<button type="button" class="btn btn-primary btn-sm mb-1">Small button</button>
+												<button type="button" class="btn btn-success btn-md mb-1">Medium button</button>
+												<button type="button" class="btn btn-danger btn-lg mb-1">Large button</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12 col-lg-6">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Width Buttons</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<button type="button" class="btn btn-primary w-xs mb-1">XS</button>
+												<button type="button" class="btn btn-teal w-sm mb-1">SM</button>
+												<button type="button" class="btn btn-danger w-md mb-1">MD</button>
+												<button type="button" class="btn btn-success w-lg mb-1">LG</button>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div  class="row">
+									<div class="col-md-12 col-lg-6">
+										<div class="card">
+											<div class="card-header">
+												<h3 class="card-title">Social buttons</h3>
+											</div>
+											<div class="card-body">
+												<div class="text-wrap">
+													<div class="">
+														<div class="btn-list">
+															<button type="button" class="btn btn-icon btn-facebook"><i class="fa fa-facebook"></i></button>
+															<button type="button" class="btn btn-icon btn-twitter"><i class="fa fa-twitter"></i></button>
+															<button type="button" class="btn btn-icon btn-google"><i class="fa fa-google"></i></button>
+															<button type="button" class="btn btn-icon btn-youtube"><i class="fa fa-youtube"></i></button>
+															<button type="button" class="btn btn-icon btn-vimeo"><i class="fa fa-vimeo"></i></button>
+															<button type="button" class="btn btn-icon btn-dribbble"><i class="fa fa-dribbble"></i></button>
+															<button type="button" class="btn btn-icon btn-github"><i class="fa fa-github"></i></button>
+															<button type="button" class="btn btn-icon btn-instagram"><i class="fa fa-instagram"></i></button>
+															<button type="button" class="btn btn-icon btn-pinterest"><i class="fa fa-pinterest"></i></button>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="col-md-12 col-lg-6">
+										<div class="card">
+											<div class="card-header">
+												<h3 class="card-title">Icon buttons</h3>
+											</div>
+											<div class="card-body">
+												<div class="text-wrap">
+													<div class="">
+														<div class="btn-list">
+															<button type="button" class="btn btn-icon btn-primary"><i class="fe fe-activity"></i></button>
+															<button type="button" class="btn btn-icon btn-github"><i class="fe fe-github"></i></button>
+															<button type="button" class="btn btn-icon btn-success"><i class="fe fe-bell"></i></button>
+															<button type="button" class="btn btn-icon btn-warning"><i class="fe fe-star"></i></button>
+															<button type="button" class="btn btn-icon btn-danger"><i class="fe fe-trash"></i></button>
+															<button type="button" class="btn btn-icon btn-purple"><i class="fe fe-bar-chart"></i></button>
+															<button type="button" class="btn btn-icon btn-secondary"><i class="fe fe-git-merge"></i></button>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Block Level Button</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<button type="button" class="btn bg-primary-transparent text-primary btn-lg btn-block">Block level button</button>
+												<button type="button" class="btn bg-info-transparent text-info btn-md btn-block">Block level button</button>
+												<button type="button" class="btn bg-success-transparent text-success btn-sm btn-block">Block level button</button>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="col-md-12">
+									<div class="card">
+										<div class="card-header">
+											<h3 class="card-title">Social buttons</h3>
+										</div>
+										<div class="card-body">
+											<div class="btn-list">
+												<button type="button" class="btn btn-facebook"><i class="fa fa-facebook me-2"></i>Facebook</button>
+												<button type="button" class="btn btn-twitter"><i class="fa fa-twitter me-2"></i>Twitter</button>
+												<button type="button" class="btn btn-google"><i class="fa fa-google me-2"></i>Google</button>
+												<button type="button" class="btn btn-youtube"><i class="fa fa-youtube me-2"></i>Youtube</button>
+												<button type="button" class="btn btn-vimeo"><i class="fa fa-vimeo me-2"></i>Vimeo</button>
+												<button type="button" class="btn btn-dribbble"><i class="fa fa-dribbble me-2"></i>Dribble</button>
+												<button type="button" class="btn btn-github"><i class="fa fa-github me-2"></i>Github</button>
+												<button type="button" class="btn btn-instagram"><i class="fa fa-instagram me-2"></i>Instagram</button>
+												<button type="button" class="btn btn-pinterest"><i class="fa fa-pinterest me-2"></i>Pinterest</button>
+												<button type="button" class="btn btn-vk"><i class="fa fa-vk me-2"></i>VKontakte</button>
+												<button type="button" class="btn btn-rss"><i class="fa fa-rss me-2"></i>RSS</button>
+												<button type="button" class="btn btn-flickr"><i class="fa fa-flickr me-2"></i>Flickr</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!--End Row-->
+						<div class="row">
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">Color variations</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wrap">
+											<div class="">
+												<div class="btn-list">
+													<a href="javascript:void(0);" class="btn btn-blue">Blue</a>
+													<a href="javascript:void(0);" class="btn btn-azure">Azure</a>
+													<a href="javascript:void(0);" class="btn btn-indigo">Indigo</a>
+													<a href="javascript:void(0);" class="btn btn-purple">Purple</a>
+													<a href="javascript:void(0);" class="btn btn-pink">Pink</a>
+													<a href="javascript:void(0);" class="btn btn-red">Red</a>
+													<a href="javascript:void(0);" class="btn btn-orange">Orange</a>
+													<a href="javascript:void(0);" class="btn btn-yellow">Yellow</a>
+													<a href="javascript:void(0);" class="btn btn-lime">Lime</a>
+													<a href="javascript:void(0);" class="btn btn-green">Green</a>
+													<a href="javascript:void(0);" class="btn btn-teal">Teal</a>
+													<a href="javascript:void(0);" class="btn btn-cyan">Cyan</a>
+													<a href="javascript:void(0);" class="btn btn-gray">Gray</a>
+													<a href="javascript:void(0);" class="btn btn-gray-dark">Dark gray</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">Button App Design</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wrap">
+											<div class="">
+												<a class="btn btn-app">
+													<i class="fa fa-edit"></i> Edit
+												</a>
+												<a class="btn btn-app">
+													<i class="fa fa-play"></i> Play
+												</a>
+												<a class="btn btn-app">
+													<i class="fa fa-pause"></i> Pause
+												</a>
+												<a class="btn btn-app">
+													<i class="fa fa-save"></i> Save
+												</a>
+												<a class="btn btn-app">
+													<span class="badge badge-pill bg-red">3</span>
+													<i class="fa fa-bullhorn"></i> Notifications
+												</a>
+												<a class="btn btn-app">
+													<i class="fa fa-repeat"></i> Repeat
+												</a>
+												<a class="btn btn-app">
+													<span class="badge badge-pill bg-blue">234</span>
+													<i class="fa fa-users"></i> Users
+												</a>
+												<a class="btn btn-app">
+													<span class="badge badge-pill bg-orange">17</span>
+													<i class="fa fa-inbox"></i> Orders
+												</a>
+												<a class="btn btn-app">
+													<span class="badge badge-pill bg-orange">20</span>
+													<i class="fa fa-envelope"></i> Inbox
+												</a>
+												<a class="btn btn-app">
+													<span class="badge badge-pill  bg-blue">345</span>
+													<i class="fa fa-heart-o"></i> Likes
+												</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">Button Groups</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wrap">
+											<div class="example">
+												<div class="btn-group mb-1">
+													<button class="btn btn-primary" type="button">Left</button>
+													<button class="btn btn-primary" type="button">Middle</button>
+													<button class="btn btn-primary" type="button">Right</button>
+												</div>
+												<div class="btn-group  btn-group-sm mb-1">
+													<button class="btn btn-primary" type="button">Left</button>
+													<button class="btn btn-primary" type="button">Middle</button>
+													<button class="btn btn-primary" type="button">Right</button>
+												</div>
+												<p class="text-muted mt-2 m-0 mb-1">Vertical button groups</p>
+												<div class="btn-group-vertical">
+													<button class="btn btn-primary" type="button">Top</button>
+													<button class="btn btn-primary" type="button">Middle</button>
+													<button class="btn btn-primary" type="button">Bottom</button>
+												</div>
+												<p class="text-muted mt-2 m-0 mb-1">Nested button groups</p>
+												<div class="btn-group">
+													<button class="btn btn-primary" type="button">1</button>
+													<button class="btn btn-primary active" type="button">2</button>
+													<button class="btn btn-primary" type="button">3</button>
+													<div class="btn-group">
+														<button data-bs-toggle="dropdown" class="btn btn-primary dropdown-toggle" type="button"> Dropdown <span class="caret"></span> </button>
+														<ul class="dropdown-menu">
+															<li><a href="javascript:void(0);">Dropdown link 1</a></li>
+															<li><a href="javascript:void(0);">Dropdown link 2</a></li>
+															<li><a href="javascript:void(0);">Dropdown link 3</a></li>
+														</ul>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">Button dropdown</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wrap">
+											<div class="">
+												<div class="btn-list">
+													<div class="dropdown">
+														<button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+															<i class="fe fe-calendar"></i>
+														</button>
+														<div class="dropdown-menu">
+															<a class="dropdown-item" href="javascript:void(0);">Dropdown link</a>
+															<a class="dropdown-item" href="javascript:void(0);">Dropdown link</a>
+														</div>
+													</div>
+													<div class="dropdown">
+														<button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown">
+															<i class="fe fe-calendar me-2"></i>Show calendar
+														</button>
+														<div class="dropdown-menu">
+															<a class="dropdown-item" href="javascript:void(0);">Dropdown link</a>
+															<a class="dropdown-item" href="javascript:void(0);">Dropdown link</a>
+														</div>
+													</div>
+													<div class="dropdown">
+														<button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown">
+															Show calendar
+														</button>
+														<div class="dropdown-menu">
+															<a class="dropdown-item" href="javascript:void(0);">Dropdown link</a>
+															<a class="dropdown-item" href="javascript:void(0);">Dropdown link</a>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">Loading button</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wra">
+											<div class="">
+												<div class="btn-list">
+													<button type="button" class="btn btn-primary btn-loading">Button text</button><br>
+													<button type="button" class="btn btn-success btn-loading btn-icon"><i class="fe fe-check"></i></button>
+													<button type="button" class="btn btn-warning btn-loading btn-sm">Button text</button><br>
+													<button type="button" class="btn btn-danger btn-loading btn-lg">Button text</button>
+													<button type="button" class="btn btn-info btn-loading btn-block">Button text</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-12 col-lg-12">
+								<div class="card">
+									<div class="card-header">
+										<h3 class="card-title">List of buttons</h3>
+									</div>
+									<div class="card-body">
+										<div class="text-wrap">
+											<p>You can now create a list of buttons with the <code class="highlighter-rouge">.btn-list</code> container.</p>
+											<div class="example">
+												<div class="btn-list">
+													<a href="javascript:void(0);" class="btn btn-primary">Save changes</a>
+													<a href="javascript:void(0);" class="btn btn-secondary">Save and continue</a>
+													<a href="javascript:void(0);" class="btn btn-danger">Cancel</a>
+												</div>
+											</div>
+										</div>
+										<div class="text-wrap mt-6">
+											<p>Use the <code class="highlighter-rouge">.text-center</code>  modifiers to alter the alignment.</p>
+											<div class="example">
+												<div class="btn-list text-center">
+													<a href="javascript:void(0);" class="btn btn-primary">Save changes</a>
+													<a href="javascript:void(0);" class="btn btn-secondary">Save and continue</a>
+													<a href="javascript:void(0);" class="btn btn-danger">Cancel</a>
+												</div>
+											</div>
+										</div>
+										<div class="text-wrap mt-6">
+											<p>Use the  <code class="highlighter-rouge">.text-end</code> modifiers to alter the alignment.</p>
+											<div class="example">
+												<div class="btn-list text-end">
+													<a href="javascript:void(0);" class="btn btn-primary">Save changes</a>
+													<a href="javascript:void(0);" class="btn btn-secondary">Save and continue</a>
+													<a href="javascript:void(0);" class="btn btn-danger">Cancel</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--/App-content-->
+			</div>
+
+			<!--Footer-->
+			<footer class="footer">
+				<div class="container">
+					<div class="row align-items-center flex-row-reverse">
+						<div class="col-lg-12 col-sm-12 mt-3 mt-lg-0 text-center">
+							Copyright © 2022 <a href="javascript:void(0);" class="fs-14 text-primary">Autolist</a>. Designed with <span class="fa fa-heart text-primary"></span> by <a href="javascript:void(0);" class="text-primary"> Spruko </a>  All rights reserved.
+						</div>
+					</div>
+				</div>
+			</footer>
+			<!-- End Footer-->
+		</div>
+		<!--/Page-->
+
+		<!-- Back to top -->
+		<a href="#top" id="back-to-top" ><i class="fa fa-rocket"></i></a>
+
+		<!-- JQuery js-->
+		<script src="../assets/js/vendors/jquery.min.js"></script>
+
+		<!-- Bootstrap js -->
+		<script src="../assets/plugins/bootstrap/js/popper.min.js"></script>
+		<script src="../assets/plugins/bootstrap/js/bootstrap.min.js"></script>
+
+		<!--JQueryVehiclerkline Js-->
+		<script src="../assets/js/vendors/jquery.sparkline.min.js"></script>
+
+		<!-- Circle Progress Js-->
+		<script src="../assets/js/vendors/circle-progress.min.js"></script>
+
+		<!-- Star Rating-2 Js-->
+		<script src="../assets/plugins/ratings-2/jquery.star-rating.js"></script>
+		<script src="../assets/plugins/ratings-2/star-rating.js"></script>
+
+
+		<!-- Fullside-menu Js-->
+		<script src="../assets/plugins/toggle-sidebar/sidemenu.js"></script>
+
+		<!-- P-scroll js-->
+		<script src="../assets/plugins/p-scrollbar/p-scrollbar.js"></script>
+		<script src="../assets/plugins/p-scrollbar/p-scroll1.js"></script>
+
+		<!--Counters -->
+		<script src="../assets/plugins/counters/counterup.min.js"></script>
+		<script src="../assets/plugins/counters/waypoints.min.js"></script>
+
+		<!--ThemeColors JS -->
+		<script src="../assets/js/themeColors.js"></script>
+
+		<!-- Custom Js-->
+		<script src="../assets/js/admin-custom.js"></script>
+
+		<!-- SwitcherCustom Js-->
+		<script src="../assets/js/switcher-custom.js"></script>
+
+	</body>
+</html>
