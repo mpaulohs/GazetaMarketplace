@@ -34,11 +34,11 @@ Revisit this decision when **any** of the following becomes true:
 - A Gazeta exigir login único com outro sistema da empresa (SSO).
 
 ## Implementation Notes
-- Pacote `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (aprovação: AR-06); usuário estendido com `FullName`, `IsActive`, `MustChangePassword`. **Chave `int`** (decisão do Product Owner, 2026-10-02): `UsuarioIdentity : IdentityUser<int>` e `PapelIdentity : IdentityRole<int>`, por consistência com as demais tabelas (`int IDENTITY`), FKs mais simples e índice clustered mais estreito. Por isso `CreatedBy`, `UpdatedBy` e `ActorId` das auditorias são `int` nulos (nulo = ação do sistema).
+- Pacote `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (aprovação: AR-06); usuário estendido com `FullName`, `IsActive`, `MustChangePassword`. **Chave `int`** (decisão do Product Owner, 2026-10-02): `AppUser : IdentityUser<int>` e `AppRole : IdentityRole<int>` (nomes em inglês, regra de idioma em `.claude/rules/overrides/lang-dotnet.md`), por consistência com as demais tabelas (`int IDENTITY`), FKs mais simples e índice clustered mais estreito. Por isso `CreatedBy`, `UpdatedBy` e `ActorId` das auditorias são `int` nulos (nulo = ação do sistema).
 - Senha (NFR-07): `RequiredLength = 8`, `RequireUppercase`, `RequireLowercase`, `RequireDigit`, `RequireNonAlphanumeric`; hash padrão do Identity.
 - Bloqueio (NFR-06): `MaxFailedAccessAttempts = 5`, `DefaultLockoutTimeSpan = 15 min`, mais o limitador por IP na rota de login (5 por 15 min, `ARCHITECTURE.md` §7).
 - Sessão (NFR-08): cookie `HttpOnly`, `Secure`, `SameSite=Lax`, `ExpireTimeSpan = 30 min`, `SlidingExpiration = true`; `SecurityStampValidatorOptions.ValidationInterval = 5 min` (usuário desativado perde o acesso em até 5 min).
 - Redefinição (NFR-09): `DataProtectionTokenProviderOptions.TokenLifespan = 1 h`; ao redefinir, o *security stamp* muda e o mesmo link deixa de valer. A resposta de "Esqueci minha senha" é sempre a mesma, exista ou não o e-mail (não revela contas).
-- Primeiro acesso (S6): filtro global na área `Painel` que redireciona para "Defina sua nova senha" enquanto `MustChangePassword = true`.
+- Primeiro acesso (S6): filtro global na área `Panel` que redireciona para "Defina sua nova senha" enquanto `MustChangePassword = true`.
 - Primeiro Administrador (S17): na inicialização, se não existir nenhum Administrador **e** as variáveis `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword` existirem, criar o usuário com `MustChangePassword = true`; registrar no log (sem a senha); remover as variáveis depois da primeira publicação (ADR-011).
-- Autorização (NFR-13): políticas `Administrador` e `Redator` nas áreas e ações; a checagem de autoria fica no serviço de aplicação, não só no controller.
+- Autorização (NFR-13): políticas `Administrator` e `Writer` (os valores dos papéis no banco continuam `Administrador` e `Redator`) nas áreas e ações; a checagem de autoria fica no serviço de aplicação, não só no controller.

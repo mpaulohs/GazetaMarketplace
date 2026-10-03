@@ -11,7 +11,7 @@
 - [x] Política de senha — `IdentityOptions.Password`: `RequiredLength = 8`, `RequireUppercase`, `RequireLowercase`, `RequireDigit`, `RequireNonAlphanumeric = true` (Task 1.1, 1.3, 1.4)
 - [x] Bloqueio de conta — `IdentityOptions.Lockout`: `MaxFailedAccessAttempts = 5`, `DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15)`, `AllowedForNewUsers = true`; **redefinir a senha com sucesso zera o bloqueio** (RC-12) (Task 1.1, 1.4)
 - [x] Token de redefinição de 1 hora e uso único — `DataProtectionTokenProviderOptions.TokenLifespan = TimeSpan.FromHours(1)`; ao redefinir, `UserManager.UpdateSecurityStampAsync` (Task 1.4)
-- [x] Endereço de retorno do login só local — `Url.IsLocalUrl(returnUrl)` em `ContaController.Entrar` (RC-18) (Task 1.1)
+- [x] Endereço de retorno do login só local — `Url.IsLocalUrl(returnUrl)` em `AccountController.Entrar` (RC-18) (Task 1.1)
 - [x] Mensagens de login e de recuperação genéricas; recuperação com resposta igual e sem esperar o envio (RC-13) (Task 1.1, 1.4)
 - [x] Primeiro Administrador por variáveis `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword`, só se não houver Administrador, com `MustChangePassword = true`; Warning no log se as variáveis continuarem (RC-19) (Task 1.2)
 - [N/A] JWT, refresh token e rotação — o site usa cookie de sessão do Identity (ADR-003); não há API para outro cliente

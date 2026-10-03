@@ -10,12 +10,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace GazetaMarketplace.Web.Tests.Playwright.Team;
 
 /// <summary>
-/// US-006 no navegador (roda no /test). Variáveis: GAZETA_BASE_URL (site no ar), GAZETA_E2E_EMAIL e GAZETA_E2E_SENHA
+/// US-006 no navegador (roda no /test). Variáveis: GAZETA_BASE_URL (site no ar), GAZETA_E2E_EMAIL e GAZETA_E2E_PASSWORD
 /// (conta de Redator ou Administrador criada no banco de teste) e, só para a sessão expirada,
 /// GAZETA_E2E_SESSION_MINUTES (o mesmo valor de Authentication__SessionMinutes com que o site foi iniciado, por exemplo 1).
 /// </summary>
 [TestClass]
-[RequiresVariables("GAZETA_BASE_URL", "GAZETA_E2E_EMAIL", "GAZETA_E2E_SENHA")]
+[RequiresVariables("GAZETA_BASE_URL", "GAZETA_E2E_EMAIL", "GAZETA_E2E_PASSWORD")]
 #pragma warning disable CA1515 // Test classes must be public for MSTest
 public class AccountE2ETests : SitePage
 #pragma warning restore CA1515
@@ -26,7 +26,7 @@ public class AccountE2ETests : SitePage
     {
         await Page.GotoAsync(Url("/painel/entrar")).ConfigureAwait(false);
         await Page.GetByLabel("E-mail").FillAsync(RequiresVariablesAttribute.Value("GAZETA_E2E_EMAIL")).ConfigureAwait(false);
-        await Page.GetByLabel("Senha").FillAsync(RequiresVariablesAttribute.Value("GAZETA_E2E_SENHA")).ConfigureAwait(false);
+        await Page.GetByLabel("Senha").FillAsync(RequiresVariablesAttribute.Value("GAZETA_E2E_PASSWORD")).ConfigureAwait(false);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Entrar" }).ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Sair" })).ToBeVisibleAsync().ConfigureAwait(false);
     }

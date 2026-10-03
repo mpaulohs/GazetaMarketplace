@@ -21,17 +21,17 @@
 | Solução, configuração, erros, segurança HTTP, saúde (0.1–0.5) | new | Web, Core, Infrastructure; middlewares | `healthLive`, `healthReady` (`/health/live`, `/health/ready`); ProblemDetails global | — | Páginas de erro | Controle transversal: amplia o escopo do `/secure` (cabeçalhos, antiforgery, limitadores) |
 | Persistência base (0.6) | new | `AppDbContext`, `AuditEntries`, `IDbConnection` (Dapper), `SqlBuilder` | — | Migration inicial; script idempotente | — | Migrations só por script (ADR-004); SQL Server do provedor (AR-03); Dapper não herda filtros do EF |
 | Layout e design system (0.7) | new | `_Layout`, `base.css`, `api.js` | — | — | Todas | Contraste e foco medidos (design-system §2.4) |
-| US-006, US-007, US-014 (1.1–1.4) | new | Identity, `ContaController`, `UsuariosController`, `SendGridEmailSender` | Páginas de conta e usuários | Tabelas do Identity | Entrar, primeiro acesso, recuperar, usuários | Segurança crítica: política de senha, bloqueio, sessão; chaves do Data Protection (AR-01) |
-| Categorias e campos (2.1–2.4, US-013 em 2.6) | new | `Categoria`, `CategoriaTree`, `FieldGroupRegistry`, 18 grupos | — | `Categories` com carga de 124 + mães | Categorias | Regras do Apêndice B e da A7; listas novas pendentes (PL-01) |
+| US-006, US-007, US-014 (1.1–1.4) | new | Identity, `AccountController`, `UsersController`, `SendGridEmailSender` | Páginas de conta e usuários | Tabelas do Identity | Entrar, primeiro acesso, recuperar, usuários | Segurança crítica: política de senha, bloqueio, sessão; chaves do Data Protection (AR-01) |
+| Categorias e campos (2.1–2.4, US-013 em 2.6) | new | `Category`, `CategoryTree`, `FieldGroupRegistry`, 18 grupos | — | `Categories` com carga de 124 + mães | Categorias | Regras do Apêndice B e da A7; listas novas pendentes (PL-01) |
 | Catálogo de veículos (2.5) | new | `IVehicleCatalog`, `VehicleCatalogController`, ferramenta de exportação (leitura e carga em lote com Dapper) | `listVehicleBrands`, `listVehicleModels`, `listVehicleModelYears`, `listVehicleVersions` | 4 tabelas + script de carga | Formulário de Carros e Motos | A5 (jurídico) bloqueia o lançamento; credencial antiga do GazetaOnline nunca reutilizada |
 | US-015 (2.7) | new | `SiteSettingsService` | Página de configurações | `SiteSettings` | Configurações | Bloqueia a publicação (US-010-S08) |
-| Modelo do anúncio (3.1) | new | `Anuncio`, `AnuncioService`, `Normalizador` | — | `Ads` com JSON, colunas calculadas e índices | — | Duas representações (C# e SQL): teste diferencial obrigatório (ADR-002) |
+| Modelo do anúncio (3.1) | new | `Ad`, `AdService`, `Normalizer` | — | `Ads` com JSON, colunas calculadas e índices | — | Duas representações (C# e SQL): teste diferencial obrigatório (ADR-002) |
 | CEP (3.2) | new | `ViaCepLookup`, `CepController`, `cep.js` | `getCep` | `CepCache`, `Cities` | Campo de CEP | Dependência externa; contrato 503 × 404 |
-| US-008, US-009 (3.3, 3.5, 3.7) | new | `AnunciosController` (Painel), `RascunhoService`, `EnviarParaRevisaoService`, fotos | `uploadAdPhoto`, `setAdPhotoCover`, `deleteAdPhoto` | `Ads`, `AdPhotos` | Formulário do anúncio | Segurança: autoria, antiforgery, texto puro |
-| Fotos (3.4, 3.6) | new | `IPhotoStorage`, `IImageProcessor`, `FotosController`, `OriginalsCleanupService` | `getPhotoFile` | Pasta persistente fora da raiz | — | HEIC/Magick.NET (AR-05); originais com GPS em `_originals/`; limpeza depende do IIS (ADR-005) |
+| US-008, US-009 (3.3, 3.5, 3.7) | new | `AdsController` (Painel), `DraftService`, `SubmitForReviewService`, fotos | `uploadAdPhoto`, `setAdPhotoCover`, `deleteAdPhoto` | `Ads`, `AdPhotos` | Formulário do anúncio | Segurança: autoria, antiforgery, texto puro |
+| Fotos (3.4, 3.6) | new | `IPhotoStorage`, `IImageProcessor`, `PhotosController`, `OriginalsCleanupService` | `getPhotoFile` | Pasta persistente fora da raiz | — | HEIC/Magick.NET (AR-05); originais com GPS em `_originals/`; limpeza depende do IIS (ADR-005) |
 | Componentes do anúncio (3.8) | new | `AdCardViewComponent`, `_AdValue`, `_AdBody` | — | — | Card, detalhe, pré-visualização | A4 e A6 (design-system §5) |
-| US-010, US-011, US-012 (4.1–4.4) | new | `FilaController`, `RevisaoService`, `RetiradaService`, `PainelListaService`, `IPainelListaReadRepository` (Dapper) | Páginas do painel | `Ads` (situação), `AuditEntries` | Fila, pré-visualização, lista | Decisão simultânea (`rowversion`); registro de ações |
-| US-001 a US-005 (5.1–5.5) | new | `HomeController`, `CategoriaController`, `AnuncioController`, `BuscaController`, `FavoritosController`, `IBuscaReadRepository` (Dapper) | `listAdsByIds` | Consultas em `Ads` e `Categories` | Início, categoria, detalhe, busca, favoritos | Desempenho (NFR-04); A6 na busca; só publicados |
+| US-010, US-011, US-012 (4.1–4.4) | new | `ReviewQueueController`, `ReviewService`, `TakedownService`, `PanelAdListService`, `IPanelAdListReadRepository` (Dapper) | Páginas do painel | `Ads` (situação), `AuditEntries` | Fila, pré-visualização, lista | Decisão simultânea (`rowversion`); registro de ações |
+| US-001 a US-005 (5.1–5.5) | new | `HomeController`, `CategoryController`, `AdController`, `SearchController`, `FavoritesController`, `ISearchReadRepository` (Dapper) | `listAdsByIds` | Consultas em `Ads` e `Categories` | Início, categoria, detalhe, busca, favoritos | Desempenho (NFR-04); A6 na busca; só publicados |
 | SEO (5.6) | new | `SeoController` | `/sitemap.xml`, `/robots.txt` | — | — | Condicional à S7 |
 | Verificações transversais (6.1–6.3) | new | Projetos de teste e Playwright | — | — | Todas | Sustenta NFR-13, 15, 16, 17 e as de desempenho |
 
@@ -94,6 +94,8 @@
 
 ## 5. Phases, Checkpoints, and Tasks
 
+> **Nomenclatura (2026-10-03):** o código segue a regra "inglês no código, português na interface" de `.claude/rules/overrides/lang-dotnet.md`. Os caminhos e nomes das tarefas 0.x a 1.2 refletem o que existe hoje. Os nomes das tarefas futuras (2.x a 6.x) foram traduzidos pelo glossário da regra; cada tarefa confirma seus nomes quando for planejada. Nomes de métodos de teste continuam em português (exceção documentada).
+
 ## Fase 0 — Fundação
 
 ### Task 0.1: Estruturar a solução em Web, Core e Infrastructure
@@ -123,9 +125,9 @@
 - [ ] `AddCore()` e `AddInfrastructure(IConfiguration)` existem e são chamados no `Program.cs`
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Arquitetura/DependenciasDasCamadasTests.Core_NaoReferencia_AspNetNemEfCore`
-- `tests/GazetaMarketplace.Web.Tests/Arquitetura/DependenciasDasCamadasTests.Infrastructure_ReferenciaSomenteCore`
-- `tests/GazetaMarketplace.Web.Tests/Arquitetura/BuildRulesTests.Projetos_NaoSobrescrevem_NullableEImplicitUsings`
+- `tests/GazetaMarketplace.Web.Tests/Architecture/LayerDependenciesTests.Core_NaoReferencia_AspNetNemEfCore`
+- `tests/GazetaMarketplace.Web.Tests/Architecture/LayerDependenciesTests.Infrastructure_ReferenciaSomenteCore`
+- `tests/GazetaMarketplace.Web.Tests/Architecture/BuildRulesTests.Projetos_NaoSobrescrevem_NullableEImplicitUsings`
 
 **Dependencies**: —
 
@@ -147,7 +149,7 @@
 
 **Files to modify**:
 - `src/GazetaMarketplace.Web/Program.cs`
-- src/GazetaMarketplace.Core/Configuracao/*.cs (opções: PhotoStorage, Logging, DataProtection, SendGrid, Bootstrap)
+- src/GazetaMarketplace.Core/Configuration/*.cs (opções: PhotoStorage, Logging, DataProtection, SendGrid, Bootstrap)
 - src/GazetaMarketplace.Web/appsettings.json (só valores não sensíveis)
 - .gitignore (appsettings.Development.json, web.Production.config, *.pubxml.user)
 - src/GazetaMarketplace.Web/web.Production.config.example (novo, sem valores reais)
@@ -162,11 +164,11 @@
 - [ ] **RC-20:** o `web.Production.config.example` traz no topo o aviso de que o arquivo real nunca vai para o git e fica em cofre de senhas, e nenhum valor real
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Configuracao/OpcoesTests.Producao_SemPastaDeFotos_FalhaNaPartida`
-- `tests/GazetaMarketplace.Web.Tests/Configuracao/OpcoesTests.Producao_SemChaveSendGrid_FalhaNaPartida`
-- `tests/GazetaMarketplace.Web.Tests/Configuracao/OpcoesTests.VariavelDeAmbiente_TemPrioridadeSobreAppsettings`
-- `tests/GazetaMarketplace.Web.Tests/Configuracao/SegredosTests.Repositorio_NaoContem_ConnectionStringComSenha`
-- `tests/GazetaMarketplace.Web.Tests/Configuracao/SegredosTests.ArquivoDeExemplo_TemAvisoDeGuardaESemValorReal`
+- `tests/GazetaMarketplace.Web.Tests/Configuration/OptionsTests.Producao_SemPastaDeFotos_FalhaNaPartida`
+- `tests/GazetaMarketplace.Web.Tests/Configuration/OptionsTests.Producao_SemChaveSendGrid_FalhaNaPartida`
+- `tests/GazetaMarketplace.Web.Tests/Configuration/OptionsTests.VariavelDeAmbiente_TemPrioridadeSobreAppsettings`
+- `tests/GazetaMarketplace.Web.Tests/Configuration/SecretsTests.Repositorio_NaoContem_ConnectionStringComSenha`
+- `tests/GazetaMarketplace.Web.Tests/Configuration/SecretsTests.ArquivoDeExemplo_TemAvisoDeGuardaESemValorReal`
 
 **Dependencies**: 0.1
 
@@ -187,7 +189,7 @@
 **Objective**: Serilog em arquivo JSON, identificador de correlação em toda requisição e respostas de erro no formato ProblemDetails com os 8 códigos do contrato.
 
 **Files to modify**:
-- src/GazetaMarketplace.Core/Excecoes/*.cs (AppException e derivadas)
+- src/GazetaMarketplace.Core/Exceptions/*.cs (AppException e derivadas)
 - `src/GazetaMarketplace.Web/Middleware/CorrelationIdMiddleware.cs`
 - `src/GazetaMarketplace.Web/Middleware/ExceptionHandlingMiddleware.cs`
 - src/GazetaMarketplace.Infrastructure/Logging/SerilogConfiguration.cs (mascaramento de senha, token e e-mail)
@@ -203,11 +205,11 @@
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Middleware/CorrelationIdTests.Requisicao_SemCabecalho_GeraEDevolveOId`
 - `tests/GazetaMarketplace.Web.Tests/Middleware/CorrelationIdTests.Requisicao_ComCabecalho_PropagaOMesmoId`
-- `tests/GazetaMarketplace.Web.Tests/Logging/MascaramentoTests.Email_ApareceMascarado`
-- `tests/GazetaMarketplace.Web.Tests/Logging/MascaramentoTests.Senha_NuncaApareceNoLog`
-- `tests/GazetaMarketplace.Web.Tests/Middleware/ErrosTests.CadaExcecao_MapeiaParaSeuCodigoEStatus`
-- `tests/GazetaMarketplace.Web.Tests/Middleware/ErrosTests.ErroInesperado_NaoExpoePilha_EtrazTraceId`
-- `tests/GazetaMarketplace.Web.Tests/Middleware/ErrosTests.TraceId_DoProblemDetails_IgualAoCodigoDeReferenciaDaTela`
+- `tests/GazetaMarketplace.Web.Tests/Logging/MaskingTests.Email_ApareceMascarado`
+- `tests/GazetaMarketplace.Web.Tests/Logging/MaskingTests.Senha_NuncaApareceNoLog`
+- `tests/GazetaMarketplace.Web.Tests/Middleware/ErrorsTests.CadaExcecao_MapeiaParaSeuCodigoEStatus`
+- `tests/GazetaMarketplace.Web.Tests/Middleware/ErrorsTests.ErroInesperado_NaoExpoePilha_EtrazTraceId`
+- `tests/GazetaMarketplace.Web.Tests/Middleware/ErrorsTests.TraceId_DoProblemDetails_IgualAoCodigoDeReferenciaDaTela`
 
 **Dependencies**: 0.1, 0.2
 
@@ -269,17 +271,17 @@
 - [ ] **RC-21:** limite global de 1 MB para o corpo de requisição (formulários e JSON), com exceção do envio de foto, que tem o limite próprio de 11 MB
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/CabecalhosTests.TodaResposta_TemOsCabecalhosObrigatorios`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/CabecalhosTests.Hsts_SoEmProducao`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/CspTests.Csp_NaoPermiteScriptInline`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/AntiforgeryTests.PostSemToken_E_Recusado`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/AntiforgeryTests.EndpointJson_ExigeCabecalhoRequestVerificationToken`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/CorsTests.Nenhuma_PoliticaCors_Registrada`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/LimitadorTests.SextaTentativaDeLogin_Devolve429`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/LimitadorTests.LimiteGlobal_Devolve429AposCemPedidos`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/LimitadorTests.IpDoCliente_VemDoCabecalhoEncaminhado_DeProxyConfiavel`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/LimitadorTests.CabecalhoEncaminhado_DeOrigemNaoConfiavel_E_Ignorado`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/LimitesCorpoTests.CorpoAcimaDe1Mb_Devolve413_ExcetoNoEnvioDeFoto`
+- `tests/GazetaMarketplace.Web.Tests/Security/HeadersTests.TodaResposta_TemOsCabecalhosObrigatorios`
+- `tests/GazetaMarketplace.Web.Tests/Security/HeadersTests.Hsts_SoEmProducao`
+- `tests/GazetaMarketplace.Web.Tests/Security/CspTests.Csp_NaoPermiteScriptInline`
+- `tests/GazetaMarketplace.Web.Tests/Security/AntiforgeryTests.PostSemToken_E_Recusado`
+- `tests/GazetaMarketplace.Web.Tests/Security/AntiforgeryTests.EndpointJson_ExigeCabecalhoRequestVerificationToken`
+- `tests/GazetaMarketplace.Web.Tests/Security/CorsTests.Nenhuma_PoliticaCors_Registrada`
+- `tests/GazetaMarketplace.Web.Tests/Security/RateLimiterTests.SextaTentativaDeLogin_Devolve429`
+- `tests/GazetaMarketplace.Web.Tests/Security/RateLimiterTests.LimiteGlobal_Devolve429AposCemPedidos`
+- `tests/GazetaMarketplace.Web.Tests/Security/RateLimiterTests.IpDoCliente_VemDoCabecalhoEncaminhado_DeProxyConfiavel`
+- `tests/GazetaMarketplace.Web.Tests/Security/RateLimiterTests.CabecalhoEncaminhado_DeOrigemNaoConfiavel_E_Ignorado`
+- `tests/GazetaMarketplace.Web.Tests/Security/BodyLimitTests.CorpoAcimaDe1Mb_Devolve413_ExcetoNoEnvioDeFoto`
 
 **Dependencies**: 0.3
 
@@ -302,7 +304,7 @@
 **Files to modify**:
 - `src/GazetaMarketplace.Web/Program.cs`
 - `src/GazetaMarketplace.Web/HealthChecks/DatabaseAndMigrationHealthCheck.cs`
-- `src/GazetaMarketplace.Core/Formatacao/MoedaEDataFormatter.cs`
+- `src/GazetaMarketplace.Core/Formatting/CurrencyAndDateFormatter.cs`
 
 **Acceptance Criteria**:
 - [ ] `/health/live` responde 200 sem tocar no banco; `/health/ready` responde 200 só com o banco acessível e a última migration aplicada, 503 caso contrário, sem detalhes internos
@@ -310,11 +312,11 @@
 - [ ] Datas gravadas em UTC e exibidas em `America/Sao_Paulo`
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Saude/HealthTests.Live_Responde200_SemBanco`
-- `tests/GazetaMarketplace.Web.Tests/Saude/HealthTests.Ready_SemBanco_Responde503_SemDetalhes`
-- `tests/GazetaMarketplace.Web.Tests/Saude/HealthTests.Ready_ComMigrationPendente_Responde503`
-- `tests/GazetaMarketplace.Web.Tests/Formatacao/MoedaTests.Centavos_SoQuandoNaoSaoZero`
-- `tests/GazetaMarketplace.Web.Tests/Formatacao/DataTests.Utc_ExibidaEmSaoPaulo_ComoDdMmAaaa`
+- `tests/GazetaMarketplace.Web.Tests/Health/HealthTests.Live_Responde200_SemBanco`
+- `tests/GazetaMarketplace.Web.Tests/Health/HealthTests.Ready_SemBanco_Responde503_SemDetalhes`
+- `tests/GazetaMarketplace.Web.Tests/Health/HealthTests.Ready_ComMigrationPendente_Responde503`
+- `tests/GazetaMarketplace.Web.Tests/Formatting/CurrencyTests.Centavos_SoQuandoNaoSaoZero`
+- `tests/GazetaMarketplace.Web.Tests/Formatting/DateTests.Utc_ExibidaEmSaoPaulo_ComoDdMmAaaa`
 
 **Dependencies**: 0.1
 
@@ -335,21 +337,21 @@
 **Objective**: Criar o `AppDbContext` (escrita e migrations), o acesso Dapper para leitura complexa (`IDbConnection`, `SqlBuilder`), as convenções do projeto, as colunas de auditoria, `rowversion`, a tabela de auditoria de ações e o processo de geração do script idempotente. **A migration inicial cria só `AuditEntries`; cada tarefa seguinte adiciona a sua** (Identity na 1.1, categorias na 2.x, anúncios e catálogo na 3.x), uma migration por mudança lógica.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Core/Entidades/BaseEntity.cs`
-- `src/GazetaMarketplace.Core/Entidades/AuditEntry.cs`
-- `src/GazetaMarketplace.Core/Interfaces/IAuditLog.cs`, `IUsuarioAtual.cs`
+- `src/GazetaMarketplace.Core/Entities/BaseEntity.cs`
+- `src/GazetaMarketplace.Core/Entities/AuditEntry.cs`
+- `src/GazetaMarketplace.Core/Interfaces/IAuditLog.cs`, `ICurrentUser.cs`
 - `src/GazetaMarketplace.Infrastructure/Data/AppDbContext.cs`
 - `src/GazetaMarketplace.Infrastructure/Data/Configurations/*.cs`
 - `src/GazetaMarketplace.Infrastructure/Data/AuditLog.cs`
-- `src/GazetaMarketplace.Infrastructure/Data/ProntidaoDoBancoEf.cs` (substitui a provisória da 0.5)
+- `src/GazetaMarketplace.Infrastructure/Data/EfDatabaseReadiness.cs` (substitui a provisória da 0.5)
 - `src/GazetaMarketplace.Infrastructure/Data/AppDbContextFactory.cs` (design-time, cadeia fictícia)
-- `src/GazetaMarketplace.Infrastructure/Data/Migrations/` (migration inicial `CriarAuditEntries`)
+- `src/GazetaMarketplace.Infrastructure/Data/Migrations/` (migration inicial `CreateAuditEntries`)
 - `src/GazetaMarketplace.Infrastructure/Data/DapperConfiguration.cs` (`IDbConnection` scoped com a cadeia do EF Core; conexão e transação do `DbContext` para escrita atômica)
 - `src/GazetaMarketplace.Infrastructure/Data/SqlBuilder.cs` (fragmentos fixos, parâmetros nomeados, ordenação só por colunas permitidas)
 - `src/GazetaMarketplace.Infrastructure/Data/SqlFragments.cs` (fragmento único do somente-publicados)
-- `src/GazetaMarketplace.Web/Seguranca/UsuarioAtualHttp.cs`
+- `src/GazetaMarketplace.Web/Security/HttpCurrentUser.cs`
 - `db/scripts/gazeta-idempotente.sql` (script único e cumulativo, regenerado a cada migration)
-- `tests/GazetaMarketplace.Web.Tests/Suporte/BancoDeTestes.cs` (fixture SQLite em memória; `rowversion` por trigger)
+- `tests/GazetaMarketplace.Web.Tests/Support/TestDatabase.cs` (fixture SQLite em memória; `rowversion` por trigger)
 - Directory.Packages.props (Dapper 2.1.89 já aprovado) e referências no projeto Infrastructure (EF Core SqlServer, Design com `PrivateAssets="all"`, Dapper)
 
 **Acceptance Criteria**:
@@ -366,17 +368,17 @@
 - [ ] `/health/ready` usa a implementação real: banco acessível e nenhuma migration pendente
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/AuditoriaTests.Salvar_PreencheCriacaoEAlteracao`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/ConcorrenciaTests.DuasEdicoes_DaMesmaLinha_GeramConflito`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/AuditLogTests.Registra_AtorAcaoAlvoEData`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/AuditLogTests.NaoExisteOperacaoParaEditarOuApagarEntradas`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/MigrationsTests.Script_Idempotente_PodeSerAplicadoDuasVezes (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/ConcorrenciaSqlServerTests.RowVersionReal_GeraConflito (TestContainers, roda no /test; no /build o rowversion é simulado por trigger no SQLite)`
-- `tests/GazetaMarketplace.Web.Tests/Arquitetura/JustificativaDapperTests.TodaEscritaDapper_TemComentarioComOMotivo`
-- `tests/GazetaMarketplace.Web.Tests/Arquitetura/DapperTests.ReadRepositories_ImplementamInterfacesDoCore`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.Valores_SempreViramParametros`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/SqlBuilderTests.FragmentoSomentePublicados_E_UnicoEReutilizado`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/AuditingTests.Salvar_PreencheCriacaoEAlteracao`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/ConcurrencyTests.DuasEdicoes_DaMesmaLinha_GeramConflito`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/AuditLogTests.Registra_AtorAcaoAlvoEData`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/AuditLogTests.NaoExisteOperacaoParaEditarOuApagarEntradas`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/MigrationsTests.Script_Idempotente_PodeSerAplicadoDuasVezes (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/ConcorrenciaSqlServerTests.RowVersionReal_GeraConflito (TestContainers, roda no /test; no /build o rowversion é simulado por trigger no SQLite)`
+- `tests/GazetaMarketplace.Web.Tests/Architecture/DapperJustificationTests.TodaEscritaDapper_TemComentarioComOMotivo`
+- `tests/GazetaMarketplace.Web.Tests/Architecture/DapperTests.ReadRepositories_ImplementamInterfacesDoCore`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/SqlBuilderTests.Valores_SempreViramParametros`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/SqlBuilderTests.FragmentoSomentePublicados_E_UnicoEReutilizado`
 
 **Dependencies**: 0.1, 0.2
 
@@ -406,7 +408,7 @@
 - `src/GazetaMarketplace.Web/wwwroot/css/poppins.css`, `base.css`, `sem-js.css`
 - `src/GazetaMarketplace.Web/wwwroot/css/components/bootstrap-tema.css`, `layout.css`, `estados.css`
 - `src/GazetaMarketplace.Web/wwwroot/js/modules/api.js`, `js/pages/layout.js`
-- `src/GazetaMarketplace.Web/Views/Shared/_Layout.cshtml`, `_LayoutPainel.cshtml`
+- `src/GazetaMarketplace.Web/Views/Shared/_Layout.cshtml`, `_PanelLayout.cshtml`
 - `src/GazetaMarketplace.Web/Views/Shared/_EstadoVazio.cshtml, _EstadoErro.cshtml, _EstadoSemResultado.cshtml, _Esqueleto.cshtml`
 - `docs/templates/autolist/` (referência; sem a chave do Google Maps) e `architecture/design-system.md`
 
@@ -428,11 +430,11 @@
 - `tests/GazetaMarketplace.Web.Tests/Layout/LayoutTests.PaginaNaoCarregaRecursosExternos`
 - `tests/GazetaMarketplace.Web.Tests/Layout/LayoutTests.NenhumScriptOuEventoInline`
 - `tests/GazetaMarketplace.Web.Tests/Layout/XssTests.TextoDeUsuario_EhCodificado_NaoExecuta`
-- `tests/GazetaMarketplace.Web.Tests/Layout/EstadosTests.EstadoDeErro_MostraCodigoDeReferenciaETentarNovamente`
-- `tests/GazetaMarketplace.Web.Tests/Layout/ModulosJsTests.NenhumModuloUsaInnerHtmlComTextoDoServidor`
+- `tests/GazetaMarketplace.Web.Tests/Layout/StatesTests.EstadoDeErro_MostraCodigoDeReferenciaETentarNovamente`
+- `tests/GazetaMarketplace.Web.Tests/Layout/JsModulesTests.NenhumModuloUsaInnerHtmlComTextoDoServidor`
 - `tests/GazetaMarketplace.Web.Tests/Layout/BaseCssTests` (tokens, três ajustes, contraste da primária `#d72213`, foco e borda)
-- `tests/GazetaMarketplace.Web.Tests/Layout/FontesETemaTests` (`woff2` da Poppins e do Font Awesome servidos localmente; ícones decorativos com `aria-hidden`; nenhuma biblioteca do template carregada)
-- `tests/GazetaMarketplace.Web.Tests/Layout/MenuPainelTests`
+- `tests/GazetaMarketplace.Web.Tests/Layout/FontsAndThemeTests` (`woff2` da Poppins e do Font Awesome servidos localmente; ícones decorativos com `aria-hidden`; nenhuma biblioteca do template carregada)
+- `tests/GazetaMarketplace.Web.Tests/Layout/PanelMenuTests`
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Layout/BaseCssTests.Foco_TemContornoComContraste (E2E, /test)` e, no mesmo arquivo, Poppins carregada, primária, borda, rolagem horizontal, CSP e axe-core
 
 **Dependencies**: 0.1, 0.3
@@ -471,19 +473,19 @@
 **Objective**: Autenticar a equipe com Identity e cookie, com políticas de papel, bloqueio por tentativas e sessão de 30 minutos.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Infrastructure/Identidade/UsuarioIdentity.cs` (`IdentityUser<int>`) e `PapelIdentity.cs` (`IdentityRole<int>`), conforme ADR-003; configurações e `HasData` dos dois papéis em `Data/Configurations/`; migration `AdicionarIdentity` e `db/scripts/gazeta-idempotente.sql` regenerado
+- `src/GazetaMarketplace.Infrastructure/Identity/AppUser.cs` (`IdentityUser<int>`) e `AppRole.cs` (`IdentityRole<int>`), conforme ADR-003; configurações e `HasData` dos dois papéis em `Data/Configurations/`; migration `AddIdentity` e `db/scripts/gazeta-idempotente.sql` regenerado
 - `src/GazetaMarketplace.Infrastructure/Data/AppDbContext.cs` (herda de `IdentityDbContext` e chama `base.OnModelCreating`)
-- `src/GazetaMarketplace.Core/Configuracao/AutenticacaoOptions.cs` (`Autenticacao:SessaoMinutos`, padrão 30, entre 1 e 120)
-- `src/GazetaMarketplace.Web/Seguranca/IdentidadeExtensions.cs` (Identity, cookie, políticas), `SignInManagerDaEquipe.cs`, `FabricaDeClaimsDaEquipe.cs`, `ContadorDeFalhasDeLogin.cs`, `PoliticasDeAcesso.cs` — a ligação do Identity fica no Web (decisão do Product Owner)
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/PainelControllerBase.cs`, `ContaController.cs` (entrar, sair, acesso negado) e `AnunciosController.cs` (**provisório**)
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Conta/Entrar.cshtml`, `AcessoNegado.cshtml` e `Anuncios/Index.cshtml`, `Fila.cshtml` (**provisórias**)
-- `src/GazetaMarketplace.Web/Program.cs` (`AddIdentidade`, `UseAuthentication`)
+- `src/GazetaMarketplace.Core/Configuration/AuthenticationOptions.cs` (`Authentication:SessionMinutes`, padrão 30, entre 1 e 120)
+- `src/GazetaMarketplace.Web/Security/IdentityExtensions.cs` (Identity, cookie, políticas), `TeamSignInManager.cs`, `TeamClaimsPrincipalFactory.cs`, `LoginFailureCounter.cs`, `AccessPolicies.cs` — a ligação do Identity fica no Web (decisão do Product Owner)
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/PanelControllerBase.cs`, `AccountController.cs` (entrar, sair, acesso negado) e `AdsController.cs` (**provisório**)
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Account/SignIn.cshtml`, `AccessDenied.cshtml` e `Ads/Index.cshtml`, `ReviewQueue.cshtml` (**provisórias**)
+- `src/GazetaMarketplace.Web/Program.cs` (`AddTeamIdentity`, `UseAuthentication`)
 
 **Decisões do Product Owner (2026-10-03)**:
-- **Bloqueio por origem conta falhas, não requisições:** `ContadorDeFalhasDeLogin`, em memória, 5 falhas em 15 minutos por IP, zerado pela entrada com sucesso, testado com relógio falso. O limitador "auth" da 0.4 (que conta toda requisição) não é usado no login, para uma redação atrás do mesmo IP poder entrar de manhã.
+- **Bloqueio por origem conta falhas, não requisições:** `LoginFailureCounter`, em memória, 5 falhas em 15 minutos por IP, zerado pela entrada com sucesso, testado com relógio falso. O limitador "auth" da 0.4 (que conta toda requisição) não é usado no login, para uma redação atrás do mesmo IP poder entrar de manhã.
 - **Conta bloqueada pelo Identity mostra a mensagem genérica** ("E-mail ou senha inválidos, ou conta desativada"); o bloqueio é real e vai para o log, mas a tela não revela que a conta existe.
 - **Páginas "Meus anúncios" e "Fila de revisão" são provisórias** (título e menu), só para US-006-S01, S02 e S07 terem aonde chegar. A 4.4 troca "Meus anúncios" e a 4.1 troca a "Fila de revisão".
-- **Papéis por `HasData`** na migration, sem inicializador na partida. A política `Redator` aceita Redator e Administrador.
+- **Papéis por `HasData`** na migration, sem inicializador na partida. A política `Writer` aceita Redator e Administrador.
 - **`/painel/acesso-negado`** nasce aqui (faz parte da configuração do cookie); o cenário US-006-S10 continua na 1.3. O link "Esqueci minha senha" aponta para `/painel/esqueci-minha-senha`, criada na 1.4 (404 até lá).
 - **Implantação:** depois da 1.1 ainda não existe Administrador (nasce na 1.2). Publicar 1.1 e 1.2 juntas, nunca só a 1.1.
 
@@ -503,16 +505,16 @@
 - [x] **RC-18:** o endereço de retorno depois do login só é aceito se for local (`Url.IsLocalUrl`); qualquer outro vai para a página inicial do painel
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S01` a `US006S08` — um teste por cenário (`@US-006-S01` a `@US-006-S08`), mais campos em branco, Redator na fila (acesso negado) e Administrador na área do Redator
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S06_SeisPessoasDaMesmaRedacao_EntramDeManhaSemBloqueio` — o contador conta falhas
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/ContadorDeFalhasDeLoginTests` (6 testes, relógio falso)
-- `tests/GazetaMarketplace.Web.Tests/Conta/SessaoTests.Cookie_Tem_HttpOnly_Secure_SameSite_E_30Min`, `SessaoMinutos_ConfiguraAExpiracao`, `SessaoMinutosForaDoIntervalo_ImpedeAPartida`, `UsuarioDesativado_PerdeAcessoAposRevalidacao`
-- `tests/GazetaMarketplace.Web.Tests/Conta/SenhaTests.Politica_RejeitaSenhasFracas` (+ hash e e-mail repetido)
-- `tests/GazetaMarketplace.Web.Tests/Conta/ContaTests.FalhaEBloqueioDeLogin_SaoRegistradosNoLog` e `EntradaESaida_SaoRegistradasNoLog_SemSenha` (RC-16)
-- `tests/GazetaMarketplace.Web.Tests/Conta/ContaTests.ReturnUrlExterno_E_Ignorado` (RC-18) e `ContaInexistente_SenhaErrada_Desativada_E_Bloqueada_RespondemIgual`
-- `tests/GazetaMarketplace.Web.Tests/Persistencia/IdentidadeModeloTests` e `MigrationsTests` (chave `int`, colunas, papéis, migration no script, modelo em dia)
-- `tests/GazetaMarketplace.Web.Tests/Configuracao/OpcoesTests.Autenticacao_*` (padrão 30, intervalo 1 a 120)
-- **E2E (rodam no `/test`, ignorados sem as variáveis):** `tests/GazetaMarketplace.Web.Tests.Playwright/Equipe/ContaTestsE2E.US006S03_SairDoPainel` e `US006S08_SessaoExpiradaPorInatividade`. Variáveis: `GAZETA_BASE_URL`, `GAZETA_E2E_EMAIL`, `GAZETA_E2E_SENHA` (conta no banco de teste) e, para o S08, `GAZETA_E2E_SESSAO_MINUTOS` igual ao `Autenticacao__SessaoMinutos` com que o site foi iniciado. Já passam localmente, sem conta: `EntrarE2E` (axe-core, CSP, rótulos e 320 px)
+- `tests/GazetaMarketplace.Web.Tests/Team/AccountTests.US006S01` a `US006S08` — um teste por cenário (`@US-006-S01` a `@US-006-S08`), mais campos em branco, Redator na fila (acesso negado) e Administrador na área do Redator
+- `tests/GazetaMarketplace.Web.Tests/Team/AccountTests.US006S06_SeisPessoasDaMesmaRedacao_EntramDeManhaSemBloqueio` — o contador conta falhas
+- `tests/GazetaMarketplace.Web.Tests/Security/LoginFailureCounterTests` (6 testes, relógio falso)
+- `tests/GazetaMarketplace.Web.Tests/Account/SessionTests.Cookie_Tem_HttpOnly_Secure_SameSite_E_30Min`, `SessaoMinutos_ConfiguraAExpiracao`, `SessaoMinutosForaDoIntervalo_ImpedeAPartida`, `UsuarioDesativado_PerdeAcessoAposRevalidacao`
+- `tests/GazetaMarketplace.Web.Tests/Account/PasswordTests.Politica_RejeitaSenhasFracas` (+ hash e e-mail repetido)
+- `tests/GazetaMarketplace.Web.Tests/Account/AccountTests.FalhaEBloqueioDeLogin_SaoRegistradosNoLog` e `EntradaESaida_SaoRegistradasNoLog_SemSenha` (RC-16)
+- `tests/GazetaMarketplace.Web.Tests/Account/AccountTests.ReturnUrlExterno_E_Ignorado` (RC-18) e `ContaInexistente_SenhaErrada_Desativada_E_Bloqueada_RespondemIgual`
+- `tests/GazetaMarketplace.Web.Tests/Persistence/IdentityModelTests` e `MigrationsTests` (chave `int`, colunas, papéis, migration no script, modelo em dia)
+- `tests/GazetaMarketplace.Web.Tests/Configuration/OptionsTests.Autenticacao_*` (padrão 30, intervalo 1 a 120)
+- **E2E (rodam no `/test`, ignorados sem as variáveis):** `tests/GazetaMarketplace.Web.Tests.Playwright/Team/AccountE2ETests.US006S03_SairDoPainel` e `US006S08_SessaoExpiradaPorInatividade`. Variáveis: `GAZETA_BASE_URL`, `GAZETA_E2E_EMAIL`, `GAZETA_E2E_PASSWORD` (conta no banco de teste) e, para o S08, `GAZETA_E2E_SESSION_MINUTES` igual ao `Authentication__SessionMinutes` com que o site foi iniciado. Já passam localmente, sem conta: `SignInE2ETests` (axe-core, CSP, rótulos e 320 px)
 
 **Dependencies**: 0.3, 0.4, 0.6, 0.7
 
@@ -537,15 +539,15 @@
 - Variáveis inválidas (e-mail malformado, senha fora da política, só uma das duas) com intenção de criar derrubam a partida com erro claro, sem repetir a senha. Banco indisponível só registra Error e o site sobe (`/health/ready` avisa). Sem variáveis, o banco não é tocado.
 - **Premissa (sem alterar o SPEC):** a nova senha não pode ser igual à provisória; a tela recusa com "A nova senha precisa ser diferente da provisória".
 - `AddDefaultTokenProviders()` com `TokenLifespan` de 1 hora (a 1.4 reaproveita o mesmo token de recuperação).
-- `IdentityErrorDescriber` próprio em pt-BR (`DescritorDeErrosDaEquipe`), reaproveitado pela 1.3 (US-014-S06).
+- `IdentityErrorDescriber` próprio em pt-BR (`TeamIdentityErrorDescriber`), reaproveitado pela 1.3 (US-014-S06).
 - A troca usa `GeneratePasswordResetTokenAsync` + `ResetPasswordAsync`, que valida a política antes de gravar: senha fraca deixa a provisória intacta.
 
 **Files modified/created**:
-- `src/GazetaMarketplace.Infrastructure/Identidade/BootstrapAdminInitializer.cs` (`IHostedService`; `BootstrapInvalidoException`)
-- `src/GazetaMarketplace.Web/Areas/Painel/Filters/MustChangePasswordFilter.cs` (aplicado em `PainelControllerBase`)
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/SenhaController.cs`, `Models/DefinirSenhaViewModel.cs`, `Views/Senha/DefinirSenha.cshtml` (controller separado porque `[AllowAnonymous]` e `[Authorize]` não convivem na base)
-- `src/GazetaMarketplace.Web/Seguranca/DescritorDeErrosDaEquipe.cs`, `IdentidadeExtensions.cs`, `FabricaDeClaimsDaEquipe.cs` (claim `deve_trocar_senha`), `PoliticasDeAcesso.cs`
-- `ContaController` (entrada com troca pendente vai para `/painel/definir-senha`), `_LayoutPainel.cshtml` (menu oculto durante a troca), `Program.cs` (falha de bootstrap derruba a partida)
+- `src/GazetaMarketplace.Infrastructure/Identity/BootstrapAdminInitializer.cs` (`IHostedService`; `InvalidBootstrapException`)
+- `src/GazetaMarketplace.Web/Areas/Panel/Filters/MustChangePasswordFilter.cs` (aplicado em `PanelControllerBase`)
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/PasswordController.cs`, `Models/SetPasswordViewModel.cs`, `Views/Password/SetPassword.cshtml` (controller separado porque `[AllowAnonymous]` e `[Authorize]` não convivem na base)
+- `src/GazetaMarketplace.Web/Security/TeamIdentityErrorDescriber.cs`, `IdentityExtensions.cs`, `TeamClaimsPrincipalFactory.cs` (claim `must_change_password`), `AccessPolicies.cs`
+- `AccountController` (entrada com troca pendente vai para `/painel/definir-senha`), `_PanelLayout.cshtml` (menu oculto durante a troca), `Program.cs` (falha de bootstrap derruba a partida)
 - Correção encontrada pelos testes: `asp-validation-for` só funciona em `<span>`; as telas Entrar e DefinirSenha usavam `<div>` e a mensagem de campo não aparecia.
 
 **Acceptance Criteria**:
@@ -556,9 +558,9 @@
 - [x] **RC-19:** se `Bootstrap__AdminEmail` ou `Bootstrap__AdminPassword` ainda existirem e já houver Administrador, o site registra Warning pedindo a remoção das variáveis
 
 **Tests added** (253 no projeto Web.Tests, todos passando):
-- `Equipe/PrimeiroAcessoTests` — `US006S09` fluxo completo, filtro em todas as páginas, menu oculto com Sair disponível, senhas fracas recusadas com a provisória ainda valendo (atomicidade), nova igual à provisória, divergência/vazio, Administrador cai na fila, sem necessidade/anônimo, senhas fora do log
-- `Conta/BootstrapAdminTests` — criação, Administrador existente (ativo, desativado), só Redator, RC-19, variável única, senha fora do log, duas partidas, sem variáveis não toca o banco, senha fraca/e-mail inválido/variável única derrubam a partida, banco indisponível registra Error
-- `Conta/DescritorDeErrosTests` — mensagens em pt-BR, token de 1 hora, token de uso único, claim
+- `Team/FirstAccessTests` — `US006S09` fluxo completo, filtro em todas as páginas, menu oculto com Sair disponível, senhas fracas recusadas com a provisória ainda valendo (atomicidade), nova igual à provisória, divergência/vazio, Administrador cai na fila, sem necessidade/anônimo, senhas fora do log
+- `Account/BootstrapAdminTests` — criação, Administrador existente (ativo, desativado), só Redator, RC-19, variável única, senha fora do log, duas partidas, sem variáveis não toca o banco, senha fraca/e-mail inválido/variável única derrubam a partida, banco indisponível registra Error
+- `Account/ErrorDescriberTests` — mensagens em pt-BR, token de 1 hora, token de uso único, claim
 
 **Verificação por mutação** (cada quebra derrubou exatamente 1 teste; código restaurado e suíte verde): (a) só contas ativas contam como Administrador → `ComAdministradorDesativado_TambemNaoCriaOutro`; (b) troca por Remove+Add em vez de token → `SenhaFraca_E_Recusada_ESenhaProvisoriaContinuaValendo`; (c) sem o filtro → `EnquantoASenhaForProvisoria_TodaPaginaDoPainelLevaATroca`.
 
@@ -583,10 +585,10 @@
 **Objective**: Tela de usuários do Administrador: criar, mudar papel, desativar, reativar e redefinir a senha, sempre com ao menos um Administrador ativo.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/UsuariosController.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Usuarios/*.cshtml`
-- `src/GazetaMarketplace.Core/Equipe/UsuarioService.cs`
-- `src/GazetaMarketplace.Web/wwwroot/js/pages/usuarios-index.js`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/UsersController.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Users/*.cshtml`
+- `src/GazetaMarketplace.Core/Team/UserService.cs`
+- `src/GazetaMarketplace.Web/wwwroot/js/pages/users-index.js`
 
 **Acceptance Criteria**:
 - [ ] `@US-014-S01` (@happy): Criar uma conta de Redator — o *Then* do SPEC é atendido
@@ -607,22 +609,22 @@
 - [ ] **RC-16:** criar, mudar papel, desativar, reativar e redefinir senha gravam em `AuditEntries` o ator, a ação, o alvo e o resultado
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S01_CriarUmaContaDeRedator` — `@US-014-S01`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S02_MudarOPapelDeUmUsuario` — `@US-014-S02`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S03_DesativarUmaConta` — `@US-014-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Equipe/UsuariosTestsE2E.US014S03_DesativarUmaConta` — `@US-014-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S04_ReativarUmaConta` — `@US-014-S04`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S05_EMailJaCadastrado` — `@US-014-S05`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S06_SenhaProvisoriaFraca` — `@US-014-S06`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S07_EMailEmFormatoInvalido` — `@US-014-S07`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S08_DesativarAPropriaConta` — `@US-014-S08`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S09_RemoverOUltimoAdministrador` — `@US-014-S09`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US014S10_RedefinirASenhaDeAlguemDaEquipe` — `@US-014-S10`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Equipe/UsuariosTestsE2E.US014S10_RedefinirASenhaDeAlguemDaEquipe` — `@US-014-S10` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Equipe/UsuariosTests.US006S10_RedatorTentaAbrirUmaPaginaExclusivaDoAdministrador` — `@US-006-S10`
-- `tests/GazetaMarketplace.Web.Tests/Usuarios/AuditoriaTests.RedefinirSenha_RegistraQuemEQuando`
-- `tests/GazetaMarketplace.Web.Tests/Usuarios/SessaoTests.UsuarioDesativado_PerdeAcessoAposRevalidacao`
-- `tests/GazetaMarketplace.Web.Tests/Usuarios/UsuariosTests.CriarMudarPapelDesativarReativar_GravamAuditoria`
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S01_CriarUmaContaDeRedator` — `@US-014-S01`
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S02_MudarOPapelDeUmUsuario` — `@US-014-S02`
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S03_DesativarUmaConta` — `@US-014-S03`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Team/UsersE2ETests.US014S03_DesativarUmaConta` — `@US-014-S03` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S04_ReativarUmaConta` — `@US-014-S04`
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S05_EMailJaCadastrado` — `@US-014-S05`
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S06_SenhaProvisoriaFraca` — `@US-014-S06`
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S07_EMailEmFormatoInvalido` — `@US-014-S07`
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S08_DesativarAPropriaConta` — `@US-014-S08`
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S09_RemoverOUltimoAdministrador` — `@US-014-S09`
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S10_RedefinirASenhaDeAlguemDaEquipe` — `@US-014-S10`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Team/UsersE2ETests.US014S10_RedefinirASenhaDeAlguemDaEquipe` — `@US-014-S10` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US006S10_RedatorTentaAbrirUmaPaginaExclusivaDoAdministrador` — `@US-006-S10`
+- `tests/GazetaMarketplace.Web.Tests/Users/AuditingTests.RedefinirSenha_RegistraQuemEQuando`
+- `tests/GazetaMarketplace.Web.Tests/Users/SessionTests.UsuarioDesativado_PerdeAcessoAposRevalidacao`
+- `tests/GazetaMarketplace.Web.Tests/Users/UsersTests.CriarMudarPapelDesativarReativar_GravamAuditoria`
 
 **Dependencies**: 1.1, 1.2
 
@@ -646,7 +648,7 @@
 - `src/GazetaMarketplace.Core/Interfaces/IEmailSender.cs`
 - `src/GazetaMarketplace.Infrastructure/Email/SendGridEmailSender.cs`
 - src/GazetaMarketplace.Infrastructure/Email/LogEmailSender.cs (desenvolvimento)
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Conta/Esqueci.cshtml, Redefinir.cshtml`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Account/Forgot.cshtml, Redefinir.cshtml`
 
 **Acceptance Criteria**:
 - [ ] `@US-007-S01` (@happy): Pedir a redefinição de senha — o *Then* do SPEC é atendido
@@ -665,20 +667,20 @@
 - [ ] **RC-13:** a resposta de "Esqueci minha senha" não depende de a conta existir: o envio do e-mail fica fora do caminho da resposta (em segundo plano), e a resposta tem a mesma forma, o mesmo código e não espera o SendGrid
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Equipe/RecuperarSenhaTests.US007S01_PedirARedefinicaoDeSenha` — `@US-007-S01`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/RecuperarSenhaTests.US007S02_DefinirUmaNovaSenhaPeloLink` — `@US-007-S02`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/RecuperarSenhaTests.US007S03_EMailNaoCadastrado` — `@US-007-S03`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/RecuperarSenhaTests.US007S04_LinkDeRedefinicaoExpirado` — `@US-007-S04`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/RecuperarSenhaTests.US007S05_LinkDeRedefinicaoJaUtilizado` — `@US-007-S05`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/RecuperarSenhaTests.US007S06_NovaSenhaQueNaoCumpreAPolitica` — `@US-007-S06`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/RecuperarSenhaTests.US007S07_ConfirmacaoDeSenhaDiferente` — `@US-007-S07`
-- `tests/GazetaMarketplace.Web.Tests/Conta/SendGridTests.EnviaPost_ParaApiV3_ComBearer_SemVazarChaveNoLog`
-- `tests/GazetaMarketplace.Web.Tests/Conta/SendGridTests.FalhaDoSendGrid_RespostaContinuaNeutra`
-- `tests/GazetaMarketplace.Web.Tests/Conta/TokenTests.Token_ExpiraEmUmaHora`
-- `tests/GazetaMarketplace.Web.Tests/Conta/RecuperarSenhaTests.QuartoPedidoNaMesmaHora_NaoEnviaEmail_MasRespondeIgual`
-- `tests/GazetaMarketplace.Web.Tests/Conta/RecuperarSenhaTests.TotalDiarioChegaA80_RegistraWarning`
-- `tests/GazetaMarketplace.Web.Tests/Conta/RecuperarSenhaTests.RedefinirComSucesso_LimpaOBloqueio`
-- `tests/GazetaMarketplace.Web.Tests/Conta/RecuperarSenhaTests.ContaExistenteEInexistente_TemMesmaRespostaESemEsperarOEnvio`
+- `tests/GazetaMarketplace.Web.Tests/Team/PasswordRecoveryTests.US007S01_PedirARedefinicaoDeSenha` — `@US-007-S01`
+- `tests/GazetaMarketplace.Web.Tests/Team/PasswordRecoveryTests.US007S02_DefinirUmaNovaSenhaPeloLink` — `@US-007-S02`
+- `tests/GazetaMarketplace.Web.Tests/Team/PasswordRecoveryTests.US007S03_EMailNaoCadastrado` — `@US-007-S03`
+- `tests/GazetaMarketplace.Web.Tests/Team/PasswordRecoveryTests.US007S04_LinkDeRedefinicaoExpirado` — `@US-007-S04`
+- `tests/GazetaMarketplace.Web.Tests/Team/PasswordRecoveryTests.US007S05_LinkDeRedefinicaoJaUtilizado` — `@US-007-S05`
+- `tests/GazetaMarketplace.Web.Tests/Team/PasswordRecoveryTests.US007S06_NovaSenhaQueNaoCumpreAPolitica` — `@US-007-S06`
+- `tests/GazetaMarketplace.Web.Tests/Team/PasswordRecoveryTests.US007S07_ConfirmacaoDeSenhaDiferente` — `@US-007-S07`
+- `tests/GazetaMarketplace.Web.Tests/Account/SendGridTests.EnviaPost_ParaApiV3_ComBearer_SemVazarChaveNoLog`
+- `tests/GazetaMarketplace.Web.Tests/Account/SendGridTests.FalhaDoSendGrid_RespostaContinuaNeutra`
+- `tests/GazetaMarketplace.Web.Tests/Account/TokenTests.Token_ExpiraEmUmaHora`
+- `tests/GazetaMarketplace.Web.Tests/Account/PasswordRecoveryTests.QuartoPedidoNaMesmaHora_NaoEnviaEmail_MasRespondeIgual`
+- `tests/GazetaMarketplace.Web.Tests/Account/PasswordRecoveryTests.TotalDiarioChegaA80_RegistraWarning`
+- `tests/GazetaMarketplace.Web.Tests/Account/PasswordRecoveryTests.RedefinirComSucesso_LimpaOBloqueio`
+- `tests/GazetaMarketplace.Web.Tests/Account/PasswordRecoveryTests.ContaExistenteEInexistente_TemMesmaRespostaESemEsperarOEnvio`
 
 **Dependencies**: 1.1, 0.3
 
@@ -709,11 +711,11 @@
 **Objective**: Criar a entidade de categoria (até 3 níveis), carregar a árvore real de `specs/categories.md` com os ids reais e expor a árvore em cache.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Core/Categorias/Categoria.cs`
-- `src/GazetaMarketplace.Core/Categorias/ICategoriaTree.cs`
-- src/GazetaMarketplace.Infrastructure/Categorias/CategoriaTree.cs (cache de memória, 10 min)
+- `src/GazetaMarketplace.Core/Categories/Category.cs`
+- `src/GazetaMarketplace.Core/Categories/ICategoryTree.cs`
+- src/GazetaMarketplace.Infrastructure/Categories/CategoriaTree.cs (cache de memória, 10 min)
 - src/GazetaMarketplace.Infrastructure/Data/Seeds/categorias.sql (gerado de specs/categories.md)
-- `src/GazetaMarketplace.Infrastructure/Data/Configurations/CategoriaConfiguration.cs`
+- `src/GazetaMarketplace.Infrastructure/Data/Configurations/CategoryConfiguration.cs`
 
 **Acceptance Criteria**:
 - [ ] A carga cria as categorias ativas (124 postáveis), as mães e a intermediária "Autopeças", com os ids reais e `IsPostable` correto; a sequência de ids continua depois do maior
@@ -721,11 +723,11 @@
 - [ ] A árvore em cache é invalidada ao editar; descendentes de uma categoria são resolvidos sem consulta por nível
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CargaInicialTests.Carga_Cria124CategoriasPostaveis_ComIdsReais`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CargaInicialTests.Autopecas_EstaNoTerceiroNivel`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/ArvoreTests.Descendentes_IncluemTodosOsNiveis`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/ArvoreTests.QuartoNivel_E_Recusado`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CacheTests.EditarCategoria_InvalidaOCache`
+- `tests/GazetaMarketplace.Web.Tests/Categories/InitialLoadTests.Carga_Cria124CategoriasPostaveis_ComIdsReais`
+- `tests/GazetaMarketplace.Web.Tests/Categories/InitialLoadTests.Autopecas_EstaNoTerceiroNivel`
+- `tests/GazetaMarketplace.Web.Tests/Categories/ArvoreTests.Descendentes_IncluemTodosOsNiveis`
+- `tests/GazetaMarketplace.Web.Tests/Categories/ArvoreTests.QuartoNivel_E_Recusado`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CacheTests.EditarCategoria_InvalidaOCache`
 
 **Dependencies**: 0.6
 
@@ -756,11 +758,11 @@
 - [ ] Os limites por grupo (`HasPrice`, `MaxPhotos`, `TitleMaxLength`, `DescriptionMaxLength`, `DescriptionLabel`) são a única fonte dessas regras
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Campos/HerancaTests.Autopecas_UsaGrupoPecas_E_CategoriaNovaHerdaDoPai`
-- `tests/GazetaMarketplace.Web.Tests/Campos/ServicosTests.SemPreco_6Fotos_Tipo11Opcoes`
-- `tests/GazetaMarketplace.Web.Tests/Campos/VagasTests.SemFotos_Titulo90_14Areas`
-- `tests/GazetaMarketplace.Web.Tests/Campos/ProdutosEmGeralTests.CondicaoObrigatoria_5Opcoes`
-- `tests/GazetaMarketplace.Web.Tests/Campos/ListasTests.IdsDasListas_SaoOsDoGazetaOnline`
+- `tests/GazetaMarketplace.Web.Tests/Fields/HerancaTests.Autopecas_UsaGrupoPecas_E_CategoriaNovaHerdaDoPai`
+- `tests/GazetaMarketplace.Web.Tests/Fields/ServicosTests.SemPreco_6Fotos_Tipo11Opcoes`
+- `tests/GazetaMarketplace.Web.Tests/Fields/VagasTests.SemFotos_Titulo90_14Areas`
+- `tests/GazetaMarketplace.Web.Tests/Fields/ProdutosEmGeralTests.CondicaoObrigatoria_5Opcoes`
+- `tests/GazetaMarketplace.Web.Tests/Fields/ListasTests.IdsDasListas_SaoOsDoGazetaOnline`
 
 **Dependencies**: 2.1
 
@@ -787,12 +789,12 @@
 - [ ] Peças: condição obrigatória, tipo de peça e cor; filtros específicos só em Carros e Motos (marca, modelo, ano, km) e em Caminhões e Ônibus (ano, km)
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Campos/CarrosTests.Obrigatorios_MarcaModeloAnoVersaoKm`
-- `tests/GazetaMarketplace.Web.Tests/Campos/MotosTests.Cilindrada_Obrigatoria`
-- `tests/GazetaMarketplace.Web.Tests/Campos/CaminhoesOnibusTests.AnoEKm_Obrigatorios`
-- `tests/GazetaMarketplace.Web.Tests/Campos/BarcosTests.HorasDeUso_NoLugarDeKm`
-- `tests/GazetaMarketplace.Web.Tests/Campos/PecasTests.Condicao_Obrigatoria_SemFiltrosDeVeiculo`
-- `tests/GazetaMarketplace.Web.Tests/Campos/FiltrosTests.FiltrosEspecificos_VemDoGrupo`
+- `tests/GazetaMarketplace.Web.Tests/Fields/CarrosTests.Obrigatorios_MarcaModeloAnoVersaoKm`
+- `tests/GazetaMarketplace.Web.Tests/Fields/MotosTests.Cilindrada_Obrigatoria`
+- `tests/GazetaMarketplace.Web.Tests/Fields/CaminhoesOnibusTests.AnoEKm_Obrigatorios`
+- `tests/GazetaMarketplace.Web.Tests/Fields/BarcosTests.HorasDeUso_NoLugarDeKm`
+- `tests/GazetaMarketplace.Web.Tests/Fields/PecasTests.Condicao_Obrigatoria_SemFiltrosDeVeiculo`
+- `tests/GazetaMarketplace.Web.Tests/Fields/FiltrosTests.FiltrosEspecificos_VemDoGrupo`
 
 **Dependencies**: 2.2
 
@@ -818,11 +820,11 @@
 - [ ] **Bloqueado até a PL-01:** as listas novas (Tamanho, Gênero, Marca por categoria de eletrônicos) só entram depois de definidas pelo Product Owner; até lá, os campos correspondentes ficam fora do grupo e a tarefa não fecha
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Campos/TelefoniaTests.Celulares_MarcaModeloCondicao_Obrigatorios`
-- `tests/GazetaMarketplace.Web.Tests/Campos/EletroTests.TipoMarcaVoltagemCondicao_Obrigatorios`
-- `tests/GazetaMarketplace.Web.Tests/Campos/TemporadaTests.TipoQuartosPessoas_Obrigatorios`
-- `tests/GazetaMarketplace.Web.Tests/Campos/RoupasTests.Condicao_Obrigatoria`
-- `tests/GazetaMarketplace.Web.Tests/Campos/MaquinasTests.Condicao_Obrigatoria`
+- `tests/GazetaMarketplace.Web.Tests/Fields/TelefoniaTests.Celulares_MarcaModeloCondicao_Obrigatorios`
+- `tests/GazetaMarketplace.Web.Tests/Fields/EletroTests.TipoMarcaVoltagemCondicao_Obrigatorios`
+- `tests/GazetaMarketplace.Web.Tests/Fields/TemporadaTests.TipoQuartosPessoas_Obrigatorios`
+- `tests/GazetaMarketplace.Web.Tests/Fields/RoupasTests.Condicao_Obrigatoria`
+- `tests/GazetaMarketplace.Web.Tests/Fields/MaquinasTests.Condicao_Obrigatoria`
 
 **Dependencies**: 2.2
 
@@ -843,7 +845,7 @@
 **Objective**: Criar as tabelas do catálogo, a consulta encadeada marca → modelo → ano → versão, os endpoints e a ferramenta de exportação, que lê a origem com Dapper, gera o script de carga e, só em bancos de desenvolvimento e de teste, pode carregar o catálogo em lote.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Core/CatalogoVeiculos/IVehicleCatalog.cs`
+- `src/GazetaMarketplace.Core/VehicleCatalog/IVehicleCatalog.cs`
 - src/GazetaMarketplace.Infrastructure/CatalogoVeiculos/VehicleCatalog.cs (cache de memória, 10 min)
 - `src/GazetaMarketplace.Web/Controllers/Api/VehicleCatalogController.cs`
 - tools/VehicleCatalogExport/ (console .NET, fora da solução do site)
@@ -864,18 +866,18 @@
 - [ ] A carga em lote é idempotente (`MERGE`) e deixa a mesma contagem que o script gerado
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Catalogo/EndpointsTests.Marcas_PorTipo_EmOrdemAlfabetica`
-- `tests/GazetaMarketplace.Web.Tests/Catalogo/EndpointsTests.Modelos_DeMarcaInexistente_Devolve404`
-- `tests/GazetaMarketplace.Web.Tests/Catalogo/EndpointsTests.Anos_EmOrdemDecrescente`
-- `tests/GazetaMarketplace.Web.Tests/Catalogo/SourceTests.TrocarFonte_NaoMudaAConsulta`
+- `tests/GazetaMarketplace.Web.Tests/Catalog/EndpointsTests.Marcas_PorTipo_EmOrdemAlfabetica`
+- `tests/GazetaMarketplace.Web.Tests/Catalog/EndpointsTests.Modelos_DeMarcaInexistente_Devolve404`
+- `tests/GazetaMarketplace.Web.Tests/Catalog/EndpointsTests.Anos_EmOrdemDecrescente`
+- `tests/GazetaMarketplace.Web.Tests/Catalog/SourceTests.TrocarFonte_NaoMudaAConsulta`
 - `tests/VehicleCatalogExport.Tests/ExportTests.SemVariavelDeConexao_ParaSemGerarArquivo`
 - `tests/VehicleCatalogExport.Tests/ExportTests.Orfaos_SaoDescartadosERelatados`
 - `tests/VehicleCatalogExport.Tests/ScriptTests.Script_E_Idempotente`
 - `tests/VehicleCatalogExport.Tests/CargaEmLoteTests.Lote_CarregaCatalogoEmBancoDeTeste_EConfereContagem (TestContainers, roda no /test)`
-- `tests/VehicleCatalogExport.Tests/CargaEmLoteTests.RecusaBancoMarcadoComoProducao`
+- `tests/VehicleCatalogExport.Tests/BatchLoadTests.RecusaBancoMarcadoComoProducao`
 - `tests/VehicleCatalogExport.Tests/CargaEmLoteTests.RodarDuasVezes_NaoDuplica (TestContainers, roda no /test)`
 - `tests/VehicleCatalogExport.Tests/CargaEmLoteTests.Lote_CarregaCatalogoEmBancoDeTeste_EConfereContagem (TestContainers, roda no /test)`
-- `tests/VehicleCatalogExport.Tests/CargaEmLoteTests.RecusaBancoMarcadoComoProducao`
+- `tests/VehicleCatalogExport.Tests/BatchLoadTests.RecusaBancoMarcadoComoProducao`
 - `tests/VehicleCatalogExport.Tests/CargaEmLoteTests.RodarDuasVezes_NaoDuplica (TestContainers, roda no /test)`
 
 **Dependencies**: 2.1, 0.6
@@ -897,10 +899,10 @@
 **Objective**: Tela de categorias do Administrador: criar até o terceiro nível, renomear, ordenar e excluir com as regras da A7.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/CategoriasController.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Categorias/*.cshtml`
-- `src/GazetaMarketplace.Core/Categorias/CategoriaService.cs`
-- `src/GazetaMarketplace.Web/wwwroot/js/pages/categorias-index.js`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/CategoriesController.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Categories/*.cshtml`
+- `src/GazetaMarketplace.Core/Categories/CategoryService.cs`
+- `src/GazetaMarketplace.Web/wwwroot/js/pages/categories-index.js`
 
 **Acceptance Criteria**:
 - [ ] `@US-013-S01` (@happy): Criar uma subcategoria — o *Then* do SPEC é atendido
@@ -921,21 +923,21 @@
 - [ ] **RC-16:** criar, renomear, reordenar e excluir categoria gravam em `AuditEntries`
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S01_CriarUmaSubcategoria` — `@US-013-S01`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S02_CriarUmaCategoriaPrincipal` — `@US-013-S02`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S03_RenomearUmaCategoria` — `@US-013-S03`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S04_MudarAOrdemDasCategorias` — `@US-013-S04`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Categorias/CategoriasTestsE2E.US013S04_MudarAOrdemDasCategorias` — `@US-013-S04` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S05_ExcluirUmaCategoriaVazia` — `@US-013-S05`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S06_NomeDeCategoriaRepetido` — `@US-013-S06`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S07_NomeDeCategoriaVazio` — `@US-013-S07`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S08_ExcluirCategoriaQueTemAnuncios` — `@US-013-S08`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S09_ExcluirCategoriaQueTemSubcategorias` — `@US-013-S09`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S10_CategoriasComCaracteristicasEspecificasNaoPodemSerExclui` — `@US-013-S10`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.US013S11_CategoriasTemAteTresNiveis` — `@US-013-S11`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/ExclusaoTests.BloqueioPorCamposEspecificos_SoParaCategoriasDaCargaComGrupoProprio`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/OrdemTests.Reordenar_SoEntreIrmas`
-- `tests/GazetaMarketplace.Web.Tests/Categorias/CategoriasTests.CriarRenomearReordenarExcluir_GravamAuditoria`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S01_CriarUmaSubcategoria` — `@US-013-S01`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S02_CriarUmaCategoriaPrincipal` — `@US-013-S02`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S03_RenomearUmaCategoria` — `@US-013-S03`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S04_MudarAOrdemDasCategorias` — `@US-013-S04`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Categories/CategoriesE2ETests.US013S04_MudarAOrdemDasCategorias` — `@US-013-S04` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S05_ExcluirUmaCategoriaVazia` — `@US-013-S05`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S06_NomeDeCategoriaRepetido` — `@US-013-S06`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S07_NomeDeCategoriaVazio` — `@US-013-S07`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S08_ExcluirCategoriaQueTemAnuncios` — `@US-013-S08`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S09_ExcluirCategoriaQueTemSubcategorias` — `@US-013-S09`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S10_CategoriasComCaracteristicasEspecificasNaoPodemSerExclui` — `@US-013-S10`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S11_CategoriasTemAteTresNiveis` — `@US-013-S11`
+- `tests/GazetaMarketplace.Web.Tests/Categories/ExclusaoTests.BloqueioPorCamposEspecificos_SoParaCategoriasDaCargaComGrupoProprio`
+- `tests/GazetaMarketplace.Web.Tests/Categories/OrdemTests.Reordenar_SoEntreIrmas`
+- `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.CriarRenomearReordenarExcluir_GravamAuditoria`
 
 **Dependencies**: 2.1, 2.2, 1.1
 
@@ -956,9 +958,9 @@
 **Objective**: Tela de configuração do número único usado em todos os anúncios.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/ConfiguracoesController.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Configuracoes/Index.cshtml`
-- `src/GazetaMarketplace.Core/Configuracoes/SiteSettingsService.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/SettingsController.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Settings/Index.cshtml`
+- `src/GazetaMarketplace.Core/Settings/SiteSettingsService.cs`
 
 **Acceptance Criteria**:
 - [ ] `@US-015-S01` (@happy): Definir o telefone/WhatsApp do site — o *Then* do SPEC é atendido
@@ -972,14 +974,14 @@
 - [ ] **RC-16:** trocar o telefone do site grava em `AuditEntries` o valor anterior e o novo
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Configurações/ConfiguracoesTests.US015S01_DefinirOTelefoneWhatsAppDoSite` — `@US-015-S01`
-- `tests/GazetaMarketplace.Web.Tests/Configurações/ConfiguracoesTests.US015S02_TrocarONumeroEmUso` — `@US-015-S02`
-- `tests/GazetaMarketplace.Web.Tests/Configurações/ConfiguracoesTests.US015S03_NumeroDigitadoSemFormatacao` — `@US-015-S03`
-- `tests/GazetaMarketplace.Web.Tests/Configurações/ConfiguracoesTests.US015S04_NumeroInvalido` — `@US-015-S04`
-- `tests/GazetaMarketplace.Web.Tests/Configurações/ConfiguracoesTests.US015S05_NumeroVazio` — `@US-015-S05`
-- `tests/GazetaMarketplace.Web.Tests/Configurações/ConfiguracoesTests.US015S06_RedatorNaoAcessaAsConfiguracoes` — `@US-015-S06`
-- `tests/GazetaMarketplace.Web.Tests/Configuracoes/NormalizacaoTests.Numero_SemFormatacao_E_Normalizado`
-- `tests/GazetaMarketplace.Web.Tests/Configuracoes/ConfiguracoesTests.TrocaDeTelefone_GravaValorAntigoENovo`
+- `tests/GazetaMarketplace.Web.Tests/Configurações/SettingsTests.US015S01_DefinirOTelefoneWhatsAppDoSite` — `@US-015-S01`
+- `tests/GazetaMarketplace.Web.Tests/Configurações/SettingsTests.US015S02_TrocarONumeroEmUso` — `@US-015-S02`
+- `tests/GazetaMarketplace.Web.Tests/Configurações/SettingsTests.US015S03_NumeroDigitadoSemFormatacao` — `@US-015-S03`
+- `tests/GazetaMarketplace.Web.Tests/Configurações/SettingsTests.US015S04_NumeroInvalido` — `@US-015-S04`
+- `tests/GazetaMarketplace.Web.Tests/Configurações/SettingsTests.US015S05_NumeroVazio` — `@US-015-S05`
+- `tests/GazetaMarketplace.Web.Tests/Configurações/SettingsTests.US015S06_RedatorNaoAcessaAsConfiguracoes` — `@US-015-S06`
+- `tests/GazetaMarketplace.Web.Tests/Settings/NormalizacaoTests.Numero_SemFormatacao_E_Normalizado`
+- `tests/GazetaMarketplace.Web.Tests/Settings/SettingsTests.TrocaDeTelefone_GravaValorAntigoENovo`
 
 **Dependencies**: 1.1, 0.6
 
@@ -1013,8 +1015,8 @@
 **Objective**: Criar a entidade do anúncio com atributos em JSON, colunas calculadas e indexadas, colunas de busca normalizadas e o serviço que controla situações e autoria.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Core/Anuncios/Anuncio.cs, SituacaoAnuncio.cs, AnuncioService.cs`
-- `src/GazetaMarketplace.Core/Busca/Normalizador.cs`
+- `src/GazetaMarketplace.Core/Ads/Anuncio.cs, SituacaoAnuncio.cs, AnuncioService.cs`
+- `src/GazetaMarketplace.Core/Search/Normalizer.cs`
 - src/GazetaMarketplace.Infrastructure/Data/Configurations/AnuncioConfiguration.cs (colunas calculadas e índices do §6.4)
 - src/GazetaMarketplace.Infrastructure/Data/Migrations/ (AdsSchema)
 
@@ -1026,12 +1028,12 @@
 - [ ] **Teste diferencial** (ADR-002): uma coluna calculada devolve exatamente o que o C# gravou em todos os grupos com filtro
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/SituacaoTests.TransicoesValidas_E_Invalidas`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/AutoriaTests.Redator_NaoLeAnuncioDeOutro_NoServico`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/NormalizadorTests.RemoveAcentos_E_MinusculasNaBusca`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/PrivacidadeTests.Modelo_NaoTemCamposDePessoaDoVendedor`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/PrecoTests.Servico_GravaNulo_NuncaZero`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/ColunasCalculadasDiferencialTests.CadaGrupoComFiltro_ClassesDeEntrada (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Ads/StatusTests.TransicoesValidas_E_Invalidas`
+- `tests/GazetaMarketplace.Web.Tests/Ads/AutoriaTests.Redator_NaoLeAnuncioDeOutro_NoServico`
+- `tests/GazetaMarketplace.Web.Tests/Ads/NormalizerTests.RemoveAcentos_E_MinusculasNaBusca`
+- `tests/GazetaMarketplace.Web.Tests/Ads/PrivacidadeTests.Modelo_NaoTemCamposDePessoaDoVendedor`
+- `tests/GazetaMarketplace.Web.Tests/Ads/PriceTests.Servico_GravaNulo_NuncaZero`
+- `tests/GazetaMarketplace.Web.Tests/Ads/ColunasCalculadasDiferencialTests.CadaGrupoComFiltro_ClassesDeEntrada (TestContainers, roda no /test)`
 
 **Dependencies**: 2.1, 2.2, 2.3, 0.6
 
@@ -1094,11 +1096,11 @@
 **Objective**: Formulário do anúncio que muda conforme o grupo de campos, com preço em centavos, contadores, CEP e preenchimento manual.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/AnunciosController.cs`
-- src/GazetaMarketplace.Web/Areas/Painel/Views/Anuncios/Editar.cshtml (+ parciais por grupo)
-- `src/GazetaMarketplace.Web/wwwroot/js/pages/anuncio-editar.js`
-- `src/GazetaMarketplace.Web/wwwroot/js/modules/preco.js, contador.js`
-- `src/GazetaMarketplace.Core/Anuncios/AnuncioRascunhoService.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs`
+- src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/Edit.cshtml (+ parciais por grupo)
+- `src/GazetaMarketplace.Web/wwwroot/js/pages/ad-edit.js`
+- `src/GazetaMarketplace.Web/wwwroot/js/modules/price.js, counter.js`
+- `src/GazetaMarketplace.Core/Ads/AdDraftService.cs`
 
 **Acceptance Criteria**:
 - [ ] `@US-008-S01` (@happy): Salvar um rascunho completo — o *Then* do SPEC é atendido
@@ -1119,25 +1121,25 @@
 - [ ] **RC-14:** os formulários usam ViewModels próprios sem `Status`, `AuthorId`, `PublishedAt` nem campos de decisão; o servidor copia só os campos permitidos
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/RascunhoTests.US008S01_SalvarUmRascunhoCompleto` — `@US-008-S01`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/RascunhoTestsE2E.US008S01_SalvarUmRascunhoCompleto` — `@US-008-S01` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/RascunhoTests.US008S07_SalvarUmRascunhoSoComOTitulo` — `@US-008-S07`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/RascunhoTests.US008S08_SalvarSemTitulo` — `@US-008-S08`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/RascunhoTests.US008S09_CamposMudamConformeACategoria` — `@US-008-S09`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/RascunhoTestsE2E.US008S09_CamposMudamConformeACategoria` — `@US-008-S09` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/RascunhoTests.US008S10_RedatorTentaEditarAnuncioDeOutroRedator` — `@US-008-S10`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/RascunhoTests.US008S11_CorrigirUmAnuncioRejeitado` — `@US-008-S11`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/RascunhoTests.US008S12_AnuncioEmRevisaoNaoPodeSerEditadoPeloRedator` — `@US-008-S12`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/RascunhoTests.US008S13_AdministradorCorrigeOPrecoDeUmAnuncioPublicado` — `@US-008-S13`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/RascunhoTests.US008S14_ServicoDeCEPForaDoAr` — `@US-008-S14`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/RascunhoTestsE2E.US008S14_ServicoDeCEPForaDoAr` — `@US-008-S14` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/PrecoMascaraTests.Digitos_ViramCentavos`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/ContadorTests.Vagas_Titulo90_E_InformacoesAdicionais6000`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/XssTests.TituloEDescricao_SaoExibidosComoTexto`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Anuncios/PrecoMascaraE2ETests.Mascara_ViraReaisComCentavos (E2E, /test)`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/RascunhoTests.PostComStatusEAutorNoCorpo_NaoAlteraSituacaoNemAutor`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/ArquiteturaTests.ViewModelsDeEdicao_NaoTemCamposDeDecisao`
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/PrecoHandoffTests.MascaraDoPrecoJs_EnviaDigitos_ServidorGravaCentavos (produtor: `preco.js`; consumidor: serviço de anúncio)`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S01_SalvarUmRascunhoCompleto` — `@US-008-S01`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/DraftE2ETests.US008S01_SalvarUmRascunhoCompleto` — `@US-008-S01` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S07_SalvarUmRascunhoSoComOTitulo` — `@US-008-S07`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S08_SalvarSemTitulo` — `@US-008-S08`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S09_CamposMudamConformeACategoria` — `@US-008-S09`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/DraftE2ETests.US008S09_CamposMudamConformeACategoria` — `@US-008-S09` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S10_RedatorTentaEditarAnuncioDeOutroRedator` — `@US-008-S10`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S11_CorrigirUmAnuncioRejeitado` — `@US-008-S11`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S12_AnuncioEmRevisaoNaoPodeSerEditadoPeloRedator` — `@US-008-S12`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S13_AdministradorCorrigeOPrecoDeUmAnuncioPublicado` — `@US-008-S13`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S14_ServicoDeCEPForaDoAr` — `@US-008-S14`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/DraftE2ETests.US008S14_ServicoDeCEPForaDoAr` — `@US-008-S14` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Ads/PriceMaskTests.Digitos_ViramCentavos`
+- `tests/GazetaMarketplace.Web.Tests/Ads/ContadorTests.Vagas_Titulo90_E_InformacoesAdicionais6000`
+- `tests/GazetaMarketplace.Web.Tests/Ads/XssTests.TituloEDescricao_SaoExibidosComoTexto`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Ads/PrecoMascaraE2ETests.Mascara_ViraReaisComCentavos (E2E, /test)`
+- `tests/GazetaMarketplace.Web.Tests/Ads/DraftTests.PostComStatusEAutorNoCorpo_NaoAlteraSituacaoNemAutor`
+- `tests/GazetaMarketplace.Web.Tests/Ads/ArchitectureTests.ViewModelsDeEdicao_NaoTemCamposDeDecisao`
+- `tests/GazetaMarketplace.Web.Tests/Ads/PrecoHandoffTests.MascaraDoPrecoJs_EnviaDigitos_ServidorGravaCentavos (produtor: `price.js`; consumidor: serviço de anúncio)`
 
 **Dependencies**: 3.1, 3.2, 2.5, 0.7
 
@@ -1160,7 +1162,7 @@
 **Files to modify**:
 - `src/GazetaMarketplace.Core/Fotos/IPhotoStorage.cs, IImageProcessor.cs`
 - `src/GazetaMarketplace.Infrastructure/Fotos/FileSystemPhotoStorage.cs, MagickImageProcessor.cs`
-- `src/GazetaMarketplace.Web/Controllers/FotosController.cs`
+- `src/GazetaMarketplace.Web/Controllers/PhotosController.cs`
 
 **Acceptance Criteria**:
 - [ ] A assinatura do arquivo (JPEG, PNG, GIF, WebP, HEIC/HEIF) decide o formato, nunca a extensão; arquivo falso com extensão `.jpg` é recusado
@@ -1172,20 +1174,20 @@
 - [ ] **RC-4:** o caminho de todo arquivo de foto usa só ids numéricos e nomes gerados, e o caminho final é conferido: precisa ficar dentro de `PhotoStorage__BasePath`
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FormatoTests.Assinatura_DecideOFormato_NaoAExtensao`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FormatoTests.Heic_E_ConvertidoParaWebP`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/MetadadosTests.Gps_NaoSobrevive_NasVersoes`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/VersoesTests.Gera1600e480_Webp_Qualidade80`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/EntregaTests.OriginaisNaoTemRota`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/EntregaTests.AnuncioNaoPublicado_Devolve404IgualAoInexistente`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/EntregaTests.Publicado_TemCacheLongo`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FalhaTests.FalhaNoMeio_ApagaArquivosGravados`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/HeicTests.BibliotecaNativaAusente_DevolveMensagemClara`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosSegurancaTests.ImagemAcimaDoLimiteDePixels_E_Recusada`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosSegurancaTests.DecodificadoresNaoUsados_EstaoDesligados`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosSegurancaTests.ArquivoSvgOuMvgComExtensaoJpg_E_Recusado`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/EntregaTests.TentativaDeSairDaPastaBase_E_Recusada`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/EntregaTests.RotaComIdNaoNumerico_Devolve404`
+- `tests/GazetaMarketplace.Web.Tests/Photos/FormatoTests.Assinatura_DecideOFormato_NaoAExtensao`
+- `tests/GazetaMarketplace.Web.Tests/Photos/FormatoTests.Heic_E_ConvertidoParaWebP`
+- `tests/GazetaMarketplace.Web.Tests/Photos/MetadadosTests.Gps_NaoSobrevive_NasVersoes`
+- `tests/GazetaMarketplace.Web.Tests/Photos/VersoesTests.Gera1600e480_Webp_Qualidade80`
+- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.OriginaisNaoTemRota`
+- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.AnuncioNaoPublicado_Devolve404IgualAoInexistente`
+- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.Publicado_TemCacheLongo`
+- `tests/GazetaMarketplace.Web.Tests/Photos/FailureTests.FalhaNoMeio_ApagaArquivosGravados`
+- `tests/GazetaMarketplace.Web.Tests/Photos/HeicTests.BibliotecaNativaAusente_DevolveMensagemClara`
+- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosSecurityTests.ImagemAcimaDoLimiteDePixels_E_Recusada`
+- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosSecurityTests.DecodificadoresNaoUsados_EstaoDesligados`
+- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosSecurityTests.ArquivoSvgOuMvgComExtensaoJpg_E_Recusado`
+- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.TentativaDeSairDaPastaBase_E_Recusada`
+- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.RotaComIdNaoNumerico_Devolve404`
 
 **Dependencies**: 3.1, 0.2
 
@@ -1207,9 +1209,9 @@
 
 **Files to modify**:
 - src/GazetaMarketplace.Web/Controllers/Api/AnuncioFotosController.cs (uploadAdPhoto, setAdPhotoCover, deleteAdPhoto)
-- `src/GazetaMarketplace.Web/wwwroot/js/modules/fotos.js`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Anuncios/_Fotos.cshtml`
-- `src/GazetaMarketplace.Core/Fotos/FotoService.cs`
+- `src/GazetaMarketplace.Web/wwwroot/js/modules/photos.js`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/_Photos.cshtml`
+- `src/GazetaMarketplace.Core/Photos/PhotoService.cs`
 
 **Acceptance Criteria**:
 - [ ] `@US-008-S02` (@happy): Adicionar fotos ao anúncio — o *Then* do SPEC é atendido
@@ -1226,22 +1228,22 @@
 - [ ] **RC-6:** no máximo 2 conversões de foto ao mesmo tempo no servidor e no máximo 30 envios por minuto por usuário logado; o excesso devolve 429 `RATE_LIMITED`
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosEndpointsTests.US008S02_AdicionarFotosAoAnuncio` — `@US-008-S02`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Fotos/FotosEndpointsTestsE2E.US008S02_AdicionarFotosAoAnuncio` — `@US-008-S02` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosEndpointsTests.US008S03_TrocarACapaERemoverUmaFoto` — `@US-008-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Fotos/FotosEndpointsTestsE2E.US008S03_TrocarACapaERemoverUmaFoto` — `@US-008-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosEndpointsTests.US008S04_PassarDoLimiteDe20Fotos` — `@US-008-S04`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Fotos/FotosEndpointsTestsE2E.US008S04_PassarDoLimiteDe20Fotos` — `@US-008-S04` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosEndpointsTests.US008S05_EnviarUmArquivoQueNaoEFotoAceita` — `@US-008-S05`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Fotos/FotosEndpointsTestsE2E.US008S05_EnviarUmArquivoQueNaoEFotoAceita` — `@US-008-S05` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosEndpointsTests.US008S06_FalhaAoEnviarUmaFoto` — `@US-008-S06`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Fotos/FotosEndpointsTestsE2E.US008S06_FalhaAoEnviarUmaFoto` — `@US-008-S06` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimitesTests.ArquivoDe10a11Mb_RecebeMensagemDaAplicacao`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimitesTests.Servicos_AceitaSeis_Vagas_AceitaZero`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/AutorizacaoTests.FotoDeAnuncioAlheio_Devolve403`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimitesTests.TerceiraConversaoSimultanea_EsperaNaFila`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimitesTests.ExcessoDeEnviosPorMinuto_Devolve429`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosHandoffTests.FotosJs_EnviaMultipart_EndpointDevolveFotoEOrdem (produtor: `fotos.js`; consumidor: `uploadAdPhoto`)`
+- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S02_AdicionarFotosAoAnuncio` — `@US-008-S02`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S02_AdicionarFotosAoAnuncio` — `@US-008-S02` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S03_TrocarACapaERemoverUmaFoto` — `@US-008-S03`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S03_TrocarACapaERemoverUmaFoto` — `@US-008-S03` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S04_PassarDoLimiteDe20Fotos` — `@US-008-S04`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S04_PassarDoLimiteDe20Fotos` — `@US-008-S04` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S05_EnviarUmArquivoQueNaoEFotoAceita` — `@US-008-S05`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S05_EnviarUmArquivoQueNaoEFotoAceita` — `@US-008-S05` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S06_FalhaAoEnviarUmaFoto` — `@US-008-S06`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S06_FalhaAoEnviarUmaFoto` — `@US-008-S06` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Photos/LimitesTests.ArquivoDe10a11Mb_RecebeMensagemDaAplicacao`
+- `tests/GazetaMarketplace.Web.Tests/Photos/LimitesTests.Servicos_AceitaSeis_Vagas_AceitaZero`
+- `tests/GazetaMarketplace.Web.Tests/Photos/AutorizacaoTests.FotoDeAnuncioAlheio_Devolve403`
+- `tests/GazetaMarketplace.Web.Tests/Photos/LimitesTests.TerceiraConversaoSimultanea_EsperaNaFila`
+- `tests/GazetaMarketplace.Web.Tests/Photos/LimitesTests.ExcessoDeEnviosPorMinuto_Devolve429`
+- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosHandoffTests.FotosJs_EnviaMultipart_EndpointDevolveFotoEOrdem (produtor: `photos.js`; consumidor: `uploadAdPhoto`)`
 
 **Dependencies**: 3.4, 3.3
 
@@ -1260,8 +1262,8 @@
 **Objective**: Serviço em segundo plano que apaga os originais com mais de 30 dias.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Infrastructure/Fotos/OriginalsCleanupService.cs`
-- `src/GazetaMarketplace.Infrastructure/Fotos/PhotoStorageOptions.cs`
+- `src/GazetaMarketplace.Infrastructure/Photos/OriginalsCleanupService.cs`
+- `src/GazetaMarketplace.Infrastructure/Photos/PhotoStorageOptions.cs`
 
 **Acceptance Criteria**:
 - [ ] Roda ao iniciar o site e a cada 24 horas enquanto o processo estiver vivo; apaga tudo o que passou de 30 dias (um atraso não perde nada)
@@ -1271,13 +1273,13 @@
 - [ ] A anulação de `OriginalKey` é feita por lote, com uma instrução (`ExecuteUpdateAsync` do EF Core); Dapper só entra se o volume medido justificar (ADR-004, ADR-005)
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimpezaTests.ApagaSoOriginaisComMaisDeTrintaDias`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimpezaTests.RodaNaPartida_E_DepoisACada24h`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimpezaTests.AnulaOriginalKey_E_Registra`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/ReprocessarTests.SemOriginal_FalhaComOriginalIndisponivel`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimpezaTests.VersoesWebp_NuncaSaoApagadas`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimpezaTests.AnulaOriginalKey_EmUmaInstrucaoPorLote`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/LimpezaTests.AnulaOriginalKey_EmUmaInstrucaoPorLote`
+- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.ApagaSoOriginaisComMaisDeTrintaDias`
+- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.RodaNaPartida_E_DepoisACada24h`
+- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.AnulaOriginalKey_E_Registra`
+- `tests/GazetaMarketplace.Web.Tests/Photos/ReprocessarTests.SemOriginal_FalhaComOriginalIndisponivel`
+- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.VersoesWebp_NuncaSaoApagadas`
+- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.AnulaOriginalKey_EmUmaInstrucaoPorLote`
+- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.AnulaOriginalKey_EmUmaInstrucaoPorLote`
 
 **Dependencies**: 3.4
 
@@ -1298,9 +1300,9 @@
 **Objective**: Conferir as pendências do grupo de campos e mudar a situação para Em revisão sem duplicar o envio.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Core/Anuncios/EnviarParaRevisaoService.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Anuncios/_Pendencias.cshtml`
-- `src/GazetaMarketplace.Web/wwwroot/js/pages/anuncio-editar.js`
+- `src/GazetaMarketplace.Core/Ads/SubmitForReviewService.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/_Pendencias.cshtml`
+- `src/GazetaMarketplace.Web/wwwroot/js/pages/ad-edit.js`
 
 **Acceptance Criteria**:
 - [ ] `@US-009-S01` (@happy): Enviar um rascunho completo para revisão — o *Then* do SPEC é atendido
@@ -1313,13 +1315,13 @@
 - [ ] Reenviar um anúncio rejeitado depois de corrigir leva a Em revisão; clique duplo gera uma única entrada na fila
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/EnviarRevisaoTests.US009S01_EnviarUmRascunhoCompletoParaRevisao` — `@US-009-S01`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/EnviarRevisaoTests.US009S02_EnviarUmRascunhoIncompleto` — `@US-009-S02`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/EnviarRevisaoTests.US009S03_FaltamCaracteristicasObrigatoriasDaCategoria` — `@US-009-S03`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/EnviarRevisaoTests.US009S04_ReenviarUmAnuncioRejeitadoDepoisDeCorrigiLo` — `@US-009-S04`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/EnviarRevisaoTests.US009S05_ClicarDuasVezesEmEnviar` — `@US-009-S05`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/EnviarRevisaoTestsE2E.US009S05_ClicarDuasVezesEmEnviar` — `@US-009-S05` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Anuncios/PendenciasTests.Vagas_NaoExigeFoto_Servicos_NaoExigePreco`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S01_EnviarUmRascunhoCompletoParaRevisao` — `@US-009-S01`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S02_EnviarUmRascunhoIncompleto` — `@US-009-S02`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S03_FaltamCaracteristicasObrigatoriasDaCategoria` — `@US-009-S03`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S04_ReenviarUmAnuncioRejeitadoDepoisDeCorrigiLo` — `@US-009-S04`
+- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S05_ClicarDuasVezesEmEnviar` — `@US-009-S05`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/SubmitForReviewE2ETests.US009S05_ClicarDuasVezesEmEnviar` — `@US-009-S05` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Ads/PendenciasTests.Vagas_NaoExigeFoto_Servicos_NaoExigePreco`
 
 **Dependencies**: 3.3, 3.5
 
@@ -1388,10 +1390,10 @@
 **Objective**: Fila de anúncios Em revisão (do mais antigo ao mais novo) e pré-visualização com a mesma aparência do site.
 
 **Files to modify**:
-- Trocar a página **provisória** `src/GazetaMarketplace.Web/Areas/Painel/Views/Anuncios/Fila.cshtml` (criada na 1.1) pela fila de revisão real; o Administrador cai nela depois de entrar (`RotasDoPainel.Fila`)
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/FilaController.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Fila/*.cshtml`
-- `src/GazetaMarketplace.Core/Anuncios/FilaService.cs`
+- Trocar a página **provisória** `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/ReviewQueue.cshtml` (criada na 1.1) pela fila de revisão real; o Administrador cai nela depois de entrar (`PanelRoutes.ReviewQueue`)
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/ReviewQueueController.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/ReviewQueue/*.cshtml`
+- `src/GazetaMarketplace.Core/Ads/ReviewQueueService.cs`
 
 **Acceptance Criteria**:
 - [ ] `@US-010-S01` (@happy): Ver a fila de revisão — o *Then* do SPEC é atendido
@@ -1403,10 +1405,10 @@
 - [ ] Redator não acessa a fila
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Revisão/FilaTests.US010S01_VerAFilaDeRevisao` — `@US-010-S01`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/FilaTests.US010S02_PreVisualizarUmAnuncioAntesDeDecidir` — `@US-010-S02`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/FilaTests.US010S06_FilaDeRevisaoVazia` — `@US-010-S06`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/FilaTests.US010S09_RedatorNaoPodeRevisarAnuncios` — `@US-010-S09`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewQueueTests.US010S01_VerAFilaDeRevisao` — `@US-010-S01`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewQueueTests.US010S02_PreVisualizarUmAnuncioAntesDeDecidir` — `@US-010-S02`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewQueueTests.US010S06_FilaDeRevisaoVazia` — `@US-010-S06`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewQueueTests.US010S09_RedatorNaoPodeRevisarAnuncios` — `@US-010-S09`
 
 **Dependencies**: 3.7, 3.8, 1.1
 
@@ -1427,9 +1429,9 @@
 **Objective**: Decidir o anúncio com registro de quem decidiu, motivo obrigatório na rejeição e proteção contra decisão simultânea.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Core/Anuncios/RevisaoService.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/FilaController.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Fila/_DialogoRejeitar.cshtml`
+- `src/GazetaMarketplace.Core/Ads/ReviewService.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/ReviewQueueController.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/ReviewQueue/_RejectDialog.cshtml`
 
 **Acceptance Criteria**:
 - [ ] `@US-010-S03` (@happy): Publicar um anúncio — o *Then* do SPEC é atendido
@@ -1442,14 +1444,14 @@
 - [ ] Dois administradores decidindo o mesmo anúncio: o segundo recebe 409 "Este anúncio já foi publicado por outro administrador" (`rowversion`)
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RevisaoTests.US010S03_PublicarUmAnuncio` — `@US-010-S03`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RevisaoTests.US010S04_RejeitarUmAnuncioComMotivo` — `@US-010-S04`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RevisaoTests.US010S05_RejeitarSemInformarOMotivo` — `@US-010-S05`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RevisaoTests.US010S07_DoisAdministradoresDecidemOMesmoAnuncio` — `@US-010-S07`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Revisão/RevisaoTestsE2E.US010S07_DoisAdministradoresDecidemOMesmoAnuncio` — `@US-010-S07` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RevisaoTests.US010S08_PublicarSemOTelefoneDoSiteConfigurado` — `@US-010-S08`
-- `tests/GazetaMarketplace.Web.Tests/Revisao/ConcorrenciaTests.DoisAdministradores_SoUmDecide`
-- `tests/GazetaMarketplace.Web.Tests/Revisao/AuditoriaTests.Publicar_E_Rejeitar_RegistramAutorDataEAcao`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S03_PublicarUmAnuncio` — `@US-010-S03`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S04_RejeitarUmAnuncioComMotivo` — `@US-010-S04`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S05_RejeitarSemInformarOMotivo` — `@US-010-S05`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S07_DoisAdministradoresDecidemOMesmoAnuncio` — `@US-010-S07`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Revisão/ReviewE2ETests.US010S07_DoisAdministradoresDecidemOMesmoAnuncio` — `@US-010-S07` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S08_PublicarSemOTelefoneDoSiteConfigurado` — `@US-010-S08`
+- `tests/GazetaMarketplace.Web.Tests/Review/ConcurrencyTests.DoisAdministradores_SoUmDecide`
+- `tests/GazetaMarketplace.Web.Tests/Review/AuditingTests.Publicar_E_Rejeitar_RegistramAutorDataEAcao`
 
 **Dependencies**: 4.1, 2.7, 0.6
 
@@ -1470,9 +1472,9 @@
 **Objective**: Retirar anúncios do site: despublicar volta a Rascunho e arquivar é definitivo.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Core/Anuncios/RetiradaService.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/AnunciosController.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Anuncios/_DialogosRetirada.cshtml`
+- `src/GazetaMarketplace.Core/Ads/TakedownService.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/_TakedownDialogs.cshtml`
 
 **Acceptance Criteria**:
 - [ ] `@US-011-S01` (@happy): Despublicar um anúncio — o *Then* do SPEC é atendido
@@ -1486,13 +1488,13 @@
 - [ ] Redator não vê as ações de retirada; ações registradas em `AuditEntries`
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RetiradaTests.US011S01_DespublicarUmAnuncio` — `@US-011-S01`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RetiradaTests.US011S02_ArquivarUmAnuncioPublicado` — `@US-011-S02`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RetiradaTests.US011S03_CancelarAConfirmacao` — `@US-011-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Revisão/RetiradaTestsE2E.US011S03_CancelarAConfirmacao` — `@US-011-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RetiradaTests.US011S05_ArquivarUmAnuncioQueAindaNaoFoiPublicado` — `@US-011-S05`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RetiradaTests.US011S06_AnuncioArquivadoNaoTemAcoesDeRetirada` — `@US-011-S06`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/RetiradaTests.US011S07_RedatorNaoVeAsAcoesDeRetirada` — `@US-011-S07`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S01_DespublicarUmAnuncio` — `@US-011-S01`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S02_ArquivarUmAnuncioPublicado` — `@US-011-S02`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S03_CancelarAConfirmacao` — `@US-011-S03`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Revisão/TakedownE2ETests.US011S03_CancelarAConfirmacao` — `@US-011-S03` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S05_ArquivarUmAnuncioQueAindaNaoFoiPublicado` — `@US-011-S05`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S06_AnuncioArquivadoNaoTemAcoesDeRetirada` — `@US-011-S06`
+- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S07_RedatorNaoVeAsAcoesDeRetirada` — `@US-011-S07`
 
 **Dependencies**: 4.2
 
@@ -1513,14 +1515,14 @@
 **Objective**: Lista de trabalho com busca por título, filtro por situação e 20 por página, lida por um *read repository* em Dapper.
 
 **Files to modify**:
-- Trocar a página **provisória** `src/GazetaMarketplace.Web/Areas/Painel/Views/Anuncios/Index.cshtml` (criada na 1.1) pela lista real de "Meus anúncios"; o Redator cai nela depois de entrar (`RotasDoPainel.Anuncios`)
-- `src/GazetaMarketplace.Core/Anuncios/IPainelListaReadRepository.cs`
-- src/GazetaMarketplace.Infrastructure/Anuncios/PainelListaReadRepository.cs (Dapper: junção de anúncios, categorias e autor; filtros e ordenação dinâmicos)
-- `src/GazetaMarketplace.Core/Anuncios/IPainelListaReadRepository.cs`
-- src/GazetaMarketplace.Infrastructure/Anuncios/PainelListaReadRepository.cs (Dapper: junção de anúncios, categorias e autor; filtros e ordenação dinâmicos)
-- src/GazetaMarketplace.Web/Areas/Painel/Controllers/AnunciosController.cs (Index)
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Anuncios/Index.cshtml`
-- `src/GazetaMarketplace.Core/Anuncios/PainelListaService.cs`
+- Trocar a página **provisória** `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/Index.cshtml` (criada na 1.1) pela lista real de "Meus anúncios"; o Redator cai nela depois de entrar (`PanelRoutes.Ads`)
+- `src/GazetaMarketplace.Core/Ads/IPanelAdListReadRepository.cs`
+- src/GazetaMarketplace.Infrastructure/Ads/PainelListaReadRepository.cs (Dapper: junção de anúncios, categorias e autor; filtros e ordenação dinâmicos)
+- `src/GazetaMarketplace.Core/Ads/IPanelAdListReadRepository.cs`
+- src/GazetaMarketplace.Infrastructure/Ads/PainelListaReadRepository.cs (Dapper: junção de anúncios, categorias e autor; filtros e ordenação dinâmicos)
+- src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs (Index)
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/Index.cshtml`
+- `src/GazetaMarketplace.Core/Ads/PanelAdListService.cs`
 
 **Acceptance Criteria**:
 - [ ] `@US-012-S01` (@happy): Redator vê apenas os próprios anúncios — o *Then* do SPEC é atendido
@@ -1541,27 +1543,27 @@
 - [ ] **RC-15:** a consulta Dapper da lista do painel usa `commandTimeout` de 10 s
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaTests.US012S01_RedatorVeApenasOsPropriosAnuncios` — `@US-012-S01`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaTests.US012S02_AdministradorVeTodosOsAnunciosComOAutor` — `@US-012-S02`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaTests.US012S03_FiltrarPorSituacao` — `@US-012-S03`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaTests.US012S04_BuscarUmAnuncioPeloTituloNoPainel` — `@US-012-S04`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaTests.US012S05_AbrirUmAnuncioDaLista` — `@US-012-S05`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaTests.US012S06_RedatorAindaSemAnuncios` — `@US-012-S06`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaTests.US012S07_ListaComMaisDe20Anuncios` — `@US-012-S07`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaTests.US012S08_FalhaAoCarregarALista` — `@US-012-S08`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.US012S01_RedatorVeApenasOsPropriosAnuncios` — `@US-012-S01` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.US012S02_AdministradorVeTodosOsAnunciosComOAutor` — `@US-012-S02` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.US012S03_FiltrarPorSituacao` — `@US-012-S03` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.US012S04_BuscarUmAnuncioPeloTituloNoPainel` — `@US-012-S04` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.US012S07_ListaComMaisDe20Anuncios` — `@US-012-S07` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Painel/ListaTests.ArquivadosEscondidos_AteFiltrar`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.Redator_RecebeSoOsProprios_NaConsulta (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.ArquivadosEscondidos_AteFiltrarPorArquivado (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.Redator_RecebeSoOsProprios_NaConsulta (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.ArquivadosEscondidos_AteFiltrarPorArquivado (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Painel/PainelListaQueryTests.ConsultaQueEstouraOTempo_Devolve503SemPilha (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S01_RedatorVeApenasOsPropriosAnuncios` — `@US-012-S01`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S02_AdministradorVeTodosOsAnunciosComOAutor` — `@US-012-S02`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S03_FiltrarPorSituacao` — `@US-012-S03`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S04_BuscarUmAnuncioPeloTituloNoPainel` — `@US-012-S04`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S05_AbrirUmAnuncioDaLista` — `@US-012-S05`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S06_RedatorAindaSemAnuncios` — `@US-012-S06`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S07_ListaComMaisDe20Anuncios` — `@US-012-S07`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S08_FalhaAoCarregarALista` — `@US-012-S08`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S01_RedatorVeApenasOsPropriosAnuncios` — `@US-012-S01` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S02_AdministradorVeTodosOsAnunciosComOAutor` — `@US-012-S02` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S03_FiltrarPorSituacao` — `@US-012-S03` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S04_BuscarUmAnuncioPeloTituloNoPainel` — `@US-012-S04` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S07_ListaComMaisDe20Anuncios` — `@US-012-S07` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Panel/ListTests.ArquivadosEscondidos_AteFiltrar`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.Redator_RecebeSoOsProprios_NaConsulta (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.ArquivadosEscondidos_AteFiltrarPorArquivado (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.Redator_RecebeSoOsProprios_NaConsulta (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.ArquivadosEscondidos_AteFiltrarPorArquivado (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.ConsultaQueEstouraOTempo_Devolve503SemPilha (TestContainers, roda no /test)`
 
 **Dependencies**: 3.3, 1.1
 
@@ -1596,7 +1598,7 @@
 **Files to modify**:
 - `src/GazetaMarketplace.Web/Controllers/HomeController.cs, CategoriaController.cs`
 - `src/GazetaMarketplace.Web/Views/Home/Index.cshtml`
-- `src/GazetaMarketplace.Web/Views/Categoria/Index.cshtml`
+- `src/GazetaMarketplace.Web/Views/Category/Index.cshtml`
 - `src/GazetaMarketplace.Core/Vitrine/VitrineService.cs`
 
 **Acceptance Criteria**:
@@ -1643,9 +1645,9 @@
 **Objective**: Página do anúncio com galeria (destaque, miniaturas, ampliar), características do grupo e página de indisponibilidade.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Web/Controllers/AnuncioController.cs`
-- `src/GazetaMarketplace.Web/Views/Anuncio/Detalhe.cshtml`
-- src/GazetaMarketplace.Web/wwwroot/js/pages/anuncio-detalhe.js (galeria)
+- `src/GazetaMarketplace.Web/Controllers/AdController.cs`
+- `src/GazetaMarketplace.Web/Views/Ad/Detalhe.cshtml`
+- src/GazetaMarketplace.Web/wwwroot/js/pages/ad-detail.js (galeria)
 - `src/GazetaMarketplace.Web/wwwroot/css/pages/anuncio-detalhe.css`
 
 **Acceptance Criteria**:
@@ -1735,14 +1737,14 @@
 **Objective**: Busca por texto normalizado com filtros por categoria, UF, cidade, preço e características do grupo, ordenação e paginação de 24, lida por um *read repository* em Dapper.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Core/Busca/IBuscaReadRepository.cs`
-- src/GazetaMarketplace.Infrastructure/Busca/BuscaReadRepository.cs (Dapper, SQL montado pelo `SqlBuilder`)
-- `src/GazetaMarketplace.Core/Busca/IBuscaReadRepository.cs`
-- src/GazetaMarketplace.Infrastructure/Busca/BuscaReadRepository.cs (Dapper, SQL montado pelo `SqlBuilder`)
-- `src/GazetaMarketplace.Web/Controllers/BuscaController.cs`
-- `src/GazetaMarketplace.Web/Views/Busca/Index.cshtml`
-- `src/GazetaMarketplace.Core/Busca/BuscaService.cs`
-- `src/GazetaMarketplace.Web/wwwroot/js/pages/busca.js`
+- `src/GazetaMarketplace.Core/Search/ISearchReadRepository.cs`
+- src/GazetaMarketplace.Infrastructure/Search/BuscaReadRepository.cs (Dapper, SQL montado pelo `SqlBuilder`)
+- `src/GazetaMarketplace.Core/Search/ISearchReadRepository.cs`
+- src/GazetaMarketplace.Infrastructure/Search/BuscaReadRepository.cs (Dapper, SQL montado pelo `SqlBuilder`)
+- `src/GazetaMarketplace.Web/Controllers/SearchController.cs`
+- `src/GazetaMarketplace.Web/Views/Search/Index.cshtml`
+- `src/GazetaMarketplace.Core/Search/SearchService.cs`
+- `src/GazetaMarketplace.Web/wwwroot/js/pages/search.js`
 
 **Acceptance Criteria**:
 - [ ] `@US-002-S01` (@happy): Buscar por texto — o *Then* do SPEC é atendido
@@ -1770,40 +1772,40 @@
 - [ ] **RC-15:** termo de busca com no máximo 100 caracteres (mensagem junto do campo) e consulta Dapper com `commandTimeout` de 10 s; estouro devolve 503 com código de referência, sem pilha
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S01_BuscarPorTexto` — `@US-002-S01`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S02_CombinarCategoriaLocalizacaoEPreco` — `@US-002-S02`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S03_FiltrarPorCaracteristicasDeVeiculo` — `@US-002-S03`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S04_FiltrarTerrenosSitiosEFazendasPorArea` — `@US-002-S04`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S05_OrdenarOsResultados` — `@US-002-S05`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S06_PaginarOsResultados` — `@US-002-S06`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S07_BuscaSemResultados` — `@US-002-S07`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S08_FaixaDePrecoInvertida` — `@US-002-S08`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S09_CompartilharUmaBuscaPeloEnderecoDaPagina` — `@US-002-S09`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S10_TrocarAUFLimpaACidadeEscolhida` — `@US-002-S10`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/BuscaTestsE2E.US002S10_TrocarAUFLimpaACidadeEscolhida` — `@US-002-S10` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S11_FalhaAoBuscar` — `@US-002-S11`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaTests.US002S12_BuscaEmTelaDeCelularEstreita` — `@US-002-S12`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/BuscaTestsE2E.US002S12_BuscaEmTelaDeCelularEstreita` — `@US-002-S12` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaQueryTests.US002S01_BuscarPorTexto` — `@US-002-S01` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaQueryTests.US002S02_CombinarCategoriaLocalizacaoEPreco` — `@US-002-S02` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaQueryTests.US002S03_FiltrarPorCaracteristicasDeVeiculo` — `@US-002-S03` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaQueryTests.US002S04_FiltrarTerrenosSitiosEFazendasPorArea` — `@US-002-S04` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaQueryTests.US002S05_OrdenarOsResultados` — `@US-002-S05` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaQueryTests.US002S06_PaginarOsResultados` — `@US-002-S06` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/BuscaQueryTests.US002S07_BuscaSemResultados` — `@US-002-S07` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Busca/ServicosTests.FaixaDePreco_ExcluiServicos_OrdenacaoMandaParaOFim`
-- `tests/GazetaMarketplace.Web.Tests/Busca/NormalizacaoTests.BuscaIgnoraAcentosEMaiusculas_NoTituloENaDescricao`
-- `tests/GazetaMarketplace.Web.Tests/Busca/SegurancaTests.Termo_E_Parametro_NaoConcatenado`
-- `tests/GazetaMarketplace.Web.Tests/Busca/DesempenhoTests.Com200Anuncios_RespondeAbaixoDe500ms (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Busca/BuscaQueryTests.SoAnunciosPublicados_EmCadaSituacao (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Busca/BuscaQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Busca/BuscaQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Busca/BuscaQueryTests.SoAnunciosPublicados_EmCadaSituacao (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Busca/BuscaQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Busca/BuscaQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Busca/BuscaTests.TermoComMaisDe100Caracteres_MostraErroJuntoDoCampo`
-- `tests/GazetaMarketplace.Web.Tests/Busca/BuscaQueryTests.ConsultaQueEstouraOTempo_Devolve503SemPilha (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Busca/EnderecoHandoffTests.FiltrosNoEndereco_ReabremIguaisNoServidor (produtor: `busca.js`; consumidor: `BuscaService`)`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S01_BuscarPorTexto` — `@US-002-S01`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S02_CombinarCategoriaLocalizacaoEPreco` — `@US-002-S02`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S03_FiltrarPorCaracteristicasDeVeiculo` — `@US-002-S03`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S04_FiltrarTerrenosSitiosEFazendasPorArea` — `@US-002-S04`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S05_OrdenarOsResultados` — `@US-002-S05`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S06_PaginarOsResultados` — `@US-002-S06`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S07_BuscaSemResultados` — `@US-002-S07`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S08_FaixaDePrecoInvertida` — `@US-002-S08`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S09_CompartilharUmaBuscaPeloEnderecoDaPagina` — `@US-002-S09`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S10_TrocarAUFLimpaACidadeEscolhida` — `@US-002-S10`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/SearchE2ETests.US002S10_TrocarAUFLimpaACidadeEscolhida` — `@US-002-S10` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S11_FalhaAoBuscar` — `@US-002-S11`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S12_BuscaEmTelaDeCelularEstreita` — `@US-002-S12`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/SearchE2ETests.US002S12_BuscaEmTelaDeCelularEstreita` — `@US-002-S12` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S01_BuscarPorTexto` — `@US-002-S01` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S02_CombinarCategoriaLocalizacaoEPreco` — `@US-002-S02` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S03_FiltrarPorCaracteristicasDeVeiculo` — `@US-002-S03` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S04_FiltrarTerrenosSitiosEFazendasPorArea` — `@US-002-S04` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S05_OrdenarOsResultados` — `@US-002-S05` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S06_PaginarOsResultados` — `@US-002-S06` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S07_BuscaSemResultados` — `@US-002-S07` (consulta com SQL Server real, TestContainers, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Search/ServicosTests.FaixaDePreco_ExcluiServicos_OrdenacaoMandaParaOFim`
+- `tests/GazetaMarketplace.Web.Tests/Search/NormalizacaoTests.BuscaIgnoraAcentosEMaiusculas_NoTituloENaDescricao`
+- `tests/GazetaMarketplace.Web.Tests/Search/SecurityTests.Termo_E_Parametro_NaoConcatenado`
+- `tests/GazetaMarketplace.Web.Tests/Search/DesempenhoTests.Com200Anuncios_RespondeAbaixoDe500ms (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.SoAnunciosPublicados_EmCadaSituacao (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.SoAnunciosPublicados_EmCadaSituacao (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Search/SearchTests.TermoComMaisDe100Caracteres_MostraErroJuntoDoCampo`
+- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.ConsultaQueEstouraOTempo_Devolve503SemPilha (TestContainers, roda no /test)`
+- `tests/GazetaMarketplace.Web.Tests/Search/EnderecoHandoffTests.FiltrosNoEndereco_ReabremIguaisNoServidor (produtor: `search.js`; consumidor: `BuscaService`)`
 
 **Dependencies**: 3.8, 3.1, 2.3, 0.7
 
@@ -1824,10 +1826,10 @@
 **Objective**: Favoritos em `localStorage`, página "Meus favoritos" e endpoint que devolve só anúncios publicados por ids.
 
 **Files to modify**:
-- src/GazetaMarketplace.Web/Controllers/Api/AnunciosController.cs (listAdsByIds)
-- `src/GazetaMarketplace.Web/Controllers/FavoritosController.cs`
-- `src/GazetaMarketplace.Web/wwwroot/js/modules/favoritos.js`
-- `src/GazetaMarketplace.Web/Views/Favoritos/Index.cshtml`
+- src/GazetaMarketplace.Web/Controllers/Api/AdsController.cs (listAdsByIds)
+- `src/GazetaMarketplace.Web/Controllers/FavoritesController.cs`
+- `src/GazetaMarketplace.Web/wwwroot/js/modules/favorites.js`
+- `src/GazetaMarketplace.Web/Views/Favorites/Index.cshtml`
 
 **Acceptance Criteria**:
 - [ ] `@US-005-S01` (@happy): Favoritar um anúncio pela lista — o *Then* do SPEC é atendido
@@ -1844,24 +1846,24 @@
 - [ ] Armazenamento bloqueado mostra mensagem e o site continua funcionando; favoritos não acompanham o visitante em outro aparelho
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritosTests.US005S01_FavoritarUmAnuncioPelaLista` — `@US-005-S01`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritosTestsE2E.US005S01_FavoritarUmAnuncioPelaLista` — `@US-005-S01` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritosTests.US005S02_FavoritarEDesfavoritarPelaPaginaDoAnuncio` — `@US-005-S02`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritosTests.US005S03_FavoritosContinuamDepoisDeFecharONavegador` — `@US-005-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritosTestsE2E.US005S03_FavoritosContinuamDepoisDeFecharONavegador` — `@US-005-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritosTests.US005S04_RemoverUmAnuncioDaPaginaMeusFavoritos` — `@US-005-S04`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritosTestsE2E.US005S04_RemoverUmAnuncioDaPaginaMeusFavoritos` — `@US-005-S04` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritosTests.US005S05_ListaDeFavoritosVazia` — `@US-005-S05`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritosTests.US005S06_UmFavoritoDeixaDeEstarDisponivel` — `@US-005-S06`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritosTests.US005S07_ONavegadorNaoPermiteSalvarFavoritos` — `@US-005-S07`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritosTestsE2E.US005S07_ONavegadorNaoPermiteSalvarFavoritos` — `@US-005-S07` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritosTests.US005S08_FavoritosNaoAcompanhamOVisitanteEmOutroAparelho` — `@US-005-S08`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritosTests.US011S04_AnuncioArquivadoSomeDosFavoritosDoVisitante` — `@US-011-S04`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritosTestsE2E.US011S04_AnuncioArquivadoSomeDosFavoritosDoVisitante` — `@US-011-S04` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Favoritos/ApiTests.MaisDe100Ids_Devolve400`
-- `tests/GazetaMarketplace.Web.Tests/Favoritos/ApiTests.IdsNaoNumericos_Devolve400`
-- `tests/GazetaMarketplace.Web.Tests/Favoritos/ApiTests.SoPublicados_NaOrdemPedida`
-- `tests/GazetaMarketplace.Web.Tests/Favoritos/FavoritosHandoffTests.IdsDoLocalStorage_ViramRespostaDaApi_ETiramOsAusentes (produtor: `favoritos.js`; consumidor: `listAdsByIds`)`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S01_FavoritarUmAnuncioPelaLista` — `@US-005-S01`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US005S01_FavoritarUmAnuncioPelaLista` — `@US-005-S01` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S02_FavoritarEDesfavoritarPelaPaginaDoAnuncio` — `@US-005-S02`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S03_FavoritosContinuamDepoisDeFecharONavegador` — `@US-005-S03`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US005S03_FavoritosContinuamDepoisDeFecharONavegador` — `@US-005-S03` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S04_RemoverUmAnuncioDaPaginaMeusFavoritos` — `@US-005-S04`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US005S04_RemoverUmAnuncioDaPaginaMeusFavoritos` — `@US-005-S04` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S05_ListaDeFavoritosVazia` — `@US-005-S05`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S06_UmFavoritoDeixaDeEstarDisponivel` — `@US-005-S06`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S07_ONavegadorNaoPermiteSalvarFavoritos` — `@US-005-S07`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US005S07_ONavegadorNaoPermiteSalvarFavoritos` — `@US-005-S07` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S08_FavoritosNaoAcompanhamOVisitanteEmOutroAparelho` — `@US-005-S08`
+- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US011S04_AnuncioArquivadoSomeDosFavoritosDoVisitante` — `@US-011-S04`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US011S04_AnuncioArquivadoSomeDosFavoritosDoVisitante` — `@US-011-S04` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Favorites/ApiTests.MaisDe100Ids_Devolve400`
+- `tests/GazetaMarketplace.Web.Tests/Favorites/ApiTests.IdsNaoNumericos_Devolve400`
+- `tests/GazetaMarketplace.Web.Tests/Favorites/ApiTests.SoPublicados_NaOrdemPedida`
+- `tests/GazetaMarketplace.Web.Tests/Favorites/FavoritosHandoffTests.IdsDoLocalStorage_ViramRespostaDaApi_ETiramOsAusentes (produtor: `favorites.js`; consumidor: `listAdsByIds`)`
 
 **Dependencies**: 3.8, 4.3
 
@@ -1893,7 +1895,7 @@
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Seo/SitemapTests.SoAnunciosPublicados`
 - `tests/GazetaMarketplace.Web.Tests/Seo/SitemapTests.Arquivado_SaiDoMapa`
-- `tests/GazetaMarketplace.Web.Tests/Seo/TituloTests.CadaPagina_TemTitleEDescriptionProprios`
+- `tests/GazetaMarketplace.Web.Tests/Seo/TitleTests.CadaPagina_TemTitleEDescriptionProprios`
 
 **Dependencies**: 5.2, 5.1
 
@@ -1926,8 +1928,8 @@
 **Objective**: Matriz automática de acesso: toda rota do painel exige login e o papel certo; textos digitados nunca executam.
 
 **Files to modify**:
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/MatrizDeAcessoTests.cs`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/XssEmTodasAsTelasTests.cs`
+- `tests/GazetaMarketplace.Web.Tests/Security/MatrizDeAcessoTests.cs`
+- `tests/GazetaMarketplace.Web.Tests/Security/XssEmTodasAsTelasTests.cs`
 
 **Acceptance Criteria**:
 - [ ] Toda rota do painel e todo endpoint JSON de escrita é listado por reflexão e testado sem login, como Redator e como Administrador; acesso indevido responde "Você não tem permissão" sem revelar conteúdo
@@ -1935,10 +1937,10 @@
 - [ ] Nenhuma rota nova do painel passa sem entrar na matriz (o teste falha)
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/MatrizDeAcessoTests.TodaRotaDoPainel_ExigeLogin`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/MatrizDeAcessoTests.Redator_NaoAcessaRotasDeAdministrador`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/MatrizDeAcessoTests.RotaNova_SemEntradaNaMatriz_FalhaOTeste`
-- `tests/GazetaMarketplace.Web.Tests/Seguranca/XssEmTodasAsTelasTests.Script_EmCadaCampo_ApareceComoTexto`
+- `tests/GazetaMarketplace.Web.Tests/Security/MatrizDeAcessoTests.TodaRotaDoPainel_ExigeLogin`
+- `tests/GazetaMarketplace.Web.Tests/Security/MatrizDeAcessoTests.Redator_NaoAcessaRotasDeAdministrador`
+- `tests/GazetaMarketplace.Web.Tests/Security/MatrizDeAcessoTests.RotaNova_SemEntradaNaMatriz_FalhaOTeste`
+- `tests/GazetaMarketplace.Web.Tests/Security/XssEmTodasAsTelasTests.Script_EmCadaCampo_ApareceComoTexto`
 
 **Dependencies**: 1.3, 2.6, 4.4, 5.4
 
@@ -1959,8 +1961,8 @@
 **Objective**: Criar no projeto Playwright a base que roda axe-core e a matriz de larguras em todas as telas; a execução completa é do `/test`.
 
 **Files to modify**:
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Suporte/AxeHelper.cs`
-- tests/GazetaMarketplace.Web.Tests.Playwright/Suporte/LarguraHelper.cs (320, 768, 1024, 1280)
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Support/AxeHelper.cs`
+- tests/GazetaMarketplace.Web.Tests.Playwright/Support/LarguraHelper.cs (320, 768, 1024, 1280)
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Acessibilidade/TodasAsTelasTests.cs`
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Responsividade/TodasAsTelasTests.cs`
 
@@ -1971,7 +1973,7 @@
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Acessibilidade/TodasAsTelasTests.Tela_NaoTemFalhasAxeAA (E2E, /test)`
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Responsividade/TodasAsTelasTests.Tela_NaoRolaNaHorizontal (E2E, /test)`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Acessibilidade/ListaDeTelasTests.TelaNova_SemEntradaNaLista_FalhaOTeste`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Acessibilidade/ScreenListTests.TelaNova_SemEntradaNaLista_FalhaOTeste`
 
 **Dependencies**: 5.1, 4.4
 
@@ -1993,7 +1995,7 @@
 
 **Files to modify**:
 - src/GazetaMarketplace.Web/Program.cs (compressão, cache de estáticos com `asp-append-version`)
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Desempenho/PesoDasPaginasTests.cs`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Desempenho/PageWeightTests.cs`
 - `tests/GazetaMarketplace.Web.Tests/Desempenho/VolumeDaV1Tests.cs`
 
 **Acceptance Criteria**:
@@ -2029,17 +2031,17 @@
 |------|------|----------------------------|
 | 3.4 | HEIC não funciona na hospedagem (componente nativo do Magick.NET, AR-05) | `HeicTests.BibliotecaNativaAusente_DevolveMensagemClara` e `FormatoTests.Heic_E_ConvertidoParaWebP`; critério de aceite da 3.4 sobre a mensagem clara |
 | 3.1 | Caminho JSON diferente entre o C# e a coluna calculada, e o filtro devolve resultado errado | `ColunasCalculadasDiferencialTests.CadaGrupoComFiltro_ClassesDeEntrada` (roda no `/test`) |
-| 4.2 | Dois administradores decidem o mesmo anúncio | `ConcorrenciaTests.DoisAdministradores_SoUmDecide` e o cenário `@US-010-S07` |
+| 4.2 | Dois administradores decidem o mesmo anúncio | `ConcurrencyTests.DoisAdministradores_SoUmDecide` e o cenário `@US-010-S07` |
 | 3.4 | Original com GPS vazar por alguma rota | `EntregaTests.OriginaisNaoTemRota` e `MetadadosTests.Gps_NaoSobrevive_NasVersoes` |
-| 3.6 | IIS compartilhado para o processo e a limpeza não roda | `LimpezaTests.RodaNaPartida_E_DepoisACada24h`: a limpeza roda na partida e apaga tudo o que passou de 30 dias |
+| 3.6 | IIS compartilhado para o processo e a limpeza não roda | `CleanupTests.RodaNaPartida_E_DepoisACada24h`: a limpeza roda na partida e apaga tudo o que passou de 30 dias |
 | 1.4 | SendGrid fora do ar deixa a pessoa sem acesso | `SendGridTests.FalhaDoSendGrid_RespostaContinuaNeutra` e a redefinição pelo Administrador em `@US-014-S10` (tarefa 1.3) |
-| 0.2 | Publicar sem a transformação do `web.config` e o site subir sem configuração | `OpcoesTests.Producao_SemPastaDeFotos_FalhaNaPartida` e `OpcoesTests.Producao_SemChaveSendGrid_FalhaNaPartida` |
-| 1.1 | Chaves do Data Protection perdidas derrubam todas as sessões | Critério de aceite da 0.2 sobre a pasta de chaves obrigatória em produção e `OpcoesTests.Producao_SemPastaDeFotos_FalhaNaPartida` (mesma validação para a pasta de chaves) |
+| 0.2 | Publicar sem a transformação do `web.config` e o site subir sem configuração | `OptionsTests.Producao_SemPastaDeFotos_FalhaNaPartida` e `OptionsTests.Producao_SemChaveSendGrid_FalhaNaPartida` |
+| 1.1 | Chaves do Data Protection perdidas derrubam todas as sessões | Critério de aceite da 0.2 sobre a pasta de chaves obrigatória em produção e `OptionsTests.Producao_SemPastaDeFotos_FalhaNaPartida` (mesma validação para a pasta de chaves) |
 | 3.2 | ViaCEP lento ou fora do ar trava o formulário | `CepEndpointTests.ViaCepLento_Devolve503Em5Segundos` e `@US-008-S14` |
-| 5.4 | Consulta Dapper esquecer o somente-publicados e mostrar anúncio não publicado | `BuscaQueryTests.SoAnunciosPublicados_EmCadaSituacao` (no `/test`) e `SqlBuilderTests.FragmentoSomentePublicados_E_UnicoEReutilizado` |
-| 4.4 | Consulta Dapper da lista do painel devolver anúncio de outro Redator (IDOR) | `PainelListaQueryTests.Redator_RecebeSoOsProprios_NaConsulta` (no `/test`) e `MatrizDeAcessoTests.Redator_NaoAcessaRotasDeAdministrador` (tarefa 6.1) |
-| 5.4 | Injeção de SQL pela ordenação ou pelo termo de busca | `SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`, `BuscaQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta` e `SegurancaTests.Termo_E_Parametro_NaoConcatenado` |
-| 0.6 | Escrita Dapper sem justificativa ou fora da transação do EF | `JustificativaDapperTests.TodaEscritaDapper_TemComentarioComOMotivo` e o critério de aceite da 0.6 sobre a conexão e a transação do `DbContext` |
+| 5.4 | Consulta Dapper esquecer o somente-publicados e mostrar anúncio não publicado | `SearchQueryTests.SoAnunciosPublicados_EmCadaSituacao` (no `/test`) e `SqlBuilderTests.FragmentoSomentePublicados_E_UnicoEReutilizado` |
+| 4.4 | Consulta Dapper da lista do painel devolver anúncio de outro Redator (IDOR) | `PanelAdListQueryTests.Redator_RecebeSoOsProprios_NaConsulta` (no `/test`) e `MatrizDeAcessoTests.Redator_NaoAcessaRotasDeAdministrador` (tarefa 6.1) |
+| 5.4 | Injeção de SQL pela ordenação ou pelo termo de busca | `SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`, `SearchQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta` e `SecurityTests.Termo_E_Parametro_NaoConcatenado` |
+| 0.6 | Escrita Dapper sem justificativa ou fora da transação do EF | `DapperJustificationTests.TodaEscritaDapper_TemComentarioComOMotivo` e o critério de aceite da 0.6 sobre a conexão e a transação do `DbContext` |
 | 5.4 | Busca lenta com o volume da v1 | `DesempenhoTests.Com200Anuncios_RespondeAbaixoDe500ms` (no `/test`) e `VolumeDaV1Tests.Com200Anuncios_P95AbaixoDe500ms` |
 | 2.5 | Catálogo copiado da API da OLX (A5) e credencial antiga do GazetaOnline | Critério de aceite da 2.5: nenhuma credencial no repositório; `ExportTests.SemVariavelDeConexao_ParaSemGerarArquivo`; bloqueio de lançamento registrado na seção 9 |
 | 2.4 | Listas novas não definidas (PL-01) travam 9 grupos | Critério de aceite da 2.4 (bloqueado até a PL-01); a tarefa não fecha sem a resposta |

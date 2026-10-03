@@ -79,7 +79,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 ## Threat: Força bruta e preenchimento de credenciais no login — [ID: S1]
 
 **Category**: S
-**Component**: `ContaController.Entrar` (US-006)
+**Component**: `AccountController.Entrar` (US-006)
 **Description**: Um atacante testa muitas senhas, ou senhas vazadas de outros sites, contra os e-mails da equipe.
 **Likelihood**: High
 **Impact**: High
@@ -97,10 +97,10 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] **RC-16** falhas e bloqueios de login registrados no log (Task 1.1)
 
 ### Acceptance Criteria
-- [ ] `LimitadorTests.SextaTentativaDeLogin_Devolve429` (0.4)
+- [ ] `RateLimiterTests.SextaTentativaDeLogin_Devolve429` (0.4)
 - [ ] teste do cenário `@US-006-S06` (1.1)
-- [ ] `LimitadorTests.IpDoCliente_VemDoCabecalhoEncaminhado_DeProxyConfiavel` (0.4)
-- [ ] `ContaTests.FalhaEBloqueioDeLogin_SaoRegistradosNoLog` (1.1)
+- [ ] `RateLimiterTests.IpDoCliente_VemDoCabecalhoEncaminhado_DeProxyConfiavel` (0.4)
+- [ ] `AccountTests.FalhaEBloqueioDeLogin_SaoRegistradosNoLog` (1.1)
 
 **Required for v1?**: Yes
 **Owner task(s)**: plan Task 0.4, 1.1
@@ -126,8 +126,8 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] "Sair" encerra a sessão e o botão Voltar não mostra o painel (Task 1.1)
 
 ### Acceptance Criteria
-- [ ] `SessaoTests.Cookie_Tem_HttpOnly_Secure_SameSite_E_30Min` (1.1)
-- [ ] `CabecalhosTests.Hsts_SoEmProducao` (0.4)
+- [ ] `SessionTests.Cookie_Tem_HttpOnly_Secure_SameSite_E_30Min` (1.1)
+- [ ] `HeadersTests.Hsts_SoEmProducao` (0.4)
 - [ ] `CspTests.Csp_NaoPermiteScriptInline` (0.4)
 - [ ] teste do cenário `@US-006-S03` (1.1)
 
@@ -155,8 +155,8 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] Chaves sem criptografia em repouso ficam como risco residual (RR-2); trocar as chaves invalida todas as sessões (Task 0.2)
 
 ### Acceptance Criteria
-- [ ] `OpcoesTests.Producao_SemPastaDeFotos_FalhaNaPartida` (0.2, mesma validação da pasta de chaves)
-- [ ] `SegredosTests.Repositorio_NaoContem_ConnectionStringComSenha` (0.2)
+- [ ] `OptionsTests.Producao_SemPastaDeFotos_FalhaNaPartida` (0.2, mesma validação da pasta de chaves)
+- [ ] `SecretsTests.Repositorio_NaoContem_ConnectionStringComSenha` (0.2)
 
 **Required for v1?**: Yes
 **Owner task(s)**: plan Task 0.2
@@ -186,7 +186,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 ### Acceptance Criteria
 - [ ] `TokenTests.Token_ExpiraEmUmaHora` (1.4)
 - [ ] testes dos cenários `@US-007-S04` e `@US-007-S05` (1.4)
-- [ ] `MascaramentoTests.Email_ApareceMascarado` (0.3)
+- [ ] `MaskingTests.Email_ApareceMascarado` (0.3)
 - [ ] `RecuperarSenhaTests.QuartoPedidoNaMesmaHora_NaoEnviaEmail_MasRespondeIgual` (1.4)
 
 **Required for v1?**: Yes
@@ -196,7 +196,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 ## Threat: Redirecionamento aberto depois do login (phishing) — [ID: S5]
 
 **Category**: S
-**Component**: `ContaController.Entrar` (`returnUrl`, US-006-S07)
+**Component**: `AccountController.Entrar` (`returnUrl`, US-006-S07)
 **Description**: O link de login carrega um endereço de retorno; se for aceito sem conferir, a vítima cai em site falso depois de entrar.
 **Likelihood**: Medium
 **Impact**: Medium
@@ -211,7 +211,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] **RC-18** `returnUrl` só é aceito se for local (`Url.IsLocalUrl`) (Task 1.1)
 
 ### Acceptance Criteria
-- [ ] `ContaTests.ReturnUrlExterno_E_Ignorado` (1.1)
+- [ ] `AccountTests.ReturnUrlExterno_E_Ignorado` (1.1)
 - [ ] teste do cenário `@US-006-S07` (1.1)
 
 **Required for v1?**: Yes
@@ -302,7 +302,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] `XssTests.TextoDeUsuario_EhCodificado_NaoExecuta` (0.7)
 - [ ] `XssEmTodasAsTelasTests.Script_EmCadaCampo_ApareceComoTexto` (6.1)
 - [ ] `CspTests.Csp_NaoPermiteScriptInline` (0.4)
-- [ ] `ModulosJsTests.NenhumModuloUsaInnerHtmlComTextoDoServidor` (0.7)
+- [ ] `JsModulesTests.NenhumModuloUsaInnerHtmlComTextoDoServidor` (0.7)
 
 **Required for v1?**: Yes
 **Owner task(s)**: plan Task 0.4, 0.7, 6.1
@@ -381,7 +381,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] `rowversion` em `Ads`; conflito vira 409 com mensagem do SPEC (Task 0.6, 4.2)
 
 ### Acceptance Criteria
-- [ ] `ConcorrenciaTests.DoisAdministradores_SoUmDecide` (4.2)
+- [ ] `ConcurrencyTests.DoisAdministradores_SoUmDecide` (4.2)
 - [ ] teste do cenário `@US-010-S07` (4.2)
 
 **Required for v1?**: Yes
@@ -440,8 +440,8 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 ### Acceptance Criteria
 - [ ] `AuditLogTests.Registra_AtorAcaoAlvoEData` (0.6)
 - [ ] `AuditLogTests.NaoExisteOperacaoParaEditarOuApagarEntradas` (0.6)
-- [ ] `AuditoriaTests.Publicar_E_Rejeitar_RegistramAutorDataEAcao` (4.2)
-- [ ] `AuditoriaTests.RedefinirSenha_RegistraQuemEQuando` (1.3)
+- [ ] `AuditingTests.Publicar_E_Rejeitar_RegistramAutorDataEAcao` (4.2)
+- [ ] `AuditingTests.RedefinirSenha_RegistraQuemEQuando` (1.3)
 
 **Required for v1?**: Yes
 **Owner task(s)**: plan Task 0.6, 1.1, 1.3, 2.6, 2.7, 4.2, 4.3
@@ -553,9 +553,9 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] Operacional (fora do código): autenticação em duas etapas no painel do provedor, conta de publicação própria e troca dos segredos quando quem publicava sair — **escalado ao `/infra`** (ver §Escalações) (Task 0.2)
 
 ### Acceptance Criteria
-- [ ] `SegredosTests.Repositorio_NaoContem_ConnectionStringComSenha` (0.2)
-- [ ] `SegredosTests.ArquivoDeExemplo_TemAvisoDeGuardaESemValorReal` (0.2)
-- [ ] `MascaramentoTests.Senha_NuncaApareceNoLog` (0.3)
+- [ ] `SecretsTests.Repositorio_NaoContem_ConnectionStringComSenha` (0.2)
+- [ ] `SecretsTests.ArquivoDeExemplo_TemAvisoDeGuardaESemValorReal` (0.2)
+- [ ] `MaskingTests.Senha_NuncaApareceNoLog` (0.3)
 - [ ] `BootstrapAdminTests.SenhaInicial_NaoApareceNoLog` (1.2)
 - [ ] `BootstrapAdminTests.VariaveisRemanescentes_RegistramWarning` (1.2)
 
@@ -582,8 +582,8 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] Mascaramento de e-mail, senha e token nos logs (Task 0.3)
 
 ### Acceptance Criteria
-- [ ] `ErrosTests.ErroInesperado_NaoExpoePilha_EtrazTraceId` (0.3)
-- [ ] `MascaramentoTests.Email_ApareceMascarado` (0.3)
+- [ ] `ErrorsTests.ErroInesperado_NaoExpoePilha_EtrazTraceId` (0.3)
+- [ ] `MaskingTests.Email_ApareceMascarado` (0.3)
 
 **Required for v1?**: Yes
 **Owner task(s)**: plan Task 0.3
@@ -608,9 +608,9 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] Nenhuma política CORS (mesma origem) (Task 0.4)
 
 ### Acceptance Criteria
-- [ ] `CabecalhosTests.TodaResposta_TemOsCabecalhosObrigatorios` (0.4)
+- [ ] `HeadersTests.TodaResposta_TemOsCabecalhosObrigatorios` (0.4)
 - [ ] `CorsTests.Nenhuma_PoliticaCors_Registrada` (0.4)
-- [ ] `CabecalhosTests.Hsts_SoEmProducao` (0.4)
+- [ ] `HeadersTests.Hsts_SoEmProducao` (0.4)
 
 **Required for v1?**: Yes
 **Owner task(s)**: plan Task 0.4
@@ -715,7 +715,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] Paginação fixa de 24 e ordem estável (sem tamanho de página escolhido pelo cliente) (Task 5.4)
 
 ### Acceptance Criteria
-- [ ] `LimitadorTests.LimiteGlobal_Devolve429AposCemPedidos` (0.4)
+- [ ] `RateLimiterTests.LimiteGlobal_Devolve429AposCemPedidos` (0.4)
 - [ ] `BuscaTests.TermoComMaisDe100Caracteres_MostraErroJuntoDoCampo` (5.4)
 - [ ] `BuscaQueryTests.ConsultaQueEstouraOTempo_Devolve503SemPilha` (5.4)
 
@@ -743,7 +743,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] Proteção de borda (CDN, firewall) não existe no plano compartilhado: risco residual RR-4 (Task 0.4)
 
 ### Acceptance Criteria
-- [ ] `LimitadorTests.LimiteGlobal_Devolve429AposCemPedidos` (0.4) cobre só o limite por IP
+- [ ] `RateLimiterTests.LimiteGlobal_Devolve429AposCemPedidos` (0.4) cobre só o limite por IP
 
 **Required for v1?**: Yes (parcial): limite por IP e consultas leves são obrigatórios; o que sobra (ataque de muitos IPs, sem proteção de borda no plano compartilhado) é risco residual aceito em RR-4
 **Owner task(s)**: plan Task 0.4, 5.4
@@ -769,7 +769,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] Alternativa de redefinição pelo Administrador (US-014-S10) quando o e-mail não chega (Task 1.3)
 
 ### Acceptance Criteria
-- [ ] `LimitadorTests.SextaTentativaDeLogin_Devolve429` (0.4, mesma regra para "Esqueci minha senha")
+- [ ] `RateLimiterTests.SextaTentativaDeLogin_Devolve429` (0.4, mesma regra para "Esqueci minha senha")
 - [ ] `RecuperarSenhaTests.QuartoPedidoNaMesmaHora_NaoEnviaEmail_MasRespondeIgual` (1.4)
 - [ ] `RecuperarSenhaTests.TotalDiarioChegaA80_RegistraWarning` (1.4)
 - [ ] teste do cenário `@US-014-S10` (1.3)
@@ -804,7 +804,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] `LimitesTests.ExcessoDeEnviosPorMinuto_Devolve429` (3.5)
 - [ ] `FotosSegurancaTests.ImagemAcimaDoLimiteDePixels_E_Recusada` (3.4)
 - [ ] `LimitesTests.Servicos_AceitaSeis_Vagas_AceitaZero` (3.5)
-- [ ] `LimitesCorpoTests.CorpoAcimaDe1Mb_Devolve413_ExcetoNoEnvioDeFoto` (0.4)
+- [ ] `BodyLimitTests.CorpoAcimaDe1Mb_Devolve413_ExcetoNoEnvioDeFoto` (0.4)
 
 **Required for v1?**: Yes
 **Owner task(s)**: plan Task 3.4, 3.5, 3.6
@@ -815,7 +815,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 ## Threat: Redator acessa ou altera o que é do Administrador ou de outro Redator — [ID: E1]
 
 **Category**: E
-**Component**: Painel (`AnunciosController`, `FilaController`, categorias, usuários, configurações)
+**Component**: Painel (`AdsController`, `FilaController`, categorias, usuários, configurações)
 **Description**: O Redator tenta abrir páginas ou ações exclusivas do Administrador, ou anúncios de outra pessoa, mudando o endereço ou o id.
 **Likelihood**: Medium
 **Impact**: High
@@ -893,8 +893,8 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 - [ ] Sem autenticação em duas etapas na v1 (RR-1); **decisão do Product Owner (SEC-02, 2026-09-30): não exigir a senha atual** em ações de alto impacto, o que exigiria mudar cenários do SPEC; risco aceito (Task 1.1)
 
 ### Acceptance Criteria
-- [ ] `AuditoriaTests.Publicar_E_Rejeitar_RegistramAutorDataEAcao` (4.2)
-- [ ] `AuditoriaTests.RedefinirSenha_RegistraQuemEQuando` (1.3)
+- [ ] `AuditingTests.Publicar_E_Rejeitar_RegistramAutorDataEAcao` (4.2)
+- [ ] `AuditingTests.RedefinirSenha_RegistraQuemEQuando` (1.3)
 - [ ] `UsuariosTests.CriarMudarPapelDesativarReativar_GravamAuditoria` (1.3)
 
 **Required for v1?**: Yes

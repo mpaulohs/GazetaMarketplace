@@ -35,7 +35,7 @@
 
 | Projeto | Papel | Depende de |
 |---|---|---|
-| `GazetaMarketplace.Web` | Apresentação: controllers MVC e Razor (site público e painel, este na área `Painel`), endpoints JSON mínimos em `/api/v1/...`, middlewares (erros, correlação, cabeçalhos de segurança), composição (DI) | Core, Infrastructure |
+| `GazetaMarketplace.Web` | Apresentação: controllers MVC e Razor (site público e painel, este na área `Panel`), endpoints JSON mínimos em `/api/v1/...`, middlewares (erros, correlação, cabeçalhos de segurança), composição (DI) | Core, Infrastructure |
 | `GazetaMarketplace.Core` | Domínio e aplicação: entidades, regras (situação do anúncio, campos por categoria, limites de fotos), serviços de aplicação, interfaces (`IPhotoStorage`, `ICepLookup`, `IEmailSender`, `IVehicleCatalog`…), exceções `AppException` | nada além da BCL |
 | `GazetaMarketplace.Infrastructure` | EF Core 10 (escrita e migrations) + Dapper (leitura complexa e escrita justificada) sobre SQL Server, ASP.NET Core Identity, `FileSystemPhotoStorage`, processamento de imagem, `ViaCepLookup`, `SendGridEmailSender`, importador do catálogo | Core |
 
@@ -74,7 +74,7 @@ Módulos conversam por interfaces do Core; nenhum módulo lê as tabelas de outr
 | NFR-10 · Cabeçalhos HTTP | XCTO, XFO, Referrer-Policy, HSTS, CSP | Middleware próprio no início do pipeline (§7); HSTS só em produção |
 | NFR-11 · Antiforgery | 100% das escritas | Filtro global `AutoValidateAntiforgeryToken` no MVC; endpoints JSON de escrita exigem o cabeçalho `RequestVerificationToken` |
 | NFR-12 · Envio de fotos | Formatos por conteúdo, 10 MB, 20/6/0, HEIC convertido | Validação pelo conteúdo (assinatura do arquivo) antes de gravar; limite de 10 MB no servidor (`RequestSizeLimit`); limite por categoria vindo do grupo de campos; reprocessamento de toda foto para WebP; o original fica 30 dias numa pasta de descarte e depois é apagado (ADR-005) |
-| NFR-13 · Controle de acesso | Login + papel; Redator só os próprios | Políticas `Administrador` e `Redator`; checagem de autoria no serviço de aplicação (não só na tela), com a mesma resposta "Você não tem permissão" |
+| NFR-13 · Controle de acesso | Login + papel; Redator só os próprios | Políticas `Administrator` e `Writer` (os valores dos papéis no banco continuam `Administrador` e `Redator`); checagem de autoria no serviço de aplicação (não só na tela), com a mesma resposta "Você não tem permissão" |
 | NFR-14 · Segredos | Nenhum no repositório | Variáveis de ambiente no `web.config` gerado na publicação, a partir de arquivo de transformação fora do git (ADR-011) |
 | NFR-15 · Textos digitados | Sempre texto puro | Codificação automática do Razor; proibido `Html.Raw` com texto de usuário; CSP sem `unsafe-inline` para scripts |
 | NFR-16 · Acessibilidade | WCAG 2.1 AA | Componentes Bootstrap com ARIA documentada; contratos de acessibilidade no `design-system.md`; axe-core nos testes Playwright |
@@ -177,7 +177,7 @@ Os diagramas estão em `architecture/diagrams/`:
 
 | Tabela | Uso |
 |---|---|
-| `AspNetUsers` e tabelas do Identity | Equipe: + `FullName`, `IsActive`, `MustChangePassword` (S6, S17). **Chave `int IDENTITY`** (`IdentityUser<int>`, `IdentityRole<int>`), como todas as demais tabelas; `CreatedBy`, `UpdatedBy` e `ActorId` das auditorias são `int` nulo (nulo = ação do sistema) |
+| `AspNetUsers` e tabelas do Identity | Equipe: + `FullName`, `IsActive`, `MustChangePassword` (S6, S17). **Chave `int IDENTITY`** (`AppUser : IdentityUser<int>`, `AppRole : IdentityRole<int>`), como todas as demais tabelas; `CreatedBy`, `UpdatedBy` e `ActorId` das auditorias são `int` nulo (nulo = ação do sistema) |
 | `SiteSettings` | Linha única: telefone/WhatsApp do site (US-015) |
 | `CepCache` | `Cep` PK, `City`, `Uf`, `FetchedAt`; validade 30 dias (NFR-24) |
 | `Cities` | Lista oficial de municípios por UF (IBGE), para o preenchimento manual e a padronização do nome |
@@ -228,7 +228,7 @@ Os diagramas estão em `architecture/diagrams/`:
 |---|---|
 | Autenticação | ASP.NET Core Identity com cookie (`HttpOnly`, `Secure`, `SameSite=Lax`), expiração deslizante de 30 min (ADR-003) |
 | Primeiro Administrador (S17) | Criado na primeira inicialização a partir das variáveis `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword`, **só se não existir nenhum Administrador**, com troca de senha obrigatória no primeiro acesso; as variáveis são removidas depois (ADR-011) |
-| Autorização e IDOR | Políticas por papel na área `Painel`; os serviços de aplicação conferem a autoria (Redator só os próprios anúncios em Rascunho/Rejeitado); anúncio não publicado no site público responde a mesma página "não está mais disponível" (US-003-S06) |
+| Autorização e IDOR | Políticas por papel na área `Panel`; os serviços de aplicação conferem a autoria (Redator só os próprios anúncios em Rascunho/Rejeitado); anúncio não publicado no site público responde a mesma página "não está mais disponível" (US-003-S06) |
 | Cabeçalhos HTTP | Middleware: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` restritiva, `Content-Security-Policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'`; HSTS (1 ano) só em produção |
 | CORS | **Nenhuma política CORS**: site e endpoints JSON são da mesma origem; pedidos de outras origens são recusados pelo navegador |
 | Antiforgery | Global no MVC; cabeçalho `RequestVerificationToken` nos endpoints JSON de escrita |

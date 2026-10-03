@@ -56,6 +56,22 @@ O público é brasileiro, mas o código é escrito em **inglês americano**. A r
 | **Texto de interface**: rótulo, botão, título, mensagem de erro e de sucesso, e-mail enviado | **Português** | "E-mail ou senha inválidos, ou conta desativada" |
 | Comentários XML e `//` | Português é aceito (inglês também) | |
 
+**Exceção — nomes de métodos de teste:**
+- Podem ficar em português, com o prefixo `USxxxSnn` do cenário. Exemplo: `US006S09_SenhaFraca_E_Recusada`.
+- Motivo: o nome é uma descrição de comportamento (documentação executável) e o prefixo do cenário já é universal no projeto.
+- As **classes** de teste seguem a regra geral (inglês). Exemplos: `AccountTests`, `PasswordTests`, `SessionTests`.
+
+**Glossário de domínio (português → inglês).** Use sempre estes termos em identificadores; a tabela do banco já segue o mesmo vocabulário (`Ads`, `AdPhotos`, `Categories`).
+
+| Português | Inglês | | Português | Inglês |
+|---|---|---|---|---|
+| anúncio | `Ad` (não `Listing`) | | categoria | `Category` |
+| fila de revisão | `ReviewQueue` | | foto | `Photo` |
+| equipe | `Team` | | favoritos | `Favorites` |
+| papel | `Role` (valores: `Administrador`, `Redator`; constantes `Administrator`, `Writer`) | | busca | `Search` |
+| usuário | `User` | | painel | `Panel` |
+| conta | `Account` | | senha | `Password` |
+
 Consequências práticas:
 - A rota em português é declarada de forma explícita no atributo (`[Route("painel/usuarios")]`); o nome do controller e da action seguem em inglês.
 - O texto exibido ao usuário nunca é usado como identificador. Quando uma regra precisa de um nome estável (claim, código de erro, valor de papel guardado no banco), esse nome é em inglês.
