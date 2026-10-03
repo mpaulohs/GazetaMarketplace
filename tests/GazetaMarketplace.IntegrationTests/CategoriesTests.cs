@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Categories;
+using GazetaMarketplace.Core.Fields;
 using GazetaMarketplace.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +40,8 @@ public sealed class CategoriesTests
         Assert.AreEqual("servicos", all.Single(c => c.Id == 66).Slug);
         Assert.AreEqual("servicos-grupo", all.Single(c => c.Id == 7).Slug);
         Assert.IsFalse(all.Any(c => c.Id is 24 or 25 or 32 or 79 or 80 or 82 or 83 or 91));
-        Assert.IsTrue(all.All(c => c.IsSystem && c.FieldGroup is null));
+        Assert.IsTrue(all.All(c => c.IsSystem));
+        CollectionAssert.AreEquivalent(new[] { 26, 27, 30, 31, 66, 96 }, all.Where(c => c.FieldGroup is not null).Select(c => c.Id).ToArray());
     }
 
     [TestMethod]
@@ -139,6 +141,35 @@ public sealed class CategoriesTests
         Assert.AreNotSame(first, second);
         Assert.AreEqual("Casas e sobrados", second.Find(27).Name);
         Assert.AreEqual("Casas", first.Find(27).Name, "o retrato antigo continua intacto para quem ainda o usa");
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task GruposDeCampos_GravadosNaCarga_SaoResolvidosPelaArvoreDoSqlServer_ComHeranca()
+    {
+        string byScript = await SqlServerFixture.CreateEmptyDatabaseAsync();
+        await SqlServerFixture.ApplyScriptAsync(byScript);
+        using IntegrationWebFactory factory = new(byScript);
+        ICategoryTree tree = factory.Services.GetRequiredService<ICategoryTree>();
+
+        // Cria uma subcategoria de Apartamentos pelo contexto do site: herda o grupo sem ninguém configurar nada
+        int createdId;
+        using (IServiceScope scope = factory.Services.CreateScope())
+        {
+            AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Category studios = new() { ParentId = 26, Name = "Studios", Slug = "studios", DisplayOrder = 9, IsPostable = true };
+            context.Categories.Add(studios);
+            await context.SaveChangesAsync();
+            createdId = studios.Id;
+        }
+
+        CategoryTreeSnapshot snapshot = await tree.GetAsync(default);
+        Assert.AreEqual(FieldGroupKeys.RealEstate, FieldGroupRegistry.Resolve(snapshot, 26).Key);
+        Assert.AreEqual(FieldGroupKeys.RealEstate, FieldGroupRegistry.Resolve(snapshot, createdId).Key, "categoria nova herda do pai");
+        Assert.AreEqual(FieldGroupKeys.Services, FieldGroupRegistry.Resolve(snapshot, 66).Key);
+        Assert.AreEqual(FieldGroupKeys.Jobs, FieldGroupRegistry.Resolve(snapshot, 96).Key);
+        Assert.AreSame(FieldGroupRegistry.Default, FieldGroupRegistry.Resolve(snapshot, 135));
+        Assert.AreEqual(6, snapshot.All.Count(n => n.FieldGroup is not null && n.Id != createdId));
     }
 
     private static async Task AssertRejectedAsync(string connection, Category category)

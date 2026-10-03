@@ -163,7 +163,7 @@ Os diagramas estão em `architecture/diagrams/`:
 | `City`, `Uf` | `nvarchar(80)`, `char(2)` | Padronizadas (regra da US-008) |
 | `LocationManual` | `bit` | Cidade/UF manual por falha do CEP (selo) |
 | `Attributes` | `nvarchar(max)` + `CHECK (ISJSON(Attributes)=1)` | Campos do grupo, em JSON (ADR-002) |
-| `VehicleBrandId`, `VehicleModelId`, `ModelYear`, `Km`, `AreaM2` | colunas calculadas persistidas a partir do JSON | Só as usadas em filtro; indexadas |
+| `VehicleBrandId`, `VehicleModelId`, `ModelYear`, `Km`, `AreaM2` | colunas calculadas persistidas a partir do JSON (`AreaM2` é `decimal(12,2)`, ADR-002) | Só as usadas em filtro; indexadas |
 | `TitleSearch`, `DescriptionSearch` | `nvarchar(200)`, `nvarchar(max)` | Título e descrição sem acento e em minúsculas, para a busca; preenchidos só pela aplicação (ADR-006) |
 | `AuthorId` | FK → AspNetUsers | Dono do anúncio (S10) |
 | `SentAt`, `PublishedAt`, `PublishedById`, `RejectedAt`, `RejectedById`, `RejectionReason`, `ArchivedAt` | | Rastro de decisão (S10); motivo visível ao autor (S9) |

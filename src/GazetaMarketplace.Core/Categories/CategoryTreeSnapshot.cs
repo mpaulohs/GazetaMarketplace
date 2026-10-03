@@ -78,6 +78,9 @@ public sealed class CategoryTreeSnapshot
             }
         }
 
+        // ATENÇÃO (mantenedores): Dictionary<int?, ...> NÃO aceita chave nula, e o primeiro nível tem ParentId nulo — um GroupBy(ParentId).ToDictionary
+        // lança ArgumentNullException só quando há raízes (bug real da tarefa 2.1). Por isso as raízes ficam numa lista própria e o dicionário
+        // guarda apenas pais não nulos.
         List<CategoryNode> roots = [.. byId.Values.Where(n => n.ParentId is null).OrderBy(n => n.DisplayOrder).ThenBy(n => n.Id)];
         Dictionary<int, List<CategoryNode>> children = byId.Values
             .Where(n => n.ParentId is not null)

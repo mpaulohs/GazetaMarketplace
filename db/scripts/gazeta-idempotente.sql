@@ -551,3 +551,76 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003170615_AssignFieldGroupsToRealEstateServicesAndJobs'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''RealEstate''
+    WHERE [Id] = 26;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003170615_AssignFieldGroupsToRealEstateServicesAndJobs'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''RealEstate''
+    WHERE [Id] = 27;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003170615_AssignFieldGroupsToRealEstateServicesAndJobs'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''RealEstate''
+    WHERE [Id] = 30;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003170615_AssignFieldGroupsToRealEstateServicesAndJobs'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''RealEstate''
+    WHERE [Id] = 31;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003170615_AssignFieldGroupsToRealEstateServicesAndJobs'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Services''
+    WHERE [Id] = 66;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003170615_AssignFieldGroupsToRealEstateServicesAndJobs'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Jobs''
+    WHERE [Id] = 96;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003170615_AssignFieldGroupsToRealEstateServicesAndJobs'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261003170615_AssignFieldGroupsToRealEstateServicesAndJobs', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

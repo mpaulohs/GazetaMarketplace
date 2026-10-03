@@ -100,6 +100,18 @@ public sealed class MigrationsTests
         Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(section, @"(VALUES |\n    )\(155, "), "Papelaria (155) entra com o id real");
     }
 
+    [TestMethod]
+    public void MigrationDosGruposDeCampos_AtualizaSoAsSeisCategoriasQueDefinemGrupo()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AssignFieldGroupsToRealEstateServicesAndJobs", StringComparison.Ordinal)));
+
+        Assert.AreEqual(6, System.Text.RegularExpressions.Regex.Matches(section, @"UPDATE \[Categories\] SET \[FieldGroup\]").Count);
+        foreach ((int id, string group) in new[] { (26, "RealEstate"), (27, "RealEstate"), (30, "RealEstate"), (31, "RealEstate"), (66, "Services"), (96, "Jobs") })
+        {
+            StringAssert.Contains(section.Replace("\r", string.Empty, StringComparison.Ordinal), $"[FieldGroup] = ''{group}''\n    WHERE [Id] = {id};");
+        }
+    }
+
     private static string[] Migrations
     {
         get

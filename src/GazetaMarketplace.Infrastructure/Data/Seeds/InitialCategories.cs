@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GazetaMarketplace.Core.Categories;
+using GazetaMarketplace.Core.Fields;
 
 namespace GazetaMarketplace.Infrastructure.Data.Seeds;
 
@@ -17,6 +18,20 @@ public static class InitialCategories
 
     /// <summary>Data fixa de criação das linhas da carga (a migration precisa ser determinística).</summary>
     public static readonly DateTime SeededAt = new(2026, 10, 3, 0, 0, 0, DateTimeKind.Utc);
+
+    /// <summary>
+    /// Grupo de campos gravado em cada categoria que define o próprio (SPEC, Apêndice B). As demais herdam do ancestral mais próximo ou
+    /// caem em Produtos em geral (A7 a). Cada tarefa 2.x acrescenta aqui os seus grupos, junto com uma migration de dados.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<int, string> FieldGroups = new Dictionary<int, string>
+    {
+        [26] = FieldGroupKeys.RealEstate,
+        [27] = FieldGroupKeys.RealEstate,
+        [30] = FieldGroupKeys.RealEstate,
+        [31] = FieldGroupKeys.RealEstate,
+        [66] = FieldGroupKeys.Services,
+        [96] = FieldGroupKeys.Jobs
+    };
 
     public static IReadOnlyList<Category> All { get; } =
     [
@@ -177,6 +192,7 @@ public static class InitialCategories
         Slug = slug,
         DisplayOrder = displayOrder,
         IsPostable = isPostable,
+        FieldGroup = FieldGroups.GetValueOrDefault(id),
         IsSystem = true,
         CreatedAt = SeededAt
     };

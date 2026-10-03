@@ -769,11 +769,11 @@
 - src/GazetaMarketplace.Core/Campos/Listas/*.cs (listas com os ids de specs/discovery/gazetaonline-lookups.md)
 
 **Acceptance Criteria**:
-- [ ] Cada categoria usa o grupo próprio ou o do ancestral mais próximo (A7 a); categoria nova herda o do pai
-- [ ] Serviços: sem preço, título até 120, "Informações adicionais" até 6000, até 6 fotos, tipo obrigatório com as 11 opções na ordem
-- [ ] Vagas de emprego: sem fotos, título até 90, "Informações adicionais" até 6000, 14 áreas (múltipla, opcional), preço exibido como Salário
-- [ ] Produtos em geral: condição obrigatória (5 opções) e tipo de produto; Imóveis: tipo, vender ou alugar, quartos, área e demais campos do Apêndice B
-- [ ] Os limites por grupo (`HasPrice`, `MaxPhotos`, `TitleMaxLength`, `DescriptionMaxLength`, `DescriptionLabel`) são a única fonte dessas regras
+- [x] Cada categoria usa o grupo próprio ou o do ancestral mais próximo (A7 a); categoria nova herda o do pai
+- [x] Serviços: sem preço, título até 120, "Informações adicionais" até 6000, até 6 fotos, tipo obrigatório com as 11 opções na ordem
+- [x] Vagas de emprego: sem fotos, título até 90, "Informações adicionais" até 6000, 14 áreas (múltipla, opcional), preço exibido como Salário
+- [x] Produtos em geral: condição obrigatória (5 opções) e tipo de produto; Imóveis: tipo, vender ou alugar, quartos, área e demais campos do Apêndice B
+- [x] Os limites por grupo (`HasPrice`, `MaxPhotos`, `TitleMaxLength`, `DescriptionMaxLength`, `DescriptionLabel`) são a única fonte dessas regras
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Fields/HerancaTests.Autopecas_UsaGrupoPecas_E_CategoriaNovaHerdaDoPai`
@@ -781,6 +781,13 @@
 - `tests/GazetaMarketplace.Web.Tests/Fields/VagasTests.SemFotos_Titulo90_14Areas`
 - `tests/GazetaMarketplace.Web.Tests/Fields/ProdutosEmGeralTests.CondicaoObrigatoria_5Opcoes`
 - `tests/GazetaMarketplace.Web.Tests/Fields/ListasTests.IdsDasListas_SaoOsDoGazetaOnline`
+
+**Decisões da implementação (aprovadas pelo Product Owner em 2026-10-03):**
+- **Framework em código** (`Core/Fields/`): `FieldGroup`, `FieldDefinition` (com `AppliesToCategories` e `OptionsByCategory`, porque Imóveis muda por categoria), `FieldList`, `FieldGroupRegistry` e `FieldLists` (listas com os ids do GazetaOnline; as de Serviços e Vagas, ids 1 a N na ordem do SPEC). Quatro grupos: `Services`, `Jobs`, `GeneralProducts` (o padrão para quem não tem grupo na cadeia) e `RealEstate`.
+- **Grupo gravado só nas categorias que o definem** (26, 27, 30, 31 → Imóveis; 66 → Serviços; 96 → Vagas), por migration de dados `AssignFieldGroupsToRealEstateServicesAndJobs`. Peças será gravado em Autopeças (id 3) na 2.3, e os ids 38 a 42 herdam (A7 a). Até a 2.3/2.4, as demais caem em Produtos em geral; nada consome isso antes da 3.1.
+- **"Tipo de produto"** é texto livre opcional de até 60 caracteres com autocomplete dinâmico; **Marca** idem. Contratos `GET /api/v1/brands/suggest` e `GET /api/v1/product-types/suggest` no `openapi.yaml`; implementação na fase 3, quando a tabela de anúncios existir.
+- **Área (m²)** é decimal com 2 casas (mín. 0,01; máx. 99.999.999,99); **Condomínio e IPTU** em centavos (`bigint`), teto de R$ 99.999.999,99; **Quartos, Banheiros e Vagas** de 0 a 20 (0 = kitnet; suposição, revisar se aparecer caso real de mais de 20). ADR-002 emendado.
+- O teste "Autopeças usa Peças" mudou para a 2.3 (o grupo Peças só nasce lá).
 
 **Dependencies**: 2.1
 

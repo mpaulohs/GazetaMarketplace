@@ -20,6 +20,17 @@ public sealed class ParityTests
 {
     private sealed record SourceRow(int Id, string Name, int? ParentId, int DisplayOrder, bool IsPostable, string ExplicitSlug);
 
+    /// <summary>
+    /// O grupo de campos que cada categoria define, lido da tabela do Apêndice B da SPEC (escrito aqui à mão, de propósito: é a segunda
+    /// representação). Cada tarefa 2.x acrescenta os seus grupos nesta lista junto com a migration de dados.
+    /// </summary>
+    private static readonly Dictionary<int, string> ExpectedFieldGroups = new()
+    {
+        [26] = "RealEstate", [27] = "RealEstate", [30] = "RealEstate", [31] = "RealEstate",
+        [66] = "Services",
+        [96] = "Jobs"
+    };
+
     private static List<SourceRow> ReadSource()
     {
         List<SourceRow> rows = [];
@@ -71,7 +82,7 @@ public sealed class ParityTests
             Assert.AreEqual(row.DisplayOrder, loaded.DisplayOrder, $"ordem da categoria {row.Id}");
             Assert.AreEqual(row.IsPostable, loaded.IsPostable, $"IsPostable da categoria {row.Id}");
             Assert.IsTrue(loaded.IsSystem, $"IsSystem da categoria {row.Id}");
-            Assert.IsNull(loaded.FieldGroup, $"FieldGroup da categoria {row.Id} (os grupos entram nas tarefas 2.2 a 2.4)");
+            Assert.AreEqual(ExpectedFieldGroups.GetValueOrDefault(row.Id), loaded.FieldGroup, $"FieldGroup da categoria {row.Id}");
         }
     }
 

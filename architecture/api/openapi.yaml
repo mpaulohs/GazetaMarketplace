@@ -22,6 +22,8 @@ tags:
     description: Envio, capa e remoção de fotos de anúncio (ADR-005)
   - name: Catálogo de veículos
     description: Listas encadeadas marca → modelo → ano → versão (ADR-008)
+  - name: Sugestões
+    description: Autocomplete dos campos de texto livre Marca e Tipo de produto (tarefa 2.4; implementação na fase 3, depois da tabela de anúncios)
   - name: Vitrine
     description: Anúncios publicados para "Meus favoritos" (US-005)
   - name: Saúde
@@ -300,6 +302,63 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/brands/suggest:
+    get:
+      tags: [Sugestões]
+      summary: Sugestões de marca para o campo de texto livre
+      description: |
+        Usado pelo formulário do anúncio (painel, exige login) nos campos **Marca** de Roupas e calçados, Eletrônicos e informática e Eletro.
+        Devolve **até 10 marcas que começam com o texto** digitado (sem diferenciar maiúscula nem acento), em ordem alfabética, tiradas das
+        marcas dos anúncios já cadastrados: a lista **não é fixa** e começa vazia. O campo continua sendo texto livre; a sugestão só ajuda.
+        **Contrato definido na 2.2; implementação na fase 3**, quando a tabela de anúncios existir.
+      operationId: suggestBrands
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SuggestionQuery'
+      responses:
+        '200':
+          description: Até 10 marcas em ordem alfabética (lista vazia se nenhuma começar com o texto)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionList'
+              example: [Brastemp, Britânia]
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/product-types/suggest:
+    get:
+      tags: [Sugestões]
+      summary: Sugestões de tipo de produto para o campo de texto livre
+      description: |
+        Usado pelo formulário do anúncio (painel, exige login) no campo **Tipo de produto** de Produtos em geral (texto livre opcional de até
+        60 caracteres). Mesmo comportamento de `suggestBrands`: até 10 valores que começam com o texto, tirados dos anúncios já cadastrados.
+        **Contrato definido na 2.2; implementação na fase 3.**
+      operationId: suggestProductTypes
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SuggestionQuery'
+      responses:
+        '200':
+          description: Até 10 tipos em ordem alfabética (lista vazia se nenhum começar com o texto)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionList'
+              example: [Cadeira de balanço, Cadeira de escritório]
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/ads:
     get:
       tags: [Vitrine]
@@ -422,6 +481,16 @@ components:
         type: integer
         minimum: 1
         example: 104
+    SuggestionQuery:
+      name: q
+      in: query
+      required: true
+      description: Início do texto digitado (1 a 60 caracteres); o servidor ignora maiúscula e acento
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 60
+        example: bra
     PhotoId:
       name: photoId
       in: path
@@ -432,6 +501,15 @@ components:
         example: 877
 
   schemas:
+    SuggestionList:
+      type: array
+      maxItems: 10
+      description: Até 10 sugestões em ordem alfabética
+      items:
+        type: string
+        maxLength: 60
+      example: [Brastemp, Britânia]
+
     CepResult:
       type: object
       required: [cep, city, uf, source]
