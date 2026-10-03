@@ -2086,7 +2086,7 @@ O `/plan` não preenche lacunas do SPEC (*no invented scope*). Estas ficam regis
 
 | Id | Pendência | Bloqueia | Dono |
 |---|---|---|---|
-| **PL-01** | As listas novas dos grupos de campos nunca foram definidas: **Tamanho** e **Gênero** (Roupas e calçados) e **Marca por categoria** (Eletrônicos e informática, Eletro). O `ARCHITECTURE.md` §Apêndice B disse que seriam definidas no `/arch`, e o `/arch` não as definiu | Tarefa **2.4** (não fecha) | Product Owner |
+| **PL-01** | ~~As listas novas dos grupos de campos nunca foram definidas.~~ **Resolvida pelo Product Owner em 2026-10-03:** Tamanho de roupas (PP, P, M, G, GG, XG, XGG); Tamanho de calçados (16 a 33 infantil, 34 a 45 adulto); Gênero (Masculino, Feminino, Unissex, Infantil); Marca em texto livre com autocomplete (`/api/v1/brands/suggest?q=`, até 10 marcas que começam com o texto, a partir das marcas dos anúncios existentes). Listas ampliáveis; a de marcas é dinâmica | Tarefa **2.4** (liberada; a lista de marcas depende da tabela de anúncios, ver `plans/BACKLOG.md`) | Product Owner |
 | AR-03 | Versão do SQL Server do SmarterASP e acesso para rodar scripts. O plano assume SQL Server 2016 ou mais novo (colunas calculadas sobre JSON); se a resposta for menor, as tarefas 0.6, 3.1 e 5.4 voltam a ser planejadas | Tarefas 0.6, 3.1, 5.4 (risco) | Product Owner com o SmarterASP |
 | AR-06 | Aprovação dos pacotes novos: Identity EF Core, `Serilog.AspNetCore`, `Serilog.Sinks.File`, `Serilog.Formatting.Compact`, Magick.NET Q8 Windows x64, FluentValidation | Tarefas 0.3, 1.1 e 3.4 (cada pacote é pedido antes de entrar) | Product Owner |
 | AR-05 | Magick.NET e HEIC na hospedagem compartilhada, provados no ambiente | Tarefa 3.4 (risco; há plano B no ADR-005) | Arquiteto |
