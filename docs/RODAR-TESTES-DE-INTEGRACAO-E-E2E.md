@@ -71,7 +71,15 @@ export GAZETA_E2E_SENDGRID_PORT=5990           # igual à porta de SendGrid__Bas
 dotnet run --project tests/GazetaMarketplace.Web.Tests.Playwright
 ```
 
-Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecoveryE2ETests` exige também `GAZETA_E2E_SENDGRID_PORT`). `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**.
+Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecoveryE2ETests` exige também `GAZETA_E2E_SENDGRID_PORT`). `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**; `SettingsE2ETests` também (e muda o telefone do site no banco de teste).
+
+**Rodando a suíte mais de uma vez em menos de uma hora no mesmo banco:** o site limita a recuperação de senha a 10 pedidos por hora por IP e `US007` passa a falhar por tempo esgotado. Antes de rodar de novo, limpe a tabela:
+
+```bash
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '<senha-sa>' -C -d gazeta_e2e -I -Q "DELETE FROM PasswordRecoveryAttempts"
+```
+
+O limite global de 100 pedidos por minuto por IP também conta tudo que a suíte faz: espere um minuto entre duas rodadas.
 
 ## Regenerar o script das migrations
 

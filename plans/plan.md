@@ -994,18 +994,18 @@
 **Files to modify**:
 - `src/GazetaMarketplace.Web/Areas/Panel/Controllers/SettingsController.cs`
 - `src/GazetaMarketplace.Web/Areas/Panel/Views/Settings/Index.cshtml`
-- `src/GazetaMarketplace.Core/Settings/SiteSettingsService.cs`
+- `src/GazetaMarketplace.Core/Settings/` (`SiteSetting`, `PhoneNumber`, `ISiteSettings`, `ISiteSettingsManagement`) e `src/GazetaMarketplace.Infrastructure/Settings/` (`SiteSettingsStore`, `SiteSettingsManagement`)
 
 **Acceptance Criteria**:
-- [ ] `@US-015-S01` (@happy): Definir o telefone/WhatsApp do site — o *Then* do SPEC é atendido
-- [ ] `@US-015-S02` (@happy): Trocar o número em uso — o *Then* do SPEC é atendido
-- [ ] `@US-015-S03` (@edge): Número digitado sem formatação — o *Then* do SPEC é atendido
-- [ ] `@US-015-S04` (@negative): Número inválido — o *Then* do SPEC é atendido
-- [ ] `@US-015-S05` (@negative): Número vazio — o *Then* do SPEC é atendido
-- [ ] `@US-015-S06` (@negative): Redator não acessa as configurações — o *Then* do SPEC é atendido
-- [ ] Aceita número com ou sem formatação e guarda só dígitos; recusa número inválido e vazio
-- [ ] Trocar o número vale para todos os anúncios na hora; só o Administrador acessa
-- [ ] **RC-16:** trocar o telefone do site grava em `AuditEntries` o valor anterior e o novo
+- [x] `@US-015-S01` (@happy): Definir o telefone/WhatsApp do site — o *Then* do SPEC é atendido
+- [x] `@US-015-S02` (@happy): Trocar o número em uso — o *Then* do SPEC é atendido
+- [x] `@US-015-S03` (@edge): Número digitado sem formatação — o *Then* do SPEC é atendido
+- [x] `@US-015-S04` (@negative): Número inválido — o *Then* do SPEC é atendido
+- [x] `@US-015-S05` (@negative): Número vazio — o *Then* do SPEC é atendido
+- [x] `@US-015-S06` (@negative): Redator não acessa as configurações — o *Then* do SPEC é atendido
+- [x] Aceita número com ou sem formatação e guarda só dígitos; recusa número inválido e vazio
+- [x] Trocar o número vale para todos os anúncios na hora; só o Administrador acessa
+- [x] **RC-16:** trocar o telefone do site grava em `AuditEntries` o valor anterior e o novo
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Configurações/SettingsTests.US015S01_DefinirOTelefoneWhatsAppDoSite` — `@US-015-S01`
@@ -1016,6 +1016,15 @@
 - `tests/GazetaMarketplace.Web.Tests/Configurações/SettingsTests.US015S06_RedatorNaoAcessaAsConfiguracoes` — `@US-015-S06`
 - `tests/GazetaMarketplace.Web.Tests/Settings/NormalizacaoTests.Numero_SemFormatacao_E_Normalizado`
 - `tests/GazetaMarketplace.Web.Tests/Settings/SettingsTests.TrocaDeTelefone_GravaValorAntigoENovo`
+
+**Implementado em 2026-10-03 (decisões do Product Owner)**:
+- Tabela chave-valor `SiteSettings` (`Key varchar(100)` único, `Value nvarchar(500)`), migration `AddSiteSettings`; chave `site.phone`, valor só com dígitos e sem o código do país. A tabela nasce vazia: o Administrador precisa informar o número.
+- Rigor total no telefone: DDD da lista oficial (67), celular com 11 dígitos começando em 9, fixo com 10 dígitos começando de 2 a 9. Aceita `(11) 91234-5678`, `11 91234-5678`, `11912345678`, `+55 (11) 91234-5678` e `5511912345678`.
+- Cache de 10 minutos (relógio do site), invalidado ao salvar. O cache é por processo; ver `plans/BACKLOG.md`.
+- A mudança grava o valor anterior e o novo em `AuditEntries` na mesma transação; reenviar o mesmo número não grava nem audita.
+- Duas pessoas criando a primeira configuração ao mesmo tempo: o índice único recusa uma e ela recebe o aviso de conflito.
+- Tela `/painel/configuracoes`, só do Administrador, pronta para receber outras chaves. Funciona sem JavaScript; o módulo `settings-index.js` só desabilita o botão ("Salvando…") durante o envio.
+- A parte de S01/S02 que o visitante vê (número no anúncio, botões Ligar e WhatsApp) entra com o detalhe público do anúncio (5.x); aqui fica provado que o site lê o número novo na hora (`ISiteSettings`).
 
 **Dependencies**: 1.1, 0.6
 

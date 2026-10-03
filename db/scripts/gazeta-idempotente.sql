@@ -697,3 +697,42 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003174013_AddSiteSettings'
+)
+BEGIN
+    CREATE TABLE [SiteSettings] (
+        [Id] int NOT NULL IDENTITY,
+        [Key] varchar(100) NOT NULL,
+        [Value] nvarchar(500) NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [CreatedBy] int NULL,
+        [UpdatedAt] datetime2 NULL,
+        [UpdatedBy] int NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_SiteSettings] PRIMARY KEY ([Id])
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003174013_AddSiteSettings'
+)
+BEGIN
+    CREATE UNIQUE INDEX [UQ_SiteSettings_Key] ON [SiteSettings] ([Key]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003174013_AddSiteSettings'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261003174013_AddSiteSettings', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

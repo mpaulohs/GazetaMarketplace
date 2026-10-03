@@ -6,6 +6,7 @@ using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Entities;
 using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Interfaces;
+using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,8 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
     public DbSet<PasswordRecoveryAttempt> PasswordRecoveryAttempts => Set<PasswordRecoveryAttempt>();
 
     public DbSet<Category> Categories => Set<Category>();
+
+    public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

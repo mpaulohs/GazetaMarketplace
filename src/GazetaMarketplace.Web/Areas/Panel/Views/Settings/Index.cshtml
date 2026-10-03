@@ -1,0 +1,39 @@
+@model SettingsViewModel
+@{
+    ViewData["Title"] = "Configurações";
+    bool phoneInvalid = ViewData.ModelState["Phone"]?.Errors.Count > 0;
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <h1 class="fs-3 mb-3">Configurações do site</h1>
+
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <div class="alert alert-success" role="status">@Model.Message</div>
+        }
+
+        @if (!Model.IsPhoneConfigured)
+        {
+            <div class="alert alert-warning" role="status">O telefone/WhatsApp do site ainda não foi configurado. Sem ele, nenhum anúncio pode ser publicado.</div>
+        }
+
+        <div class="card">
+            <div class="card-body p-4">
+                <form asp-area="Panel" asp-action="Save" method="post" novalidate data-settings-form>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="Phone">Telefone/WhatsApp do site <span aria-hidden="true">*</span></label>
+                        <input class="form-control @(phoneInvalid ? "is-invalid" : "")" asp-for="Phone" type="tel" inputmode="tel" autocomplete="off" maxlength="30" aria-required="true" aria-invalid="@(phoneInvalid ? "true" : null)" aria-describedby="phone-help error-Phone" />
+                        @await Html.PartialAsync("_FieldErrors", "Phone")
+                        <p class="form-text" id="phone-help">Esse número aparece em todos os anúncios publicados, nos botões "Ligar" e "Chamar no WhatsApp". Informe DDD e número, por exemplo (11) 91234-5678.</p>
+                    </div>
+                    <button class="btn btn-primary alvo-toque" type="submit" data-submit-button>Salvar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module" src="~/js/pages/settings-index.js" asp-append-version="true"></script>
+}

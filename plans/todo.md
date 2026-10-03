@@ -29,7 +29,7 @@
 - [ ] Task 2.4: Grupos de campos de aluguel, telefonia, eletro, eletrônicos, roupas e máquinas
 - [ ] Task 2.5: Catálogo de veículos: tabelas, consulta encadeada e ferramenta de exportação
 - [ ] Task 2.6: Gerenciar categorias
-- [ ] Task 2.7: Telefone/WhatsApp do site
+- [x] Task 2.7: Telefone/WhatsApp do site
 
 ## Checkpoint 2 — Categorias e catálogo completos
 

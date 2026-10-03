@@ -124,6 +124,17 @@ public sealed class MigrationsTests
         }
     }
 
+    [TestMethod]
+    public void MigrationDasConfiguracoes_CriaSoASiteSettings_ComChaveUnica_ESemLinhasIniciais()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddSiteSettings", StringComparison.Ordinal)));
+
+        Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(section, @"CREATE TABLE \[").Count);
+        StringAssert.Contains(section, "CREATE TABLE [SiteSettings]");
+        StringAssert.Contains(section, "CREATE UNIQUE INDEX [UQ_SiteSettings_Key] ON [SiteSettings] ([Key])");
+        Assert.DoesNotContain("INSERT INTO [SiteSettings]", section, "o telefone nasce vazio: o Administrador precisa informá-lo (US-015)");
+    }
+
     private static string[] Migrations
     {
         get

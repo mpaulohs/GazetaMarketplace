@@ -1,12 +1,14 @@
 using System;
 using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Interfaces;
+using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Categories;
 using GazetaMarketplace.Infrastructure.Data;
 using GazetaMarketplace.Infrastructure.Email;
 using GazetaMarketplace.Infrastructure.Identity;
 using GazetaMarketplace.Infrastructure.Recovery;
+using GazetaMarketplace.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +35,9 @@ public static class ServiceCollectionExtensions
             sql => sql.EnableRetryOnFailure(maxRetryCount: 3)));
         services.AddSingleton<CategoryTree>();
         services.AddSingleton<ICategoryTree>(provider => provider.GetRequiredService<CategoryTree>());
+        services.AddSingleton<SiteSettingsStore>();
+        services.AddSingleton<ISiteSettings>(provider => provider.GetRequiredService<SiteSettingsStore>());
+        services.AddScoped<ISiteSettingsManagement, SiteSettingsManagement>();
         services.AddDapper(configuration);
         services.AddScoped<IAuditLog, AuditLog>();
         services.AddScoped<IUserManagement, UserManagement>();
