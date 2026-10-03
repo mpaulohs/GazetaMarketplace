@@ -13,17 +13,17 @@ internal sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbCon
 {
     public AppDbContext CreateDbContext(string[] args)
     {
-        DbContextOptions<AppDbContext> opcoes = new DbContextOptionsBuilder<AppDbContext>()
+        DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlServer("Server=(local);Database=GazetaMarketplace;Trusted_Connection=True;TrustServerCertificate=True")
             .Options;
-        return new AppDbContext(opcoes, new UsuarioDoSistema(), TimeProvider.System);
+        return new AppDbContext(options, new SystemUser(), TimeProvider.System);
     }
 }
 
 /// <summary>Contexto sem requisição: as ações são do sistema (autor nulo).</summary>
-internal sealed class UsuarioDoSistema : IUsuarioAtual
+internal sealed class SystemUser : ICurrentUser
 {
-    public int? UsuarioId => null;
+    public int? UserId => null;
 
     public string CorrelationId => null;
 }

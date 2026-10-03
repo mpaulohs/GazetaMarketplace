@@ -4,8 +4,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Equipe;
-using GazetaMarketplace.Web.Tests.Suporte;
+using GazetaMarketplace.Core.Team;
+using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -20,24 +20,24 @@ public sealed class SessaoTests
     private const string Email = "ana@exemplo.com.br";
     private const string Senha = "Senha@Forte1";
 
-    private static async Task<FabricaWeb> NovaFabricaAsync(Dictionary<string, string> configuracao = null)
+    private static async Task<WebFactory> NovaFabricaAsync(Dictionary<string, string> configuration = null)
     {
-        FabricaWeb fabrica = new(configuracao: configuracao, comBanco: true);
-        await fabrica.CriarUsuarioAsync(Email, "Ana Souza", Senha, Papeis.Redator);
-        return fabrica;
+        WebFactory factory = new(configuration: configuration, withDatabase: true);
+        await factory.CreateUserAsync(Email, "Ana Souza", Senha, RoleNames.Writer);
+        return factory;
     }
 
-    private static async Task<bool> EstaLogadaAsync(HttpClient cliente) =>
-        (await cliente.GetAsync("/painel/anuncios")).StatusCode == HttpStatusCode.OK;
+    private static async Task<bool> EstaLogadaAsync(HttpClient client) =>
+        (await client.GetAsync("/painel/anuncios")).StatusCode == HttpStatusCode.OK;
 
     [TestMethod]
     public async Task Cookie_Tem_HttpOnly_Secure_SameSite_E_30Min()
     {
-        using FabricaWeb fabrica = await NovaFabricaAsync();
-        using HttpClient cliente = ClienteDaEquipe.Novo(fabrica);
+        using WebFactory factory = await NovaFabricaAsync();
+        using HttpClient client = ClienteDaEquipe.Novo(factory);
 
-        HttpResponseMessage entrada = await cliente.EntrarAsync(Email, Senha);
-        string cookie = entrada.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("Gazeta.Equipe=", StringComparison.Ordinal));
+        HttpResponseMessage entry = await client.EntrarAsync(Email, Senha);
+        string cookie = entry.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("Gazeta.Equipe=", StringComparison.Ordinal));
 
         StringAssert.Contains(cookie, "httponly");
         StringAssert.Contains(cookie, "secure");
@@ -46,65 +46,65 @@ public sealed class SessaoTests
         Assert.IsFalse(cookie.Contains("expires=", StringComparison.OrdinalIgnoreCase), "cookie de sessão: não sobrevive ao fechar o navegador");
 
         // 30 minutos deslizantes: cada uso renova; 31 minutos parado expira
-        fabrica.Relogio.Agora += TimeSpan.FromMinutes(29);
-        Assert.IsTrue(await EstaLogadaAsync(cliente), "aos 29 min ainda vale (e renova)");
-        fabrica.Relogio.Agora += TimeSpan.FromMinutes(29);
-        Assert.IsTrue(await EstaLogadaAsync(cliente), "29 min depois do último uso ainda vale");
-        fabrica.Relogio.Agora += TimeSpan.FromMinutes(31);
-        Assert.IsFalse(await EstaLogadaAsync(cliente), "31 min parada expira");
+        factory.Clock.Now += TimeSpan.FromMinutes(29);
+        Assert.IsTrue(await EstaLogadaAsync(client), "aos 29 min ainda vale (e renova)");
+        factory.Clock.Now += TimeSpan.FromMinutes(29);
+        Assert.IsTrue(await EstaLogadaAsync(client), "29 min depois do último uso ainda vale");
+        factory.Clock.Now += TimeSpan.FromMinutes(31);
+        Assert.IsFalse(await EstaLogadaAsync(client), "31 min parada expira");
     }
 
     [TestMethod]
     public async Task SessaoMinutos_ConfiguraAExpiracao()
     {
-        using FabricaWeb fabrica = await NovaFabricaAsync(new Dictionary<string, string> { ["Autenticacao:SessaoMinutos"] = "2" });
-        using HttpClient cliente = ClienteDaEquipe.Novo(fabrica);
-        await cliente.EntrarAsync(Email, Senha);
+        using WebFactory factory = await NovaFabricaAsync(new Dictionary<string, string> { ["Autenticacao:SessaoMinutos"] = "2" });
+        using HttpClient client = ClienteDaEquipe.Novo(factory);
+        await client.EntrarAsync(Email, Senha);
 
-        fabrica.Relogio.Agora += TimeSpan.FromMinutes(1);
-        Assert.IsTrue(await EstaLogadaAsync(cliente));
-        fabrica.Relogio.Agora += TimeSpan.FromMinutes(3);
-        Assert.IsFalse(await EstaLogadaAsync(cliente), "com 2 minutos configurados, 3 parada expira");
+        factory.Clock.Now += TimeSpan.FromMinutes(1);
+        Assert.IsTrue(await EstaLogadaAsync(client));
+        factory.Clock.Now += TimeSpan.FromMinutes(3);
+        Assert.IsFalse(await EstaLogadaAsync(client), "com 2 minutos configurados, 3 parada expira");
     }
 
     [TestMethod]
     [DataRow("0")]
     [DataRow("121")]
-    public async Task SessaoMinutosForaDoIntervalo_ImpedeAPartida(string valor)
+    public async Task SessaoMinutosForaDoIntervalo_ImpedeAPartida(string value)
     {
-        using FabricaWeb fabrica = new(configuracao: new Dictionary<string, string> { ["Autenticacao:SessaoMinutos"] = valor }, comBanco: true);
+        using WebFactory factory = new(configuration: new Dictionary<string, string> { ["Autenticacao:SessaoMinutos"] = value }, withDatabase: true);
 
-        OptionsValidationException erro = Assert.Throws<OptionsValidationException>(() => fabrica.CreateClient());
-        StringAssert.Contains(erro.Message, "SessaoMinutos");
+        OptionsValidationException error = Assert.Throws<OptionsValidationException>(() => factory.CreateClient());
+        StringAssert.Contains(error.Message, "SessaoMinutos");
     }
 
     [TestMethod]
     public async Task UsuarioDesativado_PerdeAcessoAposRevalidacao()
     {
-        using FabricaWeb fabrica = await NovaFabricaAsync();
-        using HttpClient cliente = ClienteDaEquipe.Novo(fabrica);
-        await cliente.EntrarAsync(Email, Senha);
-        Assert.IsTrue(await EstaLogadaAsync(cliente));
+        using WebFactory factory = await NovaFabricaAsync();
+        using HttpClient client = ClienteDaEquipe.Novo(factory);
+        await client.EntrarAsync(Email, Senha);
+        Assert.IsTrue(await EstaLogadaAsync(client));
 
         // Desativa sem mexer no carimbo de segurança: quem desativa pode esquecer de trocá-lo
-        await fabrica.AlterarUsuarioAsync(Email, u => u.IsActive = false);
+        await factory.UpdateUserAsync(Email, u => u.IsActive = false);
 
-        fabrica.Relogio.Agora += TimeSpan.FromMinutes(4);
-        Assert.IsTrue(await EstaLogadaAsync(cliente), "antes da revalidação de 5 min, a sessão ainda vale");
-        fabrica.Relogio.Agora += TimeSpan.FromMinutes(2);
-        Assert.IsFalse(await EstaLogadaAsync(cliente), "passada a revalidação, a conta desativada perde o acesso");
+        factory.Clock.Now += TimeSpan.FromMinutes(4);
+        Assert.IsTrue(await EstaLogadaAsync(client), "antes da revalidação de 5 min, a sessão ainda vale");
+        factory.Clock.Now += TimeSpan.FromMinutes(2);
+        Assert.IsFalse(await EstaLogadaAsync(client), "passada a revalidação, a conta desativada perde o acesso");
     }
 
     [TestMethod]
     public async Task SenhaTrocada_EncerraAsOutrasSessoes_NaRevalidacao()
     {
-        using FabricaWeb fabrica = await NovaFabricaAsync();
-        using HttpClient cliente = ClienteDaEquipe.Novo(fabrica);
-        await cliente.EntrarAsync(Email, Senha);
+        using WebFactory factory = await NovaFabricaAsync();
+        using HttpClient client = ClienteDaEquipe.Novo(factory);
+        await client.EntrarAsync(Email, Senha);
 
-        await fabrica.AlterarUsuarioAsync(Email, u => u.SecurityStamp = Guid.NewGuid().ToString());
-        fabrica.Relogio.Agora += TimeSpan.FromMinutes(6);
+        await factory.UpdateUserAsync(Email, u => u.SecurityStamp = Guid.NewGuid().ToString());
+        factory.Clock.Now += TimeSpan.FromMinutes(6);
 
-        Assert.IsFalse(await EstaLogadaAsync(cliente));
+        Assert.IsFalse(await EstaLogadaAsync(client));
     }
 }

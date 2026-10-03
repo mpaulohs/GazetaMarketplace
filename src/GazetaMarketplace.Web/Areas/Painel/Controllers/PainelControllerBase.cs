@@ -1,5 +1,5 @@
 using GazetaMarketplace.Web.Areas.Painel.Filters;
-using GazetaMarketplace.Web.Seguranca;
+using GazetaMarketplace.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +10,7 @@ namespace GazetaMarketplace.Web.Areas.Painel.Controllers;
 /// for provisória (S09) e nunca vai para o cache, para que o botão Voltar depois de "Sair" não mostre o painel (S03).
 /// </summary>
 [Area("Painel")]
-[Authorize(Policy = PoliticasDeAcesso.Redator)]
+[Authorize(Policy = PoliticasDeAcesso.Writer)]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 [TypeFilter(typeof(MustChangePasswordFilter))]
 public abstract class PainelControllerBase : Controller

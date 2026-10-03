@@ -1,34 +1,34 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Entidades;
+using GazetaMarketplace.Core.Entities;
 using GazetaMarketplace.Core.Interfaces;
 
 namespace GazetaMarketplace.Infrastructure.Data;
 
 /// <inheritdoc cref="IAuditLog"/>
-public sealed class AuditLog(AppDbContext contexto, IUsuarioAtual usuarioAtual, TimeProvider tempo) : IAuditLog
+public sealed class AuditLog(AppDbContext context, ICurrentUser currentUser, TimeProvider time) : IAuditLog
 {
-    public async Task RegistrarAsync(EntradaDeAuditoria entrada, CancellationToken cancellationToken)
+    public async Task RecordAsync(AuditRecord entry, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(entrada);
-        ArgumentException.ThrowIfNullOrWhiteSpace(entrada.Acao);
-        ArgumentException.ThrowIfNullOrWhiteSpace(entrada.TipoDoAlvo);
-        ArgumentException.ThrowIfNullOrWhiteSpace(entrada.IdDoAlvo);
+        ArgumentNullException.ThrowIfNull(entry);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.Action);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.TargetType);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.TargetId);
 
-        contexto.AuditEntries.Add(new AuditEntry
+        context.AuditEntries.Add(new AuditEntry
         {
-            OccurredAt = tempo.GetUtcNow().UtcDateTime,
-            ActorId = usuarioAtual.UsuarioId,
-            Action = entrada.Acao,
-            TargetType = entrada.TipoDoAlvo,
-            TargetId = entrada.IdDoAlvo,
-            PreviousValue = entrada.ValorAnterior,
-            NewValue = entrada.ValorNovo,
-            Result = entrada.Resultado,
-            CorrelationId = usuarioAtual.CorrelationId
+            OccurredAt = time.GetUtcNow().UtcDateTime,
+            ActorId = currentUser.UserId,
+            Action = entry.Action,
+            TargetType = entry.TargetType,
+            TargetId = entry.TargetId,
+            PreviousValue = entry.PreviousValue,
+            NewValue = entry.NewValue,
+            Result = entry.Result,
+            CorrelationId = currentUser.CorrelationId
         });
 
-        await contexto.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

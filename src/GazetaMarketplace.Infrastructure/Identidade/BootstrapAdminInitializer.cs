@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Configuracao;
-using GazetaMarketplace.Core.Equipe;
+using GazetaMarketplace.Core.Configuration;
+using GazetaMarketplace.Core.Team;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,7 +14,7 @@ using Microsoft.Extensions.Options;
 namespace GazetaMarketplace.Infrastructure.Identidade;
 
 /// <summary>Configuração do primeiro Administrador inválida: o site não sobe, em vez de ficar sem acesso ao painel (ADR-011).</summary>
-public sealed class BootstrapInvalidoException(string mensagem) : InvalidOperationException(mensagem);
+public sealed class InvalidBootstrapException(string message) : InvalidOperationException(message);
 
 /// <summary>
 /// Cria o primeiro Administrador na partida (S17, ADR-003): só se <c>Bootstrap__AdminEmail</c> e <c>Bootstrap__AdminPassword</c>
@@ -23,15 +23,15 @@ public sealed class BootstrapInvalidoException(string mensagem) : InvalidOperati
 /// </summary>
 public sealed class BootstrapAdminInitializer(
     IServiceScopeFactory escopos,
-    IOptions<BootstrapOptions> opcoes,
+    IOptions<BootstrapOptions> options,
     ILogger<BootstrapAdminInitializer> log) : IHostedService
 {
-    public async Task StartAsync(CancellationToken cancelamento)
+    public async Task StartAsync(CancellationToken cancellation)
     {
-        string email = opcoes.Value.AdminEmail?.Trim();
-        string senha = opcoes.Value.AdminPassword;
+        string email = options.Value.AdminEmail?.Trim();
+        string adminPassword = options.Value.AdminPassword;
         bool temEmail = !string.IsNullOrWhiteSpace(email);
-        bool temSenha = !string.IsNullOrEmpty(senha);
+        bool temSenha = !string.IsNullOrEmpty(adminPassword);
 
         // Sem variáveis, nada a fazer e nem o banco é consultado
         if (!temEmail && !temSenha)
@@ -39,18 +39,18 @@ public sealed class BootstrapAdminInitializer(
             return;
         }
 
-        using IServiceScope escopo = escopos.CreateScope();
-        UserManager<UsuarioIdentity> usuarios = escopo.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
+        using IServiceScope scope = escopos.CreateScope();
+        UserManager<UsuarioIdentity> users = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
 
         bool jaExiste;
         try
         {
-            jaExiste = (await usuarios.GetUsersInRoleAsync(Papeis.Administrador)).Count > 0;
+            jaExiste = (await users.GetUsersInRoleAsync(RoleNames.Administrator)).Count > 0;
         }
-        catch (Exception erro) when (erro is not OperationCanceledException)
+        catch (Exception error) when (error is not OperationCanceledException)
         {
             // Banco fora do ar na partida: o site sobe e o /health/ready avisa; a próxima partida tenta de novo
-            log.LogError(erro, "Não foi possível verificar se já existe um Administrador; o Administrador inicial não foi criado");
+            log.LogError(error, "Não foi possível verificar se já existe um Administrador; o Administrador inicial não foi criado");
             return;
         }
 
@@ -63,21 +63,21 @@ public sealed class BootstrapAdminInitializer(
             return;
         }
 
-        await CriarAsync(usuarios, email, senha, temEmail && temSenha);
+        await CriarAsync(users, email, adminPassword, temEmail && temSenha);
     }
 
-    public Task StopAsync(CancellationToken cancelamento) => Task.CompletedTask;
+    public Task StopAsync(CancellationToken cancellation) => Task.CompletedTask;
 
-    private async Task CriarAsync(UserManager<UsuarioIdentity> usuarios, string email, string senha, bool completas)
+    private async Task CriarAsync(UserManager<UsuarioIdentity> users, string email, string adminPassword, bool completas)
     {
         if (!completas)
         {
-            throw new BootstrapInvalidoException("Bootstrap__AdminEmail e Bootstrap__AdminPassword precisam existir juntas para criar o primeiro Administrador.");
+            throw new InvalidBootstrapException("Bootstrap__AdminEmail e Bootstrap__AdminPassword precisam existir juntas para criar o primeiro Administrador.");
         }
 
         if (!new EmailAddressAttribute().IsValid(email))
         {
-            throw new BootstrapInvalidoException("Bootstrap__AdminEmail não é um e-mail válido.");
+            throw new InvalidBootstrapException("Bootstrap__AdminEmail não é um e-mail válido.");
         }
 
         UsuarioIdentity administrador = new()
@@ -90,31 +90,31 @@ public sealed class BootstrapAdminInitializer(
         };
 
         // Valida a política de senha antes de tocar no banco; as mensagens não repetem a senha
-        foreach (IPasswordValidator<UsuarioIdentity> validador in usuarios.PasswordValidators)
+        foreach (IPasswordValidator<UsuarioIdentity> validador in users.PasswordValidators)
         {
-            IdentityResult validacao = await validador.ValidateAsync(usuarios, administrador, senha);
+            IdentityResult validacao = await validador.ValidateAsync(users, administrador, adminPassword);
             if (!validacao.Succeeded)
             {
-                throw new BootstrapInvalidoException(
+                throw new InvalidBootstrapException(
                     "Bootstrap__AdminPassword não cumpre a política de senha: " + string.Join("; ", validacao.Errors.Select(e => e.Description)));
             }
         }
 
         try
         {
-            IdentityResult criado = await usuarios.CreateAsync(administrador, senha);
-            if (!criado.Succeeded)
+            IdentityResult created = await users.CreateAsync(administrador, adminPassword);
+            if (!created.Succeeded)
             {
                 // Outra instância pode ter criado a conta no mesmo instante: o e-mail repetido é o caso esperado
-                log.LogError("O Administrador inicial não foi criado: {Erros}", string.Join(", ", criado.Errors.Select(e => e.Code)));
+                log.LogError("O Administrador inicial não foi criado: {Erros}", string.Join(", ", created.Errors.Select(e => e.Code)));
                 return;
             }
 
-            await usuarios.AddToRoleAsync(administrador, Papeis.Administrador);
+            await users.AddToRoleAsync(administrador, RoleNames.Administrator);
         }
-        catch (Exception erro) when (erro is not OperationCanceledException)
+        catch (Exception error) when (error is not OperationCanceledException)
         {
-            log.LogError(erro, "Não foi possível criar o Administrador inicial");
+            log.LogError(error, "Não foi possível criar o Administrador inicial");
             return;
         }
 

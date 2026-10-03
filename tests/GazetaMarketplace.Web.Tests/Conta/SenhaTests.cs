@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using GazetaMarketplace.Infrastructure.Identidade;
-using GazetaMarketplace.Web.Tests.Suporte;
+using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -21,45 +21,45 @@ public sealed class SenhaTests
     [DataRow("SENHA@FORTE1", "PasswordRequiresLower")]
     [DataRow("Senha@Forte", "PasswordRequiresDigit")]
     [DataRow("SenhaForte12", "PasswordRequiresNonAlphanumeric")]
-    public async Task Politica_RejeitaSenhasFracas(string senha, string erroEsperado)
+    public async Task Politica_RejeitaSenhasFracas(string password, string erroEsperado)
     {
-        using FabricaWeb fabrica = new(comBanco: true);
-        using IServiceScope escopo = fabrica.Services.CreateScope();
-        UserManager<UsuarioIdentity> usuarios = escopo.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
+        using WebFactory factory = new(withDatabase: true);
+        using IServiceScope scope = factory.Services.CreateScope();
+        UserManager<UsuarioIdentity> users = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
 
-        IdentityResult resultado = await usuarios.CreateAsync(
-            new UsuarioIdentity { UserName = "fraca@exemplo.com.br", Email = "fraca@exemplo.com.br", FullName = "Fraca" }, senha);
+        IdentityResult result = await users.CreateAsync(
+            new UsuarioIdentity { UserName = "fraca@exemplo.com.br", Email = "fraca@exemplo.com.br", FullName = "Fraca" }, password);
 
-        Assert.IsFalse(resultado.Succeeded, senha);
-        CollectionAssert.Contains(resultado.Errors.Select(e => e.Code).ToArray(), erroEsperado);
+        Assert.IsFalse(result.Succeeded, password);
+        CollectionAssert.Contains(result.Errors.Select(e => e.Code).ToArray(), erroEsperado);
     }
 
     [TestMethod]
     public async Task SenhaForte_E_Aceita_ESoFicaOHash()
     {
-        using FabricaWeb fabrica = new(comBanco: true);
-        using IServiceScope escopo = fabrica.Services.CreateScope();
-        UserManager<UsuarioIdentity> usuarios = escopo.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
-        UsuarioIdentity usuario = new() { UserName = "forte@exemplo.com.br", Email = "forte@exemplo.com.br", FullName = "Forte" };
+        using WebFactory factory = new(withDatabase: true);
+        using IServiceScope scope = factory.Services.CreateScope();
+        UserManager<UsuarioIdentity> users = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
+        UsuarioIdentity user = new() { UserName = "forte@exemplo.com.br", Email = "forte@exemplo.com.br", FullName = "Forte" };
 
-        IdentityResult resultado = await usuarios.CreateAsync(usuario, "Senha@Forte1");
+        IdentityResult result = await users.CreateAsync(user, "Senha@Forte1");
 
-        Assert.IsTrue(resultado.Succeeded, string.Join(";", resultado.Errors.Select(e => e.Code)));
-        Assert.IsFalse(usuario.PasswordHash.Contains("Senha@Forte1", StringComparison.Ordinal), "nunca em texto");
-        StringAssert.StartsWith(usuario.PasswordHash, "AQAAAA", "hash do Identity (PBKDF2 com sal), irreversível");
+        Assert.IsTrue(result.Succeeded, string.Join(";", result.Errors.Select(e => e.Code)));
+        Assert.IsFalse(user.PasswordHash.Contains("Senha@Forte1", StringComparison.Ordinal), "nunca em texto");
+        StringAssert.StartsWith(user.PasswordHash, "AQAAAA", "hash do Identity (PBKDF2 com sal), irreversível");
     }
 
     [TestMethod]
     public async Task EmailRepetido_NaoCriaSegundaConta()
     {
-        using FabricaWeb fabrica = new(comBanco: true);
-        await fabrica.CriarUsuarioAsync("ana@exemplo.com.br", "Ana", "Senha@Forte1", "Redator");
-        using IServiceScope escopo = fabrica.Services.CreateScope();
-        UserManager<UsuarioIdentity> usuarios = escopo.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
+        using WebFactory factory = new(withDatabase: true);
+        await factory.CreateUserAsync("ana@exemplo.com.br", "Ana", "Senha@Forte1", "Redator");
+        using IServiceScope scope = factory.Services.CreateScope();
+        UserManager<UsuarioIdentity> users = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
 
-        IdentityResult resultado = await usuarios.CreateAsync(
+        IdentityResult result = await users.CreateAsync(
             new UsuarioIdentity { UserName = "ANA@exemplo.com.br", Email = "ANA@exemplo.com.br", FullName = "Outra" }, "Senha@Forte1");
 
-        Assert.IsFalse(resultado.Succeeded);
+        Assert.IsFalse(result.Succeeded);
     }
 }

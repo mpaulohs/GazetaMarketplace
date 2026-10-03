@@ -6,10 +6,10 @@ namespace GazetaMarketplace.Infrastructure.Data;
 /// </summary>
 public static class SqlFragments
 {
-    public const string ParametroStatusPublicado = "StatusPublicado";
+    public const string PublishedStatusParameter = "StatusPublicado";
 
     /// <summary>Valor de "Publicado" em Ads.Status (ARCHITECTURE.md §6.2). A tarefa 3.1 cria o enum SituacaoAnuncio e um teste de igualdade.</summary>
-    public const byte StatusPublicado = 3;
+    public const byte PublishedStatus = 3;
 
-    public const string SomentePublicados = "a.Status = @" + ParametroStatusPublicado;
+    public const string OnlyPublished = "a.Status = @" + PublishedStatusParameter;
 }

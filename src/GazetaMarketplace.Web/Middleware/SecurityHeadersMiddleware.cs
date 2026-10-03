@@ -7,7 +7,7 @@ namespace GazetaMarketplace.Web.Middleware;
 /// Cabeçalhos de segurança em toda resposta (NFR-10, ARCHITECTURE.md §7). HSTS só em produção e
 /// só em HTTPS; a CSP não permite script nem estilo inline.
 /// </summary>
-public sealed class SecurityHeadersMiddleware(RequestDelegate next, bool producao)
+public sealed class SecurityHeadersMiddleware(RequestDelegate next, bool production)
 {
     private const string Csp =
         "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; " +
@@ -19,15 +19,15 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next, bool produca
     {
         context.Response.OnStarting(() =>
         {
-            IHeaderDictionary cabecalhos = context.Response.Headers;
-            cabecalhos["X-Content-Type-Options"] = "nosniff";
-            cabecalhos["X-Frame-Options"] = "DENY";
-            cabecalhos["Referrer-Policy"] = "strict-origin-when-cross-origin";
-            cabecalhos["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
-            cabecalhos["Content-Security-Policy"] = Csp;
-            if (producao && context.Request.IsHttps)
+            IHeaderDictionary headers = context.Response.Headers;
+            headers["X-Content-Type-Options"] = "nosniff";
+            headers["X-Frame-Options"] = "DENY";
+            headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+            headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
+            headers["Content-Security-Policy"] = Csp;
+            if (production && context.Request.IsHttps)
             {
-                cabecalhos["Strict-Transport-Security"] = Hsts;
+                headers["Strict-Transport-Security"] = Hsts;
             }
 
             return Task.CompletedTask;

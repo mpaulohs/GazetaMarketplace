@@ -1,8 +1,0 @@
-@using GazetaMarketplace.Web.Models
-@{
-    ViewData["Title"] = "Estados hostis";
-    string hostil = "<script>alert('xss')</script>";
-}
-@await Html.PartialAsync("_EstadoVazio", new EstadoPaginaViewModel { Titulo = hostil, Mensagem = hostil, AcaoTexto = hostil, AcaoUrl = "javascript:alert(1)" })
-@await Html.PartialAsync("_EstadoSemResultado", new EstadoPaginaViewModel { Titulo = hostil, Mensagem = hostil, AcaoUrl = "//evil.example/x" })
-@await Html.PartialAsync("_EstadoErro", new EstadoPaginaViewModel { Titulo = hostil, Mensagem = hostil, AcaoUrl = "https://evil.example/x", CodigoReferencia = hostil })

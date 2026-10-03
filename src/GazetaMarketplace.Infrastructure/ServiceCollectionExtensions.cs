@@ -19,15 +19,15 @@ public static class ServiceCollectionExtensions
 
         services.TryAddSingleton(TimeProvider.System);
         // Sem requisição (a Web registra a versão HTTP antes desta chamada), as ações são do sistema
-        services.TryAddScoped<IUsuarioAtual, UsuarioDoSistema>();
+        services.TryAddScoped<ICurrentUser, SystemUser>();
 
         // A cadeia é lida só quando o contexto é criado (inclui valores acrescentados depois pelo host)
-        services.AddDbContext<AppDbContext>(opcoes => opcoes.UseSqlServer(
+        services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
             configuration.GetConnectionString("DefaultConnection"),
             sql => sql.EnableRetryOnFailure(maxRetryCount: 3)));
         services.AddDapper(configuration);
         services.AddScoped<IAuditLog, AuditLog>();
-        services.AddScoped<IProntidaoDoBanco, ProntidaoDoBancoEf>();
+        services.AddScoped<IDatabaseReadiness, EfDatabaseReadiness>();
 
         return services;
     }

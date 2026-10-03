@@ -8,25 +8,25 @@ using Microsoft.Extensions.Logging;
 namespace GazetaMarketplace.Web.HealthChecks;
 
 /// <summary>Pronto = banco acessível e última migration aplicada (ADR-010). Nada interno vai para a resposta.</summary>
-public sealed class DatabaseAndMigrationHealthCheck(IProntidaoDoBanco prontidao, ILogger<DatabaseAndMigrationHealthCheck> logger) : IHealthCheck
+public sealed class DatabaseAndMigrationHealthCheck(IDatabaseReadiness readiness, ILogger<DatabaseAndMigrationHealthCheck> logger) : IHealthCheck
 {
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
         {
-            ProntidaoDoBanco estado = await prontidao.VerificarAsync(cancellationToken);
-            if (!estado.Pronto)
+            DatabaseReadiness state = await readiness.CheckAsync(cancellationToken);
+            if (!state.IsReady)
             {
-                logger.LogWarning("Banco não pronto: acessível={Acessivel}, migration em dia={MigrationEmDia}",
-                    estado.BancoAcessivel, estado.MigrationAplicada);
+                logger.LogWarning("Banco não pronto: acessível={Reachable}, migration em dia={MigrationUpToDate}",
+                    state.DatabaseReachable, state.MigrationApplied);
             }
 
-            return estado.Pronto ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy();
+            return state.IsReady ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy();
         }
         catch (Exception ex)
         {
             // Só o tipo: a mensagem de uma exceção de banco pode conter a cadeia de conexão
-            logger.LogWarning("Falha ao verificar o banco: {Tipo}", ex.GetType().Name);
+            logger.LogWarning("Falha ao verificar o banco: {Type}", ex.GetType().Name);
             return HealthCheckResult.Unhealthy();
         }
     }

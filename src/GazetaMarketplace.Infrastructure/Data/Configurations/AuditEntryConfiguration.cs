@@ -1,4 +1,4 @@
-using GazetaMarketplace.Core.Entidades;
+using GazetaMarketplace.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

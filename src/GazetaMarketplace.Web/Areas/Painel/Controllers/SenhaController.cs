@@ -1,10 +1,10 @@
 using System.Linq;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Equipe;
+using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Identidade;
 using GazetaMarketplace.Web.Areas.Painel.Models;
-using GazetaMarketplace.Web.Navegacao;
-using GazetaMarketplace.Web.Seguranca;
+using GazetaMarketplace.Web.Navigation;
+using GazetaMarketplace.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,28 +17,28 @@ namespace GazetaMarketplace.Web.Areas.Painel.Controllers;
 /// leva para esta própria tela e a pessoa ficaria presa num redirecionamento sem fim.
 /// </summary>
 [Area("Painel")]
-[Authorize(Policy = PoliticasDeAcesso.Redator)]
+[Authorize(Policy = PoliticasDeAcesso.Writer)]
 [Route("painel")]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public sealed class SenhaController(
-    UserManager<UsuarioIdentity> usuarios,
+    UserManager<UsuarioIdentity> users,
     SignInManager<UsuarioIdentity> acesso,
     ILogger<SenhaController> log) : Controller
 {
     public const string MensagemIgualAProvisoria = "A nova senha precisa ser diferente da provisória";
 
     [HttpGet("definir-senha")]
-    public async Task<IActionResult> DefinirSenha()
+    public async Task<IActionResult> SetPassword()
     {
-        UsuarioIdentity usuario = await usuarios.GetUserAsync(User);
-        return usuario is { MustChangePassword: true } ? View(new DefinirSenhaViewModel()) : LocalRedirect(PaginaInicial());
+        UsuarioIdentity user = await users.GetUserAsync(User);
+        return user is { MustChangePassword: true } ? View(new DefinirSenhaViewModel()) : LocalRedirect(PaginaInicial());
     }
 
     [HttpPost("definir-senha")]
-    public async Task<IActionResult> DefinirSenha(DefinirSenhaViewModel modelo)
+    public async Task<IActionResult> SetPassword(DefinirSenhaViewModel modelo)
     {
-        UsuarioIdentity usuario = await usuarios.GetUserAsync(User);
-        if (usuario is not { MustChangePassword: true })
+        UsuarioIdentity user = await users.GetUserAsync(User);
+        if (user is not { MustChangePassword: true })
         {
             return LocalRedirect(PaginaInicial());
         }
@@ -52,34 +52,34 @@ public sealed class SenhaController(
             return View(modelo);
         }
 
-        if (await usuarios.CheckPasswordAsync(usuario, nova))
+        if (await users.CheckPasswordAsync(user, nova))
         {
             ModelState.AddModelError(nameof(DefinirSenhaViewModel.NovaSenha), MensagemIgualAProvisoria);
             return View(modelo);
         }
 
         // Atômico: o token valida a política antes de gravar, então uma senha fraca deixa a provisória intacta
-        string token = await usuarios.GeneratePasswordResetTokenAsync(usuario);
-        IdentityResult troca = await usuarios.ResetPasswordAsync(usuario, token, nova);
+        string token = await users.GeneratePasswordResetTokenAsync(user);
+        IdentityResult troca = await users.ResetPasswordAsync(user, token, nova);
         if (!troca.Succeeded)
         {
-            foreach (IdentityError erro in troca.Errors)
+            foreach (IdentityError error in troca.Errors)
             {
-                ModelState.AddModelError(nameof(DefinirSenhaViewModel.NovaSenha), erro.Description);
+                ModelState.AddModelError(nameof(DefinirSenhaViewModel.NovaSenha), error.Description);
             }
 
-            log.LogWarning("Troca de senha recusada para o usuário {UsuarioId}: {Erros}", usuario.Id, string.Join(", ", troca.Errors.Select(e => e.Code)));
+            log.LogWarning("Troca de senha recusada para o usuário {UsuarioId}: {Erros}", user.Id, string.Join(", ", troca.Errors.Select(e => e.Code)));
             return View(modelo);
         }
 
-        usuario.MustChangePassword = false;
-        await usuarios.UpdateAsync(usuario);
+        user.MustChangePassword = false;
+        await users.UpdateAsync(user);
 
         // O carimbo de segurança mudou: emite um cookie novo, já sem o aviso de senha provisória
-        await acesso.RefreshSignInAsync(usuario);
-        log.LogInformation("Usuário {UsuarioId} definiu a nova senha no primeiro acesso", usuario.Id);
+        await acesso.RefreshSignInAsync(user);
+        log.LogInformation("Usuário {UsuarioId} definiu a nova senha no primeiro acesso", user.Id);
         return LocalRedirect(PaginaInicial());
     }
 
-    private string PaginaInicial() => User.IsInRole(Papeis.Administrador) ? RotasDoPainel.Fila : RotasDoPainel.Anuncios;
+    private string PaginaInicial() => User.IsInRole(RoleNames.Administrator) ? PanelRoutes.ReviewQueue : PanelRoutes.Ads;
 }

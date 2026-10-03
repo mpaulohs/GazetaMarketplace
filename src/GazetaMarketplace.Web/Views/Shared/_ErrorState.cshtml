@@ -1,0 +1,18 @@
+@model PageStateViewModel
+
+@* Falha de página ou de lista: mensagem, "Tentar novamente" e o código de referência do log. O título recebe o foco. *@
+<section class="estado-pagina text-center py-5">
+    <h1 class="fs-3" tabindex="-1" data-foco-inicial>@Model.Title</h1>
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p>@Model.Message</p>
+    }
+    @if (Url.IsLocalUrl(Model.ActionUrl))
+    {
+        <a class="btn btn-primary" href="@Model.ActionUrl">@(Model.ActionText ?? "Tentar novamente")</a>
+    }
+    @if (!string.IsNullOrEmpty(Model.ReferenceCode))
+    {
+        <p class="small text-body-secondary mt-3">Código de referência: <code>@Model.ReferenceCode</code></p>
+    }
+</section>

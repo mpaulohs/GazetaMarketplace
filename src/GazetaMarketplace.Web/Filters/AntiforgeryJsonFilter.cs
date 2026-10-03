@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Excecoes;
+using GazetaMarketplace.Core.Exceptions;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -23,9 +23,9 @@ public sealed class AntiforgeryJsonFilter : IAsyncAuthorizationFilter, IOrderedF
 
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
-        HttpRequest requisicao = context.HttpContext.Request;
-        bool dispensado = context.Filters.OfType<IgnoreAntiforgeryTokenAttribute>().Any();
-        if (dispensado || !requisicao.Path.StartsWithSegments("/api") || MetodoSeguro(requisicao.Method))
+        HttpRequest request = context.HttpContext.Request;
+        bool dismissed = context.Filters.OfType<IgnoreAntiforgeryTokenAttribute>().Any();
+        if (dismissed || !request.Path.StartsWithSegments("/api") || IsSafeMethod(request.Method))
         {
             return;
         }
@@ -44,6 +44,6 @@ public sealed class AntiforgeryJsonFilter : IAsyncAuthorizationFilter, IOrderedF
         }
     }
 
-    private static bool MetodoSeguro(string metodo) =>
+    private static bool IsSafeMethod(string metodo) =>
         HttpMethods.IsGet(metodo) || HttpMethods.IsHead(metodo) || HttpMethods.IsOptions(metodo) || HttpMethods.IsTrace(metodo);
 }

@@ -2,12 +2,12 @@ using System;
 using System.Globalization;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Equipe;
+using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Identidade;
 using GazetaMarketplace.Web.Areas.Painel.Models;
 using GazetaMarketplace.Web.Models;
-using GazetaMarketplace.Web.Navegacao;
-using GazetaMarketplace.Web.Seguranca;
+using GazetaMarketplace.Web.Navigation;
+using GazetaMarketplace.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -23,7 +23,7 @@ namespace GazetaMarketplace.Web.Areas.Painel.Controllers;
 [Route("painel")]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public sealed class ContaController(
-    UserManager<UsuarioIdentity> usuarios,
+    UserManager<UsuarioIdentity> users,
     SignInManager<UsuarioIdentity> acesso,
     ContadorDeFalhasDeLogin falhas,
     ILogger<ContaController> log) : Controller
@@ -38,30 +38,30 @@ public sealed class ContaController(
     private static readonly string HashFalso = Hasher.HashPassword(new UsuarioIdentity(), "Falsa!Senha1");
 
     [HttpGet("entrar")]
-    public IActionResult Entrar(
+    public IActionResult SignIn(
         [FromQuery(Name = "ReturnUrl")] string retorno,
         [FromQuery(Name = IdentidadeExtensions.ParametroSessaoExpirada)] string expirada)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
-            return LocalRedirect(PaginaInicialDe(User.IsInRole(Papeis.Administrador)));
+            return LocalRedirect(PaginaInicialDe(User.IsInRole(RoleNames.Administrator)));
         }
 
         return View(new EntrarViewModel { Retorno = retorno, SessaoExpirada = expirada == "1" });
     }
 
     [HttpPost("entrar")]
-    public async Task<IActionResult> Entrar(EntrarViewModel modelo)
+    public async Task<IActionResult> SignIn(EntrarViewModel modelo)
     {
-        string origem = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
-        string senha = modelo.Senha;
+        string source = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
+        string submittedPassword = modelo.Senha;
         modelo.Senha = null; // a senha nunca volta para a tela (S04)
 
-        if (falhas.EstaBloqueado(origem))
+        if (falhas.EstaBloqueado(source))
         {
-            log.LogWarning("Entrada recusada: origem {Origem} bloqueada por excesso de falhas", origem);
+            log.LogWarning("Entrada recusada: origem {Origem} bloqueada por excesso de falhas", source);
             Response.StatusCode = StatusCodes.Status429TooManyRequests;
-            Response.Headers.RetryAfter = Math.Ceiling(falhas.EsperaRestante(origem).TotalSeconds).ToString(CultureInfo.InvariantCulture);
+            Response.Headers.RetryAfter = Math.Ceiling(falhas.EsperaRestante(source).TotalSeconds).ToString(CultureInfo.InvariantCulture);
             ModelState.AddModelError(string.Empty, MensagemDeExcesso);
             return View(modelo);
         }
@@ -71,31 +71,31 @@ public sealed class ContaController(
             return View(modelo);
         }
 
-        UsuarioIdentity usuario = await usuarios.FindByEmailAsync(modelo.Email.Trim());
-        SignInResult resultado;
-        if (usuario is null)
+        UsuarioIdentity user = await users.FindByEmailAsync(modelo.Email.Trim());
+        SignInResult result;
+        if (user is null)
         {
-            Hasher.VerifyHashedPassword(new UsuarioIdentity(), HashFalso, senha);
-            resultado = SignInResult.Failed;
+            Hasher.VerifyHashedPassword(new UsuarioIdentity(), HashFalso, submittedPassword);
+            result = SignInResult.Failed;
         }
         else
         {
-            resultado = await acesso.PasswordSignInAsync(usuario, senha, isPersistent: false, lockoutOnFailure: true);
+            result = await acesso.PasswordSignInAsync(user, submittedPassword, isPersistent: false, lockoutOnFailure: true);
         }
 
-        if (resultado.Succeeded)
+        if (result.Succeeded)
         {
-            bool administrador = await usuarios.IsInRoleAsync(usuario, Papeis.Administrador);
-            falhas.Zerar(origem);
-            log.LogInformation("Entrada do usuário {UsuarioId} ({Papel})", usuario.Id, administrador ? Papeis.Administrador : Papeis.Redator);
+            bool administrador = await users.IsInRoleAsync(user, RoleNames.Administrator);
+            falhas.Zerar(source);
+            log.LogInformation("Entrada do usuário {UsuarioId} ({Papel})", user.Id, administrador ? RoleNames.Administrator : RoleNames.Writer);
 
             // Senha provisória (S09): a troca vem antes de qualquer página, inclusive a que a pessoa tentava abrir
-            return usuario.MustChangePassword
-                ? LocalRedirect(RotasDoPainel.DefinirSenha)
+            return user.MustChangePassword
+                ? LocalRedirect(PanelRoutes.SetPassword)
                 : LocalRedirect(RetornoLocalOu(modelo.Retorno, PaginaInicialDe(administrador)));
         }
 
-        RegistrarFalha(origem, modelo.Email, usuario, resultado);
+        RegistrarFalha(source, modelo.Email, user, result);
 
         // Mesma mensagem para senha errada, e-mail inexistente, conta desativada e conta bloqueada (S04, S05)
         ModelState.AddModelError(string.Empty, MensagemDeFalha);
@@ -103,7 +103,7 @@ public sealed class ContaController(
     }
 
     [HttpPost("sair")]
-    public async Task<IActionResult> Sair()
+    public async Task<IActionResult> SignOutAsync()
     {
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -111,51 +111,51 @@ public sealed class ContaController(
         }
 
         await acesso.SignOutAsync();
-        return Redirect(RotasDoPainel.Entrar);
+        return Redirect(PanelRoutes.SignIn);
     }
 
     [HttpGet("acesso-negado")]
-    public IActionResult AcessoNegado()
+    public IActionResult AccessDenied()
     {
         Response.StatusCode = StatusCodes.Status403Forbidden;
-        return View(new EstadoPaginaViewModel
+        return View(new PageStateViewModel
         {
-            Titulo = "Você não tem permissão para acessar esta página",
-            AcaoTexto = "Ir para o painel",
-            AcaoUrl = PaginaInicialDe(User.IsInRole(Papeis.Administrador))
+            Title = "Você não tem permissão para acessar esta página",
+            ActionText = "Ir para o painel",
+            ActionUrl = PaginaInicialDe(User.IsInRole(RoleNames.Administrator))
         });
     }
 
-    private static string PaginaInicialDe(bool administrador) => administrador ? RotasDoPainel.Fila : RotasDoPainel.Anuncios;
+    private static string PaginaInicialDe(bool administrador) => administrador ? PanelRoutes.ReviewQueue : PanelRoutes.Ads;
 
     // RC-18: o endereço de retorno só vale se for local (e não a própria entrada); senão vai para a página inicial do papel
-    private string RetornoLocalOu(string retorno, string padrao) =>
-        !string.IsNullOrEmpty(retorno) && Url.IsLocalUrl(retorno) && !retorno.StartsWith(RotasDoPainel.Entrar, StringComparison.OrdinalIgnoreCase)
+    private string RetornoLocalOu(string retorno, string defaultValue) =>
+        !string.IsNullOrEmpty(retorno) && Url.IsLocalUrl(retorno) && !retorno.StartsWith(PanelRoutes.SignIn, StringComparison.OrdinalIgnoreCase)
             ? retorno
-            : padrao;
+            : defaultValue;
 
-    private void RegistrarFalha(string origem, string email, UsuarioIdentity usuario, SignInResult resultado)
+    private void RegistrarFalha(string source, string email, UsuarioIdentity user, SignInResult result)
     {
-        bool fechouBloqueio = falhas.RegistrarFalha(origem);
-        string motivo = usuario is null ? "conta inexistente"
-            : resultado.IsLockedOut ? "conta bloqueada"
-            : resultado.IsNotAllowed ? "conta desativada"
+        bool fechouBloqueio = falhas.RegistrarFalha(source);
+        string motivo = user is null ? "conta inexistente"
+            : result.IsLockedOut ? "conta bloqueada"
+            : result.IsNotAllowed ? "conta desativada"
             : "senha incorreta";
 
         // Quem digita a senha no campo de e-mail não pode ir parar no log: só entra o que parece e-mail
         string paraLog = email.Contains('@', StringComparison.Ordinal) && email.Length <= 254 ? email : "(formato inválido)";
-        log.LogWarning("Falha de entrada de {Email} a partir de {Origem}: {Motivo}", paraLog, origem, motivo);
+        log.LogWarning("Falha de entrada de {Email} a partir de {Origem}: {Motivo}", paraLog, source, motivo);
 
-        if (resultado.IsLockedOut)
+        if (result.IsLockedOut)
         {
-            log.LogWarning("Conta do usuário {UsuarioId} bloqueada por tentativas de senha", usuario.Id);
+            log.LogWarning("Conta do usuário {UsuarioId} bloqueada por tentativas de senha", user.Id);
         }
 
         if (fechouBloqueio)
         {
             log.LogWarning(
                 "Origem {Origem} bloqueada por {Limite} falhas de entrada em {Janela} minutos",
-                origem, ContadorDeFalhasDeLogin.Limite, ContadorDeFalhasDeLogin.Janela.TotalMinutes);
+                source, ContadorDeFalhasDeLogin.Limite, ContadorDeFalhasDeLogin.Window.TotalMinutes);
         }
     }
 }

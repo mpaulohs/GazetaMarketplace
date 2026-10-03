@@ -1,5 +1,5 @@
-using GazetaMarketplace.Web.Navegacao;
-using GazetaMarketplace.Web.Seguranca;
+using GazetaMarketplace.Web.Navigation;
+using GazetaMarketplace.Web.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -15,7 +15,7 @@ public sealed class MustChangePasswordFilter : IActionFilter
     {
         if (context.HttpContext.User.HasClaim(ClaimsDaEquipe.DeveTrocarSenha, "1"))
         {
-            context.Result = new RedirectResult(RotasDoPainel.DefinirSenha);
+            context.Result = new RedirectResult(PanelRoutes.SetPassword);
         }
     }
 

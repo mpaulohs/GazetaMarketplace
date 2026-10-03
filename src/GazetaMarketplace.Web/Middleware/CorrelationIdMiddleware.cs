@@ -13,14 +13,14 @@ namespace GazetaMarketplace.Web.Middleware;
 /// </summary>
 public sealed partial class CorrelationIdMiddleware(RequestDelegate next)
 {
-    public const string Cabecalho = "X-Correlation-ID";
+    public const string Header = "X-Correlation-ID";
 
     public async Task InvokeAsync(HttpContext context)
     {
-        string id = context.Request.Headers[Cabecalho].FirstOrDefault();
+        string id = context.Request.Headers[Header].FirstOrDefault();
 
         // Só aceita um formato seguro: um valor livre do cliente poderia forjar linhas no log
-        if (id is null || !IdValido().IsMatch(id))
+        if (id is null || !IsValidId().IsMatch(id))
         {
             id = Guid.NewGuid().ToString("N");
         }
@@ -28,7 +28,7 @@ public sealed partial class CorrelationIdMiddleware(RequestDelegate next)
         context.TraceIdentifier = id;
         context.Response.OnStarting(() =>
         {
-            context.Response.Headers[Cabecalho] = id;
+            context.Response.Headers[Header] = id;
             return Task.CompletedTask;
         });
 
@@ -39,5 +39,5 @@ public sealed partial class CorrelationIdMiddleware(RequestDelegate next)
     }
 
     [GeneratedRegex(@"^[A-Za-z0-9_\-]{1,64}$")]
-    private static partial Regex IdValido();
+    private static partial Regex IsValidId();
 }

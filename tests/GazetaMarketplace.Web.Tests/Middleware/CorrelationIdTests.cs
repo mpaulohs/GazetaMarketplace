@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using GazetaMarketplace.Web.Tests.Suporte;
+using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GazetaMarketplace.Web.Tests.Middleware;
@@ -14,47 +14,47 @@ public sealed class CorrelationIdTests
     [TestMethod]
     public async Task Requisicao_SemCabecalho_GeraEDevolveOId()
     {
-        using FabricaWeb fabrica = new();
-        using HttpClient cliente = fabrica.CreateClient();
+        using WebFactory factory = new();
+        using HttpClient client = factory.CreateClient();
 
-        HttpResponseMessage resposta = await cliente.GetAsync("/api/v1/teste/log");
+        HttpResponseMessage response = await client.GetAsync("/api/v1/teste/log");
 
-        Assert.IsTrue(resposta.Headers.TryGetValues("X-Correlation-ID", out var valores));
+        Assert.IsTrue(response.Headers.TryGetValues("X-Correlation-ID", out var valores));
         string id = valores.Single();
         Assert.IsFalse(string.IsNullOrWhiteSpace(id));
 
         // cada linha de log da requisição leva o mesmo id
-        var evento = fabrica.Logs.Eventos.Single(e => ColetorSink.Texto(e) == "Linha de teste");
-        Assert.AreEqual("\"" + id + "\"", evento.Properties["CorrelationId"].ToString());
+        var logEvent = factory.Logs.Events.Single(e => CollectorSink.Text(e) == "Linha de teste");
+        Assert.AreEqual("\"" + id + "\"", logEvent.Properties["CorrelationId"].ToString());
     }
 
     [TestMethod]
     public async Task Requisicao_ComCabecalho_PropagaOMesmoId()
     {
-        using FabricaWeb fabrica = new();
-        using HttpClient cliente = fabrica.CreateClient();
-        using HttpRequestMessage pedido = new(HttpMethod.Get, "/api/v1/teste/log");
-        pedido.Headers.Add("X-Correlation-ID", "abc-123_XYZ");
+        using WebFactory factory = new();
+        using HttpClient client = factory.CreateClient();
+        using HttpRequestMessage request = new(HttpMethod.Get, "/api/v1/teste/log");
+        request.Headers.Add("X-Correlation-ID", "abc-123_XYZ");
 
-        HttpResponseMessage resposta = await cliente.SendAsync(pedido);
+        HttpResponseMessage response = await client.SendAsync(request);
 
-        Assert.AreEqual("abc-123_XYZ", resposta.Headers.GetValues("X-Correlation-ID").Single());
+        Assert.AreEqual("abc-123_XYZ", response.Headers.GetValues("X-Correlation-ID").Single());
     }
 
     [TestMethod]
     [DataRow("com espaço e <script>")]
     [DataRow("0123456789012345678901234567890123456789012345678901234567890123456789")]
-    public async Task Requisicao_ComCabecalhoInseguro_GeraUmNovoId(string inseguro)
+    public async Task Requisicao_ComCabecalhoInseguro_GeraUmNovoId(string insecure)
     {
-        using FabricaWeb fabrica = new();
-        using HttpClient cliente = fabrica.CreateClient();
-        using HttpRequestMessage pedido = new(HttpMethod.Get, "/api/v1/teste/log");
-        pedido.Headers.TryAddWithoutValidation("X-Correlation-ID", inseguro);
+        using WebFactory factory = new();
+        using HttpClient client = factory.CreateClient();
+        using HttpRequestMessage request = new(HttpMethod.Get, "/api/v1/teste/log");
+        request.Headers.TryAddWithoutValidation("X-Correlation-ID", insecure);
 
-        HttpResponseMessage resposta = await cliente.SendAsync(pedido);
+        HttpResponseMessage response = await client.SendAsync(request);
 
-        string id = resposta.Headers.GetValues("X-Correlation-ID").Single();
-        Assert.AreNotEqual(inseguro, id);
+        string id = response.Headers.GetValues("X-Correlation-ID").Single();
+        Assert.AreNotEqual(insecure, id);
         Assert.IsFalse(string.IsNullOrWhiteSpace(id));
     }
 }

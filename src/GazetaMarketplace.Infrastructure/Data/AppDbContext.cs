@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Entidades;
-using GazetaMarketplace.Core.Excecoes;
+using GazetaMarketplace.Core.Entities;
+using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Infrastructure.Identidade;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -19,19 +19,19 @@ namespace GazetaMarketplace.Infrastructure.Data;
 /// </summary>
 public class AppDbContext : IdentityDbContext<UsuarioIdentity, PapelIdentity, int>
 {
-    private readonly IUsuarioAtual _usuarioAtual;
-    private readonly TimeProvider _tempo;
+    private readonly ICurrentUser _currentUser;
+    private readonly TimeProvider _time;
 
-    public AppDbContext(DbContextOptions<AppDbContext> options, IUsuarioAtual usuarioAtual, TimeProvider tempo)
-        : this((DbContextOptions)options, usuarioAtual, tempo)
+    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser currentUser, TimeProvider time)
+        : this((DbContextOptions)options, currentUser, time)
     {
     }
 
-    protected AppDbContext(DbContextOptions options, IUsuarioAtual usuarioAtual, TimeProvider tempo)
+    protected AppDbContext(DbContextOptions options, ICurrentUser currentUser, TimeProvider time)
         : base(options)
     {
-        _usuarioAtual = usuarioAtual;
-        _tempo = tempo;
+        _currentUser = currentUser;
+        _time = time;
     }
 
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
@@ -58,7 +58,7 @@ public class AppDbContext : IdentityDbContext<UsuarioIdentity, PapelIdentity, in
 
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
-        Preparar();
+        Prepare();
         try
         {
             return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
@@ -71,7 +71,7 @@ public class AppDbContext : IdentityDbContext<UsuarioIdentity, PapelIdentity, in
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
-        Preparar();
+        Prepare();
         try
         {
             return base.SaveChanges(acceptAllChangesOnSuccess);
@@ -82,25 +82,25 @@ public class AppDbContext : IdentityDbContext<UsuarioIdentity, PapelIdentity, in
         }
     }
 
-    private void Preparar()
+    private void Prepare()
     {
-        DateTime agora = _tempo.GetUtcNow().UtcDateTime;
-        int? usuario = _usuarioAtual.UsuarioId;
+        DateTime now = _time.GetUtcNow().UtcDateTime;
+        int? user = _currentUser.UserId;
 
-        foreach (EntityEntry<BaseEntity> entrada in ChangeTracker.Entries<BaseEntity>())
+        foreach (EntityEntry<BaseEntity> entry in ChangeTracker.Entries<BaseEntity>())
         {
-            if (entrada.State == EntityState.Added)
+            if (entry.State == EntityState.Added)
             {
-                entrada.Entity.CreatedAt = agora;
-                entrada.Entity.CreatedBy = usuario;
+                entry.Entity.CreatedAt = now;
+                entry.Entity.CreatedBy = user;
             }
-            else if (entrada.State == EntityState.Modified)
+            else if (entry.State == EntityState.Modified)
             {
                 // A criação nunca muda, mesmo que quem chama tente
-                entrada.Property(e => e.CreatedAt).IsModified = false;
-                entrada.Property(e => e.CreatedBy).IsModified = false;
-                entrada.Entity.UpdatedAt = agora;
-                entrada.Entity.UpdatedBy = usuario;
+                entry.Property(e => e.CreatedAt).IsModified = false;
+                entry.Property(e => e.CreatedBy).IsModified = false;
+                entry.Entity.UpdatedAt = now;
+                entry.Entity.UpdatedBy = user;
             }
         }
 

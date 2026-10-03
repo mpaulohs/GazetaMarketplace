@@ -24,5 +24,5 @@ internal sealed class ExigeVariaveisAttribute : ConditionBaseAttribute
 
     public override string GroupName => nameof(ExigeVariaveisAttribute) + string.Join("+", _variaveis);
 
-    public static string Valor(string nome) => Environment.GetEnvironmentVariable(nome);
+    public static string Valor(string name) => Environment.GetEnvironmentVariable(name);
 }

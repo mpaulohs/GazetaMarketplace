@@ -22,7 +22,7 @@ namespace GazetaMarketplace.Infrastructure.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("GazetaMarketplace.Core.Entidades.AuditEntry", b =>
+            modelBuilder.Entity("GazetaMarketplace.Core.Entities.AuditEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

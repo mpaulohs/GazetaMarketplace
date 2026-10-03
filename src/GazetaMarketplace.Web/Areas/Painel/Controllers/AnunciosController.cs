@@ -1,5 +1,5 @@
-using GazetaMarketplace.Core.Equipe;
-using GazetaMarketplace.Web.Seguranca;
+using GazetaMarketplace.Core.Team;
+using GazetaMarketplace.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +16,6 @@ public sealed class AnunciosController : PainelControllerBase
     public IActionResult Index() => View();
 
     [HttpGet("fila")]
-    [Authorize(Policy = PoliticasDeAcesso.Administrador)]
-    public IActionResult Fila() => View();
+    [Authorize(Policy = PoliticasDeAcesso.Administrator)]
+    public IActionResult ReviewQueue() => View();
 }

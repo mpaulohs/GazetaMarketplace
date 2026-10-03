@@ -1,17 +1,17 @@
 using System.Threading;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Entidades;
+using GazetaMarketplace.Core.Entities;
 
 namespace GazetaMarketplace.Core.Interfaces;
 
 /// <summary>O que registrar. Ator, data e correlação vêm do contexto, não de quem chama.</summary>
-public sealed record EntradaDeAuditoria(
-    string Acao,
-    string TipoDoAlvo,
-    string IdDoAlvo,
-    ResultadoDaAuditoria Resultado = ResultadoDaAuditoria.Sucesso,
-    string ValorAnterior = null,
-    string ValorNovo = null);
+public sealed record AuditRecord(
+    string Action,
+    string TargetType,
+    string TargetId,
+    AuditResult Result = AuditResult.Success,
+    string PreviousValue = null,
+    string NewValue = null);
 
 /// <summary>
 /// Serviço único de auditoria de ações (RC-16). Só acrescenta: não há operação de editar nem apagar.
@@ -20,5 +20,5 @@ public sealed record EntradaDeAuditoria(
 /// </summary>
 public interface IAuditLog
 {
-    Task RegistrarAsync(EntradaDeAuditoria entrada, CancellationToken cancellationToken);
+    Task RecordAsync(AuditRecord entry, CancellationToken cancellationToken);
 }

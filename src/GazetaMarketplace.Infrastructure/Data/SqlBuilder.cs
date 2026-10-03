@@ -8,7 +8,7 @@ using Dapper;
 namespace GazetaMarketplace.Infrastructure.Data;
 
 /// <summary>SQL pronto e seus parâmetros, para entregar ao Dapper.</summary>
-public sealed record ConsultaSql(string Sql, DynamicParameters Parametros);
+public sealed record SqlQuery(string Sql, DynamicParameters Parameters);
 
 /// <summary>
 /// Monta consultas Dapper de filtro dinâmico sem concatenar valores (ADR-004): só fragmentos fixos,
@@ -18,55 +18,55 @@ public sealed record ConsultaSql(string Sql, DynamicParameters Parametros);
 public sealed partial class SqlBuilder
 {
     private readonly List<string> _joins = [];
-    private readonly List<string> _filtros = [];
-    private readonly DynamicParameters _parametros = new();
-    private readonly HashSet<string> _nomesDeParametros = new(StringComparer.Ordinal);
+    private readonly List<string> _filters = [];
+    private readonly DynamicParameters _parameters = new();
+    private readonly HashSet<string> _parameterNames = new(StringComparer.Ordinal);
     private string _select;
     private string _from;
-    private string _ordenacao;
+    private string _ordering;
     private int? _offset;
     private int? _take;
 
-    public SqlBuilder Select(string colunas)
+    public SqlBuilder Select(string columns)
     {
-        _select = Validar(colunas);
+        _select = Validate(columns);
         return this;
     }
 
-    public SqlBuilder From(string tabela)
+    public SqlBuilder From(string table)
     {
-        _from = Validar(tabela);
+        _from = Validate(table);
         return this;
     }
 
-    public SqlBuilder Join(string fragmento)
+    public SqlBuilder Join(string fragment)
     {
-        _joins.Add(Validar(fragmento));
+        _joins.Add(Validate(fragment));
         return this;
     }
 
-    public SqlBuilder Where(string fragmento)
+    public SqlBuilder Where(string fragment)
     {
-        _filtros.Add(Validar(fragmento));
+        _filters.Add(Validate(fragment));
         return this;
     }
 
-    /// <summary>Filtro único de "somente publicados" (<see cref="SqlFragments.SomentePublicados"/>).</summary>
-    public SqlBuilder SomentePublicados()
+    /// <summary>Filtro único de "somente publicados" (<see cref="SqlFragments.OnlyPublished"/>).</summary>
+    public SqlBuilder OnlyPublished()
     {
-        Where(SqlFragments.SomentePublicados);
-        return Parametro(SqlFragments.ParametroStatusPublicado, SqlFragments.StatusPublicado);
+        Where(SqlFragments.OnlyPublished);
+        return Parameter(SqlFragments.PublishedStatusParameter, SqlFragments.PublishedStatus);
     }
 
-    public SqlBuilder Parametro(string nome, object valor)
+    public SqlBuilder Parameter(string name, object value)
     {
-        if (string.IsNullOrEmpty(nome) || !NomeValido().IsMatch(nome))
+        if (string.IsNullOrEmpty(name) || !IsValidName().IsMatch(name))
         {
-            throw new ArgumentException("Nome de parâmetro inválido.", nameof(nome));
+            throw new ArgumentException("Nome de parâmetro inválido.", nameof(name));
         }
 
-        _parametros.Add(nome, valor);
-        _nomesDeParametros.Add(nome);
+        _parameters.Add(name, value);
+        _parameterNames.Add(name);
         return this;
     }
 
@@ -74,42 +74,42 @@ public sealed partial class SqlBuilder
     /// Ordena por uma chave da lista permitida (chave → coluna). Chave fora da lista cai na ordem padrão;
     /// direção diferente de asc/desc vira ASC. O texto recebido nunca entra no SQL.
     /// </summary>
-    public SqlBuilder OrderBy(string chave, string direcao, IReadOnlyDictionary<string, string> permitidas, string ordemPadrao)
+    public SqlBuilder OrderBy(string key, string direction, IReadOnlyDictionary<string, string> allowed, string defaultOrder)
     {
-        ArgumentNullException.ThrowIfNull(permitidas);
+        ArgumentNullException.ThrowIfNull(allowed);
 
-        if (chave is not null && permitidas.TryGetValue(chave, out string coluna))
+        if (key is not null && allowed.TryGetValue(key, out string column))
         {
-            string sentido = string.Equals(direcao, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
-            _ordenacao = Validar(coluna) + " " + sentido;
+            string sentido = string.Equals(direction, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+            _ordering = Validate(column) + " " + sentido;
         }
         else
         {
-            _ordenacao = Validar(ordemPadrao);
+            _ordering = Validate(defaultOrder);
         }
 
         return this;
     }
 
-    public SqlBuilder Paginar(int pagina, int tamanho)
+    public SqlBuilder Page(int page, int size)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(pagina, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(tamanho, 1);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(tamanho, 100);
+        ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(size, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(size, 100);
 
-        _offset = (pagina - 1) * tamanho;
-        _take = tamanho;
+        _offset = (page - 1) * size;
+        _take = size;
         return this;
     }
 
-    public ConsultaSql Build()
+    public SqlQuery Build()
     {
         if (_select is null || _from is null)
         {
             throw new InvalidOperationException("A consulta precisa de Select e From.");
         }
 
-        if (_offset is not null && _ordenacao is null)
+        if (_offset is not null && _ordering is null)
         {
             throw new InvalidOperationException("Paginação exige ordenação.");
         }
@@ -121,66 +121,66 @@ public sealed partial class SqlBuilder
             sql.Append(' ').Append(join);
         }
 
-        if (_filtros.Count > 0)
+        if (_filters.Count > 0)
         {
-            sql.Append(" WHERE ").Append(string.Join(" AND ", _filtros));
+            sql.Append(" WHERE ").Append(string.Join(" AND ", _filters));
         }
 
-        if (_ordenacao is not null)
+        if (_ordering is not null)
         {
-            sql.Append(" ORDER BY ").Append(_ordenacao);
+            sql.Append(" ORDER BY ").Append(_ordering);
         }
 
-        DynamicParameters parametros = new(_parametros);
+        DynamicParameters parameters = new(_parameters);
         if (_offset is not null)
         {
             sql.Append(" OFFSET @Offset ROWS FETCH NEXT @Take ROWS ONLY");
-            parametros.Add("Offset", _offset.Value);
-            parametros.Add("Take", _take.Value);
+            parameters.Add("Offset", _offset.Value);
+            parameters.Add("Take", _take.Value);
         }
 
-        string texto = sql.ToString();
-        string[] semValor = Placeholder().Matches(texto).Select(m => m.Groups[1].Value)
-            .Where(n => !_nomesDeParametros.Contains(n) && n is not ("Offset" or "Take"))
+        string text = sql.ToString();
+        string[] withoutValue = Placeholder().Matches(text).Select(m => m.Groups[1].Value)
+            .Where(n => !_parameterNames.Contains(n) && n is not ("Offset" or "Take"))
             .Distinct()
             .ToArray();
-        if (semValor.Length > 0)
+        if (withoutValue.Length > 0)
         {
-            throw new InvalidOperationException("Parâmetros sem valor: " + string.Join(", ", semValor));
+            throw new InvalidOperationException("Parâmetros sem valor: " + string.Join(", ", withoutValue));
         }
 
-        return new ConsultaSql(texto, parametros);
+        return new SqlQuery(text, parameters);
     }
 
     // Aceita só identificadores, pontos, colchetes, vírgulas, operadores e @parâmetros. Recusa aspas,
     // ponto e vírgula, comentários e números soltos (um valor concatenado seria um literal).
-    private static string Validar(string fragmento)
+    private static string Validate(string fragment)
     {
-        if (string.IsNullOrWhiteSpace(fragmento))
+        if (string.IsNullOrWhiteSpace(fragment))
         {
-            throw new ArgumentException("Fragmento de SQL vazio.", nameof(fragmento));
+            throw new ArgumentException("Fragmento de SQL vazio.", nameof(fragment));
         }
 
-        bool perigoso = !CaracteresPermitidos().IsMatch(fragmento)
-            || fragmento.Contains("--", StringComparison.Ordinal)
-            || fragmento.Contains("/*", StringComparison.Ordinal)
-            || NumeroSolto().IsMatch(fragmento);
-        if (perigoso)
+        bool dangerous = !AllowedCharacters().IsMatch(fragment)
+            || fragment.Contains("--", StringComparison.Ordinal)
+            || fragment.Contains("/*", StringComparison.Ordinal)
+            || LooseNumber().IsMatch(fragment);
+        if (dangerous)
         {
-            throw new ArgumentException("Fragmento de SQL não permitido: use parâmetros para valores.", nameof(fragmento));
+            throw new ArgumentException("Fragmento de SQL não permitido: use parâmetros para valores.", nameof(fragment));
         }
 
-        return fragmento.Trim();
+        return fragment.Trim();
     }
 
     [GeneratedRegex(@"^[A-Za-z0-9_\[\]\.\s,=<>!()@*+\-]+$")]
-    private static partial Regex CaracteresPermitidos();
+    private static partial Regex AllowedCharacters();
 
     [GeneratedRegex(@"(?<![\w@\.\[])\d+(?!\w)")]
-    private static partial Regex NumeroSolto();
+    private static partial Regex LooseNumber();
 
     [GeneratedRegex(@"^[A-Za-z_][A-Za-z0-9_]*$")]
-    private static partial Regex NomeValido();
+    private static partial Regex IsValidName();
 
     [GeneratedRegex(@"@([A-Za-z_][A-Za-z0-9_]*)")]
     private static partial Regex Placeholder();

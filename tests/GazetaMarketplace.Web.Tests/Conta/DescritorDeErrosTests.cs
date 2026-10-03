@@ -2,10 +2,10 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Equipe;
+using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Identidade;
-using GazetaMarketplace.Web.Seguranca;
-using GazetaMarketplace.Web.Tests.Suporte;
+using GazetaMarketplace.Web.Security;
+using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -22,8 +22,8 @@ public sealed class DescritorDeErrosTests
     [TestMethod]
     public void DescritorDoSite_EODaEquipe_ComCodigosOriginais()
     {
-        using FabricaWeb fabrica = new(comBanco: true);
-        IdentityErrorDescriber describer = fabrica.Services.GetRequiredService<IdentityErrorDescriber>();
+        using WebFactory factory = new(withDatabase: true);
+        IdentityErrorDescriber describer = factory.Services.GetRequiredService<IdentityErrorDescriber>();
 
         Assert.IsInstanceOfType<DescritorDeErrosDaEquipe>(describer);
         IdentityError curta = describer.PasswordTooShort(8);
@@ -39,7 +39,7 @@ public sealed class DescritorDeErrosTests
     public void NenhumaMensagemFicaEmIngles()
     {
         IdentityErrorDescriber describer = new DescritorDeErrosDaEquipe();
-        IdentityError[] erros =
+        IdentityError[] errors =
         [
             describer.DefaultError(), describer.PasswordMismatch(), describer.PasswordTooShort(8), describer.PasswordRequiresUpper(),
             describer.PasswordRequiresLower(), describer.PasswordRequiresDigit(), describer.PasswordRequiresNonAlphanumeric(),
@@ -47,46 +47,46 @@ public sealed class DescritorDeErrosTests
             describer.DuplicateEmail("x"), describer.DuplicateUserName("x"), describer.InvalidToken()
         ];
 
-        foreach (IdentityError erro in erros)
+        foreach (IdentityError error in errors)
         {
-            Assert.IsFalse(erro.Description.Contains("Password", StringComparison.Ordinal) || erro.Description.Contains("must", StringComparison.OrdinalIgnoreCase), erro.Code + ": " + erro.Description);
+            Assert.IsFalse(error.Description.Contains("Password", StringComparison.Ordinal) || error.Description.Contains("must", StringComparison.OrdinalIgnoreCase), error.Code + ": " + error.Description);
         }
     }
 
     [TestMethod]
     public void TokenDoIdentity_ValeUmaHora()
     {
-        using FabricaWeb fabrica = new(comBanco: true);
+        using WebFactory factory = new(withDatabase: true);
 
-        Assert.AreEqual(TimeSpan.FromHours(1), fabrica.Services.GetRequiredService<IOptions<DataProtectionTokenProviderOptions>>().Value.TokenLifespan);
+        Assert.AreEqual(TimeSpan.FromHours(1), factory.Services.GetRequiredService<IOptions<DataProtectionTokenProviderOptions>>().Value.TokenLifespan);
     }
 
     [TestMethod]
     public async Task TokenDeRedefinicao_PodeSerGerado_ESoValeUmaVez()
     {
-        using FabricaWeb fabrica = new(comBanco: true);
-        await fabrica.CriarUsuarioAsync("ana@exemplo.com.br", "Ana", "Senha@Forte1", Papeis.Redator);
-        using IServiceScope escopo = fabrica.Services.CreateScope();
-        UserManager<UsuarioIdentity> usuarios = escopo.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
-        UsuarioIdentity ana = await usuarios.FindByEmailAsync("ana@exemplo.com.br");
+        using WebFactory factory = new(withDatabase: true);
+        await factory.CreateUserAsync("ana@exemplo.com.br", "Ana", "Senha@Forte1", RoleNames.Writer);
+        using IServiceScope scope = factory.Services.CreateScope();
+        UserManager<UsuarioIdentity> users = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
+        UsuarioIdentity ana = await users.FindByEmailAsync("ana@exemplo.com.br");
 
-        string token = await usuarios.GeneratePasswordResetTokenAsync(ana);
-        Assert.IsTrue((await usuarios.ResetPasswordAsync(ana, token, "Outra@Senha2")).Succeeded);
-        Assert.IsFalse((await usuarios.ResetPasswordAsync(ana, token, "Terceira@Senha3")).Succeeded, "o carimbo mudou: o mesmo token não vale de novo");
+        string token = await users.GeneratePasswordResetTokenAsync(ana);
+        Assert.IsTrue((await users.ResetPasswordAsync(ana, token, "Outra@Senha2")).Succeeded);
+        Assert.IsFalse((await users.ResetPasswordAsync(ana, token, "Terceira@Senha3")).Succeeded, "o carimbo mudou: o mesmo token não vale de novo");
     }
 
     [TestMethod]
     public async Task Cookie_LevaOClaimDaSenhaProvisoria()
     {
-        using FabricaWeb fabrica = new(comBanco: true);
-        await fabrica.CriarUsuarioAsync("nova@exemplo.com.br", "Nova", "Provisoria@1", Papeis.Redator, trocarSenha: true);
-        await fabrica.CriarUsuarioAsync("velha@exemplo.com.br", "Velha", "Senha@Forte1", Papeis.Redator);
-        using IServiceScope escopo = fabrica.Services.CreateScope();
-        UserManager<UsuarioIdentity> usuarios = escopo.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
-        IUserClaimsPrincipalFactory<UsuarioIdentity> fabricaDeClaims = escopo.ServiceProvider.GetRequiredService<IUserClaimsPrincipalFactory<UsuarioIdentity>>();
+        using WebFactory factory = new(withDatabase: true);
+        await factory.CreateUserAsync("nova@exemplo.com.br", "Nova", "Provisoria@1", RoleNames.Writer, mustChangePassword: true);
+        await factory.CreateUserAsync("velha@exemplo.com.br", "Velha", "Senha@Forte1", RoleNames.Writer);
+        using IServiceScope scope = factory.Services.CreateScope();
+        UserManager<UsuarioIdentity> users = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
+        IUserClaimsPrincipalFactory<UsuarioIdentity> fabricaDeClaims = scope.ServiceProvider.GetRequiredService<IUserClaimsPrincipalFactory<UsuarioIdentity>>();
 
-        ClaimsPrincipal nova = await fabricaDeClaims.CreateAsync(await usuarios.FindByEmailAsync("nova@exemplo.com.br"));
-        ClaimsPrincipal velha = await fabricaDeClaims.CreateAsync(await usuarios.FindByEmailAsync("velha@exemplo.com.br"));
+        ClaimsPrincipal nova = await fabricaDeClaims.CreateAsync(await users.FindByEmailAsync("nova@exemplo.com.br"));
+        ClaimsPrincipal velha = await fabricaDeClaims.CreateAsync(await users.FindByEmailAsync("velha@exemplo.com.br"));
 
         Assert.AreEqual("1", nova.FindFirstValue(ClaimsDaEquipe.DeveTrocarSenha));
         Assert.AreEqual("0", velha.FindFirstValue(ClaimsDaEquipe.DeveTrocarSenha));

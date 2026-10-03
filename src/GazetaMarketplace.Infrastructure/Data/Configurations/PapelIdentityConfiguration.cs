@@ -1,4 +1,4 @@
-using GazetaMarketplace.Core.Equipe;
+using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Identidade;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -18,15 +18,15 @@ internal sealed class PapelIdentityConfiguration : IEntityTypeConfiguration<Pape
             new PapelIdentity
             {
                 Id = IdAdministrador,
-                Name = Papeis.Administrador,
-                NormalizedName = Papeis.Administrador.ToUpperInvariant(),
+                Name = RoleNames.Administrator,
+                NormalizedName = RoleNames.Administrator.ToUpperInvariant(),
                 ConcurrencyStamp = "5c0b1d2a-8f7e-4a39-9d41-0a1e6c3b7f01"
             },
             new PapelIdentity
             {
                 Id = IdRedator,
-                Name = Papeis.Redator,
-                NormalizedName = Papeis.Redator.ToUpperInvariant(),
+                Name = RoleNames.Writer,
+                NormalizedName = RoleNames.Writer.ToUpperInvariant(),
                 ConcurrencyStamp = "9e4a6f3c-2b15-4d87-a6c0-7d2f8e1b5a02"
             });
     }

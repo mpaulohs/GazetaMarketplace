@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Equipe;
+using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Identidade;
-using GazetaMarketplace.Web.Tests.Suporte;
+using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -26,7 +26,7 @@ public sealed class BootstrapAdminTests
     private const string Email = "chefe@exemplo.com.br";
     private const string Senha = "Inicial@Senha1";
 
-    private static Dictionary<string, string> Variaveis(string email = Email, string senha = Senha)
+    private static Dictionary<string, string> Variaveis(string email = Email, string password = Senha)
     {
         Dictionary<string, string> v = [];
         if (email is not null)
@@ -34,43 +34,43 @@ public sealed class BootstrapAdminTests
             v["Bootstrap:AdminEmail"] = email;
         }
 
-        if (senha is not null)
+        if (password is not null)
         {
-            v["Bootstrap:AdminPassword"] = senha;
+            v["Bootstrap:AdminPassword"] = password;
         }
 
         return v;
     }
 
-    private static string TudoNoLog(FabricaWeb fabrica) => string.Join("\n", fabrica.Logs.Eventos.Select(ColetorSink.TudoComoTexto));
+    private static string TudoNoLog(WebFactory factory) => string.Join("\n", factory.Logs.Events.Select(CollectorSink.AllAsText));
 
-    private static Exception ErroDaPartida(FabricaWeb fabrica)
+    private static Exception ErroDaPartida(WebFactory factory)
     {
         try
         {
-            fabrica.CreateClient().Dispose();
+            factory.CreateClient().Dispose();
         }
-        catch (Exception erro)
+        catch (Exception error)
         {
-            return erro;
+            return error;
         }
 
         Assert.Fail("A partida deveria ter falhado");
         return null;
     }
 
-    private static bool EhBootstrapInvalido(Exception erro) =>
-        erro is BootstrapInvalidoException || erro.InnerException is BootstrapInvalidoException || (erro is AggregateException a && a.InnerExceptions.Any(EhBootstrapInvalido));
+    private static bool EhBootstrapInvalido(Exception error) =>
+        error is InvalidBootstrapException || error.InnerException is InvalidBootstrapException || (error is AggregateException a && a.InnerExceptions.Any(EhBootstrapInvalido));
 
     [TestMethod]
     public async Task SemAdministrador_ComVariaveis_CriaComTrocaObrigatoria()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis(), comBanco: true);
-        using HttpClient cliente = ClienteDaEquipe.Novo(fabrica);
+        using WebFactory factory = new(configuration: Variaveis(), withDatabase: true);
+        using HttpClient client = ClienteDaEquipe.Novo(factory);
 
-        IReadOnlyList<UsuarioIdentity> usuarios = await fabrica.ListarUsuariosAsync();
+        IReadOnlyList<UsuarioIdentity> users = await factory.ListUsersAsync();
 
-        UsuarioIdentity admin = usuarios.Single();
+        UsuarioIdentity admin = users.Single();
         Assert.AreEqual(Email, admin.Email);
         Assert.AreEqual("Administrador", admin.FullName);
         Assert.IsTrue(admin.MustChangePassword, "troca obrigatória no primeiro acesso");
@@ -78,152 +78,152 @@ public sealed class BootstrapAdminTests
         Assert.IsFalse(admin.PasswordHash.Contains(Senha, StringComparison.Ordinal));
 
         // Entra com a senha inicial e é levado à troca
-        Assert.AreEqual("/painel/definir-senha", (await cliente.EntrarAsync(Email, Senha)).Destino());
+        Assert.AreEqual("/painel/definir-senha", (await client.EntrarAsync(Email, Senha)).Destino());
     }
 
     [TestMethod]
     public async Task ComAdministrador_NaoCriaOutro()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis("outro@exemplo.com.br", "Outra@Senha1"), comBanco: true,
-            semear: ctx => FabricaWeb.SemearUsuario(ctx, "existente@exemplo.com.br", IdAdministrador));
+        using WebFactory factory = new(configuration: Variaveis("outro@exemplo.com.br", "Outra@Senha1"), withDatabase: true,
+            seed: ctx => WebFactory.SeedUser(ctx, "existente@exemplo.com.br", IdAdministrador));
 
-        IReadOnlyList<UsuarioIdentity> usuarios = await fabrica.ListarUsuariosAsync();
+        IReadOnlyList<UsuarioIdentity> users = await factory.ListUsersAsync();
 
-        Assert.AreEqual("existente@exemplo.com.br", usuarios.Single().Email);
+        Assert.AreEqual("existente@exemplo.com.br", users.Single().Email);
     }
 
     [TestMethod]
     public async Task ComAdministradorDesativado_TambemNaoCriaOutro()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis(), comBanco: true,
-            semear: ctx => FabricaWeb.SemearUsuario(ctx, "desativado@exemplo.com.br", IdAdministrador, ativo: false));
+        using WebFactory factory = new(configuration: Variaveis(), withDatabase: true,
+            seed: ctx => WebFactory.SeedUser(ctx, "desativado@exemplo.com.br", IdAdministrador, active: false));
 
-        IReadOnlyList<UsuarioIdentity> usuarios = await fabrica.ListarUsuariosAsync();
+        IReadOnlyList<UsuarioIdentity> users = await factory.ListUsersAsync();
 
-        Assert.AreEqual(1, usuarios.Count, "quem reativa um Administrador é outro Administrador, não esta rotina");
-        Assert.IsFalse(usuarios.Single().IsActive);
+        Assert.AreEqual(1, users.Count, "quem reativa um Administrador é outro Administrador, não esta rotina");
+        Assert.IsFalse(users.Single().IsActive);
     }
 
     [TestMethod]
     public async Task ComSoRedatores_CriaOAdministrador()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis(), comBanco: true,
-            semear: ctx => FabricaWeb.SemearUsuario(ctx, "redator@exemplo.com.br", IdRedator));
+        using WebFactory factory = new(configuration: Variaveis(), withDatabase: true,
+            seed: ctx => WebFactory.SeedUser(ctx, "redator@exemplo.com.br", IdRedator));
 
-        IReadOnlyList<UsuarioIdentity> usuarios = await fabrica.ListarUsuariosAsync();
+        IReadOnlyList<UsuarioIdentity> users = await factory.ListUsersAsync();
 
-        Assert.AreEqual(2, usuarios.Count);
-        Assert.IsTrue(usuarios.Any(u => u.Email == Email));
+        Assert.AreEqual(2, users.Count);
+        Assert.IsTrue(users.Any(u => u.Email == Email));
     }
 
     [TestMethod]
     public async Task VariaveisRemanescentes_RegistramWarning() // RC-19
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis(), comBanco: true,
-            semear: ctx => FabricaWeb.SemearUsuario(ctx, "existente@exemplo.com.br", IdAdministrador));
+        using WebFactory factory = new(configuration: Variaveis(), withDatabase: true,
+            seed: ctx => WebFactory.SeedUser(ctx, "existente@exemplo.com.br", IdAdministrador));
 
-        await fabrica.ListarUsuariosAsync();
+        await factory.ListUsersAsync();
 
-        LogEvent aviso = fabrica.Logs.Eventos.Single(e => e.Level == LogEventLevel.Warning && ColetorSink.Texto(e).Contains("ainda existe", StringComparison.Ordinal));
-        string texto = ColetorSink.Texto(aviso);
-        StringAssert.Contains(texto, "Bootstrap__AdminEmail");
-        StringAssert.Contains(texto, "Bootstrap__AdminPassword");
-        StringAssert.Contains(texto, "Remova");
-        Assert.IsFalse(TudoNoLog(fabrica).Contains(Senha, StringComparison.Ordinal));
+        LogEvent aviso = factory.Logs.Events.Single(e => e.Level == LogEventLevel.Warning && CollectorSink.Text(e).Contains("ainda existe", StringComparison.Ordinal));
+        string text = CollectorSink.Text(aviso);
+        StringAssert.Contains(text, "Bootstrap__AdminEmail");
+        StringAssert.Contains(text, "Bootstrap__AdminPassword");
+        StringAssert.Contains(text, "Remova");
+        Assert.IsFalse(TudoNoLog(factory).Contains(Senha, StringComparison.Ordinal));
     }
 
     [TestMethod]
     public async Task SoUmaVariavelRemanescente_ComAdministrador_ApenasAvisa()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis(senha: null), comBanco: true,
-            semear: ctx => FabricaWeb.SemearUsuario(ctx, "existente@exemplo.com.br", IdAdministrador));
+        using WebFactory factory = new(configuration: Variaveis(password: null), withDatabase: true,
+            seed: ctx => WebFactory.SeedUser(ctx, "existente@exemplo.com.br", IdAdministrador));
 
-        Assert.AreEqual(1, (await fabrica.ListarUsuariosAsync()).Count, "não derruba nem cria");
-        StringAssert.Contains(string.Join("\n", fabrica.Logs.Eventos.Select(ColetorSink.Texto)), "Bootstrap__AdminEmail");
+        Assert.AreEqual(1, (await factory.ListUsersAsync()).Count, "não derruba nem cria");
+        StringAssert.Contains(string.Join("\n", factory.Logs.Events.Select(CollectorSink.Text)), "Bootstrap__AdminEmail");
     }
 
     [TestMethod]
     public async Task SenhaInicial_NaoApareceNoLog()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis(), comBanco: true);
+        using WebFactory factory = new(configuration: Variaveis(), withDatabase: true);
 
-        await fabrica.ListarUsuariosAsync();
+        await factory.ListUsersAsync();
 
-        string tudo = TudoNoLog(fabrica);
-        Assert.IsFalse(tudo.Contains(Senha, StringComparison.Ordinal), "a senha inicial foi para o log");
-        Assert.IsFalse(tudo.Contains(Email, StringComparison.Ordinal), "o e-mail completo foi para o log");
-        StringAssert.Contains(tudo, "Administrador inicial criado");
-        StringAssert.Contains(tudo, "c***@exemplo.com.br");
+        string all = TudoNoLog(factory);
+        Assert.IsFalse(all.Contains(Senha, StringComparison.Ordinal), "a senha inicial foi para o log");
+        Assert.IsFalse(all.Contains(Email, StringComparison.Ordinal), "o e-mail completo foi para o log");
+        StringAssert.Contains(all, "Administrador inicial criado");
+        StringAssert.Contains(all, "c***@exemplo.com.br");
     }
 
     [TestMethod]
     public async Task RodarDuasVezes_CriaUmaContaSo_ERegistraOAviso()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis(), comBanco: true);
-        Assert.AreEqual(1, (await fabrica.ListarUsuariosAsync()).Count);
+        using WebFactory factory = new(configuration: Variaveis(), withDatabase: true);
+        Assert.AreEqual(1, (await factory.ListUsersAsync()).Count);
 
-        BootstrapAdminInitializer rotina = fabrica.Services.GetServices<IHostedService>().OfType<BootstrapAdminInitializer>().Single();
+        BootstrapAdminInitializer rotina = factory.Services.GetServices<IHostedService>().OfType<BootstrapAdminInitializer>().Single();
         await rotina.StartAsync(default);
 
-        Assert.AreEqual(1, (await fabrica.ListarUsuariosAsync()).Count);
-        Assert.IsTrue(fabrica.Logs.Eventos.Any(e => e.Level == LogEventLevel.Warning && ColetorSink.Texto(e).Contains("ainda existe", StringComparison.Ordinal)));
+        Assert.AreEqual(1, (await factory.ListUsersAsync()).Count);
+        Assert.IsTrue(factory.Logs.Events.Any(e => e.Level == LogEventLevel.Warning && CollectorSink.Text(e).Contains("ainda existe", StringComparison.Ordinal)));
     }
 
     [TestMethod]
     public async Task SemVariaveis_NaoTocaNoBanco_NemDerrubaAPartida()
     {
-        using FabricaWeb fabrica = new(); // sem banco algum: qualquer consulta viraria Error no log
+        using WebFactory factory = new(); // sem banco algum: qualquer consulta viraria Error no log
 
-        using HttpClient cliente = fabrica.CreateClient();
+        using HttpClient client = factory.CreateClient();
 
-        Assert.IsFalse(fabrica.Logs.Eventos.Any(e => e.Level >= LogEventLevel.Error), "nenhum erro na partida");
+        Assert.IsFalse(factory.Logs.Events.Any(e => e.Level >= LogEventLevel.Error), "nenhum erro na partida");
         await Task.CompletedTask;
     }
 
     [TestMethod]
     public void SenhaQueNaoCumpreAPolitica_DerrubaAPartida_SemRepetirASenha()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis(senha: "fraca1"), comBanco: true);
+        using WebFactory factory = new(configuration: Variaveis(password: "fraca1"), withDatabase: true);
 
-        Exception erro = ErroDaPartida(fabrica);
+        Exception error = ErroDaPartida(factory);
 
-        Assert.IsTrue(EhBootstrapInvalido(erro), erro.ToString());
-        string mensagem = erro.ToString();
-        StringAssert.Contains(mensagem, "Bootstrap__AdminPassword");
-        Assert.IsFalse(mensagem.Contains("fraca1", StringComparison.Ordinal), "a mensagem não repete a senha");
+        Assert.IsTrue(EhBootstrapInvalido(error), error.ToString());
+        string message = error.ToString();
+        StringAssert.Contains(message, "Bootstrap__AdminPassword");
+        Assert.IsFalse(message.Contains("fraca1", StringComparison.Ordinal), "a mensagem não repete a senha");
     }
 
     [TestMethod]
     public void EmailInvalido_DerrubaAPartida()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis("isto-nao-e-email"), comBanco: true);
+        using WebFactory factory = new(configuration: Variaveis("isto-nao-e-email"), withDatabase: true);
 
-        Exception erro = ErroDaPartida(fabrica);
+        Exception error = ErroDaPartida(factory);
 
-        Assert.IsTrue(EhBootstrapInvalido(erro), erro.ToString());
-        StringAssert.Contains(erro.ToString(), "Bootstrap__AdminEmail");
+        Assert.IsTrue(EhBootstrapInvalido(error), error.ToString());
+        StringAssert.Contains(error.ToString(), "Bootstrap__AdminEmail");
     }
 
     [TestMethod]
     public void SoUmaVariavel_SemAdministrador_DerrubaAPartida()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis(senha: null), comBanco: true);
+        using WebFactory factory = new(configuration: Variaveis(password: null), withDatabase: true);
 
-        Exception erro = ErroDaPartida(fabrica);
+        Exception error = ErroDaPartida(factory);
 
-        Assert.IsTrue(EhBootstrapInvalido(erro), erro.ToString());
-        StringAssert.Contains(erro.ToString(), "precisam existir juntas");
+        Assert.IsTrue(EhBootstrapInvalido(error), error.ToString());
+        StringAssert.Contains(error.ToString(), "precisam existir juntas");
     }
 
     [TestMethod]
     public async Task BancoIndisponivel_RegistraErro_EOSiteSobe()
     {
-        using FabricaWeb fabrica = new(configuracao: Variaveis()); // sem banco de teste: a consulta falha
+        using WebFactory factory = new(configuration: Variaveis()); // sem banco de teste: a consulta falha
 
-        using HttpClient cliente = fabrica.CreateClient();
+        using HttpClient client = factory.CreateClient();
 
-        Assert.IsTrue(fabrica.Logs.Eventos.Any(e => e.Level == LogEventLevel.Error && ColetorSink.Texto(e).Contains("Administrador", StringComparison.Ordinal)), "o erro fica no log");
-        Assert.IsFalse(TudoNoLog(fabrica).Contains(Senha, StringComparison.Ordinal));
+        Assert.IsTrue(factory.Logs.Events.Any(e => e.Level == LogEventLevel.Error && CollectorSink.Text(e).Contains("Administrador", StringComparison.Ordinal)), "o erro fica no log");
+        Assert.IsFalse(TudoNoLog(factory).Contains(Senha, StringComparison.Ordinal));
         await Task.CompletedTask;
     }
 }

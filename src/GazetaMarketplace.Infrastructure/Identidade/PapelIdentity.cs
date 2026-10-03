@@ -9,8 +9,8 @@ public class PapelIdentity : IdentityRole<int>
     {
     }
 
-    public PapelIdentity(string nome)
-        : base(nome)
+    public PapelIdentity(string name)
+        : base(name)
     {
     }
 }

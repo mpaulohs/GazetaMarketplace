@@ -11,7 +11,7 @@ GO
 BEGIN TRANSACTION;
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261002230057_CriarAuditEntries'
+    WHERE [MigrationId] = N'20261002230057_CreateAuditEntries'
 )
 BEGIN
     CREATE TABLE [AuditEntries] (
@@ -31,7 +31,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261002230057_CriarAuditEntries'
+    WHERE [MigrationId] = N'20261002230057_CreateAuditEntries'
 )
 BEGIN
     CREATE INDEX [IX_AuditEntries_ActorId_OccurredAt] ON [AuditEntries] ([ActorId], [OccurredAt]);
@@ -39,7 +39,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261002230057_CriarAuditEntries'
+    WHERE [MigrationId] = N'20261002230057_CreateAuditEntries'
 )
 BEGIN
     CREATE INDEX [IX_AuditEntries_OccurredAt] ON [AuditEntries] ([OccurredAt]);
@@ -47,7 +47,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261002230057_CriarAuditEntries'
+    WHERE [MigrationId] = N'20261002230057_CreateAuditEntries'
 )
 BEGIN
     CREATE INDEX [IX_AuditEntries_TargetType_TargetId] ON [AuditEntries] ([TargetType], [TargetId]);
@@ -55,11 +55,11 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261002230057_CriarAuditEntries'
+    WHERE [MigrationId] = N'20261002230057_CreateAuditEntries'
 )
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-    VALUES (N'20261002230057_CriarAuditEntries', N'10.0.12');
+    VALUES (N'20261002230057_CreateAuditEntries', N'10.0.12');
 END;
 
 COMMIT;

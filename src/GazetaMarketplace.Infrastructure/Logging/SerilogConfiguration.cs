@@ -10,46 +10,46 @@ namespace GazetaMarketplace.Infrastructure.Logging;
 /// <summary>Configuração do Serilog (ADR-010): arquivo JSON diário fora da raiz do site, 14 dias de retenção.</summary>
 public static class SerilogConfiguration
 {
-    public const int RetencaoEmDias = 14;
+    public const int RetentionDays = 14;
 
-    public static LoggerConfiguration Configurar(
-        LoggerConfiguration configuracao,
-        string pastaDosLogs,
-        bool producao,
-        IEnumerable<ILogEventSink> sinksExtras = null)
+    public static LoggerConfiguration Configure(
+        LoggerConfiguration configuration,
+        string logsFolder,
+        bool production,
+        IEnumerable<ILogEventSink> extraSinks = null)
     {
-        configuracao
+        configuration
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .Enrich.With(new MascaramentoEnricher());
+            .Enrich.With(new MaskingEnricher());
 
-        bool temPasta = !string.IsNullOrWhiteSpace(pastaDosLogs);
-        if (temPasta)
+        bool hasFolder = !string.IsNullOrWhiteSpace(logsFolder);
+        if (hasFolder)
         {
-            configuracao.WriteTo.File(
+            configuration.WriteTo.File(
                 new CompactJsonFormatter(),
-                Path.Combine(pastaDosLogs, "gazeta-.json"),
+                Path.Combine(logsFolder, "gazeta-.json"),
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: RetencaoEmDias);
+                retainedFileCountLimit: RetentionDays);
         }
 
         // Em produção o stdout não é coletado (ADR-010); sem pasta configurada, o console é a única
         // chance de ver por que o site não subiu.
-        if (!producao || !temPasta)
+        if (!production || !hasFolder)
         {
-            configuracao.WriteTo.Console();
+            configuration.WriteTo.Console();
         }
 
-        if (sinksExtras is not null)
+        if (extraSinks is not null)
         {
-            foreach (ILogEventSink sink in sinksExtras)
+            foreach (ILogEventSink sink in extraSinks)
             {
-                configuracao.WriteTo.Sink(sink);
+                configuration.WriteTo.Sink(sink);
             }
         }
 
-        return configuracao;
+        return configuration;
     }
 }

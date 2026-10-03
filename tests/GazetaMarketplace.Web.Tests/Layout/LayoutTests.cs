@@ -1,7 +1,7 @@
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using GazetaMarketplace.Web.Tests.Suporte;
+using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GazetaMarketplace.Web.Tests.Layout;
@@ -11,15 +11,15 @@ namespace GazetaMarketplace.Web.Tests.Layout;
 public sealed class LayoutTests
 #pragma warning restore CA1515
 {
-    private static readonly string[] _paginas = ["/teste/publica", "/teste/painel", "/teste/estados", "/"];
+    private static readonly string[] _pages = ["/teste/publica", "/teste/painel", "/teste/estados", "/"];
 
     [TestMethod]
     [DataRow("/teste/publica")]
     [DataRow("/teste/painel")]
     [DataRow("/")]
-    public async Task Html_TemLangPtBr_SkipLink_E_MainComFoco(string caminho)
+    public async Task Html_TemLangPtBr_SkipLink_E_MainComFoco(string path)
     {
-        string html = await BaixarAsync(caminho);
+        string html = await DownloadAsync(path);
 
         StringAssert.Matches(html, new Regex(@"<html[^>]*\blang=""pt-BR"""));
         StringAssert.Matches(html, new Regex(@"<a[^>]*href=""#conteudo""[^>]*>\s*Ir para o conteúdo\s*</a>"));
@@ -29,24 +29,24 @@ public sealed class LayoutTests
     [TestMethod]
     public async Task LayoutPainel_ExpoeOTokenAntiforgery_ELayoutPublicoNaoEmiteToken()
     {
-        using FabricaWeb fabrica = new();
-        using HttpClient cliente = fabrica.CreateClient();
+        using WebFactory factory = new();
+        using HttpClient client = factory.CreateClient();
 
-        HttpResponseMessage painel = await cliente.GetAsync("/teste/painel");
-        string htmlPainel = await painel.Content.ReadAsStringAsync();
-        StringAssert.Matches(htmlPainel, new Regex(@"<meta[^>]*name=""request-verification-token""[^>]*content=""[^""]+"""));
+        HttpResponseMessage panel = await client.GetAsync("/teste/painel");
+        string panelHtml = await panel.Content.ReadAsStringAsync();
+        StringAssert.Matches(panelHtml, new Regex(@"<meta[^>]*name=""request-verification-token""[^>]*content=""[^""]+"""));
 
         // O site público não escreve nada no servidor: sem token, sem cookie (a página continua cacheável)
-        HttpResponseMessage publica = await cliente.GetAsync("/teste/publica");
-        string htmlPublico = await publica.Content.ReadAsStringAsync();
-        Assert.IsFalse(htmlPublico.Contains("request-verification-token", System.StringComparison.Ordinal));
-        Assert.IsFalse(publica.Headers.Contains("Set-Cookie"));
+        HttpResponseMessage publicPage = await client.GetAsync("/teste/publica");
+        string publicHtml = await publicPage.Content.ReadAsStringAsync();
+        Assert.IsFalse(publicHtml.Contains("request-verification-token", System.StringComparison.Ordinal));
+        Assert.IsFalse(publicPage.Headers.Contains("Set-Cookie"));
     }
 
     [TestMethod]
     public async Task Html_PrimeiroLinkDaPagina_EOSkipLink()
     {
-        string html = await BaixarAsync("/teste/publica");
+        string html = await DownloadAsync("/teste/publica");
 
         Match primeiro = Regex.Match(html, @"<a\b[^>]*>");
         StringAssert.Contains(primeiro.Value, "href=\"#conteudo\"");
@@ -55,7 +55,7 @@ public sealed class LayoutTests
     [TestMethod]
     public async Task LayoutPublico_TemBuscaEFavoritosComCaminhosFixos()
     {
-        string html = await BaixarAsync("/teste/publica");
+        string html = await DownloadAsync("/teste/publica");
 
         StringAssert.Matches(html, new Regex(@"<form[^>]*\bmethod=""get""[^>]*\baction=""/busca""|<form[^>]*\baction=""/busca""[^>]*\bmethod=""get"""));
         StringAssert.Matches(html, new Regex(@"<a[^>]*href=""/favoritos""[^>]*>[\s\S]*?Favoritos"));
@@ -65,23 +65,23 @@ public sealed class LayoutTests
     [TestMethod]
     public async Task PaginaNaoCarregaRecursosExternos()
     {
-        using FabricaWeb fabrica = new();
-        using HttpClient cliente = fabrica.CreateClient();
+        using WebFactory factory = new();
+        using HttpClient client = factory.CreateClient();
 
-        foreach (string caminho in _paginas)
+        foreach (string path in _pages)
         {
-            string html = await (await cliente.GetAsync(caminho)).Content.ReadAsStringAsync();
+            string html = await (await client.GetAsync(path)).Content.ReadAsStringAsync();
 
-            Assert.AreEqual(0, Regex.Matches(html, @"\b(src|href|action|data)\s*=\s*""(https?:)?//", RegexOptions.IgnoreCase).Count, caminho + ": URL absoluta no HTML");
-            Assert.AreEqual(0, Regex.Matches(html, @"@import|url\(\s*['""]?(https?:)?//", RegexOptions.IgnoreCase).Count, caminho);
+            Assert.AreEqual(0, Regex.Matches(html, @"\b(src|href|action|data)\s*=\s*""(https?:)?//", RegexOptions.IgnoreCase).Count, path + ": URL absoluta no HTML");
+            Assert.AreEqual(0, Regex.Matches(html, @"@import|url\(\s*['""]?(https?:)?//", RegexOptions.IgnoreCase).Count, path);
 
             // Todo CSS e JS referenciado é servido pelo próprio site e não puxa nada de fora
             foreach (Match recurso in Regex.Matches(html, @"(?:src|href)=""(/[^""#]+\.(?:css|js))(?:\?[^""]*)?"""))
             {
-                HttpResponseMessage resposta = await cliente.GetAsync(recurso.Groups[1].Value + "?" + "v=1");
-                Assert.IsTrue(resposta.IsSuccessStatusCode, recurso.Groups[1].Value + " não foi servido");
-                string conteudo = await resposta.Content.ReadAsStringAsync();
-                Assert.AreEqual(0, Regex.Matches(conteudo, @"@import\s+(url\()?['""]?(https?:)?//|url\(\s*['""]?https?://").Count, recurso.Groups[1].Value);
+                HttpResponseMessage response = await client.GetAsync(recurso.Groups[1].Value + "?" + "v=1");
+                Assert.IsTrue(response.IsSuccessStatusCode, recurso.Groups[1].Value + " não foi servido");
+                string content = await response.Content.ReadAsStringAsync();
+                Assert.AreEqual(0, Regex.Matches(content, @"@import\s+(url\()?['""]?(https?:)?//|url\(\s*['""]?https?://").Count, recurso.Groups[1].Value);
             }
         }
     }
@@ -89,29 +89,29 @@ public sealed class LayoutTests
     [TestMethod]
     public async Task NenhumScriptOuEventoInline()
     {
-        using FabricaWeb fabrica = new();
-        using HttpClient cliente = fabrica.CreateClient();
+        using WebFactory factory = new();
+        using HttpClient client = factory.CreateClient();
 
-        foreach (string caminho in _paginas)
+        foreach (string path in _pages)
         {
-            string html = await (await cliente.GetAsync(caminho)).Content.ReadAsStringAsync();
+            string html = await (await client.GetAsync(path)).Content.ReadAsStringAsync();
 
             foreach (Match script in Regex.Matches(html, @"<script\b[^>]*>", RegexOptions.IgnoreCase))
             {
-                StringAssert.Matches(script.Value, new Regex(@"\bsrc="""), caminho + ": script sem src (inline): " + script.Value);
+                StringAssert.Matches(script.Value, new Regex(@"\bsrc="""), path + ": script sem src (inline): " + script.Value);
             }
 
-            Assert.AreEqual(0, Regex.Matches(html, @"<[a-z][^>]*\son[a-z]+\s*=", RegexOptions.IgnoreCase).Count, caminho + ": evento inline");
-            Assert.AreEqual(0, Regex.Matches(html, @"<[a-z][^>]*\sstyle\s*=", RegexOptions.IgnoreCase).Count, caminho + ": atributo style (a CSP bloqueia)");
-            Assert.AreEqual(0, Regex.Matches(html, @"<style\b", RegexOptions.IgnoreCase).Count, caminho + ": <style> inline");
-            Assert.AreEqual(0, Regex.Matches(html, @"javascript:", RegexOptions.IgnoreCase).Count, caminho);
+            Assert.AreEqual(0, Regex.Matches(html, @"<[a-z][^>]*\son[a-z]+\s*=", RegexOptions.IgnoreCase).Count, path + ": evento inline");
+            Assert.AreEqual(0, Regex.Matches(html, @"<[a-z][^>]*\sstyle\s*=", RegexOptions.IgnoreCase).Count, path + ": atributo style (a CSP bloqueia)");
+            Assert.AreEqual(0, Regex.Matches(html, @"<style\b", RegexOptions.IgnoreCase).Count, path + ": <style> inline");
+            Assert.AreEqual(0, Regex.Matches(html, @"javascript:", RegexOptions.IgnoreCase).Count, path);
         }
     }
 
     [TestMethod]
     public async Task Jquery_NaoEhCarregadoPeloLayout()
     {
-        string html = await BaixarAsync("/teste/publica");
+        string html = await DownloadAsync("/teste/publica");
 
         Assert.IsFalse(html.Contains("jquery", System.StringComparison.OrdinalIgnoreCase));
     }
@@ -119,18 +119,18 @@ public sealed class LayoutTests
     [TestMethod]
     public async Task SemJavaScript_MenuDoPainelFicaVisivel()
     {
-        string html = await BaixarAsync("/teste/painel");
+        string html = await DownloadAsync("/teste/painel");
 
         StringAssert.Matches(html, new Regex(@"<noscript>\s*<link[^>]*href=""/css/sem-js\.css"));
     }
 
-    private static async Task<string> BaixarAsync(string caminho)
+    private static async Task<string> DownloadAsync(string path)
     {
-        using FabricaWeb fabrica = new();
-        using HttpClient cliente = fabrica.CreateClient();
-        cliente.DefaultRequestHeaders.Add(FabricaWeb.CabecalhoPapel, "Administrador");
-        HttpResponseMessage resposta = await cliente.GetAsync(caminho);
-        Assert.IsTrue(resposta.IsSuccessStatusCode, caminho + " respondeu " + (int)resposta.StatusCode);
-        return await resposta.Content.ReadAsStringAsync();
+        using WebFactory factory = new();
+        using HttpClient client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(WebFactory.RoleHeader, "Administrador");
+        HttpResponseMessage response = await client.GetAsync(path);
+        Assert.IsTrue(response.IsSuccessStatusCode, path + " respondeu " + (int)response.StatusCode);
+        return await response.Content.ReadAsStringAsync();
     }
 }

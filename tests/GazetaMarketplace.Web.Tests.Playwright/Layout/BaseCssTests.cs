@@ -17,17 +17,17 @@ namespace GazetaMarketplace.Web.Tests.Playwright.Layout;
 /// Roda no /test: precisa do site no ar e da variável GAZETA_BASE_URL (por exemplo https://localhost:5001); sem ela os testes são ignorados.
 /// </summary>
 [TestClass]
-[ExigeSiteNoAr]
+[RequiresRunningSite]
 #pragma warning disable CA1515 // Test classes must be public for MSTest
-public class BaseCssTests : PaginaDoSite
+public class BaseCssTests : SitePage
 #pragma warning restore CA1515
 {
-    private static readonly int[] _larguras = [320, 768, 1024, 1280];
+    private static readonly int[] _widths = [320, 768, 1024, 1280];
 
-    private static string Url(string caminho)
+    private static string Url(string path)
     {
-        string baseUrl = Environment.GetEnvironmentVariable(ExigeSiteNoArAttribute.Variavel);
-        return baseUrl.TrimEnd('/') + caminho;
+        string baseUrl = Environment.GetEnvironmentVariable(RequiresRunningSiteAttribute.Variable);
+        return baseUrl.TrimEnd('/') + path;
     }
 
     [TestMethod]
@@ -37,17 +37,17 @@ public class BaseCssTests : PaginaDoSite
 
         // O primeiro Tab cai no link "Ir para o conteúdo"
         await Page.Keyboard.PressAsync("Tab").ConfigureAwait(false);
-        ILocator foco = Page.Locator(":focus");
-        await Expect(foco).ToHaveTextAsync("Ir para o conteúdo").ConfigureAwait(false);
+        ILocator focus = Page.Locator(":focus");
+        await Expect(focus).ToHaveTextAsync("Ir para o conteúdo").ConfigureAwait(false);
 
-        string estilo = await foco.EvaluateAsync<string>(
+        string style = await focus.EvaluateAsync<string>(
             "e => { const c = getComputedStyle(e); return [c.outlineStyle, c.outlineWidth, c.outlineColor].join('|'); }").ConfigureAwait(false);
-        string[] partes = estilo.Split('|');
+        string[] parts = style.Split('|');
 
-        Assert.AreEqual("solid", partes[0]);
-        Assert.AreEqual("2px", partes[1]);
-        Assert.AreEqual("rgb(10, 88, 202)", partes[2]);
-        Assert.IsTrue(Contraste(partes[2], "rgb(255, 255, 255)") >= 3.0, "o contorno precisa de 3:1 contra o fundo");
+        Assert.AreEqual("solid", parts[0]);
+        Assert.AreEqual("2px", parts[1]);
+        Assert.AreEqual("rgb(10, 88, 202)", parts[2]);
+        Assert.IsTrue(Contrast(parts[2], "rgb(255, 255, 255)") >= 3.0, "o contorno precisa de 3:1 contra o fundo");
     }
 
     [TestMethod]
@@ -59,7 +59,7 @@ public class BaseCssTests : PaginaDoSite
             .EvaluateAsync<string>("e => getComputedStyle(e).borderTopColor").ConfigureAwait(false);
 
         Assert.AreEqual("rgb(108, 117, 125)", cor);
-        Assert.IsTrue(Contraste(cor, "rgb(255, 255, 255)") >= 3.0, "a borda do campo precisa de 3:1 (WCAG 1.4.11)");
+        Assert.IsTrue(Contrast(cor, "rgb(255, 255, 255)") >= 3.0, "a borda do campo precisa de 3:1 (WCAG 1.4.11)");
     }
 
     [TestMethod]
@@ -67,43 +67,43 @@ public class BaseCssTests : PaginaDoSite
     {
         await Page.GotoAsync(Url("/")).ConfigureAwait(false);
 
-        string decoracao = await Page.GetByRole(AriaRole.Link, new() { Name = "Área da equipe" })
+        string decoration = await Page.GetByRole(AriaRole.Link, new() { Name = "Área da equipe" })
             .EvaluateAsync<string>("e => getComputedStyle(e).textDecorationLine").ConfigureAwait(false);
 
-        StringAssert.Contains(decoracao, "underline");
+        StringAssert.Contains(decoration, "underline");
     }
 
     [TestMethod]
     public async Task PaginaInicial_NaoTemRolagemHorizontal_NasQuatroLarguras()
     {
-        foreach (int largura in _larguras)
+        foreach (int width in _widths)
         {
-            await Page.SetViewportSizeAsync(largura, 800).ConfigureAwait(false);
+            await Page.SetViewportSizeAsync(width, 800).ConfigureAwait(false);
             await Page.GotoAsync(Url("/")).ConfigureAwait(false);
 
-            bool cabe = await Page.EvaluateAsync<bool>(
+            bool fits = await Page.EvaluateAsync<bool>(
                 "() => document.documentElement.scrollWidth <= document.documentElement.clientWidth").ConfigureAwait(false);
 
-            Assert.IsTrue(cabe, $"rolagem horizontal em {largura} px (NFR-17)");
+            Assert.IsTrue(fits, $"rolagem horizontal em {width} px (NFR-17)");
         }
     }
 
     [TestMethod]
     public async Task PaginaInicial_NaoViolaACsp()
     {
-        List<string> violacoes = [];
-        Page.Console += (_, mensagem) =>
+        List<string> violations = [];
+        Page.Console += (_, message) =>
         {
-            if (mensagem.Text.Contains("Content Security Policy", StringComparison.OrdinalIgnoreCase))
+            if (message.Text.Contains("Content Security Policy", StringComparison.OrdinalIgnoreCase))
             {
-                violacoes.Add(mensagem.Text);
+                violations.Add(message.Text);
             }
         };
 
         await Page.GotoAsync(Url("/")).ConfigureAwait(false);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
 
-        CollectionAssert.AreEqual(Array.Empty<string>(), violacoes.ToArray(), "a CSP bloqueou algo que o layout usa");
+        CollectionAssert.AreEqual(Array.Empty<string>(), violations.ToArray(), "a CSP bloqueou algo que o layout usa");
     }
 
     [TestMethod]
@@ -111,12 +111,12 @@ public class BaseCssTests : PaginaDoSite
     {
         await Page.GotoAsync(Url("/")).ConfigureAwait(false);
 
-        AxeResult resultado = await Page.RunAxe(new AxeRunOptions
+        AxeResult result = await Page.RunAxe(new AxeRunOptions
         {
             RunOnly = new RunOnlyOptions { Type = "tag", Values = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] }
         }).ConfigureAwait(false);
 
-        Assert.AreEqual(0, resultado.Violations.Length, string.Join("; ", resultado.Violations.Select(v => v.Id + ": " + v.Help)));
+        Assert.AreEqual(0, result.Violations.Length, string.Join("; ", result.Violations.Select(v => v.Id + ": " + v.Help)));
     }
 
     [TestMethod]
@@ -124,14 +124,14 @@ public class BaseCssTests : PaginaDoSite
     {
         await Page.GotoAsync(Url("/")).ConfigureAwait(false);
 
-        bool carregada = await Page.EvaluateAsync<bool>(
+        bool loaded = await Page.EvaluateAsync<bool>(
             "async () => { await document.fonts.ready; return document.fonts.check('16px Poppins') && document.fonts.check('600 16px Poppins'); }").ConfigureAwait(false);
-        string familia = await Page.Locator("body").EvaluateAsync<string>("e => getComputedStyle(e).fontFamily").ConfigureAwait(false);
+        string family = await Page.Locator("body").EvaluateAsync<string>("e => getComputedStyle(e).fontFamily").ConfigureAwait(false);
         int faces = await Page.EvaluateAsync<int>(
             "() => [...document.fonts].filter(f => f.family.replace(/\"/g, '') === 'Poppins' && f.status === 'loaded').length").ConfigureAwait(false);
 
-        Assert.IsTrue(carregada, "a Poppins 400 e 600 não carregaram");
-        StringAssert.Contains(familia, "Poppins");
+        Assert.IsTrue(loaded, "a Poppins 400 e 600 não carregaram");
+        StringAssert.Contains(family, "Poppins");
         Assert.IsTrue(faces >= 2, $"esperava ao menos 2 pesos carregados, vieram {faces}");
     }
 
@@ -140,12 +140,12 @@ public class BaseCssTests : PaginaDoSite
     {
         await Page.GotoAsync(Url("/")).ConfigureAwait(false);
 
-        bool carregada = await Page.EvaluateAsync<bool>(
+        bool loaded = await Page.EvaluateAsync<bool>(
             "async () => { await document.fonts.ready; return document.fonts.check('14px FontAwesome'); }").ConfigureAwait(false);
-        string conteudo = await Page.Locator("i.fa-search").First.EvaluateAsync<string>("e => getComputedStyle(e, '::before').content").ConfigureAwait(false);
+        string content = await Page.Locator("i.fa-search").First.EvaluateAsync<string>("e => getComputedStyle(e, '::before').content").ConfigureAwait(false);
 
-        Assert.IsTrue(carregada, "a fonte do Font Awesome não carregou");
-        Assert.AreNotEqual("none", conteudo);
+        Assert.IsTrue(loaded, "a fonte do Font Awesome não carregou");
+        Assert.AreNotEqual("none", content);
     }
 
     [TestMethod]
@@ -153,14 +153,14 @@ public class BaseCssTests : PaginaDoSite
     {
         await Page.GotoAsync(Url("/")).ConfigureAwait(false);
 
-        string fundo = await Page.Locator("header.cabecalho").EvaluateAsync<string>("e => getComputedStyle(e).backgroundImage").ConfigureAwait(false);
-        string[] botao = (await Page.GetByRole(AriaRole.Button, new() { Name = "Buscar" })
+        string background = await Page.Locator("header.cabecalho").EvaluateAsync<string>("e => getComputedStyle(e).backgroundImage").ConfigureAwait(false);
+        string[] button = (await Page.GetByRole(AriaRole.Button, new() { Name = "Buscar" })
             .EvaluateAsync<string>("e => { const c = getComputedStyle(e); return c.backgroundColor + '|' + c.color; }").ConfigureAwait(false)).Split('|');
 
-        StringAssert.Contains(fundo, "linear-gradient");
-        Assert.AreEqual("rgb(215, 34, 19)", botao[0]);
-        Assert.AreEqual("rgb(255, 255, 255)", botao[1]);
-        Assert.IsTrue(Contraste(botao[1], botao[0]) >= 4.5, "texto branco sobre o botão primário");
+        StringAssert.Contains(background, "linear-gradient");
+        Assert.AreEqual("rgb(215, 34, 19)", button[0]);
+        Assert.AreEqual("rgb(255, 255, 255)", button[1]);
+        Assert.IsTrue(Contrast(button[1], button[0]) >= 4.5, "texto branco sobre o botão primário");
     }
 
     [TestMethod]
@@ -168,12 +168,12 @@ public class BaseCssTests : PaginaDoSite
     {
         List<string> externas = [];
         string host = new Uri(Url("/")).Host;
-        Page.Request += (_, requisicao) =>
+        Page.Request += (_, request) =>
         {
-            Uri uri = new(requisicao.Url);
+            Uri uri = new(request.Url);
             if (uri.Scheme.StartsWith("http", StringComparison.Ordinal) && !string.Equals(uri.Host, host, StringComparison.OrdinalIgnoreCase))
             {
-                externas.Add(requisicao.Url);
+                externas.Add(request.Url);
             }
         };
 
@@ -183,19 +183,19 @@ public class BaseCssTests : PaginaDoSite
         CollectionAssert.AreEqual(Array.Empty<string>(), externas.ToArray(), "o site buscou algo fora do próprio domínio (Google Fonts, CDN...)");
     }
 
-    private static double Contraste(string a, string b)
+    private static double Contrast(string a, string b)
     {
-        double la = Luminancia(a);
-        double lb = Luminancia(b);
+        double la = Luminance(a);
+        double lb = Luminance(b);
         return (Math.Max(la, lb) + 0.05) / (Math.Min(la, lb) + 0.05);
     }
 
-    private static double Luminancia(string rgb)
+    private static double Luminance(string rgb)
     {
-        double[] canais = Regex.Matches(rgb, @"\d+").Take(3)
+        double[] channels = Regex.Matches(rgb, @"\d+").Take(3)
             .Select(m => int.Parse(m.Value, CultureInfo.InvariantCulture) / 255.0)
             .Select(c => c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4))
             .ToArray();
-        return (0.2126 * canais[0]) + (0.7152 * canais[1]) + (0.0722 * canais[2]);
+        return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
     }
 }

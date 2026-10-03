@@ -1,0 +1,14 @@
+@model PageStateViewModel
+
+@* Busca ou filtro sem resultado: mensagem e "Limpar filtros". O título recebe o foco. *@
+<section class="estado-pagina text-center py-5">
+    <h1 class="fs-3" tabindex="-1" data-foco-inicial>@Model.Title</h1>
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p class="text-body-secondary">@Model.Message</p>
+    }
+    @if (Url.IsLocalUrl(Model.ActionUrl))
+    {
+        <a class="btn btn-outline-secondary" href="@Model.ActionUrl">@(Model.ActionText ?? "Limpar filtros")</a>
+    }
+</section>

@@ -1,7 +1,7 @@
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using GazetaMarketplace.Web.Tests.Suporte;
+using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GazetaMarketplace.Web.Tests.Layout;
@@ -14,7 +14,7 @@ public sealed class XssTests
     [TestMethod]
     public async Task TextoDeUsuario_EhCodificado_NaoExecuta()
     {
-        string html = await BaixarAsync("/teste/estados-hostis");
+        string html = await DownloadAsync("/teste/estados-hostis");
 
         Assert.IsFalse(html.Contains("<script>alert", System.StringComparison.Ordinal), "o texto hostil saiu sem codificação");
         StringAssert.Contains(html, "&lt;script&gt;alert(");
@@ -24,18 +24,18 @@ public sealed class XssTests
     [TestMethod]
     public async Task EnderecoDaAcao_SoAceitaCaminhoLocal()
     {
-        string html = await BaixarAsync("/teste/estados-hostis");
+        string html = await DownloadAsync("/teste/estados-hostis");
 
         Assert.IsFalse(html.Contains("javascript:", System.StringComparison.OrdinalIgnoreCase));
         Assert.IsFalse(html.Contains("evil.example", System.StringComparison.OrdinalIgnoreCase));
     }
 
-    private static async Task<string> BaixarAsync(string caminho)
+    private static async Task<string> DownloadAsync(string path)
     {
-        using FabricaWeb fabrica = new();
-        using HttpClient cliente = fabrica.CreateClient();
-        HttpResponseMessage resposta = await cliente.GetAsync(caminho);
-        Assert.IsTrue(resposta.IsSuccessStatusCode);
-        return await resposta.Content.ReadAsStringAsync();
+        using WebFactory factory = new();
+        using HttpClient client = factory.CreateClient();
+        HttpResponseMessage response = await client.GetAsync(path);
+        Assert.IsTrue(response.IsSuccessStatusCode);
+        return await response.Content.ReadAsStringAsync();
     }
 }

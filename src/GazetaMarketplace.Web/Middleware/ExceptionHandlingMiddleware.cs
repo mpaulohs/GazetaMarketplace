@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using GazetaMarketplace.Core.Excecoes;
+using GazetaMarketplace.Core.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -28,13 +28,13 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         }
         catch (Exception ex) when (!context.Response.HasStarted)
         {
-            await ResponderAsync(context, ex);
+            await RespondAsync(context, ex);
         }
     }
 
-    private async Task ResponderAsync(HttpContext context, Exception ex)
+    private async Task RespondAsync(HttpContext context, Exception ex)
     {
-        (int status, string codigo, string detalhe, IReadOnlyDictionary<string, string[]> erros) = ex switch
+        (int status, string code, string detail, IReadOnlyDictionary<string, string[]> errors) = ex switch
         {
             ValidationException v => (v.StatusCode, v.Code, v.Message, v.Errors),
             AppException a => (a.StatusCode, a.Code, a.Message, null),
@@ -47,26 +47,26 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         }
         else
         {
-            logger.LogWarning("Erro do cliente {Code} em {Method} {Path}: {Detalhe}",
-                codigo, context.Request.Method, context.Request.Path, detalhe);
+            logger.LogWarning("Erro do cliente {Code} em {Method} {Path}: {Detail}",
+                code, context.Request.Method, context.Request.Path, detail);
         }
 
-        ProblemDetails problema = new()
+        ProblemDetails problem = new()
         {
             Status = status,
             Title = ReasonPhrases.GetReasonPhrase(status),
-            Detail = detalhe,
+            Detail = detail,
             Instance = context.Request.Path
         };
-        problema.Extensions["code"] = codigo;
-        problema.Extensions["traceId"] = context.TraceIdentifier;
-        if (erros is not null)
+        problem.Extensions["code"] = code;
+        problem.Extensions["traceId"] = context.TraceIdentifier;
+        if (errors is not null)
         {
-            problema.Extensions["errors"] = erros;
+            problem.Extensions["errors"] = errors;
         }
 
         context.Response.Clear();
         context.Response.StatusCode = status;
-        await context.Response.WriteAsJsonAsync(problema, options: null, contentType: "application/problem+json");
+        await context.Response.WriteAsJsonAsync(problem, options: null, contentType: "application/problem+json");
     }
 }
