@@ -2,7 +2,7 @@
 
 > Projeção de `plans/plan.md`: cada linha repete o id e o título da tarefa. O `/build` marca `- [x]` ao concluir; nada de escopo novo entra aqui.
 
-## Fase 0 — Fundação
+## Fase 0 — Fundação (concluída em 2026-10-03)
 - [x] Task 0.1: Estruturar a solução em Web, Core e Infrastructure
 - [x] Task 0.2: Configuração tipada, segredos fora do repositório e ambiente de desenvolvimento
 - [x] Task 0.3: Logs estruturados, correlação e contrato de erros
@@ -12,7 +12,7 @@
 - [x] Task 0.6: Persistência base: DbContext, Dapper, auditoria, concorrência e script de migrations
 - [x] Task 0.7: Layout base, tokens do design system e componentes de estado de página
 
-## Checkpoint 0 — Fundação completa
+## Checkpoint 0 — Fundação completa (fechado em 2026-10-03)
 
 ## Fase 1 — Equipe e acesso
 - [ ] Task 1.1: Entrar e sair do painel, com bloqueio e sessão

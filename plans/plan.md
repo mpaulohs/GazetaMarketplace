@@ -444,13 +444,15 @@
 ---
 ## Checkpoint 0 — Fundação completa
 
+**Fechado em 2026-10-03 pelo Product Owner.** Evidência: `dotnet build` com 0 avisos; `dotnet test` com 178 testes (168 passam, 10 de navegador ignorados sem `GAZETA_BASE_URL`, e passam quando o site está no ar).
+
 **Verify before proceeding**:
-- [ ] Solução em 3 projetos compila sem avisos
-- [ ] Partida em Production falha sem configuração
-- [ ] Logs e erros com código de referência
-- [ ] Cabeçalhos e antiforgery ativos
-- [ ] Layout base navegável só pelo teclado
-- [ ] Cobertura de linha ≥ 80% nos projetos novos
+- [x] Solução em 3 projetos compila sem avisos
+- [x] Partida em Production falha sem configuração (`OpcoesTests.Producao_Sem*_FalhaNaPartida`, tarefa 0.2)
+- [x] Logs e erros com código de referência
+- [x] Cabeçalhos e antiforgery ativos
+- [x] Layout base navegável só pelo teclado (skip link, foco visível e axe-core por teste automático; a verificação manual com NVDA fica para o `/test`)
+- [ ] Cobertura de linha ≥ 80% nos projetos novos — **ainda não medida**: a ferramenta de cobertura não está configurada (`testing.md` pede para confirmar o comando no primeiro `/test`); aceito pelo Product Owner ao fechar o checkpoint
 
 ---
 
