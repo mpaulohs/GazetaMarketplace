@@ -125,6 +125,29 @@ public sealed class MigrationsTests
     }
 
     [TestMethod]
+    public void MigrationDosGruposRestantes_Atualiza53CategoriasEFechaOsDezoitoGrupos()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AssignFieldGroupsToRemainingCategories", StringComparison.Ordinal))).Replace("\r", string.Empty, StringComparison.Ordinal);
+        (int Id, string Group)[] expected =
+        [
+            (28, "RoomRental"), (29, "Seasonal"), (43, "Phones"), (46, "Smartwatches"), (44, "TelephonyProducts"), (45, "TelephonyProducts"),
+            (47, "TelephonyProducts"), (48, "TelephonyProducts"), (64, "ClothingAndShoes"), (65, "ClothingAndShoes"), (68, "ClothingAndShoes"),
+            (69, "ClothingAndShoes"), (72, "ClothingAndShoes"), (75, "ClothingAndShoes"), (76, "ClothingAndShoes"), (77, "ClothingAndShoes"),
+            (89, "Machinery"), (92, "Machinery"), (93, "Machinery"), (97, "Machinery"),
+            .. System.Linq.Enumerable.Range(102, 26).Select(id => (id, "ElectronicsAndComputers")),
+            .. System.Linq.Enumerable.Range(128, 7).Select(id => (id, "Appliances"))
+        ];
+
+        Assert.HasCount(53, expected);
+        Assert.AreEqual(53, System.Text.RegularExpressions.Regex.Matches(section, @"UPDATE \[Categories\] SET \[FieldGroup\]").Count);
+        Assert.DoesNotContain("INSERT INTO [Categories]", section, "só atribui grupos; nenhuma categoria nasce nem some");
+        foreach ((int id, string group) in expected)
+        {
+            StringAssert.Contains(section, $"[FieldGroup] = ''{group}''\n    WHERE [Id] = {id};");
+        }
+    }
+
+    [TestMethod]
     public void MigrationDasConfiguracoes_CriaSoASiteSettings_ComChaveUnica_ESemLinhasIniciais()
     {
         string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddSiteSettings", StringComparison.Ordinal)));

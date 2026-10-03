@@ -18,7 +18,7 @@ public sealed class DeletionTests
 {
     private const int Imoveis = 1;
     private const int Autopecas = 3;
-    private const int AluguelDeQuartos = 28;
+    private const int Ciclismo = 58;
     private const int Terrenos = 30;
     private const int PecasParaCarros = 38;
 
@@ -46,16 +46,16 @@ public sealed class DeletionTests
     public async Task US013S08_ComAnuncios_Recusa_ComAContagemNaMensagem() // @US-013-S08
     {
         using PanelFixture panel = await PanelFixture.StartAsync();
-        panel.Usage.Counts[AluguelDeQuartos] = 3;
+        panel.Usage.Counts[Ciclismo] = 3;
 
-        string html = await panel.FollowAsync(await panel.DeleteAsync(AluguelDeQuartos));
+        string html = await panel.FollowAsync(await panel.DeleteAsync(Ciclismo));
 
         StringAssert.Contains(html, "Não é possível excluir: 3 anúncios usam esta categoria");
-        Assert.IsTrue(await ExistsAsync(panel, AluguelDeQuartos), "a categoria continua na lista");
-        StringAssert.Contains(html, ">Aluguel de quartos<");
+        Assert.IsTrue(await ExistsAsync(panel, Ciclismo), "a categoria continua na lista");
+        StringAssert.Contains(html, ">Ciclismo<");
 
-        panel.Usage.Counts[AluguelDeQuartos] = 1;
-        StringAssert.Contains(await panel.FollowAsync(await panel.DeleteAsync(AluguelDeQuartos)), "Não é possível excluir: 1 anúncio usa esta categoria");
+        panel.Usage.Counts[Ciclismo] = 1;
+        StringAssert.Contains(await panel.FollowAsync(await panel.DeleteAsync(Ciclismo)), "Não é possível excluir: 1 anúncio usa esta categoria");
     }
 
     [TestMethod]
@@ -122,7 +122,7 @@ public sealed class DeletionTests
     [TestMethod]
     public async Task BloqueioPorCamposEspecificos_SoParaCategoriasDaCargaComGrupoProprio()
     {
-        HashSet<int> expected = [3, 26, 27, 30, 31, 33, 34, 35, 36, 37, 66, 96];
+        HashSet<int> expected = [3, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 43, 44, 45, 46, 47, 48, 64, 65, 66, 68, 69, 72, 75, 76, 77, 89, 92, 93, 96, 97, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134];
         CategoryRow[] rows = [.. InitialCategories.All.Select(c => new CategoryRow(c.Id, c.ParentId, c.Name, c.Slug, c.DisplayOrder, c.IsPostable, c.FieldGroup, c.IsSystem))];
         CategoryTreeSnapshot tree = CategoryTreeSnapshot.Build(rows);
 
@@ -130,7 +130,8 @@ public sealed class DeletionTests
 
         CollectionAssert.AreEquivalent(expected.ToArray(), protectedIds.ToArray());
         Assert.IsFalse(CategoryRules.IsProtectedFromDeletion(tree.Find(PecasParaCarros)), "as peças só herdam o grupo de Autopeças");
-        Assert.IsFalse(CategoryRules.IsProtectedFromDeletion(tree.Find(58)), "da carga, mas sem grupo próprio");
+        Assert.IsFalse(CategoryRules.IsProtectedFromDeletion(tree.Find(Ciclismo)), "da carga, mas sem grupo próprio");
+        Assert.AreEqual(65, protectedIds.Count, "12 das tarefas anteriores e 53 da 2.4");
 
         // Criada pelo Administrador, mesmo com um grupo gravado, não é protegida; da carga sem grupo também não
         CategoryNode custom = new(900, 2, "Criada", "criada", 1, true, "Cars", false, 2);
@@ -169,11 +170,11 @@ public sealed class DeletionTests
     {
         using PanelFixture panel = await PanelFixture.StartAsync();
 
-        string html = await (await panel.Admin.GetAsync($"{PanelFixture.Page}/{AluguelDeQuartos}/excluir")).TextAsync();
+        string html = await (await panel.Admin.GetAsync($"{PanelFixture.Page}/{Ciclismo}/excluir")).TextAsync();
 
-        StringAssert.Contains(html, "Excluir Aluguel de quartos?");
+        StringAssert.Contains(html, "Excluir Ciclismo?");
         StringAssert.Contains(html, "Essa ação não pode ser desfeita");
         StringAssert.Contains(html, "Cancelar");
-        StringAssert.Contains(html, $"action=\"{PanelFixture.Page}/{AluguelDeQuartos}/excluir\"");
+        StringAssert.Contains(html, $"action=\"{PanelFixture.Page}/{Ciclismo}/excluir\"");
     }
 }

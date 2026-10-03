@@ -57,10 +57,40 @@ public sealed partial class ListsTests
         nameof(FieldLists.PartColor),
         nameof(FieldLists.AutoPartType),
         nameof(FieldLists.MotorcyclePartType),
-        nameof(FieldLists.BoatPartType)
+        nameof(FieldLists.BoatPartType),
+        nameof(FieldLists.SeasonalType),
+        nameof(FieldLists.SeasonalFeature),
+        nameof(FieldLists.RoomFeature),
+        nameof(FieldLists.SeasonalPaymentType),
+        nameof(FieldLists.PhoneStorage),
+        nameof(FieldLists.PhoneColor),
+        nameof(FieldLists.PhoneBrand),
+        nameof(FieldLists.SmartwatchBrand),
+        nameof(FieldLists.PhoneBatteryHealth),
+        nameof(FieldLists.PhoneAccessoryType),
+        nameof(FieldLists.PhonePartType),
+        nameof(FieldLists.SmartwatchAccessoryType),
+        nameof(FieldLists.LandlinePhoneType),
+        nameof(FieldLists.AirConditionerCapacity),
+        nameof(FieldLists.AirConditionerType),
+        nameof(FieldLists.FanType),
+        nameof(FieldLists.RefrigeratorType),
+        nameof(FieldLists.StoveType),
+        nameof(FieldLists.WasherType),
+        nameof(FieldLists.KitchenApplianceType),
+        nameof(FieldLists.PersonalCareApplianceType),
+        nameof(FieldLists.ApplianceVoltage)
     ];
 
-    private static readonly string[] FromSpec = [nameof(FieldLists.ServiceType), nameof(FieldLists.JobArea)];
+    private static readonly string[] FromSpec =
+    [
+        nameof(FieldLists.ServiceType),
+        nameof(FieldLists.JobArea),
+        nameof(FieldLists.ClothingSize),
+        nameof(FieldLists.AdultShoeSize),
+        nameof(FieldLists.ChildShoeSize),
+        nameof(FieldLists.Gender)
+    ];
 
     [GeneratedRegex(@"^\| (\d+) \| (.+?) \|\s*$", RegexOptions.Multiline)]
     private static partial Regex RowPattern();
@@ -191,5 +221,29 @@ public sealed partial class ListsTests
         Assert.IsNull(FieldLists.ApartmentType.Find(99));
         Assert.IsTrue(FieldLists.ApartmentType.Contains(1));
         Assert.IsFalse(FieldLists.ApartmentType.Contains(0));
+    }
+
+    [TestMethod]
+    public void Tamanhos_Roupas_PPaXGG_CalcadoAdulto34a45_CalcadoInfantil16a33_IdEhANumeracao()
+    {
+        CollectionAssert.AreEqual(new[] { "PP", "P", "M", "G", "GG", "XG", "XGG" }, FieldLists.ClothingSize.Options.Select(o => o.Label).ToArray());
+        CollectionAssert.AreEqual(Enumerable.Range(1, 7).ToArray(), FieldLists.ClothingSize.Options.Select(o => o.Id).ToArray());
+
+        CollectionAssert.AreEqual(Enumerable.Range(34, 12).ToArray(), FieldLists.AdultShoeSize.Options.Select(o => o.Id).ToArray());
+        Assert.IsTrue(FieldLists.AdultShoeSize.Options.All(o => o.Label == o.Id.ToString(CultureInfo.InvariantCulture)));
+        Assert.IsFalse(FieldLists.AdultShoeSize.Contains(33));
+        Assert.IsFalse(FieldLists.AdultShoeSize.Contains(46));
+
+        CollectionAssert.AreEqual(Enumerable.Range(16, 18).ToArray(), FieldLists.ChildShoeSize.Options.Select(o => o.Id).ToArray());
+        Assert.IsTrue(FieldLists.ChildShoeSize.Options.All(o => o.Label == o.Id.ToString(CultureInfo.InvariantCulture)));
+        Assert.IsFalse(FieldLists.ChildShoeSize.Contains(15));
+        Assert.IsFalse(FieldLists.ChildShoeSize.Contains(34));
+    }
+
+    [TestMethod]
+    public void Genero_Tem4Opcoes_NaOrdemDaDecisao()
+    {
+        CollectionAssert.AreEqual(new[] { "Masculino", "Feminino", "Unissex", "Infantil" }, FieldLists.Gender.Options.Select(o => o.Label).ToArray());
+        CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, FieldLists.Gender.Options.Select(o => o.Id).ToArray());
     }
 }

@@ -41,7 +41,7 @@ public sealed class CategoriesTests
         Assert.AreEqual("servicos-grupo", all.Single(c => c.Id == 7).Slug);
         Assert.IsFalse(all.Any(c => c.Id is 24 or 25 or 32 or 79 or 80 or 82 or 83 or 91));
         Assert.IsTrue(all.All(c => c.IsSystem));
-        CollectionAssert.AreEquivalent(new[] { 3, 26, 27, 30, 31, 33, 34, 35, 36, 37, 66, 96 }, all.Where(c => c.FieldGroup is not null).Select(c => c.Id).ToArray());
+        CollectionAssert.AreEquivalent(new[] { 3, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 43, 44, 45, 46, 47, 48, 64, 65, 66, 68, 69, 72, 75, 76, 77, 89, 92, 93, 96, 97, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134 }, all.Where(c => c.FieldGroup is not null).Select(c => c.Id).ToArray());
     }
 
     [TestMethod]
@@ -169,7 +169,11 @@ public sealed class CategoriesTests
         Assert.AreEqual(FieldGroupKeys.Services, FieldGroupRegistry.Resolve(snapshot, 66).Key);
         Assert.AreEqual(FieldGroupKeys.Jobs, FieldGroupRegistry.Resolve(snapshot, 96).Key);
         Assert.AreSame(FieldGroupRegistry.Default, FieldGroupRegistry.Resolve(snapshot, 135));
-        Assert.AreEqual(12, snapshot.All.Count(n => n.FieldGroup is not null && n.Id != createdId));
+        Assert.AreEqual(FieldGroupKeys.Phones, FieldGroupRegistry.Resolve(snapshot, 43).Key);
+        Assert.AreEqual(FieldGroupKeys.Appliances, FieldGroupRegistry.Resolve(snapshot, 134).Key);
+        Assert.AreEqual(FieldGroupKeys.ElectronicsAndComputers, FieldGroupRegistry.Resolve(snapshot, 102).Key);
+        Assert.AreEqual(FieldGroupKeys.Machinery, FieldGroupRegistry.Resolve(snapshot, 97).Key);
+        Assert.AreEqual(65, snapshot.All.Count(n => n.FieldGroup is not null && n.Id != createdId));
     }
 
     private static async Task AssertRejectedAsync(string connection, Category category)

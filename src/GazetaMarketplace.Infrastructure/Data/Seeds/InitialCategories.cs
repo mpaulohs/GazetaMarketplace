@@ -21,7 +21,7 @@ public static class InitialCategories
 
     /// <summary>
     /// Grupo de campos gravado em cada categoria que define o próprio (SPEC, Apêndice B). As demais herdam do ancestral mais próximo ou
-    /// caem em Produtos em geral (A7 a). Cada tarefa 2.x acrescenta aqui os seus grupos, junto com uma migration de dados.
+    /// caem em Produtos em geral (A7 a). As 65 categorias com grupo próprio ficam protegidas contra exclusão (A7 b). Cada tarefa 2.x acrescentou aqui os seus grupos, junto com uma migration de dados.
     /// </summary>
     public static readonly IReadOnlyDictionary<int, string> FieldGroups = new Dictionary<int, string>
     {
@@ -36,7 +36,60 @@ public static class InitialCategories
         [36] = FieldGroupKeys.Motorcycles,
         [37] = FieldGroupKeys.BoatsAndAircraft,
         [66] = FieldGroupKeys.Services,
-        [96] = FieldGroupKeys.Jobs
+        [96] = FieldGroupKeys.Jobs,
+        [28] = FieldGroupKeys.RoomRental,
+        [29] = FieldGroupKeys.Seasonal,
+        [43] = FieldGroupKeys.Phones,
+        [44] = FieldGroupKeys.TelephonyProducts,
+        [45] = FieldGroupKeys.TelephonyProducts,
+        [46] = FieldGroupKeys.Smartwatches,
+        [47] = FieldGroupKeys.TelephonyProducts,
+        [48] = FieldGroupKeys.TelephonyProducts,
+        [64] = FieldGroupKeys.ClothingAndShoes,
+        [65] = FieldGroupKeys.ClothingAndShoes,
+        [68] = FieldGroupKeys.ClothingAndShoes,
+        [69] = FieldGroupKeys.ClothingAndShoes,
+        [72] = FieldGroupKeys.ClothingAndShoes,
+        [75] = FieldGroupKeys.ClothingAndShoes,
+        [76] = FieldGroupKeys.ClothingAndShoes,
+        [77] = FieldGroupKeys.ClothingAndShoes,
+        [89] = FieldGroupKeys.Machinery,
+        [92] = FieldGroupKeys.Machinery,
+        [93] = FieldGroupKeys.Machinery,
+        [97] = FieldGroupKeys.Machinery,
+        [102] = FieldGroupKeys.ElectronicsAndComputers,
+        [103] = FieldGroupKeys.ElectronicsAndComputers,
+        [104] = FieldGroupKeys.ElectronicsAndComputers,
+        [105] = FieldGroupKeys.ElectronicsAndComputers,
+        [106] = FieldGroupKeys.ElectronicsAndComputers,
+        [107] = FieldGroupKeys.ElectronicsAndComputers,
+        [108] = FieldGroupKeys.ElectronicsAndComputers,
+        [109] = FieldGroupKeys.ElectronicsAndComputers,
+        [110] = FieldGroupKeys.ElectronicsAndComputers,
+        [111] = FieldGroupKeys.ElectronicsAndComputers,
+        [112] = FieldGroupKeys.ElectronicsAndComputers,
+        [113] = FieldGroupKeys.ElectronicsAndComputers,
+        [114] = FieldGroupKeys.ElectronicsAndComputers,
+        [115] = FieldGroupKeys.ElectronicsAndComputers,
+        [116] = FieldGroupKeys.ElectronicsAndComputers,
+        [117] = FieldGroupKeys.ElectronicsAndComputers,
+        [118] = FieldGroupKeys.ElectronicsAndComputers,
+        [119] = FieldGroupKeys.ElectronicsAndComputers,
+        [120] = FieldGroupKeys.ElectronicsAndComputers,
+        [121] = FieldGroupKeys.ElectronicsAndComputers,
+        [122] = FieldGroupKeys.ElectronicsAndComputers,
+        [123] = FieldGroupKeys.ElectronicsAndComputers,
+        [124] = FieldGroupKeys.ElectronicsAndComputers,
+        [125] = FieldGroupKeys.ElectronicsAndComputers,
+        [126] = FieldGroupKeys.ElectronicsAndComputers,
+        [127] = FieldGroupKeys.ElectronicsAndComputers,
+        [128] = FieldGroupKeys.Appliances,
+        [129] = FieldGroupKeys.Appliances,
+        [130] = FieldGroupKeys.Appliances,
+        [131] = FieldGroupKeys.Appliances,
+        [132] = FieldGroupKeys.Appliances,
+        [133] = FieldGroupKeys.Appliances,
+        [134] = FieldGroupKeys.Appliances
     };
 
     public static IReadOnlyList<Category> All { get; } =

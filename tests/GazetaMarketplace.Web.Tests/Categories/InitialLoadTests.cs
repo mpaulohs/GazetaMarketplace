@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Categories;
+using GazetaMarketplace.Infrastructure.Data.Seeds;
 using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,7 +31,8 @@ public sealed class InitialLoadTests
         Assert.AreEqual("Papelaria", all.Single(c => c.Id == 155).Name);
         Assert.IsEmpty(all.Where(c => c.Id is 24 or 25 or 32 or 79 or 80 or 82 or 83 or 91), "buracos do arquivo e animais vivos continuam ausentes");
         Assert.IsTrue(all.All(c => c.IsSystem));
-        CollectionAssert.AreEquivalent(new[] { 3, 26, 27, 30, 31, 33, 34, 35, 36, 37, 66, 96 }, all.Where(c => c.FieldGroup is not null).Select(c => c.Id).ToArray(), "só as categorias que definem o próprio grupo o têm gravado");
+        Assert.AreEqual(65, all.Count(c => c.FieldGroup is not null), "12 das tarefas anteriores e 53 da 2.4");
+        CollectionAssert.AreEquivalent(InitialCategories.FieldGroups.Keys.ToArray(), all.Where(c => c.FieldGroup is not null).Select(c => c.Id).ToArray(), "só as categorias que definem o próprio grupo o têm gravado");
         Assert.IsTrue(all.All(c => c.CreatedAt == new DateTime(2026, 10, 3, 0, 0, 0, DateTimeKind.Utc)));
     }
 

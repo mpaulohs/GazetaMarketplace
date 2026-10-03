@@ -231,3 +231,51 @@ Todas foram desfeitas depois. Três mutações não compilavam de primeira (cód
 4. **Limite global de pedidos.** A suíte completa passou de 100 pedidos por minuto de um IP só e começou a receber 429 em páginas de login. O limite ficou configurável (`RateLimiting:GlobalPerMinute`, padrão 100); só o site do E2E usa 1000. O limite de login e de recuperação de senha não mudou.
 5. **Rolagem animada.** O Bootstrap rola até a âncora com animação e a lista tem ~150 itens; o Playwright via os botões "instáveis". Os E2E de categorias rodam com movimento reduzido (BACKLOG avalia `scroll-behavior: auto` nesta tela).
 6. **SPEC S08 × A7 b.** O exemplo do S08 ("Motos tem 3 anúncios") bate com a proteção por campos específicos; ver BACKLOG.
+
+## Tarefa 2.4 — nove grupos de campos que fecham o Apêndice B
+
+> **Em resumo:** 619 testes unitários (23 novos), 43 da ferramenta de catálogo, 57 de integração (SQL Server real) e 36 de navegador passam. As seis mutações planejadas derrubam testes. A tarefa não tem tela nova, então não há teste de navegador novo: o E2E existente confirma que nada das telas de categorias quebrou com as 65 categorias protegidas.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site | 619 | 619 | 0 |
+| Ferramenta (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 57 | 57 | 0 |
+| E2E (Playwright, site publicado em Production, script idempotente com 9 migrations) | 36 | 36 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| Celulares sem Marca obrigatória | 2 (`AppendixBTests.NoveGruposDa2_4…`, `Celulares_Marca…`) |
+| Calçados infantis (75) com a lista de calçados adultos | `RoupasECalcados_TamanhoMudaPorCategoria…` |
+| Categoria 110 (Eletrônicos) sem o grupo gravado | 4 (`AppendixBTests` ×2, `ParityTests`, `ModeloDoCodigo_EstaEmDiaComASnapshotDasMigrations`) |
+| Capacidade fora do Ar-condicionado (128 e 129) | 2 (`AppendixBTests.CampoComRestricaoDeCategoria…`, `Eletro_Tipo…`) |
+| Voltagem sem obrigatoriedade | 2 (`AppendixBTests.NoveGruposDa2_4…`, `Eletro_Tipo…`) |
+| Ano de fabricação aceitando o ano seguinte | 4 (`ManufactureYearTests` ×4) |
+
+Todas foram desfeitas depois.
+
+**O que cada camada prova**
+
+- Unitários: as 22 listas herdadas conferidas linha a linha contra `gazetaonline-lookups.md` (ids e rótulos); Tamanho (roupas, calçados adultos e infantis) e Gênero; o conjunto de categorias de cada um dos 18 grupos e os rótulos, a ordem e a obrigatoriedade dos campos dos nove grupos novos, lidos da tabela do Apêndice B da SPEC; as 124 categorias postáveis resolvem para o grupo do Apêndice B (as 55 demais, para Produtos em geral); marca e modelo em texto livre com limite 60; limites numéricos de Temporada e de Máquinas; Ano de fabricação (sem ano futuro, virada de ano no fuso de São Paulo); a migration de dados faz exatamente 53 `UPDATE`; a proteção contra exclusão cobre exatamente as 65 categorias da carga com grupo próprio.
+- Integração: o script idempotente e as migrations dão o mesmo esquema e as mesmas 147 linhas de categorias (com o `FieldGroup` de cada uma); 9 migrations; árvore com 65 categorias com grupo gravado e a herança das novas.
+- E2E: as telas de categorias continuam funcionando sobre o banco com 65 categorias protegidas.
+
+**Achados desta rodada**
+
+1. Dois testes da 2.6 usavam Aluguel de quartos (28) como categoria excluível; agora que ela é protegida, passaram a usar Ciclismo (58), que continua sem grupo próprio.
+2. O banco do E2E (reaproveitado entre rodadas) acumulou 3 categorias criadas por testes; o banco de testes de integração, limpo, mostra 147 linhas e 124 postáveis. Sem efeito sobre o resultado.
+
+## Checkpoint 2 — Categorias e catálogo completos (2026-10-03)
+
+> **Em resumo:** os quatro itens do Checkpoint 2 da `plans/plan.md` estão atendidos e verificados por teste. A Fase 2 está pronta para a sua confirmação.
+
+| Item do checkpoint | Situação | Prova |
+|---|---|---|
+| Árvore com 124 postáveis e ids reais | **OK** | `CategoriesTests` (integração, SQL Server limpo): 147 linhas, 124 postáveis, 22 de primeiro nível, ids reais (24, 25 e 32 ausentes como no arquivo; animais vivos fora); `ParityTests` relê `specs/categories.md` linha a linha |
+| 18 grupos de campos implementados | **OK** | `AppendixBTests`: os 18 grupos da tabela do Apêndice B estão no registro; o conjunto de categorias de cada grupo bate com a SPEC; as 124 postáveis resolvem para o grupo certo; 65 categorias da carga com grupo gravado |
+| Catálogo consultável e ferramenta de exportação testada | **OK** | `VehicleCatalogTests` (integração) e `Web.Tests/Catalog/*`: 4 consultas encadeadas, tipo `car`/`moto`, cache; `VehicleCatalogExport.Tests`: 43 testes (validação, `MERGE` idempotente, trava de produção, lotes). **Ressalva registrada:** a exportação real depende do parecer jurídico (A5) e do esquema do GazetaOnline, ainda não lido; hoje só a amostra reduzida existe |
+| Telefone do site configurável | **OK** | `SettingsTests` (integração) e `SettingsE2ETests` (navegador): salvar em `/painel/configuracoes`, regras de telefone, auditoria, cache |
+
+**Também conferido na verificação:** o script `db/scripts/gazeta-idempotente.sql` aplicado em SQL Server real termina com 9 migrations e 65 categorias com grupo; `git status` não mostra mudança em `appsettings*.json`, `Program.cs` nem `docker-compose*.yml`; as quatro suítes passam ao mesmo tempo (619 + 43 + 57 + 36).
+
+**Pendências que seguem abertas (todas no `plans/BACKLOG.md`):** exportação real do catálogo (A5); esquema presumido da origem; `ICategoryUsage` real e o autocomplete de marcas na Fase 3; mensagem "Mova antes os anúncios desta categoria" fora da SPEC; caches por processo; suposições de limites numéricos.

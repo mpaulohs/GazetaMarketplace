@@ -2,7 +2,7 @@ namespace GazetaMarketplace.Core.Fields;
 
 /// <summary>
 /// Chaves estáveis dos grupos de campos: é o que fica gravado em <c>Categories.FieldGroup</c>. Nunca renomeie uma chave em uso.
-/// Os 18 grupos do Apêndice B entram aqui conforme as tarefas 2.2 a 2.4.
+/// Os 18 grupos do Apêndice B (as tarefas 2.2 a 2.4 os trouxeram todos).
 /// </summary>
 public static class FieldGroupKeys
 {
@@ -25,4 +25,22 @@ public static class FieldGroupKeys
 
     /// <summary>Gravado em Autopeças (id 3); as filhas 38 a 42 herdam.</summary>
     public const string Parts = "Parts";
+
+    public const string RoomRental = "RoomRental";
+
+    public const string Seasonal = "Seasonal";
+
+    public const string Phones = "Phones";
+
+    public const string Smartwatches = "Smartwatches";
+
+    public const string TelephonyProducts = "TelephonyProducts";
+
+    public const string Appliances = "Appliances";
+
+    public const string ElectronicsAndComputers = "ElectronicsAndComputers";
+
+    public const string ClothingAndShoes = "ClothingAndShoes";
+
+    public const string Machinery = "Machinery";
 }

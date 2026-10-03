@@ -850,19 +850,26 @@
 - `src/GazetaMarketplace.Core/Campos/Grupos/AluguelQuartos.cs, Temporada.cs, Celulares.cs, Smartwatches.cs, ProdutosTelefonia.cs, Eletro.cs, EletronicosInformatica.cs, RoupasCalcados.cs, Maquinas.cs`
 
 **Acceptance Criteria**:
-- [ ] Cada grupo tem os campos, obrigatórios e listas do Apêndice B; as listas herdadas usam os ids do GazetaOnline
-- [ ] **Bloqueado até a PL-01:** as listas novas (Tamanho, Gênero, Marca por categoria de eletrônicos) só entram depois de definidas pelo Product Owner; até lá, os campos correspondentes ficam fora do grupo e a tarefa não fecha
+- [x] Cada grupo tem os campos, obrigatórios e listas do Apêndice B; as listas herdadas usam os ids do GazetaOnline
+- [x] ~~Bloqueado até a PL-01~~ PL-01 respondida em 2026-10-03: Tamanho (roupas PP a XGG; calçados adultos 34 a 45; infantis e de bebê 16 a 33), Gênero e Marca em texto livre com autocomplete entram nos grupos
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Fields/TelefoniaTests.Celulares_MarcaModeloCondicao_Obrigatorios`
-- `tests/GazetaMarketplace.Web.Tests/Fields/EletroTests.TipoMarcaVoltagemCondicao_Obrigatorios`
-- `tests/GazetaMarketplace.Web.Tests/Fields/TemporadaTests.TipoQuartosPessoas_Obrigatorios`
-- `tests/GazetaMarketplace.Web.Tests/Fields/RoupasTests.Condicao_Obrigatoria`
-- `tests/GazetaMarketplace.Web.Tests/Fields/MaquinasTests.Condicao_Obrigatoria`
+- `tests/GazetaMarketplace.Web.Tests/Fields/RemainingGroupsTests` (Celulares, Eletro, Temporada, Roupas, Máquinas e os demais: obrigatórios, limites, listas por categoria)
+- `tests/GazetaMarketplace.Web.Tests/Fields/AppendixBTests` (conjunto de categorias de cada um dos 18 grupos, rótulos, ordem e obrigatórios lidos da tabela da SPEC; as 124 categorias postáveis resolvem para o grupo certo)
+- `tests/GazetaMarketplace.Web.Tests/Fields/ManufactureYearTests` e `ListsTests` (22 listas herdadas conferidas contra `gazetaonline-lookups.md`; Tamanho e Gênero)
+
+**Decisões da implementação (aprovadas pelo Product Owner em 2026-10-03):**
+- **Nove grupos** em `Core/Fields/Groups/` (`RoomRental`, `Seasonal`, `Phones`, `Smartwatches`, `TelephonyProducts`, `Appliances`, `ElectronicsAndComputers`, `ClothingAndShoes`, `Machinery`), gravados nas 53 categorias que os definem pela migration de dados `AssignFieldGroupsToRemainingCategories` (53 `UPDATE`, nenhuma categoria nasce nem some). Com isso são **18 grupos** e **65 categorias da carga protegidas contra exclusão** (A7 b).
+- **O grupo é gravado em cada uma das 53 categorias** (Eletrônicos e informática: 26 categorias; Eletro: 7; Roupas e calçados: 8; Produtos de telefonia: 4; Máquinas: 4), não só nas mães.
+- **Marca em Eletro, Eletrônicos e Máquinas é texto livre de até 60 caracteres com autocomplete** (`SuggestionSource.Brands`, PL-01); as listas de marca por tipo herdadas do GazetaOnline continuam em `gazetaonline-lookups.md` sem uso. **Modelo** (Celulares e Eletrônicos): texto de até 60. Celulares e Smartwatches usam as listas de marca do GazetaOnline (`PhoneBrand`, `SmartwatchBrand`).
+- **Limites (suposições):** Temporada — Quartos 0 a 20 (0 = estúdio), Pessoas 1 a 50, Banheiros e Vagas 0 a 20; Máquinas — Ano de fabricação de 1950 até o **ano atual** (nunca futuro, diferente do ano do modelo de veículos) e Horas de uso de 0 a 999.999.
+- **Tamanho muda por categoria:** roupas (64, 68, 72, 76) PP a XGG; calçados adultos (65, 69) 34 a 45; calçados infantis e de bebê (75, 77) 16 a 33 (o id é a própria numeração). **Gênero** (Masculino, Feminino, Unissex, Infantil) é uma lista só para as oito categorias.
+- **Tipo** de Produtos de telefonia e de Eletro muda por categoria (uma lista por categoria); **Marcas compatíveis** só em 44 e 45; **Capacidade** só em 128.
+- Roupas e calçados **não tem Marca** (o Apêndice B não pede).
 
 **Dependencies**: 2.2
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Conferir contra o Apêndice B e contra as respostas da PL-01.
+**Verification**: Done when every test under "Tests to add" passes, plus manual check: Conferir contra o Apêndice B e contra as respostas da PL-01. **Feito em 2026-10-03.**
 
 **Estimate**: M
 
@@ -1056,7 +1063,7 @@
 
 **Verify before proceeding**:
 - [ ] Árvore com 124 postáveis e ids reais
-- [ ] 18 grupos de campos implementados (2.4 depende da PL-01)
+- [x] 18 grupos de campos implementados (2.4, com a PL-01 respondida)
 - [ ] Catálogo consultável e ferramenta de exportação testada
 - [ ] Telefone do site configurável
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GazetaMarketplace.Core.Fields;
 
@@ -25,6 +26,21 @@ public static class FieldLists
 
         options.Add(new FieldOption(ModelYearRules.MinYear, "1950 ou anterior"));
         return new FieldList("VehicleModelYear", options);
+    }
+
+    /// <summary>
+    /// Ano de fabricação (Máquinas): do ano atual até 1950, em ordem decrescente. O <b>id é o próprio ano</b>. Diferente do ano do modelo de veículos, não
+    /// passa do ano atual (máquina fabricada não é do futuro).
+    /// </summary>
+    public static FieldList ManufactureYears(int currentYear)
+    {
+        List<FieldOption> options = [];
+        for (int year = ManufactureYearRules.MaxYear(currentYear); year >= ManufactureYearRules.MinYear; year--)
+        {
+            options.Add(new FieldOption(year, year.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        }
+
+        return new FieldList("ManufactureYear", options);
     }
 
     /// <summary>Fonte: gazetaonline-lookups.md.</summary>
@@ -538,5 +554,335 @@ public static class FieldLists
         new(12, "Construção / Industrial"),
         new(13, "Saúde / Medicina / Enfermagem"),
         new(14, "Agricultura / Pecuária / Veterinária"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList SeasonalType = new(nameof(SeasonalType),
+    [
+        new(1, "Apartamento"),
+        new(2, "Casa"),
+        new(3, "Quarto individual"),
+        new(4, "Quarto compartilhado"),
+        new(5, "Hotel, hostel e pousada"),
+        new(6, "Sítio, fazenda e chácara"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList SeasonalFeature = new(nameof(SeasonalFeature),
+    [
+        new(1, "Geladeira"),
+        new(2, "Fogão"),
+        new(3, "Estacionamento"),
+        new(4, "Ventilador"),
+        new(5, "Varanda/Terraço"),
+        new(6, "TV a cabo"),
+        new(7, "Churrasqueira"),
+        new(8, "Piscina"),
+        new(9, "Ar condicionado"),
+        new(10, "Roupa de cama"),
+        new(11, "Internet"),
+        new(12, "Permitido animais"),
+        new(13, "Máquina de lavar"),
+        new(14, "Toalhas"),
+        new(15, "Café da manhã"),
+        new(16, "Aquecimento"),
+        new(17, "Lareira"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList RoomFeature = new(nameof(RoomFeature),
+    [
+        new(1, "Armário no quarto"),
+        new(2, "Banheiro no quarto"),
+        new(3, "Mobiliado"),
+        new(4, "Ar condicionado"),
+        new(5, "Varanda"),
+        new(6, "Aquecimento"),
+        new(7, "Internet"),
+        new(8, "TV a cabo"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList SeasonalPaymentType = new(nameof(SeasonalPaymentType),
+    [
+        new(1, "Por dia"),
+        new(2, "Por semana"),
+        new(3, "Por mês"),
+        new(4, "Pacote"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList PhoneStorage = new(nameof(PhoneStorage),
+    [
+        new(1, "512MB"),
+        new(2, "1GB"),
+        new(3, "2GB"),
+        new(4, "4GB"),
+        new(5, "8GB"),
+        new(6, "16GB"),
+        new(7, "32GB"),
+        new(8, "64GB"),
+        new(9, "128GB"),
+        new(10, "256GB"),
+        new(11, "512GB"),
+        new(12, "1TB"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList PhoneColor = new(nameof(PhoneColor),
+    [
+        new(1, "Amarelo"),
+        new(2, "Azul"),
+        new(3, "Branco"),
+        new(4, "Bronze"),
+        new(5, "Cinza"),
+        new(6, "Dourado"),
+        new(7, "Laranja"),
+        new(8, "Prata"),
+        new(9, "Preto"),
+        new(10, "Rosa"),
+        new(11, "Roxo"),
+        new(12, "Verde"),
+        new(13, "Vermelho"),
+        new(14, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList PhoneBrand = new(nameof(PhoneBrand),
+    [
+        new(1, "Apple"),
+        new(2, "Asus"),
+        new(3, "Huawei"),
+        new(4, "Infinix"),
+        new(5, "Lenovo"),
+        new(6, "LG"),
+        new(7, "Motorola"),
+        new(8, "Samsung"),
+        new(9, "Sony"),
+        new(10, "Xiaomi"),
+        new(11, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList SmartwatchBrand = new(nameof(SmartwatchBrand),
+    [
+        new(1, "Apple"),
+        new(2, "Samsung"),
+        new(3, "Garmin"),
+        new(4, "Xiaomi"),
+        new(5, "Amazfit"),
+        new(6, "Fitbit"),
+        new(7, "Huawei"),
+        new(8, "Fossil"),
+        new(9, "Mobvoi"),
+        new(10, "Suunto"),
+        new(11, "Polar"),
+        new(12, "Coros"),
+        new(13, "Tag Heuer"),
+        new(14, "Withings"),
+        new(15, "Michael Kors"),
+        new(16, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList PhoneBatteryHealth = new(nameof(PhoneBatteryHealth),
+    [
+        new(1, "Perfeita (95% até 100%)"),
+        new(2, "Boa (80% até 94%)"),
+        new(3, "OK (60% até 79%)"),
+        new(4, "Ruim (40% até 59%)"),
+        new(5, "Muito ruim (abaixo de 39%)"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList PhoneAccessoryType = new(nameof(PhoneAccessoryType),
+    [
+        new(1, "Adaptadores para Celular"),
+        new(2, "Cabos para Celular"),
+        new(3, "Capas para Celular"),
+        new(4, "Carregadores de Celular"),
+        new(5, "Carregadores Portáteis"),
+        new(6, "Controles para Celular"),
+        new(7, "Estabilizadores e Gimbals"),
+        new(8, "Microfones para Celular"),
+        new(9, "Películas para Celular"),
+        new(10, "Ring Lights para Celular"),
+        new(11, "Suportes para Celular"),
+        new(12, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList PhonePartType = new(nameof(PhonePartType),
+    [
+        new(1, "Baterias de Celular"),
+        new(2, "Carcaças de Celular"),
+        new(3, "Conectores de Celular"),
+        new(4, "Câmeras de Celular"),
+        new(5, "Displays e Telas de Celular"),
+        new(6, "Placas-mãe de Celular"),
+        new(7, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList SmartwatchAccessoryType = new(nameof(SmartwatchAccessoryType),
+    [
+        new(1, "Carregadores para Smartwatch"),
+        new(2, "Películas para Smartwatch"),
+        new(3, "Pulseiras para Smartwatch"),
+        new(4, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList LandlinePhoneType = new(nameof(LandlinePhoneType),
+    [
+        new(1, "Aparelhos de Telefone Fixo"),
+        new(2, "Centrais Telefônicas"),
+        new(3, "Interfones"),
+        new(4, "Telefones sem Fio"),
+        new(5, "Walkie Talkie"),
+        new(6, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList AirConditionerCapacity = new(nameof(AirConditionerCapacity),
+    [
+        new(1, "Até 9000 BTUs"),
+        new(2, "10000 até 15000 BTUs"),
+        new(3, "16000 até 20000 BTUs"),
+        new(4, "Acima de 20000 BTUs"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList AirConditionerType = new(nameof(AirConditionerType),
+    [
+        new(1, "Ar-condicionados de Janela"),
+        new(2, "Ar-condicionados Piso Teto"),
+        new(3, "Ar-condicionados Portáteis"),
+        new(4, "Ar-condicionados Split"),
+        new(5, "Ar-condicionados Split Cassete"),
+        new(6, "Ar-condicionados Split Inverter"),
+        new(7, "Peças Para Ar-condicionado"),
+        new(8, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList FanType = new(nameof(FanType),
+    [
+        new(1, "Aquecedores"),
+        new(2, "Circuladores de Ar"),
+        new(3, "Climatizadores de Ar"),
+        new(4, "Exaustores"),
+        new(5, "Ventiladores de Parede"),
+        new(6, "Ventiladores de Torre e Coluna"),
+        new(7, "Ventiladores de Mesa"),
+        new(8, "Ventiladores de Teto"),
+        new(9, "Peças Para Ventiladores e Climatizadores"),
+        new(10, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList RefrigeratorType = new(nameof(RefrigeratorType),
+    [
+        new(1, "Adegas e Cervejeiras Climatizadas"),
+        new(2, "Freezers Horizontais"),
+        new(3, "Freezers Verticais"),
+        new(4, "Frigobares"),
+        new(5, "Geladeiras"),
+        new(6, "Geladeiras Duplex"),
+        new(7, "Geladeiras Inverse"),
+        new(8, "Peças Para Geladeiras e Freezers"),
+        new(9, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList StoveType = new(nameof(StoveType),
+    [
+        new(1, "Coifas e Depuradores"),
+        new(2, "Cooktop a Gás"),
+        new(3, "Cooktop Por Indução"),
+        new(4, "Fogões a Gás"),
+        new(5, "Fogões Elétricos"),
+        new(6, "Fornos a Gás"),
+        new(7, "Fornos Elétricos"),
+        new(8, "Micro-Ondas"),
+        new(9, "Peças Para Fogões e Fornos"),
+        new(10, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList WasherType = new(nameof(WasherType),
+    [
+        new(1, "Centrífugas de Roupa"),
+        new(2, "Lava e Seca"),
+        new(3, "Lava Louças"),
+        new(4, "Máquinas de Lavar Roupa"),
+        new(5, "Secadoras de Roupa"),
+        new(6, "Tanquinhos"),
+        new(7, "Peças Para Máquinas de Lavar e Secar"),
+        new(8, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList KitchenApplianceType = new(nameof(KitchenApplianceType),
+    [
+        new(1, "Aspiradores de Pó"),
+        new(2, "Batedeiras Elétricas"),
+        new(3, "Bebedouros e Purificadores de Água"),
+        new(4, "Cafeteiras Elétricas"),
+        new(5, "Churrasqueiras Elétricas"),
+        new(6, "Ferros de Passar"),
+        new(7, "Fritadeiras Elétricas"),
+        new(8, "Grills, Sanduicheiras e Torradeiras"),
+        new(9, "Liquidificadores"),
+        new(10, "Máquinas de Costurar Elétricas"),
+        new(11, "Panelas Elétricas"),
+        new(12, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList PersonalCareApplianceType = new(nameof(PersonalCareApplianceType),
+    [
+        new(1, "Aparadores e Barbeadores Elétricos"),
+        new(2, "Chapinhas"),
+        new(3, "Escovas Elétricas"),
+        new(4, "Modeladores de Cacho"),
+        new(5, "Pranchas de Cabelo"),
+        new(6, "Secadores de Cabelo"),
+        new(7, "Outros"),
+    ]);
+
+    /// <summary>Fonte: gazetaonline-lookups.md.</summary>
+    public static readonly FieldList ApplianceVoltage = new(nameof(ApplianceVoltage),
+    [
+        new(1, "127v"),
+        new(2, "220v"),
+        new(3, "Bivolt"),
+    ]);
+
+    /// <summary>Lista nova (PL-01, 2026-10-03). Ids 1 a 7 na ordem do Product Owner; para estender, acrescente ids novos.</summary>
+    public static readonly FieldList ClothingSize = new(nameof(ClothingSize),
+    [
+        new(1, "PP"),
+        new(2, "P"),
+        new(3, "M"),
+        new(4, "G"),
+        new(5, "GG"),
+        new(6, "XG"),
+        new(7, "XGG"),
+    ]);
+
+    /// <summary>Lista nova (PL-01): numeração de calçado adulto, 34 a 45. O id é a própria numeração.</summary>
+    public static readonly FieldList AdultShoeSize = new(nameof(AdultShoeSize), [.. Enumerable.Range(34, 12).Select(n => new FieldOption(n, n.ToString(System.Globalization.CultureInfo.InvariantCulture)))]);
+
+    /// <summary>Lista nova (PL-01): numeração de calçado infantil e de bebê, 16 a 33. O id é a própria numeração.</summary>
+    public static readonly FieldList ChildShoeSize = new(nameof(ChildShoeSize), [.. Enumerable.Range(16, 18).Select(n => new FieldOption(n, n.ToString(System.Globalization.CultureInfo.InvariantCulture)))]);
+
+    /// <summary>Lista nova (PL-01). O texto da decisão trazia "Unisseque"; adotado "Unissex" (confirmado em 2026-10-03).</summary>
+    public static readonly FieldList Gender = new(nameof(Gender),
+    [
+        new(1, "Masculino"),
+        new(2, "Feminino"),
+        new(3, "Unissex"),
+        new(4, "Infantil"),
     ]);
 }

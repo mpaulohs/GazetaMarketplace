@@ -28,7 +28,10 @@ public enum FieldType
     ModelYear = 7,
 
     /// <summary>Um nível da cadeia do catálogo de veículos (marca → modelo → ano → versão), descrito por <see cref="FieldDefinition.Catalog"/>. As consultas chegam na tarefa 2.5.</summary>
-    CatalogItem = 8
+    CatalogItem = 8,
+
+    /// <summary>Ano de fabricação (<c>int</c>; o id é o próprio ano), de 1950 até o ano atual: <see cref="FieldLists.ManufactureYears"/> e <see cref="ManufactureYearRules"/>.</summary>
+    ManufactureYear = 9
 }
 
 /// <summary>Qual catálogo de veículos o campo consulta.</summary>

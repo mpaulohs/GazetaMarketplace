@@ -22,7 +22,7 @@ public sealed class ParityTests
 
     /// <summary>
     /// O grupo de campos que cada categoria define, lido da tabela do Apêndice B da SPEC (escrito aqui à mão, de propósito: é a segunda
-    /// representação). Cada tarefa 2.x acrescenta os seus grupos nesta lista junto com a migration de dados.
+    /// representação). Cada tarefa 2.x acrescentou os seus grupos nesta lista junto com a migration de dados; a 2.4 fechou os 18 do Apêndice B.
     /// </summary>
     private static readonly Dictionary<int, string> ExpectedFieldGroups = new()
     {
@@ -37,7 +37,60 @@ public sealed class ParityTests
         [36] = "Motorcycles",
         [37] = "BoatsAndAircraft",
         [66] = "Services",
-        [96] = "Jobs"
+        [96] = "Jobs",
+        [28] = "RoomRental",
+        [29] = "Seasonal",
+        [43] = "Phones",
+        [44] = "TelephonyProducts",
+        [45] = "TelephonyProducts",
+        [46] = "Smartwatches",
+        [47] = "TelephonyProducts",
+        [48] = "TelephonyProducts",
+        [64] = "ClothingAndShoes",
+        [65] = "ClothingAndShoes",
+        [68] = "ClothingAndShoes",
+        [69] = "ClothingAndShoes",
+        [72] = "ClothingAndShoes",
+        [75] = "ClothingAndShoes",
+        [76] = "ClothingAndShoes",
+        [77] = "ClothingAndShoes",
+        [89] = "Machinery",
+        [92] = "Machinery",
+        [93] = "Machinery",
+        [97] = "Machinery",
+        [102] = "ElectronicsAndComputers",
+        [103] = "ElectronicsAndComputers",
+        [104] = "ElectronicsAndComputers",
+        [105] = "ElectronicsAndComputers",
+        [106] = "ElectronicsAndComputers",
+        [107] = "ElectronicsAndComputers",
+        [108] = "ElectronicsAndComputers",
+        [109] = "ElectronicsAndComputers",
+        [110] = "ElectronicsAndComputers",
+        [111] = "ElectronicsAndComputers",
+        [112] = "ElectronicsAndComputers",
+        [113] = "ElectronicsAndComputers",
+        [114] = "ElectronicsAndComputers",
+        [115] = "ElectronicsAndComputers",
+        [116] = "ElectronicsAndComputers",
+        [117] = "ElectronicsAndComputers",
+        [118] = "ElectronicsAndComputers",
+        [119] = "ElectronicsAndComputers",
+        [120] = "ElectronicsAndComputers",
+        [121] = "ElectronicsAndComputers",
+        [122] = "ElectronicsAndComputers",
+        [123] = "ElectronicsAndComputers",
+        [124] = "ElectronicsAndComputers",
+        [125] = "ElectronicsAndComputers",
+        [126] = "ElectronicsAndComputers",
+        [127] = "ElectronicsAndComputers",
+        [128] = "Appliances",
+        [129] = "Appliances",
+        [130] = "Appliances",
+        [131] = "Appliances",
+        [132] = "Appliances",
+        [133] = "Appliances",
+        [134] = "Appliances"
     };
 
     private static List<SourceRow> ReadSource()

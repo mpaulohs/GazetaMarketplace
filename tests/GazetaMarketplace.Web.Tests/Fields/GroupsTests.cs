@@ -189,10 +189,14 @@ public sealed class GroupsTests
     }
 
     [TestMethod]
-    public void Grupos_ImplementadosAteAgora_ComChavesEstaveis()
+    public void Grupos_Os18DoApendiceB_ComChavesEstaveis()
     {
         CollectionAssert.AreEquivalent(
-            new[] { "Services", "Jobs", "GeneralProducts", "RealEstate", "Cars", "Motorcycles", "TrucksAndBuses", "BoatsAndAircraft", "Parts" },
+            new[]
+            {
+                "Services", "Jobs", "GeneralProducts", "RealEstate", "Cars", "Motorcycles", "TrucksAndBuses", "BoatsAndAircraft", "Parts",
+                "RoomRental", "Seasonal", "Phones", "Smartwatches", "TelephonyProducts", "Appliances", "ElectronicsAndComputers", "ClothingAndShoes", "Machinery"
+            },
             FieldGroupRegistry.All.Select(g => g.Key).ToArray());
         Assert.IsNull(FieldGroupRegistry.Get("NaoExiste"));
         Assert.IsNull(FieldGroupRegistry.Get(null));

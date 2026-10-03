@@ -839,3 +839,546 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''RoomRental''
+    WHERE [Id] = 28;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Seasonal''
+    WHERE [Id] = 29;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Phones''
+    WHERE [Id] = 43;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''TelephonyProducts''
+    WHERE [Id] = 44;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''TelephonyProducts''
+    WHERE [Id] = 45;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Smartwatches''
+    WHERE [Id] = 46;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''TelephonyProducts''
+    WHERE [Id] = 47;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''TelephonyProducts''
+    WHERE [Id] = 48;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ClothingAndShoes''
+    WHERE [Id] = 64;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ClothingAndShoes''
+    WHERE [Id] = 65;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ClothingAndShoes''
+    WHERE [Id] = 68;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ClothingAndShoes''
+    WHERE [Id] = 69;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ClothingAndShoes''
+    WHERE [Id] = 72;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ClothingAndShoes''
+    WHERE [Id] = 75;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ClothingAndShoes''
+    WHERE [Id] = 76;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ClothingAndShoes''
+    WHERE [Id] = 77;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Machinery''
+    WHERE [Id] = 89;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Machinery''
+    WHERE [Id] = 92;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Machinery''
+    WHERE [Id] = 93;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Machinery''
+    WHERE [Id] = 97;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 102;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 103;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 104;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 105;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 106;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 107;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 108;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 109;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 110;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 111;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 112;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 113;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 114;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 115;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 116;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 117;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 118;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 119;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 120;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 121;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 122;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 123;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 124;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 125;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 126;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''ElectronicsAndComputers''
+    WHERE [Id] = 127;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Appliances''
+    WHERE [Id] = 128;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Appliances''
+    WHERE [Id] = 129;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Appliances''
+    WHERE [Id] = 130;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Appliances''
+    WHERE [Id] = 131;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Appliances''
+    WHERE [Id] = 132;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Appliances''
+    WHERE [Id] = 133;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Appliances''
+    WHERE [Id] = 134;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003230221_AssignFieldGroupsToRemainingCategories'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261003230221_AssignFieldGroupsToRemainingCategories', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

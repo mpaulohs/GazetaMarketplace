@@ -22,7 +22,16 @@ public static class FieldGroupRegistry
         MotorcyclesGroup.Create(),
         TrucksAndBusesGroup.Create(),
         BoatsAndAircraftGroup.Create(),
-        PartsGroup.Create()
+        PartsGroup.Create(),
+        RoomRentalGroup.Create(),
+        SeasonalGroup.Create(),
+        PhonesGroup.Create(),
+        SmartwatchesGroup.Create(),
+        TelephonyProductsGroup.Create(),
+        AppliancesGroup.Create(),
+        ElectronicsAndComputersGroup.Create(),
+        ClothingAndShoesGroup.Create(),
+        MachineryGroup.Create()
     }.ToDictionary(g => g.Key, StringComparer.Ordinal);
 
     public static IReadOnlyCollection<FieldGroup> All => Groups.Values.ToList();
