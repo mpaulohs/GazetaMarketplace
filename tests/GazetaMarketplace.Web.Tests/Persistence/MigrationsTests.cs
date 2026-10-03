@@ -82,6 +82,36 @@ public sealed class MigrationsTests
     }
 
     [TestMethod]
+    public void MigrationDeCategorias_CriaATabelaComIndicesEACargaInicial()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddCategories", StringComparison.Ordinal)));
+
+        StringAssert.Contains(section, "CREATE TABLE [Categories]");
+        StringAssert.Contains(section, "CREATE UNIQUE INDEX [UQ_Categories_Slug]");
+        StringAssert.Contains(section, "CREATE UNIQUE INDEX [UQ_Categories_ParentId_Name] ON [Categories] ([ParentId], [Name]) WHERE [ParentId] IS NOT NULL");
+        StringAssert.Contains(section, "CREATE UNIQUE INDEX [UQ_Categories_Name_Root] ON [Categories] ([Name]) WHERE [ParentId] IS NULL");
+        StringAssert.Contains(section, "CREATE INDEX [IX_Categories_ParentId_DisplayOrder]");
+        StringAssert.Contains(section, "CK_Categories_NotOwnParent");
+        StringAssert.Contains(section, "SET IDENTITY_INSERT [Categories] ON");
+        StringAssert.Contains(section, "N''Autopeças''");
+        // 147 linhas de carga (cada uma leva a data fixa da carga); o animal vivo 79 não entra
+        Assert.AreEqual(147, System.Text.RegularExpressions.Regex.Matches(section, "''2026-10-03T00:00:00.0000000Z''").Count);
+        Assert.IsFalse(System.Text.RegularExpressions.Regex.IsMatch(section, @"(VALUES |\n    )\(79, "), "Cachorros (79) fica fora da v1");
+        Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(section, @"(VALUES |\n    )\(155, "), "Papelaria (155) entra com o id real");
+    }
+
+    private static string[] Migrations
+    {
+        get
+        {
+            using AppDbContext context = new(
+                new DbContextOptionsBuilder<AppDbContext>().UseSqlServer("Server=(local);Database=Nenhum").Options,
+                new FakeCurrentUser(), new FakeClock());
+            return [.. context.Database.GetMigrations()];
+        }
+    }
+
+    [TestMethod]
     public void ModeloDoCodigo_EstaEmDiaComASnapshotDasMigrations()
     {
         using AppDbContext context = new(

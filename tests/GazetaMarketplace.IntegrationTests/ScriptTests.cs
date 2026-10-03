@@ -30,7 +30,7 @@ public sealed class ScriptTests
 
         CollectionAssert.AreEqual(afterFirst, await QueryAsync(connectionString, "SELECT MigrationId FROM __EFMigrationsHistory ORDER BY MigrationId"));
         CollectionAssert.AreEqual(schemaAfterFirst, (await DescribeSchemaAsync(connectionString)).ToArray());
-        Assert.AreEqual(3, afterFirst.Count, "as três migrations do projeto");
+        Assert.AreEqual(4, afterFirst.Count, "as quatro migrations do projeto");
         Assert.AreEqual(2, (await QueryAsync(connectionString, "SELECT Name FROM AspNetRoles")).Count, "os dois papéis não são duplicados");
     }
 
@@ -43,7 +43,7 @@ public sealed class ScriptTests
 
         await SqlServerFixture.ApplyScriptAsync(connectionString, quotedIdentifierOff: true);
 
-        Assert.AreEqual(3, (await QueryAsync(connectionString, "SELECT MigrationId FROM __EFMigrationsHistory")).Count);
+        Assert.AreEqual(4, (await QueryAsync(connectionString, "SELECT MigrationId FROM __EFMigrationsHistory")).Count);
     }
 
     [TestMethod]
@@ -59,6 +59,11 @@ public sealed class ScriptTests
 
         const string roles = "SELECT CAST(Id AS nvarchar(10)) + '|' + Name + '|' + NormalizedName FROM AspNetRoles ORDER BY Id";
         CollectionAssert.AreEqual(await QueryAsync(byMigrations, roles), await QueryAsync(byScript, roles));
+        // A carga inicial de categorias: as mesmas 147 linhas, com os mesmos slugs, pelos dois caminhos
+        const string categories = "SELECT CAST(Id AS nvarchar(10)) + '|' + COALESCE(CAST(ParentId AS nvarchar(10)), '-') + '|' + Name + '|' + Slug + '|' + CAST(DisplayOrder AS nvarchar(10)) + '|' + CAST(IsPostable AS nvarchar(1)) + '|' + CAST(IsSystem AS nvarchar(1)) + '|' + COALESCE(FieldGroup, '-') FROM Categories ORDER BY Id";
+        List<string> byMigrationCategories = await QueryAsync(byMigrations, categories);
+        Assert.HasCount(147, byMigrationCategories);
+        CollectionAssert.AreEqual(byMigrationCategories, await QueryAsync(byScript, categories));
         const string history = "SELECT MigrationId + '|' + ProductVersion FROM __EFMigrationsHistory ORDER BY MigrationId";
         CollectionAssert.AreEqual(await QueryAsync(byMigrations, history), await QueryAsync(byScript, history));
     }
@@ -86,6 +91,10 @@ public sealed class ScriptTests
             SELECT 'FK ' + CAST(fk.name AS nvarchar(400)) COLLATE DATABASE_DEFAULT + ' ' + CAST(OBJECT_NAME(fk.parent_object_id) AS nvarchar(400)) COLLATE DATABASE_DEFAULT + '->' + CAST(OBJECT_NAME(fk.referenced_object_id) AS nvarchar(400)) COLLATE DATABASE_DEFAULT
                  + ' delete=' + CAST(fk.delete_referential_action_desc AS nvarchar(400)) COLLATE DATABASE_DEFAULT
             FROM sys.foreign_keys fk
+            """));
+        lines.AddRange(await QueryAsync(connectionString, """
+            SELECT 'CK ' + CAST(name AS nvarchar(400)) COLLATE DATABASE_DEFAULT + ' ' + CAST(OBJECT_NAME(parent_object_id) AS nvarchar(400)) COLLATE DATABASE_DEFAULT + ' ' + CAST(definition AS nvarchar(max)) COLLATE DATABASE_DEFAULT
+            FROM sys.check_constraints
             """));
         lines.Sort(StringComparer.Ordinal);
         return lines;

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Entities;
 using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Interfaces;
@@ -21,22 +22,31 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
 {
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _time;
+    private readonly ICategoryTree _categoryTree;
+    private bool _categoriesChanged;
 
-    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser currentUser, TimeProvider time)
-        : this((DbContextOptions)options, currentUser, time)
+    /// <param name="options">Provedor e conexão.</param>
+    /// <param name="currentUser">Quem está agindo, para as colunas de auditoria.</param>
+    /// <param name="time">Relógio.</param>
+    /// <param name="categoryTree">Cache da árvore de categorias, esvaziado aqui depois de gravar qualquer categoria. Opcional: ferramentas e testes sem cache passam nulo.</param>
+    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser currentUser, TimeProvider time, ICategoryTree categoryTree = null)
+        : this((DbContextOptions)options, currentUser, time, categoryTree)
     {
     }
 
-    protected AppDbContext(DbContextOptions options, ICurrentUser currentUser, TimeProvider time)
+    protected AppDbContext(DbContextOptions options, ICurrentUser currentUser, TimeProvider time, ICategoryTree categoryTree = null)
         : base(options)
     {
         _currentUser = currentUser;
         _time = time;
+        _categoryTree = categoryTree;
     }
 
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     public DbSet<PasswordRecoveryAttempt> PasswordRecoveryAttempts => Set<PasswordRecoveryAttempt>();
+
+    public DbSet<Category> Categories => Set<Category>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,7 +73,9 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
         Prepare();
         try
         {
-            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            int saved = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            InvalidateCategoryTreeIfNeeded();
+            return saved;
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -76,7 +88,9 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
         Prepare();
         try
         {
-            return base.SaveChanges(acceptAllChangesOnSuccess);
+            int saved = base.SaveChanges(acceptAllChangesOnSuccess);
+            InvalidateCategoryTreeIfNeeded();
+            return saved;
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -84,8 +98,23 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
         }
     }
 
+    // Qualquer gravação de categoria, venha de onde vier (tela, carga, teste), esvazia o cache da árvore. Fica aqui e não num
+    // interceptor do EF porque os hosts de teste trocam as opções do contexto e perderiam o interceptor. Atenção: grava-se antes
+    // do commit de uma transação explícita; quem usa transação deve chamar ICategoryTree.Invalidate() depois do commit.
+    // ExecuteUpdate/ExecuteDelete não passam por aqui e também exigem Invalidate().
+    private void InvalidateCategoryTreeIfNeeded()
+    {
+        if (_categoriesChanged)
+        {
+            _categoriesChanged = false;
+            _categoryTree?.Invalidate();
+        }
+    }
+
     private void Prepare()
     {
+        _categoriesChanged = ChangeTracker.Entries<Category>().Any(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted);
+
         DateTime now = _time.GetUtcNow().UtcDateTime;
         int? user = _currentUser.UserId;
 

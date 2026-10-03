@@ -729,9 +729,9 @@
 - `src/GazetaMarketplace.Infrastructure/Data/Configurations/CategoryConfiguration.cs`
 
 **Acceptance Criteria**:
-- [ ] A carga cria as categorias ativas (124 postáveis), as mães e a intermediária "Autopeças", com os ids reais e `IsPostable` correto; a sequência de ids continua depois do maior
-- [ ] Profundidade máxima 3 validada no serviço; nome único entre irmãs; `Slug` único
-- [ ] A árvore em cache é invalidada ao editar; descendentes de uma categoria são resolvidos sem consulta por nível
+- [x] A carga cria 147 linhas (22 mães, a intermediária "Autopeças" e as 124 postáveis ativas), com os ids reais e `IsPostable` correto; os 5 animais vivos (79, 80, 82, 83, 91) ficam fora da v1; a sequência de ids continua depois do maior (próxima categoria = 156)
+- [x] Profundidade máxima 3 validada no serviço; nome único entre irmãs; `Slug` único
+- [x] A árvore em cache é invalidada ao editar; descendentes de uma categoria são resolvidos sem consulta por nível
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Categories/InitialLoadTests.Carga_Cria124CategoriasPostaveis_ComIdsReais`
@@ -739,6 +739,13 @@
 - `tests/GazetaMarketplace.Web.Tests/Categories/ArvoreTests.Descendentes_IncluemTodosOsNiveis`
 - `tests/GazetaMarketplace.Web.Tests/Categories/ArvoreTests.QuartoNivel_E_Recusado`
 - `tests/GazetaMarketplace.Web.Tests/Categories/CacheTests.EditarCategoria_InvalidaOCache`
+
+**Decisões da implementação (aprovadas pelo Product Owner em 2026-10-03):**
+- **Carga por `HasData` do EF** (`Data/Seeds/InitialCategories.cs`, 147 linhas com o slug final), e não por `Seeds/categorias.sql`: entra no script idempotente como os papéis do Identity. O `ParityTests` relê `specs/categories.md` e confere linha a linha. Os ids 24, 25 e 32 continuam ausentes.
+- **Slug:** o explícito do arquivo vale como está (29, inclusive `cars`); os demais são gerados do nome (sem acento, minúsculas, hífen, sem especiais) com unicidade global. Em colisão de nomes, **a postável fica com o slug limpo** e a não postável ganha `-grupo` (`-grupo-2`…); duas postáveis: menor id fica com o limpo, a outra ganha `-2`. Resultado: `servicos-grupo` (7), `servicos` (66), `vagas-de-emprego-grupo` (13), `vagas-de-emprego` (96).
+- **Invalidação do cache dentro do `AppDbContext`** (grava → `ICategoryTree.Invalidate()`), e não em um interceptor do EF: os hosts de teste trocam as opções do contexto e perderiam o interceptor, e o teste passaria por um caminho diferente do site.
+- `FieldGroup` fica nulo em toda a carga; os grupos entram nas tarefas 2.2 a 2.4. `IsSystem = 1` em toda a carga.
+- Nomes (inglês): `Core/Categories/{Category, CategoryRules, SlugGenerator, CategoryTreeSnapshot, ICategoryTree}.cs` e `Infrastructure/Categories/CategoryTree.cs`; migration `AddCategories`.
 
 **Dependencies**: 0.6
 

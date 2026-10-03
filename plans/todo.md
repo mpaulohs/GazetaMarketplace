@@ -23,7 +23,7 @@
 ## Checkpoint 1 — Equipe completa
 
 ## Fase 2 — Categorias, campos e catálogo
-- [ ] Task 2.1: Árvore de categorias e carga inicial
+- [x] Task 2.1: Árvore de categorias e carga inicial
 - [ ] Task 2.2: Grupos de campos: framework e grupos Serviços, Vagas, Produtos em geral e Imóveis
 - [ ] Task 2.3: Grupos de campos de veículos e peças
 - [ ] Task 2.4: Grupos de campos de aluguel, telefonia, eletro, eletrônicos, roupas e máquinas

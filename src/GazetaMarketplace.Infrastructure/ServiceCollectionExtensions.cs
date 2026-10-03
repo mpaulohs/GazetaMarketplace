@@ -1,6 +1,8 @@
 using System;
+using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Team;
+using GazetaMarketplace.Infrastructure.Categories;
 using GazetaMarketplace.Infrastructure.Data;
 using GazetaMarketplace.Infrastructure.Email;
 using GazetaMarketplace.Infrastructure.Identity;
@@ -29,6 +31,8 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
             configuration.GetConnectionString("DefaultConnection"),
             sql => sql.EnableRetryOnFailure(maxRetryCount: 3)));
+        services.AddSingleton<CategoryTree>();
+        services.AddSingleton<ICategoryTree>(provider => provider.GetRequiredService<CategoryTree>());
         services.AddDapper(configuration);
         services.AddScoped<IAuditLog, AuditLog>();
         services.AddScoped<IUserManagement, UserManagement>();
