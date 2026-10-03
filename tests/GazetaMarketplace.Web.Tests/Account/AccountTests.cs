@@ -81,6 +81,20 @@ public sealed class AccountTests
     }
 
     [TestMethod]
+    public async Task EntradaNoLog_UsaAsPropriedadesEmIngles_UserIdERole() // regra de idioma: propriedades de log em inglês
+    {
+        using WebFactory factory = await NewFactoryAsync();
+        using HttpClient client = TeamClient.Create(factory);
+
+        await client.SignInAsync(Email, Password);
+
+        var entry = factory.Logs.Events.First(e => CollectorSink.Text(e).StartsWith("Entrada do usuário", StringComparison.Ordinal));
+        Assert.IsTrue(entry.Properties.ContainsKey("UserId"));
+        Assert.IsTrue(entry.Properties.ContainsKey("Role"));
+        Assert.IsFalse(entry.Properties.ContainsKey("UsuarioId"));
+    }
+
+    [TestMethod]
     public async Task SenhaDigitadaNoCampoDeEmail_NaoVaiParaOLog()
     {
         using WebFactory factory = await NewFactoryAsync();
