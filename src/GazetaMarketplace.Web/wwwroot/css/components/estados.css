@@ -1,6 +1,11 @@
 /* Estados de página: esqueleto de carregamento com a altura do conteúdo final (NFR-03)
    e bloco de mídia reservada. Alturas só por classe: a CSP (style-src 'self') bloqueia atributo style. */
 
+/* O título da página de estado recebe o foco por script; o contorno só atrapalharia (não é alvo de Tab) */
+[data-foco-inicial]:focus-visible {
+  outline: none;
+}
+
 .esqueleto {
   background: var(--app-skeleton-bg);
   border: 1px solid var(--bs-border-color);

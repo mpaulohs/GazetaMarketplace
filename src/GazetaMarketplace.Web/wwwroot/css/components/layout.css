@@ -1,7 +1,118 @@
-/* Peças do layout que o Bootstrap não cobre. */
+/* Peças do layout (site público e painel): cabeçalho, busca, rodapé e menu do painel.
+   Aparência extraída do template Autolist; estrutura dos wireframes aprovados. */
 
 /* Alvo de toque mínimo (design-system §7) */
 .alvo-toque {
   min-height: var(--app-touch-target);
   min-width: var(--app-touch-target);
+}
+
+/* Rodapé fixo no fim da tela quando a página é curta */
+.corpo-pagina {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.corpo-pagina__conteudo {
+  flex: 1 0 auto;
+}
+
+/* ---------- Cabeçalho (degradê do template) ---------- */
+.cabecalho {
+  background: var(--app-gradient-header);
+  color: #fff;
+}
+
+.cabecalho a:not(.btn) {
+  color: #fff;
+}
+
+.cabecalho :focus-visible,
+.rodape :focus-visible {
+  outline: var(--app-on-dark-focus);
+}
+
+.cabecalho__marca {
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.cabecalho__favoritos {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* Telas estreitas: só "♡ (0)", como no wireframe; o rótulo continua disponível para leitor de tela */
+@media (max-width: 575.98px) {
+  .cabecalho__rotulo {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Caixa de busca: painel escuro translúcido com campo branco e botão primário, como no template */
+.cabecalho__busca {
+  flex: 1 1 100%;
+  order: 3;
+  padding: .5rem;
+  background: rgba(0, 0, 0, .3);
+  border-radius: var(--bs-border-radius);
+}
+
+@media (min-width: 576px) {
+  .cabecalho__marca { font-size: 1.375rem; }
+}
+
+@media (min-width: 768px) {
+  .cabecalho__marca { order: 1; }
+  .cabecalho__busca { flex: 1 1 0; order: 2; max-width: 44rem; }
+  .cabecalho__favoritos { order: 3; margin-left: 0; }
+}
+
+/* ---------- Menu do painel (navbar do Bootstrap com a skin do degradê) ---------- */
+.cabecalho .navbar {
+  --bs-navbar-color: #fff;
+  --bs-navbar-hover-color: #fff;
+  --bs-navbar-active-color: #fff;
+  --bs-navbar-brand-color: #fff;
+  --bs-navbar-brand-hover-color: #fff;
+  --bs-navbar-toggler-border-color: rgba(255, 255, 255, .75);
+}
+
+.cabecalho .navbar-toggler {
+  color: #fff;
+  font-weight: 600;
+}
+
+.cabecalho .nav-link {
+  border-radius: var(--bs-border-radius);
+}
+
+.cabecalho .nav-link:hover {
+  background: rgba(255, 255, 255, .15);
+}
+
+/* Item ativo: fundo e peso, não só cor (NFR-16) */
+.cabecalho .nav-link[aria-current="page"] {
+  background: rgba(255, 255, 255, .25);
+  font-weight: 600;
+}
+
+/* ---------- Rodapé escuro do template ---------- */
+.rodape {
+  background: var(--app-footer-bg);
+  color: var(--app-footer-color);
+  font-size: .875rem;
+}
+
+.rodape a {
+  color: #fff;
 }

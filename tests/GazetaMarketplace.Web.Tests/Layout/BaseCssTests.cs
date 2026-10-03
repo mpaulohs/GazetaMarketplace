@@ -22,8 +22,8 @@ public sealed class BaseCssTests
     [DataRow("--app-input-border-color: #6c757d;")]
     [DataRow("--app-media-ratio: 4 / 3;")]
     [DataRow("--app-touch-target: 44px;")]
-    [DataRow("--bs-primary: #0d6efd;")]
-    [DataRow("--bs-body-font-family: system-ui")]
+    [DataRow("--bs-primary: #d72213;")]
+    [DataRow("--bs-body-font-family: \"Poppins\", system-ui")]
     public void TokensDoDesignSystem_EstaoNoBaseCss(string trecho)
     {
         StringAssert.Contains(Normalizar(BaseCss()), trecho);
@@ -36,7 +36,7 @@ public sealed class BaseCssTests
 
         StringAssert.Matches(css, new Regex(@":focus-visible \{[^}]*outline: var\(--app-focus-outline\);[^}]*outline-offset: var\(--app-focus-offset\);[^}]*box-shadow: none;"));
         StringAssert.Matches(css, new Regex(@"\.form-control, \.form-select, \.form-check-input \{ border-color: var\(--app-input-border-color\); \}"));
-        StringAssert.Matches(css, new Regex(@"a:not\(\.btn\):not\(\.nav-link\):not\(\.page-link\) \{ text-decoration: underline; \}"));
+        StringAssert.Matches(css, new Regex(@"a:where\(:not\(\.btn\):not\(\.nav-link\):not\(\.page-link\)\) \{ text-decoration: underline; \}"));
     }
 
     [TestMethod]
@@ -45,7 +45,7 @@ public sealed class BaseCssTests
         string css = Normalizar(BaseCss());
 
         StringAssert.Contains(css, "--bs-btn-bg: var(--bs-primary);");
-        StringAssert.Contains(css, "--bs-btn-hover-bg: #0b5ed7;");
+        StringAssert.Contains(css, "--bs-btn-hover-bg: #b81d10;");
     }
 
     [TestMethod]

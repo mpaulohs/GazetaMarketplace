@@ -392,17 +392,23 @@
 
 **NFRs covered**: `NFR-16`, `NFR-17`, `NFR-03`, `NFR-15`
 
-**References**: —
+**References**: `architecture/design-system.md` (v. 2026-10-03, visual do template Autolist), `docs/templates/autolist/LEIAME.md`
 
-**Objective**: Implementar o `base.css` com os tokens aprovados, os layouts do site e do painel, o módulo `api.js` e os estados de página (vazio, erro, sem resultado, carregando).
+**Objective**: Implementar o *shell* de interface com o visual do template Autolist: `base.css` e `components/*.css` escritos à mão (CSS puro, `--bs-*` e `--app-*`), cabeçalho com busca, rodapé, layout do painel com menu superior, Poppins e Font Awesome 4.7 locais, o módulo `api.js` e os estados de página (vazio, erro, sem resultado, carregando). Cards, detalhe e formulários ganham a skin nas tarefas das telas (3.x), usando `docs/templates/autolist/` como referência.
+
+**Decisões de escopo (Product Owner, 2026-10-03)**:
+- O `style.css` do template **não** é carregado nem editado (927 KB, 3.140 `!important`, `@import` externo, foco suprimido); o visual é extraído para o CSS do projeto.
+- Primária `#d72213` (a do template, `#e72a1a`, dá 4,43:1 e falha o AA); Poppins 400/600/700 autohospedada; só Font Awesome 4.7 como biblioteca de ícones.
+- Painel com **menu superior** dos wireframes (não o menu lateral do template); nenhum plugin jQuery do template.
 
 **Files to modify**:
-- src/GazetaMarketplace.Web/wwwroot/lib/bootstrap/ (Bootstrap 5.3.8 estático)
-- `src/GazetaMarketplace.Web/wwwroot/css/base.css`
-- `src/GazetaMarketplace.Web/wwwroot/js/modules/api.js`
-- `src/GazetaMarketplace.Web/Views/Shared/_Layout.cshtml`
-- `src/GazetaMarketplace.Web/Views/Shared/_LayoutPainel.cshtml`
-- `src/GazetaMarketplace.Web/Views/Shared/_EstadoVazio.cshtml, _EstadoErro.cshtml, _Esqueleto.cshtml`
+- `src/GazetaMarketplace.Web/wwwroot/lib/` (Bootstrap 5.3.8, `font-awesome/`, `poppins/`; procedência em `LEIAME.md`)
+- `src/GazetaMarketplace.Web/wwwroot/css/poppins.css`, `base.css`, `sem-js.css`
+- `src/GazetaMarketplace.Web/wwwroot/css/components/bootstrap-tema.css`, `layout.css`, `estados.css`
+- `src/GazetaMarketplace.Web/wwwroot/js/modules/api.js`, `js/pages/layout.js`
+- `src/GazetaMarketplace.Web/Views/Shared/_Layout.cshtml`, `_LayoutPainel.cshtml`
+- `src/GazetaMarketplace.Web/Views/Shared/_EstadoVazio.cshtml, _EstadoErro.cshtml, _EstadoSemResultado.cshtml, _Esqueleto.cshtml`
+- `docs/templates/autolist/` (referência; sem a chave do Google Maps) e `architecture/design-system.md`
 
 **Acceptance Criteria**:
 - [x] `base.css` contém os tokens e os três ajustes de acessibilidade de `architecture/design-system.md` §2.1 e nenhum arquivo externo (CDN, fonte, ícones) é carregado
@@ -411,6 +417,11 @@
 - [x] Estados de página: vazio, erro com código de referência e "Tentar novamente", sem resultado com "Limpar filtros" e esqueleto com altura reservada
 - [x] `api.js` trata ProblemDetails e envia o token antiforgery em escritas
 - [x] **RC-17:** nenhum módulo de `wwwroot/js` usa `innerHTML`, `outerHTML` ou `insertAdjacentHTML` com texto vindo do servidor; cards e mensagens são montados com `textContent` ou `<template>`
+- [x] Visual do Autolist aplicado ao cabeçalho (degradê, painel de busca escuro, botão primário), ao rodapé escuro e ao fundo da página, sem carregar o `style.css` do template
+- [x] Primária `#d72213` com branco a 5,09:1; todos os pares da §2.4 do design system a 4,5:1 (texto) ou 3:1 (foco e bordas)
+- [x] Poppins (`woff2`) e Font Awesome 4.7 (`woff2`) servidos pelo próprio site; nenhum `@import` nem URL absoluta em CSS ou HTML
+- [x] Ícones decorativos com `aria-hidden="true"`; nenhum plugin jQuery do template no site
+- [x] Procedência, integridade, o que foi extraído e o que foi removido documentados em `docs/templates/autolist/LEIAME.md` e `wwwroot/lib/LEIAME.md`
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Layout/LayoutTests.Html_TemLangPtBr_SkipLink_E_MainComFoco`
@@ -418,12 +429,15 @@
 - `tests/GazetaMarketplace.Web.Tests/Layout/LayoutTests.NenhumScriptOuEventoInline`
 - `tests/GazetaMarketplace.Web.Tests/Layout/XssTests.TextoDeUsuario_EhCodificado_NaoExecuta`
 - `tests/GazetaMarketplace.Web.Tests/Layout/EstadosTests.EstadoDeErro_MostraCodigoDeReferenciaETentarNovamente`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Layout/BaseCssTests.Foco_TemContornoComContraste (E2E, /test)`
 - `tests/GazetaMarketplace.Web.Tests/Layout/ModulosJsTests.NenhumModuloUsaInnerHtmlComTextoDoServidor`
+- `tests/GazetaMarketplace.Web.Tests/Layout/BaseCssTests` (tokens, três ajustes, contraste da primária `#d72213`, foco e borda)
+- `tests/GazetaMarketplace.Web.Tests/Layout/FontesETemaTests` (`woff2` da Poppins e do Font Awesome servidos localmente; ícones decorativos com `aria-hidden`; nenhuma biblioteca do template carregada)
+- `tests/GazetaMarketplace.Web.Tests/Layout/MenuPainelTests`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Layout/BaseCssTests.Foco_TemContornoComContraste (E2E, /test)` e, no mesmo arquivo, Poppins carregada, primária, borda, rolagem horizontal, CSP e axe-core
 
 **Dependencies**: 0.1, 0.3
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Abrir as telas-base em 320 px e em 1280 px, navegar só pelo teclado.
+**Verification**: Done when every test under "Tests to add" passes, plus manual check: Abrir as telas-base em 320 px e em 1280 px, navegar só pelo teclado e comparar o cabeçalho com `docs/templates/autolist/Html/index.html`.
 
 **Estimate**: L
 

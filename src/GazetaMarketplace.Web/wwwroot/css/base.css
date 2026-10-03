@@ -1,28 +1,44 @@
-/* base.css — carregado depois do bootstrap.min.css. Valores do Bootstrap 5.3.8 mantidos,
-   exceto os três ajustes de acessibilidade (architecture/design-system.md §1, item 2). */
+/* base.css — carregado depois do bootstrap.min.css (5.3.8). Visual extraído do template Autolist
+   (docs/templates/autolist); valores e contrastes em architecture/design-system.md §2.
+   Três ajustes de acessibilidade sobre o Bootstrap: foco, borda de campos e links sublinhados. */
 :root {
-  /* Cores: padrão do Bootstrap 5.3.8 (paleta da Gazeta pendente, DS-01) */
-  --bs-primary: #0d6efd;       --bs-primary-rgb: 13, 110, 253;
+  /* Cores: primária do Autolist escurecida de #e72a1a para #d72213 (branco sobre ela: 5,09:1) */
+  --bs-primary: #d72213;       --bs-primary-rgb: 215, 34, 19;
+  --bs-primary-bg-subtle: #fbe7e5;
+  --bs-primary-border-subtle: #f1b3ad;
+  --bs-primary-text-emphasis: #561009;
   --bs-secondary: #6c757d;     --bs-secondary-rgb: 108, 117, 125;
   --bs-success: #198754;       --bs-success-rgb: 25, 135, 84;
   --bs-warning: #ffc107;       --bs-warning-rgb: 255, 193, 7;
   --bs-danger: #dc3545;        --bs-danger-rgb: 220, 53, 69;
-  --bs-body-color: #212529;    --bs-body-bg: #fff;
-  --bs-link-color: #0d6efd;    --bs-link-hover-color: #0a58ca;
+  --bs-body-color: #080e1b;    --bs-body-color-rgb: 8, 14, 27;
+  --bs-body-bg: #fff;          --bs-body-bg-rgb: 255, 255, 255;
+  --bs-secondary-color: #566581;  --bs-secondary-color-rgb: 86, 101, 129;  /* o #6d7e9c do template dá 4,11:1 */
+  --bs-border-color: #d8dde6;
+  --bs-link-color: #182b48;    --bs-link-color-rgb: 24, 43, 72;
+  --bs-link-hover-color: #b01b0f;  --bs-link-hover-color-rgb: 176, 27, 15;
+  --bs-code-color: #561009;                    /* o rosa padrão dá menos de 4,5:1 sobre o fundo da página */
 
-  /* Tipografia: pilha do sistema, sem fonte externa (fonte da Gazeta pendente, DS-02) */
-  --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+  /* Tipografia: Poppins autohospedada (css/poppins.css) com a pilha do sistema como reserva */
+  --bs-body-font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     "Noto Sans", "Liberation Sans", Arial, sans-serif;
   --bs-body-font-size: 1rem;
   --bs-body-line-height: 1.5;
 
-  /* Raio: padrão do Bootstrap */
-  --bs-border-radius-sm: .25rem;
-  --bs-border-radius: .375rem;
-  --bs-border-radius-lg: .5rem;
+  /* Raios e sombra do template */
+  --bs-border-radius-sm: .125rem;
+  --bs-border-radius: .1875rem;
+  --bs-border-radius-lg: .3125rem;
+  --bs-box-shadow: 0 0 40px 0 rgba(234, 238, 249, .5);
 
   /* Tokens do projeto (o Bootstrap não tem variável para estes) */
-  --app-focus-outline: 2px solid #0a58ca;      /* 6,44:1 sobre branco */
+  --app-page-bg: #f1f5fd;                      /* fundo da página; cards e campos continuam brancos */
+  --app-accent: #8d0bb7;                       /* roxo do template: só degradê e detalhes (7,33:1 sobre branco) */
+  --app-gradient-header: linear-gradient(90deg, #b9281c 0%, #7c1fa0 100%);  /* branco sobre as pontas: 6,21 e 8,20:1 */
+  --app-footer-bg: #010408;
+  --app-footer-color: #a7b4c9;                 /* 9,80:1 sobre o fundo do rodapé */
+  --app-on-dark-focus: 2px solid #fff;         /* foco sobre degradê e rodapé escuros */
+  --app-focus-outline: 2px solid #0a58ca;      /* 6,44:1 sobre branco, 5,89:1 sobre o fundo da página */
   --app-focus-offset: 2px;
   --app-input-border-color: #6c757d;           /* 4,69:1 sobre branco */
   --app-media-ratio: 4 / 3;                    /* capa do card, galeria e bloco "Vaga de emprego" */
@@ -30,6 +46,14 @@
   --app-media-placeholder-color: var(--bs-secondary-text-emphasis); /* #2b2f32, 10,51:1 */
   --app-skeleton-bg: var(--bs-tertiary-bg);    /* #f8f9fa */
   --app-touch-target: 44px;                    /* alvo mínimo de toque (wireframes) */
+}
+
+body {
+  background-color: var(--app-page-bg);
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-weight: 600;
 }
 
 /* Foco visível e com contraste em todo elemento interativo (NFR-16) */
@@ -42,17 +66,31 @@
 /* Bordas de campos com 3:1 ou mais (WCAG 1.4.11) */
 .form-control, .form-select, .form-check-input { border-color: var(--app-input-border-color); }
 
-/* Link nunca depende só da cor */
-a:not(.btn):not(.nav-link):not(.page-link) { text-decoration: underline; }
+/* Link nunca depende só da cor. :where() zera a especificidade, então um componente (logotipo, item de menu)
+   pode tirar o sublinhado com a própria classe quando o contexto já deixa claro que é um link. */
+a:where(:not(.btn):not(.nav-link):not(.page-link)) { text-decoration: underline; }
 
-/* .btn-primary tem variáveis próprias e NÃO lê --bs-primary; listadas para quando a paleta mudar */
+/* .btn-primary e .btn-outline-primary têm variáveis próprias e NÃO leem --bs-primary */
 .btn-primary {
   --bs-btn-bg: var(--bs-primary);
   --bs-btn-border-color: var(--bs-primary);
-  --bs-btn-hover-bg: #0b5ed7;
-  --bs-btn-hover-border-color: #0a58ca;
-  --bs-btn-active-bg: #0a58ca;
-  --bs-btn-active-border-color: #0a53be;
+  --bs-btn-hover-bg: #b81d10;
+  --bs-btn-hover-border-color: #ab1a0f;
+  --bs-btn-active-bg: #a5190e;
+  --bs-btn-active-border-color: #98160c;
   --bs-btn-disabled-bg: var(--bs-primary);
   --bs-btn-disabled-border-color: var(--bs-primary);
+  --bs-btn-focus-shadow-rgb: 215, 34, 19;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-bg: var(--bs-primary);
+  --bs-btn-hover-border-color: var(--bs-primary);
+  --bs-btn-active-bg: #a5190e;
+  --bs-btn-active-border-color: #98160c;
+  --bs-btn-disabled-color: var(--bs-primary);
+  --bs-btn-disabled-border-color: var(--bs-primary);
+  --bs-btn-focus-shadow-rgb: 215, 34, 19;
 }

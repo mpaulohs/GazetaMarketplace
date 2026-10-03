@@ -13,16 +13,21 @@
     <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
     <meta name="robots" content="noindex, nofollow" />
     <title>@(ViewData["Title"] is string titulo ? titulo + " · " : "")Painel · GazetaMarketplace</title>
+    <link rel="preload" href="~/lib/poppins/files/poppins-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="~/lib/poppins/files/poppins-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="~/css/poppins.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/bootstrap-tema.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components/layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components/estados.css" asp-append-version="true" />
     <noscript><link rel="stylesheet" href="~/css/sem-js.css" asp-append-version="true" /></noscript>
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
+<body class="corpo-pagina">
     <a class="visually-hidden-focusable" href="#conteudo">Ir para o conteúdo</a>
-    <header class="border-bottom bg-body">
+    <header class="cabecalho">
         <nav class="navbar navbar-expand-md" aria-label="Menu do painel">
             <div class="container">
                 <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">Gazeta · Painel</a>
@@ -37,7 +42,7 @@
                             <span>@User.Identity.Name@(papel is null ? "" : " (" + papel + ")")</span>
                             <form method="post" action="@RotasDoPainel.Sair">
                                 @Html.AntiForgeryToken()
-                                <button class="btn btn-outline-secondary alvo-toque" type="submit">Sair</button>
+                                <button class="btn btn-outline-light alvo-toque" type="submit"><i class="fa fa-sign-out me-1" aria-hidden="true"></i>Sair</button>
                             </form>
                         </div>
                     </div>
@@ -48,8 +53,8 @@
     <div class="container mt-3">
         <div id="avisos-globais" class="alert alert-danger" role="alert" hidden></div>
     </div>
-    <div class="container">
-        <main id="conteudo" tabindex="-1" class="pb-3">
+    <div class="container corpo-pagina__conteudo">
+        <main id="conteudo" tabindex="-1" class="pt-3 pb-3">
             @RenderBody()
         </main>
     </div>

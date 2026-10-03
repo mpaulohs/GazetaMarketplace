@@ -1,26 +1,31 @@
 # Design system: GazetaMarketplace v1
 
-> **Em resumo:** este documento define o vocabulário visual comum às telas já aprovadas em `specs/wireframes/`: os **tokens** (cores, tipografia, raio, espaçamento), a **matriz de estados** de cada componente compartilhado e o **contrato** de cada componente em termos de classes do Bootstrap 5.3.8. Ele não redesenha telas. Sem identidade visual definida, a v1 usa **as cores e a fonte padrão do Bootstrap**, com três ajustes de acessibilidade medidos (foco, bordas de campos e links). Também fecha a **A4** (anúncio sem foto) e a **A6** (Serviços sem preço). Leitor: quem constrói o frontend no `/build`.
+> **Em resumo:** este documento define o vocabulário visual comum às telas já aprovadas em `specs/wireframes/`: os **tokens** (cores, tipografia, raio, espaçamento), a **matriz de estados** de cada componente compartilhado e o **contrato** de cada componente em termos de classes do Bootstrap 5.3.8. Ele não redesenha telas. O visual vem do template **Autolist** (decisão do Product Owner, 2026-10-03): degradê vermelho-roxo no topo, rodapé escuro, fundo azul-claro, cards brancos e a fonte **Poppins** autohospedada. Três ajustes de acessibilidade medidos continuam (foco, bordas de campos e links), e a cor primária do template foi **escurecida** de `#e72a1a` para `#d72213` para passar o contraste. Também fecha a **A4** (anúncio sem foto) e a **A6** (Serviços sem preço). Leitor: quem constrói o frontend no `/build`.
 
 | Campo | Valor |
 |---|---|
-| Base | Bootstrap 5.3.8, arquivos estáticos em `wwwroot/lib/bootstrap/` (`rules/frontend.md`) |
+| Base | Bootstrap 5.3.8, arquivos estáticos em `wwwroot/lib/bootstrap/` (`rules/frontend.md`); procedência das bibliotecas em `wwwroot/lib/LEIAME.md` |
 | Onde os tokens moram | `wwwroot/css/base.css`, carregado depois do `bootstrap.min.css` |
-| Sem | Sass, bundler, CDN, outro framework CSS, fontes externas, biblioteca de ícones |
+| Visual | Extraído do template Autolist à mão (`docs/templates/autolist/`, só referência). O `style.css` do template **nunca** é carregado nem editado |
+| Fonte e ícones | Poppins 400/600/700 em `wwwroot/lib/poppins/`; Font Awesome 4.7 em `wwwroot/lib/font-awesome/` (única biblioteca de ícones) |
+| Sem | Sass, bundler, CDN, outro framework CSS, fontes externas, plugins jQuery, outras bibliotecas de ícones |
 | SPEC | `specs/SPEC.md` Approved v1.2 · NFR-03, NFR-16, NFR-17, NFR-20 |
 
 ---
 
 ## 1. Decisões principais
 
-1. **Cores e fonte padrão do Bootstrap** (decisão do Product Owner, 2026-09-30). A paleta, a fonte e o logotipo da Gazeta ficam como perguntas em aberto (§9). Trocar depois é mexer só em `base.css`.
-2. **Três ajustes de acessibilidade sobre o padrão**, porque o padrão não passa nos critérios da NFR-16 (medidos em §2.4):
-   - **foco:** contorno sólido `#0a58ca` de 2 px em `:focus-visible`, no lugar do anel azul translúcido (contraste 1,41:1 → 6,44:1);
+1. **Visual do Autolist sobre o Bootstrap 5.3.8** (decisão do Product Owner, 2026-10-03, que substitui a de 2026-09-30 de usar as cores e a fonte padrão). O visual é escrito à mão em `base.css` e `components/*.css`, com `--bs-*` e `--app-*`, porque o `style.css` do template pesa 927 KB, tem 3.140 `!important`, importa fonte externa (bloqueada pela CSP) e suprime o foco. Só o logotipo da Gazeta continua em aberto (§9, DS-03).
+2. **Três ajustes de acessibilidade sobre o Bootstrap**, porque o padrão não passa nos critérios da NFR-16 (medidos em §2.4):
+   - **foco:** contorno sólido `#0a58ca` de 2 px em `:focus-visible`, no lugar do anel azul translúcido (contraste 1,41:1 → 6,44:1); sobre o degradê e o rodapé escuros o contorno é **branco** (`--app-on-dark-focus`);
    - **borda dos campos de formulário:** `#6c757d` no lugar de `#dee2e6` (1,3:1 → 4,69:1);
-   - **links sempre sublinhados** (o azul padrão tem 4,5:1, no limite; o sublinhado garante que o link não depende só da cor).
-3. **A4 — anúncio sem foto (Vagas de emprego):** o card e a página de detalhe usam um **bloco neutro "Vaga de emprego"** no lugar da foto, do mesmo tamanho, com a área da vaga quando houver (§5.2, §5.4).
-4. **A6 — Serviços sem preço:** o card e a página de detalhe mostram o **tipo do serviço no lugar do preço**; na busca, Serviços ficam fora da faixa de preço e no fim das ordenações (ADR-006).
-5. **Estado na tela:** tudo vem renderizado do servidor; o único estado no navegador é a lista de favoritos no `localStorage` (S1). Não há biblioteca de estado nem framework JavaScript.
+   - **links sempre sublinhados** (o sublinhado garante que o link não depende só da cor); só o logotipo e os itens do menu do painel, onde o contexto já mostra que são links, ficam sem sublinhado.
+3. **Cor primária `#d72213`** no lugar da `#e72a1a` do template: branco sobre `#e72a1a` dá 4,43:1 e falha o mínimo de 4,5:1; sobre `#d72213` dá 5,09:1. O cinza de texto secundário do template (`#6d7e9c`, 4,11:1) também foi trocado por `#566581`.
+4. **Fonte Poppins autohospedada**, com a pilha do sistema como reserva; nenhum arquivo vem de Google Fonts ou CDN.
+5. **Ícones só do Font Awesome 4.7** (as outras 14 famílias do template foram removidas). Ícone decorativo leva `aria-hidden="true"`; ícone que sozinho faz o papel de botão ou link precisa de nome acessível (`aria-label` ou texto `visually-hidden`). Onde um símbolo de texto bastar, ele continua valendo.
+6. **A4 — anúncio sem foto (Vagas de emprego):** o card e a página de detalhe usam um **bloco neutro "Vaga de emprego"** no lugar da foto, do mesmo tamanho, com a área da vaga quando houver (§5.2, §5.4).
+7. **A6 — Serviços sem preço:** o card e a página de detalhe mostram o **tipo do serviço no lugar do preço**; na busca, Serviços ficam fora da faixa de preço e no fim das ordenações (ADR-006).
+8. **Estado na tela:** tudo vem renderizado do servidor; o único estado no navegador é a lista de favoritos no `localStorage` (S1). Não há biblioteca de estado nem framework JavaScript.
 
 ---
 
@@ -28,32 +33,50 @@
 
 ### 2.1 Bloco de tokens (`wwwroot/css/base.css`)
 
+> O arquivo `base.css` é a fonte de verdade; o bloco abaixo é o mesmo conteúdo, e o teste `BaseCssTests` confere os valores. As peças de layout ficam em `components/layout.css`, as cores dos componentes do Bootstrap que não leem `--bs-primary` em `components/bootstrap-tema.css`, e a fonte em `css/poppins.css`.
+
 ```css
-/* base.css — carregado depois do bootstrap.min.css. Valores do Bootstrap 5.3.8 mantidos,
-   exceto os três ajustes de acessibilidade (§1, item 2). */
+/* base.css — carregado depois do bootstrap.min.css (5.3.8). Visual extraído do template Autolist
+   (docs/templates/autolist); valores e contrastes em architecture/design-system.md §2.
+   Três ajustes de acessibilidade sobre o Bootstrap: foco, borda de campos e links sublinhados. */
 :root {
-  /* Cores: padrão do Bootstrap 5.3.8 (paleta da Gazeta pendente, §9) */
-  --bs-primary: #0d6efd;       --bs-primary-rgb: 13, 110, 253;
+  /* Cores: primária do Autolist escurecida de #e72a1a para #d72213 (branco sobre ela: 5,09:1) */
+  --bs-primary: #d72213;       --bs-primary-rgb: 215, 34, 19;
+  --bs-primary-bg-subtle: #fbe7e5;
+  --bs-primary-border-subtle: #f1b3ad;
+  --bs-primary-text-emphasis: #561009;
   --bs-secondary: #6c757d;     --bs-secondary-rgb: 108, 117, 125;
   --bs-success: #198754;       --bs-success-rgb: 25, 135, 84;
   --bs-warning: #ffc107;       --bs-warning-rgb: 255, 193, 7;
   --bs-danger: #dc3545;        --bs-danger-rgb: 220, 53, 69;
-  --bs-body-color: #212529;    --bs-body-bg: #fff;
-  --bs-link-color: #0d6efd;    --bs-link-hover-color: #0a58ca;
+  --bs-body-color: #080e1b;    --bs-body-color-rgb: 8, 14, 27;
+  --bs-body-bg: #fff;          --bs-body-bg-rgb: 255, 255, 255;
+  --bs-secondary-color: #566581;  --bs-secondary-color-rgb: 86, 101, 129;  /* o #6d7e9c do template dá 4,11:1 */
+  --bs-border-color: #d8dde6;
+  --bs-link-color: #182b48;    --bs-link-color-rgb: 24, 43, 72;
+  --bs-link-hover-color: #b01b0f;  --bs-link-hover-color-rgb: 176, 27, 15;
+  --bs-code-color: #561009;                    /* o rosa padrão dá menos de 4,5:1 sobre o fundo da página */
 
-  /* Tipografia: pilha do sistema, sem fonte externa (fonte da Gazeta pendente, §9) */
-  --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+  /* Tipografia: Poppins autohospedada (css/poppins.css) com a pilha do sistema como reserva */
+  --bs-body-font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     "Noto Sans", "Liberation Sans", Arial, sans-serif;
   --bs-body-font-size: 1rem;
   --bs-body-line-height: 1.5;
 
-  /* Raio: padrão do Bootstrap */
-  --bs-border-radius-sm: .25rem;
-  --bs-border-radius: .375rem;
-  --bs-border-radius-lg: .5rem;
+  /* Raios e sombra do template */
+  --bs-border-radius-sm: .125rem;
+  --bs-border-radius: .1875rem;
+  --bs-border-radius-lg: .3125rem;
+  --bs-box-shadow: 0 0 40px 0 rgba(234, 238, 249, .5);
 
   /* Tokens do projeto (o Bootstrap não tem variável para estes) */
-  --app-focus-outline: 2px solid #0a58ca;      /* 6,44:1 sobre branco */
+  --app-page-bg: #f1f5fd;                      /* fundo da página; cards e campos continuam brancos */
+  --app-accent: #8d0bb7;                       /* roxo do template: só degradê e detalhes (7,33:1 sobre branco) */
+  --app-gradient-header: linear-gradient(90deg, #b9281c 0%, #7c1fa0 100%);  /* branco sobre as pontas: 6,21 e 8,20:1 */
+  --app-footer-bg: #010408;
+  --app-footer-color: #a7b4c9;                 /* 9,80:1 sobre o fundo do rodapé */
+  --app-on-dark-focus: 2px solid #fff;         /* foco sobre degradê e rodapé escuros */
+  --app-focus-outline: 2px solid #0a58ca;      /* 6,44:1 sobre branco, 5,89:1 sobre o fundo da página */
   --app-focus-offset: 2px;
   --app-input-border-color: #6c757d;           /* 4,69:1 sobre branco */
   --app-media-ratio: 4 / 3;                    /* capa do card, galeria e bloco "Vaga de emprego" */
@@ -61,6 +84,14 @@
   --app-media-placeholder-color: var(--bs-secondary-text-emphasis); /* #2b2f32, 10,51:1 */
   --app-skeleton-bg: var(--bs-tertiary-bg);    /* #f8f9fa */
   --app-touch-target: 44px;                    /* alvo mínimo de toque (wireframes) */
+}
+
+body {
+  background-color: var(--app-page-bg);
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-weight: 600;
 }
 
 /* Foco visível e com contraste em todo elemento interativo (NFR-16) */
@@ -73,19 +104,33 @@
 /* Bordas de campos com 3:1 ou mais (WCAG 1.4.11) */
 .form-control, .form-select, .form-check-input { border-color: var(--app-input-border-color); }
 
-/* Link nunca depende só da cor */
-a:not(.btn):not(.nav-link):not(.page-link) { text-decoration: underline; }
+/* Link nunca depende só da cor. :where() zera a especificidade, então um componente (logotipo, item de menu)
+   pode tirar o sublinhado com a própria classe quando o contexto já deixa claro que é um link. */
+a:where(:not(.btn):not(.nav-link):not(.page-link)) { text-decoration: underline; }
 
-/* .btn-primary tem variáveis próprias e NÃO lê --bs-primary; listadas para quando a paleta mudar */
+/* .btn-primary e .btn-outline-primary têm variáveis próprias e NÃO leem --bs-primary */
 .btn-primary {
   --bs-btn-bg: var(--bs-primary);
   --bs-btn-border-color: var(--bs-primary);
-  --bs-btn-hover-bg: #0b5ed7;
-  --bs-btn-hover-border-color: #0a58ca;
-  --bs-btn-active-bg: #0a58ca;
-  --bs-btn-active-border-color: #0a53be;
+  --bs-btn-hover-bg: #b81d10;
+  --bs-btn-hover-border-color: #ab1a0f;
+  --bs-btn-active-bg: #a5190e;
+  --bs-btn-active-border-color: #98160c;
   --bs-btn-disabled-bg: var(--bs-primary);
   --bs-btn-disabled-border-color: var(--bs-primary);
+  --bs-btn-focus-shadow-rgb: 215, 34, 19;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-bg: var(--bs-primary);
+  --bs-btn-hover-border-color: var(--bs-primary);
+  --bs-btn-active-bg: #a5190e;
+  --bs-btn-active-border-color: #98160c;
+  --bs-btn-disabled-color: var(--bs-primary);
+  --bs-btn-disabled-border-color: var(--bs-primary);
+  --bs-btn-focus-shadow-rgb: 215, 34, 19;
 }
 ```
 
@@ -93,14 +138,20 @@ a:not(.btn):not(.nav-link):not(.page-link) { text-decoration: underline; }
 
 | Token | Valor | Onde |
 |---|---|---|
-| `--bs-primary` | `#0d6efd` | Botão principal ("Buscar", "Salvar", "Enviar para revisão", "Publicar", "Ligar"), paginação ativa |
+| `--bs-primary` | `#d72213` | Botão principal ("Buscar", "Salvar", "Enviar para revisão", "Publicar"), paginação ativa, botão de busca do cabeçalho |
+| `--bs-link-color` / `--bs-link-hover-color` | `#182b48` / `#b01b0f` | Links de texto (sempre sublinhados) |
 | `--bs-success` | `#198754` | Situação "Publicado"; mensagens de sucesso (`alert-success`) |
 | `--bs-warning` | `#ffc107` (texto preto) | Situação "Em revisão"; selo "Cidade/UF informadas manualmente" (versão *subtle*) |
 | `--bs-danger` | `#dc3545` | Situação "Rejeitado"; erros; botões "Arquivar", "Desativar", "Excluir" (`btn-outline-danger`) |
 | `--bs-secondary` | `#6c757d` | Situações "Rascunho" e "Arquivado"; botões secundários (`btn-outline-secondary`) |
-| `--bs-body-font-family` | pilha do sistema | Todo o texto |
-| `--bs-border-radius` | `.375rem` | Cards, campos, botões |
+| `--bs-body-font-family` | Poppins, depois a pilha do sistema | Todo o texto |
+| `--bs-border-radius` | `.1875rem` (3 px) | Campos e botões; cards usam `--bs-border-radius-lg` (5 px) |
+| `--app-page-bg` | `#f1f5fd` | Fundo da página (cards, campos e menus continuam brancos) |
+| `--app-gradient-header` | `#b9281c` → `#7c1fa0` | Cabeçalho do site e do painel |
+| `--app-footer-bg` / `--app-footer-color` | `#010408` / `#a7b4c9` | Rodapé |
+| `--app-accent` | `#8d0bb7` | Roxo do template, só em detalhes; **não** substitui `--bs-secondary`, que continua cinza para "Rascunho" e "Arquivado" |
 | `--app-focus-outline` | `2px solid #0a58ca` | Todo elemento com foco pelo teclado |
+| `--app-on-dark-focus` | `2px solid #fff` | Foco dentro do cabeçalho e do rodapé |
 | `--app-input-border-color` | `#6c757d` | Campos de texto, listas e caixas de seleção |
 | `--app-media-ratio` | `4 / 3` | Capa do card, foto em destaque, bloco "Vaga de emprego" (reserva o espaço: NFR-03) |
 | `--app-media-placeholder-*` | `#e2e3e5` / `#2b2f32` | Bloco "Vaga de emprego" e "Foto indisponível" |
@@ -109,23 +160,37 @@ a:not(.btn):not(.nav-link):not(.page-link) { text-decoration: underline; }
 
 ### 2.3 Tipografia e espaçamento
 
-- **Escala:** a do Bootstrap. Título da página `h1` (`.fs-3` no celular); preço no detalhe `.fs-3 .fw-bold`; preço no card `.fw-bold`; textos de ajuda `.small .text-body-secondary`.
+- **Fonte:** Poppins 400 (texto), 600 (títulos e itens ativos) e 700 (logotipo e preços), autohospedada em `wwwroot/lib/poppins/`. `font-display: swap` e *preload* dos pesos 400 e 600 evitam texto invisível e reduzem o salto de layout (NFR-03).
+- **Escala:** a do Bootstrap, corpo em `1rem` (o template usa 14 px; mantivemos 1rem por leitura). Título da página `h1` (`.fs-3` no celular); preço no detalhe `.fs-3 .fw-bold`; preço no card `.fw-bold`; textos de ajuda `.small .text-body-secondary`.
 - **Espaçamento:** escala do Bootstrap (utilitários 0–5: 0,25 / 0,5 / 1 / 1,5 / 3 rem). Nenhum `--app-space-*` foi necessário.
 - **Largura de leitura:** descrições e textos longos com no máximo ~70 caracteres por linha (`max-width: 70ch`) no detalhe.
 
 ### 2.4 Contrastes medidos (WCAG 2.1 AA)
 
+Calculados com a fórmula de luminância relativa do WCAG; os testes `BaseCssTests` (projeto `Web.Tests`) repetem os cálculos de foco, borda e primária.
+
 | Par | Contraste | Mínimo | Resultado |
 |---|---|---|---|
-| Texto `#212529` sobre branco | 15,43:1 | 4,5:1 | Passa |
-| Texto secundário (`--bs-secondary-color`) sobre branco | 6,76:1 | 4,5:1 | Passa |
-| Branco sobre `--bs-primary` (botões) | 4,50:1 | 4,5:1 | Passa, **sem folga** — qualquer paleta nova deve ter mais |
-| Link `#0d6efd` sobre branco | 4,50:1 | 4,5:1 | Passa, sem folga; links sublinhados |
+| Texto `#080e1b` sobre branco / sobre o fundo da página `#f1f5fd` | 19,28 / 17,65:1 | 4,5:1 | Passa |
+| Texto secundário `#566581` sobre branco / sobre o fundo da página | 5,88 / 5,38:1 | 4,5:1 | Passa |
+| Branco sobre `--bs-primary` `#d72213` (botões) | 5,09:1 | 4,5:1 | Passa |
+| Branco sobre o botão primário em hover `#b81d10` / ativo `#a5190e` | 6,52 / 7,65:1 | 4,5:1 | Passa |
+| Primária `#d72213` como texto sobre branco / sobre o fundo da página | 5,09 / 4,66:1 | 4,5:1 | Passa |
+| Link `#182b48` / hover `#b01b0f` sobre o fundo da página | 13,00 / 6,39:1 | 4,5:1 | Passa |
+| Branco sobre as pontas do degradê (`#b9281c` / `#7c1fa0`) | 6,21 / 8,20:1 | 4,5:1 | Passa; o meio do degradê fica entre os dois |
+| Texto do rodapé `#a7b4c9` / links brancos sobre `#010408` | 9,80 / 20,54:1 | 4,5:1 | Passa |
 | Branco sobre `--bs-success` / `--bs-danger` / `--bs-secondary` | 4,53 / 4,53 / 4,69:1 | 4,5:1 | Passa |
 | Preto sobre `--bs-warning` | 12,88:1 | 4,5:1 | Passa |
 | Textos *emphasis* sobre fundos *subtle* (alertas, selo, situações) | 7,21 a 10,51:1 | 4,5:1 | Passa |
-| Anel de foco padrão (azul 25%) sobre branco | 1,41:1 | 3:1 | **Falha** → trocado por `--app-focus-outline` (6,44:1) |
-| Borda padrão de campo `#dee2e6` sobre branco | 1,30:1 | 3:1 | **Falha** → trocada por `#6c757d` (4,69:1) |
+| `<code>` `#561009` sobre o fundo da página | 13,04:1 | 4,5:1 | Passa |
+| Contorno de foco `#0a58ca` sobre branco / sobre o fundo da página | 6,44 / 5,89:1 | 3:1 | Passa |
+| Contorno de foco branco sobre as pontas do degradê | 6,21 / 8,20:1 | 3:1 | Passa |
+| Borda de campo `#6c757d` sobre branco / sobre o fundo da página | 4,69 / 4,29:1 | 3:1 | Passa |
+| Roxo `--app-accent` sobre branco | 7,33:1 | 4,5:1 | Passa |
+| *Valores originais do Autolist, trocados:* branco sobre `#e72a1a` | 4,43:1 | 4,5:1 | **Falha** → `#d72213` |
+| *Valores originais do Bootstrap e do Autolist, trocados:* anel de foco padrão (azul 25%) sobre branco | 1,41:1 | 3:1 | **Falha** → `--app-focus-outline` |
+| *Original do Bootstrap, trocado:* borda padrão de campo `#dee2e6` sobre branco | 1,30:1 | 3:1 | **Falha** → `#6c757d` |
+| *Original do Autolist, trocado:* texto secundário `#6d7e9c` sobre branco | 4,11:1 | 4,5:1 | **Falha** → `#566581` |
 
 ---
 
@@ -154,7 +219,7 @@ Legenda: ✅ desenhado e obrigatório · — não se aplica. Detalhes de cada es
 | Campo de preço (máscara) | ✅ "R$ 0,00" | — | ✅ | — | — | — | ✅ "Informe um preço maior que zero" | ✅ |
 | Campo de CEP | ✅ | — | ✅ | — | — | ✅ "Buscando…" / "tentativa 2 de 2" | ✅ não encontrado; serviço fora → listas | — |
 | Card de anúncio | ✅ 3 variantes | ✅ título sublinhado | ✅ contorno no card | — | — | ✅ esqueleto | ✅ foto indisponível | — |
-| Coração (favoritar) | ✅ ♡ | ✅ | ✅ | ✅ ♥ `aria-pressed="true"` | — | — | ✅ armazenamento bloqueado | — |
+| Coração (favoritar) | ✅ ♡ (`fa-heart-o`) | ✅ | ✅ | ✅ ♥ (`fa-heart`) `aria-pressed="true"` | — | — | ✅ armazenamento bloqueado | — |
 | Galeria | ✅ | ✅ setas | ✅ | ✅ miniatura atual | — | ✅ esqueleto | ✅ "Foto indisponível" | ✅ uma foto: sem setas |
 | Bloco "Vaga de emprego" (A4) | ✅ | — | — | — | — | — | — | — |
 | Preço / Salário / Tipo (A6) | ✅ 3 formas | — | — | — | — | — | — | — |
@@ -279,6 +344,6 @@ A situação é sempre texto; a cor só reforça (NFR-16).
 
 | Id | Pergunta | Até quando | Dono |
 |---|---|---|---|
-| DS-01 | **Paleta da marca Gazeta.** Ao trocar, conferir o contraste de cada par da §2.4 e atualizar as variáveis próprias dos componentes (`--bs-btn-*`), que não leem `--bs-primary` | Antes do lançamento | Product Owner com a Gazeta |
-| DS-02 | **Fonte da marca.** Se for uma fonte própria, ela entra como arquivo estático em `wwwroot` (sem Google Fonts nem CDN, por causa da CSP) | Antes do lançamento | Product Owner com a Gazeta |
-| DS-03 | **Logotipo** (e ícone do navegador). Até lá, o cabeçalho usa o texto "GazetaMarketplace" | Antes do lançamento | Product Owner com a Gazeta |
+| DS-01 | ~~Paleta da marca Gazeta~~ **Resolvida em 2026-10-03:** paleta do template Autolist, com a primária escurecida para `#d72213`. Se a Gazeta definir outra paleta, conferir cada par da §2.4 e atualizar as variáveis próprias dos componentes (`--bs-btn-*` e `bootstrap-tema.css`), que não leem `--bs-primary` | — | — |
+| DS-02 | ~~Fonte da marca~~ **Resolvida em 2026-10-03:** Poppins autohospedada. Se a Gazeta tiver fonte própria, ela entra como arquivo estático em `wwwroot` (sem Google Fonts nem CDN, por causa da CSP) | — | — |
+| DS-03 | **Logotipo** (e ícone do navegador). Até lá, o cabeçalho usa o texto "GazetaMarketplace" em Poppins 700 | Antes do lançamento | Product Owner com a Gazeta |

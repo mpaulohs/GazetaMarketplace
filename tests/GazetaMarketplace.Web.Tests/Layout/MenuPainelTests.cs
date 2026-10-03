@@ -81,7 +81,7 @@ public sealed class MenuPainelTests
         }
 
         StringAssert.Contains(html, "Ana Souza");
-        StringAssert.Matches(html, new Regex(@"<button[^>]*>\s*Sair\s*</button>"));
+        StringAssert.Matches(html, new Regex(@"<button[^>]*>(?:\s*<i[^>]*></i>)?\s*Sair\s*</button>"));
         StringAssert.Matches(html, new Regex(@"<button[^>]*data-bs-toggle=""collapse""[^>]*>[\s\S]*?Menu"));
     }
 
@@ -94,7 +94,7 @@ public sealed class MenuPainelTests
         string html = await (await cliente.GetAsync("/teste/painel")).Content.ReadAsStringAsync();
 
         Assert.IsFalse(html.Contains(RotasDoPainel.Anuncios, System.StringComparison.Ordinal));
-        Assert.IsFalse(Regex.IsMatch(html, @"<button[^>]*>\s*Sair\s*</button>"));
+        Assert.IsFalse(Regex.IsMatch(html, @"<button[^>]*>(?:\s*<i[^>]*></i>)?\s*Sair\s*</button>"));
     }
 
     private static ClaimsPrincipal Pessoa(string papel) =>

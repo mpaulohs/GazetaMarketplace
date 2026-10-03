@@ -5,35 +5,42 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(ViewData["Title"] is string titulo ? titulo + " · " : "")GazetaMarketplace</title>
+    <link rel="preload" href="~/lib/poppins/files/poppins-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="~/lib/poppins/files/poppins-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="~/css/poppins.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/bootstrap-tema.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components/layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components/estados.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
+<body class="corpo-pagina">
     <a class="visually-hidden-focusable" href="#conteudo">Ir para o conteúdo</a>
-    <header class="border-bottom bg-body">
-        <div class="container py-2 d-flex flex-wrap align-items-center gap-2">
-            <a class="fs-5 fw-bold text-body alvo-toque d-inline-flex align-items-center" asp-controller="Home" asp-action="Index">GazetaMarketplace</a>
-            <a class="ms-auto order-md-3 alvo-toque d-inline-flex align-items-center" href="@RotasPublicas.Favoritos"><span aria-hidden="true">♡&nbsp;</span>Favoritos (<span data-favoritos-contagem>0</span>)</a>
-            <form class="d-flex flex-grow-1 gap-2 order-md-2" role="search" method="get" action="@RotasPublicas.Busca">
+    <header class="cabecalho">
+        <div class="container py-2 d-flex flex-wrap align-items-center gap-2 gap-md-3">
+            <a class="cabecalho__marca alvo-toque d-inline-flex align-items-center" asp-controller="Home" asp-action="Index">GazetaMarketplace</a>
+            <a class="cabecalho__favoritos alvo-toque" href="@RotasPublicas.Favoritos"><i class="fa fa-heart-o me-2" aria-hidden="true"></i><span class="cabecalho__rotulo">Favoritos&nbsp;</span>(<span data-favoritos-contagem>0</span>)</a>
+            <form class="cabecalho__busca" role="search" method="get" action="@RotasPublicas.Busca">
                 <label class="visually-hidden" for="busca-q">Buscar anúncios</label>
-                <input class="form-control" id="busca-q" name="q" type="search" placeholder="Buscar anúncios…" autocomplete="off" />
-                <button class="btn btn-primary alvo-toque" type="submit">Buscar</button>
+                <div class="input-group">
+                    <input class="form-control" id="busca-q" name="q" type="search" placeholder="Buscar anúncios…" autocomplete="off" />
+                    <button class="btn btn-primary alvo-toque" type="submit"><i class="fa fa-search me-1" aria-hidden="true"></i>Buscar</button>
+                </div>
             </form>
         </div>
     </header>
     <div class="container mt-3">
         <div id="avisos-globais" class="alert alert-danger" role="alert" hidden></div>
     </div>
-    <div class="container">
-        <main id="conteudo" tabindex="-1" class="pb-3">
+    <div class="container corpo-pagina__conteudo">
+        <main id="conteudo" tabindex="-1" class="pt-3 pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top mt-4 py-3 small text-body-secondary">
+    <footer class="rodape mt-4 py-4">
         <div class="container d-flex flex-wrap justify-content-between gap-2">
             <span>&copy; @DateTime.UtcNow.Year GazetaMarketplace</span>
             <a href="@RotasDoPainel.Entrar">Área da equipe</a>
