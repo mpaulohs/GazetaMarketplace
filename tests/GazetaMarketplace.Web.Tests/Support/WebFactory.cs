@@ -73,7 +73,8 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
         ["PhotoStorage:BasePath"] = "/dados/fotos",
         ["DataProtection:KeysDirectory"] = "/dados/chaves",
         ["SendGrid:ApiKey"] = "chave-de-teste",
-        ["SendGrid:FromEmail"] = "noreply@exemplo.com.br"
+        ["SendGrid:FromEmail"] = "noreply@exemplo.com.br",
+        ["Site:BaseUrl"] = "https://gazeta.exemplo.com.br"
     };
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

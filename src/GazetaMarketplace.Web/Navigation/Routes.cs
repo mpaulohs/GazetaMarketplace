@@ -30,6 +30,8 @@ public static class PanelRoutes
 
     public const string SetPassword = "/painel/definir-senha";
 
-    /// <summary>Criada na tarefa 1.4; até lá o link do formulário de entrada leva a 404.</summary>
     public const string ForgotPassword = "/painel/esqueci-minha-senha";
+
+    /// <summary>Destino do link enviado por e-mail; leva <c>?id=</c> e <c>&amp;code=</c>.</summary>
+    public const string ResetPassword = "/painel/redefinir-senha";
 }

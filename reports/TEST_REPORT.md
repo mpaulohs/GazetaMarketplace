@@ -1,4 +1,4 @@
-# Relatório de testes — Fase 1 (tarefas 1.1 a 1.3)
+# Relatório de testes — Fase 1 (tarefas 1.1 a 1.4)
 
 > **Em resumo:** os 322 testes passam (283 unitários, 22 de integração em SQL Server real, 17 de navegador). Os dois testes de corrida agora usam uma barreira e falham de verdade quando a transação deixa de ser serializável. Veredito: **aprovado**.
 
@@ -33,3 +33,24 @@ As duas mutações foram desfeitas (`git diff` limpo nesses arquivos).
 - Telas e CSS: ver `plans/BACKLOG.md`.
 - Cobertura numérica (80%/75%) não foi medida nesta rodada; fica para o `/review`.
 - Os testes de CSS (`BaseCssTests`) só valem contra a saída publicada (documentado em `docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md`).
+
+## Tarefa 1.4 — recuperar senha por e-mail (US-007)
+
+> **Em resumo:** 337 testes unitários, 25 de integração (SQL Server real) e 20 de navegador passam. As quatro mutações planejadas derrubam testes.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários | 337 | 337 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 25 | 25 | 0 |
+| E2E (Playwright, site publicado em Production, SendGrid de mentira local) | 20 | 20 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| Tirar o limite de 3 pedidos por hora por e-mail | `QuartoPedidoNaMesmaHora_NaoEnviaEmail_MasRespondeIgual`, `DepoisDeUmaHora_OLimitePorEmailLibera` |
+| Tirar a checagem de conta ativa no envio | `ContaDesativada_NaoRecebeEmailDeRedefinicao` |
+| Deixar o token valer duas vezes (ignorar o carimbo de segurança) | `US007S05_LinkDeRedefinicaoJaUtilizado`, `Token_QueVirouUsado_NaoValeDeNovo`, `TokenDeRedefinicao_PodeSerGerado_ESoValeUmaVez` |
+| Deixar o corpo do e-mail (com o link) no log de Production | `EmProduction_OLogTemSoODestinatarioMascarado_SemOLink`, `EnviaPost_ParaApiV3_ComBearer_SemVazarChaveNoLog` |
+
+Todas foram desfeitas depois. No log do site em Production (arquivo JSON do E2E) não aparece `code=` nem o link; só o caminho da requisição, sem consulta.
+
+**Problema de ambiente resolvido:** com mais de 300 hosts de teste, o limite de 128 instâncias de inotify do Linux estourava (testes aleatórios falhavam com `IOException`). `TestHostSettings` desliga a recarga automática de configuração nos hosts de teste.

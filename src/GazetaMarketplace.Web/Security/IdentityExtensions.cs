@@ -46,12 +46,16 @@ public static class IdentityExtensions
                 options.Lockout.DefaultLockoutTimeSpan = LoginFailureCounter.Window;
 
                 options.User.RequireUniqueEmail = true;
+
+                // US-007: o link de redefinição usa o token próprio (relógio do site, "expirou" separado de "já usado")
+                options.Tokens.PasswordResetTokenProvider = RecoveryTokenProvider.Name;
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager<TeamSignInManager>()
             .AddClaimsPrincipalFactory<TeamClaimsPrincipalFactory>()
             .AddErrorDescriber<TeamIdentityErrorDescriber>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddTokenProvider<RecoveryTokenProvider>(RecoveryTokenProvider.Name);
 
         // NFR-09: link de redefinição de 1 hora (a troca de senha do primeiro acesso usa o mesmo mecanismo)
         services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromHours(1));

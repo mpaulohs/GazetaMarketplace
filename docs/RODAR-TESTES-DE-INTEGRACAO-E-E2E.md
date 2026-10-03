@@ -49,6 +49,8 @@ export PhotoStorage__BasePath=/caminho/fotos  Logging__FileDirectory=/caminho/lo
 export SendGrid__ApiKey=chave-de-teste  SendGrid__FromEmail=noreply@exemplo.com.br   # exigidos em Production (ADR-011)
 export Bootstrap__AdminEmail=e2e.admin@exemplo.com.br  Bootstrap__AdminPassword='<senha-do-admin>'
 export Authentication__SessionMinutes=1        # só para o teste de sessão expirada
+export Site__BaseUrl=https://localhost:5443    # obrigatório em Production: endereço que vai nos links dos e-mails
+export SendGrid__BaseUrl=http://localhost:5990 # só nos E2E: o SendGrid "de mentira" que o teste de recuperação de senha abre
 cd /caminho/publish && dotnet GazetaMarketplace.Web.dll
 ```
 
@@ -65,10 +67,11 @@ export PLAYWRIGHT_BROWSERS_PATH=/caminho/pw
 export GAZETA_BASE_URL=https://localhost:5443
 export GAZETA_E2E_EMAIL=e2e.admin@exemplo.com.br GAZETA_E2E_PASSWORD='<senha-do-admin>'
 export GAZETA_E2E_SESSION_MINUTES=1            # igual a Authentication__SessionMinutes do site
+export GAZETA_E2E_SENDGRID_PORT=5990           # igual à porta de SendGrid__BaseUrl; o teste de recuperação de senha escuta nela e lê o link do e-mail
 dotnet run --project tests/GazetaMarketplace.Web.Tests.Playwright
 ```
 
-Sem as variáveis, os testes que dependem delas ficam ignorados. `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**.
+Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecoveryE2ETests` exige também `GAZETA_E2E_SENDGRID_PORT`). `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**.
 
 ## Regenerar o script das migrations
 
@@ -77,6 +80,7 @@ Depois de criar uma migration, rode `db/scripts/gerar-script.sh`. Ele chama `dot
 ## Publicação (para o runbook de implantação)
 
 - **Script de banco:** aplicar `db/scripts/gazeta-idempotente.sql` com `sqlcmd -I` (redundância defensiva; o script já liga o `QUOTED_IDENTIFIER`).
+- **Endereço do site:** definir `Site__BaseUrl` (https). Sem ele o site não sobe em Production, por segurança: o link do e-mail de redefinição de senha não pode nascer do cabeçalho Host.
 - **Arquivos estáticos:** em Production, os arquivos estáticos só saem da saída publicada. Rodar os testes de CSS contra a pasta publicada, nunca contra o código-fonte.
 
 ## Desligar e religar o ambiente de E2E

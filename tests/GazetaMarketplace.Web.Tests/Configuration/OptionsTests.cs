@@ -24,7 +24,8 @@ public sealed class OptionsTests
         ["Logging:FileDirectory"] = "/dados/logs",
         ["DataProtection:KeysDirectory"] = "/dados/chaves",
         ["SendGrid:ApiKey"] = "chave-de-teste",
-        ["SendGrid:FromEmail"] = "noreply@exemplo.com.br"
+        ["SendGrid:FromEmail"] = "noreply@exemplo.com.br",
+        ["Site:BaseUrl"] = "https://gazeta.exemplo.com.br"
     };
 
     private static IHost Assemble(Dictionary<string, string> values, bool production, bool withEnvironmentVariables = false)
@@ -102,6 +103,31 @@ public sealed class OptionsTests
 
         OptionsValidationException error = await Assert.ThrowsExactlyAsync<OptionsValidationException>(() => host.StartAsync());
         StringAssert.Contains(error.Message, "ApiKey");
+    }
+
+    [TestMethod]
+    public async Task Producao_SemEnderecoDoSite_FalhaNaPartida()
+    {
+        // Sem Site:BaseUrl o link do e-mail viria do cabeçalho Host, que o atacante controla
+        Dictionary<string, string> values = FullConfiguration();
+        values.Remove("Site:BaseUrl");
+
+        using IHost host = Assemble(values, production: true);
+
+        OptionsValidationException error = await Assert.ThrowsExactlyAsync<OptionsValidationException>(() => host.StartAsync());
+        StringAssert.Contains(error.Message, "BaseUrl");
+    }
+
+    [TestMethod]
+    public async Task EnderecoDoSite_ForaDeProducao_PodeFicarVazio()
+    {
+        Dictionary<string, string> values = FullConfiguration();
+        values.Remove("Site:BaseUrl");
+
+        using IHost host = Assemble(values, production: false);
+
+        await host.StartAsync();
+        Assert.IsNull(host.Services.GetRequiredService<IOptions<GazetaMarketplace.Core.Configuration.SiteOptions>>().Value.BaseUrl);
     }
 
     [TestMethod]

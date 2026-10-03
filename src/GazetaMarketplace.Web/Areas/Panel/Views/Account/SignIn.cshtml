@@ -16,6 +16,11 @@
                     <div class="alert alert-warning" role="status">Sua sessão expirou. Entre novamente.</div>
                 }
 
+                @if (Model.PasswordChanged)
+                {
+                    <div class="alert alert-info" role="status">@PasswordRecoveryMessages.PasswordChanged</div>
+                }
+
                 @if (hasGeneralError)
                 {
                     <div class="alert alert-danger" role="alert">@generalState.Errors[0].ErrorMessage</div>

@@ -9,6 +9,7 @@ using GazetaMarketplace.Infrastructure.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,11 +19,13 @@ namespace GazetaMarketplace.IntegrationTests;
 internal sealed class IntegrationWebFactory : WebApplicationFactory<Program>
 {
     private readonly string _connectionString;
+    private readonly Action<IServiceCollection> _services;
     private readonly string _logsFolder = Path.Combine(Path.GetTempPath(), "gazeta-int-" + Guid.NewGuid().ToString("N"));
 
-    public IntegrationWebFactory(string connectionString)
+    public IntegrationWebFactory(string connectionString, Action<IServiceCollection> services = null)
     {
         _connectionString = connectionString;
+        _services = services;
         ClientOptions.BaseAddress = new Uri("https://localhost");
     }
 
@@ -34,6 +37,7 @@ internal sealed class IntegrationWebFactory : WebApplicationFactory<Program>
             ["ConnectionStrings:DefaultConnection"] = _connectionString,
             ["Logging:FileDirectory"] = _logsFolder
         }));
+        builder.ConfigureTestServices(services => _services?.Invoke(services));
     }
 
     public HttpClient CreateBrowser() => CreateClient(new WebApplicationFactoryClientOptions

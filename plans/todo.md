@@ -18,7 +18,7 @@
 - [x] Task 1.1: Entrar e sair do painel, com bloqueio e sessão
 - [x] Task 1.2: Primeiro acesso e Administrador inicial
 - [x] Task 1.3: Gerenciar usuários da equipe
-- [ ] Task 1.4: Recuperar senha esquecida por e-mail
+- [x] Task 1.4: Recuperar senha esquecida por e-mail
 
 ## Checkpoint 1 — Equipe completa
 

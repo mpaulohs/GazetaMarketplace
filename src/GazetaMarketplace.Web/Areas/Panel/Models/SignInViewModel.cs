@@ -18,4 +18,7 @@ public sealed class SignInViewModel
 
     /// <summary>Verdadeiro quando o cookie da sessão existia mas venceu (S08).</summary>
     public bool SessionExpired { get; set; }
+
+    /// <summary>Verdadeiro logo depois de redefinir a senha pelo link do e-mail (US-007-S02).</summary>
+    public bool PasswordChanged { get; set; }
 }

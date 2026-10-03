@@ -1,0 +1,7 @@
+@model PageStateViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewData["Brand"] = "GazetaMarketplace · Área da equipe";
+}
+
+@await Html.PartialAsync("_EmptyState", Model)

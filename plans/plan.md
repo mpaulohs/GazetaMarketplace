@@ -653,20 +653,20 @@
 - `src/GazetaMarketplace.Web/Areas/Panel/Views/Account/Forgot.cshtml, Redefinir.cshtml`
 
 **Acceptance Criteria**:
-- [ ] `@US-007-S01` (@happy): Pedir a redefinição de senha — o *Then* do SPEC é atendido
-- [ ] `@US-007-S02` (@happy): Definir uma nova senha pelo link — o *Then* do SPEC é atendido
-- [ ] `@US-007-S03` (@negative): E-mail não cadastrado — o *Then* do SPEC é atendido
-- [ ] `@US-007-S04` (@negative): Link de redefinição expirado — o *Then* do SPEC é atendido
-- [ ] `@US-007-S05` (@negative): Link de redefinição já utilizado — o *Then* do SPEC é atendido
-- [ ] `@US-007-S06` (@negative): Nova senha que não cumpre a política — o *Then* do SPEC é atendido
-- [ ] `@US-007-S07` (@negative): Confirmação de senha diferente — o *Then* do SPEC é atendido
-- [ ] A resposta de "Esqueci minha senha" é a mesma exista ou não a conta e mesmo se o envio falhar; a falha é registrada no log com o `traceId`
-- [ ] Token vale 1 hora; ao redefinir, o `SecurityStamp` muda e o mesmo link deixa de valer
-- [ ] E-mail enviado por `HttpClient` à API v3 do SendGrid, sem SDK, com chave em variável de ambiente
-- [ ] Destinatário mascarado no log; token e link nunca aparecem
-- [ ] **RC-11:** no máximo 3 pedidos de redefinição por hora por e-mail: acima disso nada é enviado e a resposta continua igual; o log registra Warning quando o total diário de e-mails chegar a 80 (o plano gratuito do SendGrid permite 100 por dia)
-- [ ] **RC-12:** redefinir a senha com sucesso zera o contador de falhas e o bloqueio da conta (quem foi bloqueado de propósito volta a entrar)
-- [ ] **RC-13:** a resposta de "Esqueci minha senha" não depende de a conta existir: o envio do e-mail fica fora do caminho da resposta (em segundo plano), e a resposta tem a mesma forma, o mesmo código e não espera o SendGrid
+- [x] `@US-007-S01` (@happy): Pedir a redefinição de senha — o *Then* do SPEC é atendido
+- [x] `@US-007-S02` (@happy): Definir uma nova senha pelo link — o *Then* do SPEC é atendido
+- [x] `@US-007-S03` (@negative): E-mail não cadastrado — o *Then* do SPEC é atendido
+- [x] `@US-007-S04` (@negative): Link de redefinição expirado — o *Then* do SPEC é atendido
+- [x] `@US-007-S05` (@negative): Link de redefinição já utilizado — o *Then* do SPEC é atendido
+- [x] `@US-007-S06` (@negative): Nova senha que não cumpre a política — o *Then* do SPEC é atendido
+- [x] `@US-007-S07` (@negative): Confirmação de senha diferente — o *Then* do SPEC é atendido
+- [x] A resposta de "Esqueci minha senha" é a mesma exista ou não a conta e mesmo se o envio falhar; a falha é registrada no log com o `traceId`
+- [x] Token vale 1 hora; ao redefinir, o `SecurityStamp` muda e o mesmo link deixa de valer
+- [x] E-mail enviado por `HttpClient` à API v3 do SendGrid, sem SDK, com chave em variável de ambiente
+- [x] Destinatário mascarado no log; token e link nunca aparecem
+- [x] **RC-11:** no máximo 3 pedidos de redefinição por hora por e-mail: acima disso nada é enviado e a resposta continua igual; o log registra Warning quando o total diário de e-mails chegar a 80 (o plano gratuito do SendGrid permite 100 por dia)
+- [x] **RC-12:** redefinir a senha com sucesso zera o contador de falhas e o bloqueio da conta (quem foi bloqueado de propósito volta a entrar)
+- [x] **RC-13:** a resposta de "Esqueci minha senha" não depende de a conta existir: o envio do e-mail fica fora do caminho da resposta (em segundo plano), e a resposta tem a mesma forma, o mesmo código e não espera o SendGrid
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Team/PasswordRecoveryTests.US007S01_PedirARedefinicaoDeSenha` — `@US-007-S01`
@@ -684,6 +684,15 @@
 - `tests/GazetaMarketplace.Web.Tests/Account/PasswordRecoveryTests.RedefinirComSucesso_LimpaOBloqueio`
 - `tests/GazetaMarketplace.Web.Tests/Account/PasswordRecoveryTests.ContaExistenteEInexistente_TemMesmaRespostaESemEsperarOEnvio`
 
+**Decisões da implementação (aprovadas pelo Product Owner em 2026-10-03):**
+- **Contador no banco** (tabela `PasswordRecoveryAttempts`: Id, Email, Ip, RequestedAt; índices em `(Email, RequestedAt)`, `(Ip, RequestedAt)` e `(RequestedAt)`, este último para o total diário e a limpeza), porque o IIS recicla o processo e zeraria um contador em memória. Migration `AddPasswordRecoveryAttempts`; limpeza diária de entradas com mais de 24 horas (`PasswordRecoveryCleanupService`).
+- **Limites:** 3 pedidos por hora por e-mail e 10 por hora por IP; os pedidos de e-mail inexistente contam do mesmo jeito (a resposta é indistinguível). O aviso de 80 por dia conta **pedidos** das últimas 24 horas (limite superior dos e-mails enviados).
+- **E-mail** em texto simples e HTML, em português, remetente `SendGrid:FromEmail`; assunto "Redefinição de senha — GazetaMarketplace".
+- **Log:** em Production o remetente é só o SendGrid e o log mostra apenas "E-mail enviado para m***@dominio", sem link; em Development o `LogEmailSender` escreve o e-mail inteiro no console (o log mascara `code=`).
+- **Token próprio** (`RecoveryTokenProvider`): mesmo desenho do token do Identity, mas com o relógio do site e com resultado "expirou" separado de "já foi usado".
+- **Endereço do link vem de `Site:BaseUrl`** (obrigatório em Production), nunca do cabeçalho Host: sem isso, um atacante poderia apontar o e-mail da vítima para outro servidor.
+- **Envio em segundo plano** (fila em memória + `PasswordRecoveryWorker`): a resposta não espera o SendGrid nem depende de a conta existir (RC-13). Pedidos na fila se perdem se o processo reiniciar; a pessoa pede de novo.
+
 **Dependencies**: 1.1, 0.3
 
 **Verification**: Done when every test under "Tests to add" passes, plus manual check: Pedir o link em desenvolvimento e ler o e-mail no log; usar o link duas vezes.
@@ -694,9 +703,9 @@
 ## Checkpoint 1 — Equipe completa
 
 **Verify before proceeding**:
-- [ ] Entrar, sair, primeiro acesso, recuperar e gerenciar usuários funcionam
-- [ ] Nenhum log tem senha, token ou e-mail completo
-- [ ] Cobertura ≥ 80% e sem regressão da fase anterior
+- [x] Entrar, sair, primeiro acesso, recuperar e gerenciar usuários funcionam
+- [x] Nenhum log tem senha, token ou e-mail completo
+- [x] Cobertura ≥ 80% e sem regressão da fase anterior
 
 ---
 

@@ -13,4 +13,8 @@ public sealed class SendGridOptions
     [Required]
     [EmailAddress]
     public string FromEmail { get; set; }
+
+    /// <summary>Endereço da API; só muda em testes de ponta a ponta, que apontam para um SendGrid de mentira local.</summary>
+    [Url]
+    public string BaseUrl { get; set; } = "https://api.sendgrid.com";
 }

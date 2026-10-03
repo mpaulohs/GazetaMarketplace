@@ -268,3 +268,54 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003081958_AddPasswordRecoveryAttempts'
+)
+BEGIN
+    CREATE TABLE [PasswordRecoveryAttempts] (
+        [Id] int NOT NULL IDENTITY,
+        [Email] nvarchar(254) NOT NULL,
+        [Ip] varchar(45) NOT NULL,
+        [RequestedAt] datetime2 NOT NULL,
+        CONSTRAINT [PK_PasswordRecoveryAttempts] PRIMARY KEY ([Id])
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003081958_AddPasswordRecoveryAttempts'
+)
+BEGIN
+    CREATE INDEX [IX_PasswordRecoveryAttempts_Email_RequestedAt] ON [PasswordRecoveryAttempts] ([Email], [RequestedAt]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003081958_AddPasswordRecoveryAttempts'
+)
+BEGIN
+    CREATE INDEX [IX_PasswordRecoveryAttempts_Ip_RequestedAt] ON [PasswordRecoveryAttempts] ([Ip], [RequestedAt]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003081958_AddPasswordRecoveryAttempts'
+)
+BEGIN
+    CREATE INDEX [IX_PasswordRecoveryAttempts_RequestedAt] ON [PasswordRecoveryAttempts] ([RequestedAt]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003081958_AddPasswordRecoveryAttempts'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261003081958_AddPasswordRecoveryAttempts', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

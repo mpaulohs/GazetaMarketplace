@@ -70,6 +70,7 @@ builder.Services.AddTeamIdentity();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddCore();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddEmailSender(builder.Environment.IsProduction());
 
 var app = builder.Build();
 

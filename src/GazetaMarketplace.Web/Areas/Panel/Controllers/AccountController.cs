@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Identity;
@@ -26,9 +27,13 @@ public sealed class AccountController(
     UserManager<AppUser> users,
     SignInManager<AppUser> access,
     LoginFailureCounter failures,
+    IPasswordRecovery recovery,
     ILogger<AccountController> log) : Controller
 {
     public const string InvalidCredentialsMessage = "E-mail ou senha inválidos, ou conta desativada";
+
+    /// <summary>Acrescentado ao endereço de entrada depois de redefinir a senha pelo link (US-007-S02).</summary>
+    public const string ChangedParameter = "alterada";
 
     public const string TooManyAttemptsMessage = "Muitas tentativas. Tente novamente em alguns minutos.";
 
@@ -40,14 +45,15 @@ public sealed class AccountController(
     [HttpGet("entrar")]
     public IActionResult SignIn(
         [FromQuery(Name = "ReturnUrl")] string returnUrl,
-        [FromQuery(Name = IdentityExtensions.SessionExpiredParameter)] string expired)
+        [FromQuery(Name = IdentityExtensions.SessionExpiredParameter)] string expired,
+        [FromQuery(Name = ChangedParameter)] string changed)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
             return LocalRedirect(HomePageFor(User.IsInRole(RoleNames.Administrator)));
         }
 
-        return View(new SignInViewModel { ReturnUrl = returnUrl, SessionExpired = expired == "1" });
+        return View(new SignInViewModel { ReturnUrl = returnUrl, SessionExpired = expired == "1", PasswordChanged = changed == "1" });
     }
 
     [HttpPost("entrar")]
@@ -102,6 +108,69 @@ public sealed class AccountController(
         return View(model);
     }
 
+    [HttpGet("esqueci-minha-senha")]
+    public IActionResult Forgot() => View(new ForgotPasswordViewModel());
+
+    // A resposta é a mesma exista a conta ou não, venha o envio a falhar ou não (US-007-S03, RC-13): a conta só é procurada depois, em segundo plano
+    [HttpPost("esqueci-minha-senha")]
+    public async Task<IActionResult> Forgot(ForgotPasswordViewModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        string source = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
+        await recovery.RequestAsync(model.Email, source, $"{Request.Scheme}://{Request.Host}", HttpContext.TraceIdentifier, cancellationToken);
+        return View(new ForgotPasswordViewModel { Sent = true });
+    }
+
+    [HttpGet("redefinir-senha")]
+    public async Task<IActionResult> Reset(int id, string code, CancellationToken cancellationToken)
+    {
+        RecoveryLinkState state = await recovery.CheckLinkAsync(id, code, cancellationToken);
+        return state == RecoveryLinkState.Valid
+            ? View(new RecoverPasswordViewModel { Id = id, Code = code })
+            : LinkProblem(state);
+    }
+
+    [HttpPost("redefinir-senha")]
+    public async Task<IActionResult> Reset(RecoverPasswordViewModel model, CancellationToken cancellationToken)
+    {
+        RecoveryLinkState state = await recovery.CheckLinkAsync(model.Id, model.Code, cancellationToken);
+        if (state != RecoveryLinkState.Valid)
+        {
+            return LinkProblem(state);
+        }
+
+        string newPassword = model.NewPassword;
+        model.NewPassword = null;
+        model.ConfirmPassword = null; // nenhuma senha volta para a tela
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        PasswordResetResult result = await recovery.ResetAsync(model.Id, model.Code, newPassword, cancellationToken);
+        if (result.Succeeded)
+        {
+            return Redirect(PanelRoutes.SignIn + "?" + ChangedParameter + "=1");
+        }
+
+        if (result.LinkState != RecoveryLinkState.Valid)
+        {
+            return LinkProblem(result.LinkState);
+        }
+
+        foreach (string error in result.PasswordErrors)
+        {
+            ModelState.AddModelError(nameof(RecoverPasswordViewModel.NewPassword), error);
+        }
+
+        return View(model);
+    }
+
     [HttpPost("sair")]
     public async Task<IActionResult> SignOutAsync()
     {
@@ -125,6 +194,19 @@ public sealed class AccountController(
             ActionUrl = HomePageFor(User.IsInRole(RoleNames.Administrator))
         });
     }
+
+    // US-007-S04 e S05: link vencido ou já usado, com o botão para pedir outro
+    private IActionResult LinkProblem(RecoveryLinkState state) => View("LinkProblem", new PageStateViewModel
+    {
+        Title = state switch
+        {
+            RecoveryLinkState.Expired => PasswordRecoveryMessages.LinkExpired,
+            RecoveryLinkState.Used => PasswordRecoveryMessages.LinkUsed,
+            _ => PasswordRecoveryMessages.LinkInvalid
+        },
+        ActionText = "Pedir novo link",
+        ActionUrl = PanelRoutes.ForgotPassword
+    });
 
     private static string HomePageFor(bool administrator) => administrator ? PanelRoutes.ReviewQueue : PanelRoutes.Ads;
 

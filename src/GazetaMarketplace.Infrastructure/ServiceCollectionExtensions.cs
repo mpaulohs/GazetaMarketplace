@@ -2,7 +2,9 @@ using System;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Data;
+using GazetaMarketplace.Infrastructure.Email;
 using GazetaMarketplace.Infrastructure.Identity;
+using GazetaMarketplace.Infrastructure.Recovery;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,34 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuditLog, AuditLog>();
         services.AddScoped<IUserManagement, UserManagement>();
         services.AddScoped<IDatabaseReadiness, EfDatabaseReadiness>();
+
+        // Recuperação de senha (US-007): o envio sai da fila depois da resposta (RC-13)
+        services.AddSingleton<PasswordRecoveryQueue>();
+        services.AddHostedService<PasswordRecoveryWorker>();
+        services.AddSingleton<PasswordRecoveryCleanupService>();
+        services.AddHostedService(provider => provider.GetRequiredService<PasswordRecoveryCleanupService>());
+        services.AddScoped<PasswordRecoveryMailer>();
+        services.AddScoped<IPasswordRecovery, PasswordRecoveryService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Escolhe o remetente de e-mail: em Production, só o SendGrid; nos demais ambientes, o remetente de console
+    /// (que mostra o link só em Development).
+    /// </summary>
+    public static IServiceCollection AddEmailSender(this IServiceCollection services, bool production)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        if (production)
+        {
+            services.AddHttpClient<IEmailSender, SendGridEmailSender>(http => http.Timeout = TimeSpan.FromSeconds(15));
+        }
+        else
+        {
+            services.TryAddSingleton<IEmailSender, LogEmailSender>();
+        }
 
         return services;
     }

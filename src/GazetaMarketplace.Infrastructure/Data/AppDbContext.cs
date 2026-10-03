@@ -36,6 +36,8 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
 
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
+    public DbSet<PasswordRecoveryAttempt> PasswordRecoveryAttempts => Set<PasswordRecoveryAttempt>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Constrói as tabelas do Identity antes das configurações do projeto

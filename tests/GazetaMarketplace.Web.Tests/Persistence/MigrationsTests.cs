@@ -70,6 +70,18 @@ public sealed class MigrationsTests
     }
 
     [TestMethod]
+    public void MigrationDaRecuperacaoDeSenha_CriaATabelaDeTentativasComOsIndices()
+    {
+        string section = MigrationSection("20261003081958_AddPasswordRecoveryAttempts");
+
+        StringAssert.Contains(section, "CREATE TABLE [PasswordRecoveryAttempts]");
+        Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(section, @"CREATE TABLE \[").Count);
+        StringAssert.Contains(section, "CREATE INDEX [IX_PasswordRecoveryAttempts_Email_RequestedAt] ON [PasswordRecoveryAttempts] ([Email], [RequestedAt])");
+        StringAssert.Contains(section, "CREATE INDEX [IX_PasswordRecoveryAttempts_Ip_RequestedAt] ON [PasswordRecoveryAttempts] ([Ip], [RequestedAt])");
+        StringAssert.Contains(section, "CREATE INDEX [IX_PasswordRecoveryAttempts_RequestedAt] ON [PasswordRecoveryAttempts] ([RequestedAt])");
+    }
+
+    [TestMethod]
     public void ModeloDoCodigo_EstaEmDiaComASnapshotDasMigrations()
     {
         using AppDbContext context = new(
