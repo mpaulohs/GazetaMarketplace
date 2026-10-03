@@ -25,10 +25,16 @@ public static class InitialCategories
     /// </summary>
     public static readonly IReadOnlyDictionary<int, string> FieldGroups = new Dictionary<int, string>
     {
+        [3] = FieldGroupKeys.Parts, // Autopeças: as filhas 38 a 42 herdam
         [26] = FieldGroupKeys.RealEstate,
         [27] = FieldGroupKeys.RealEstate,
         [30] = FieldGroupKeys.RealEstate,
         [31] = FieldGroupKeys.RealEstate,
+        [33] = FieldGroupKeys.Cars,
+        [34] = FieldGroupKeys.TrucksAndBuses,
+        [35] = FieldGroupKeys.TrucksAndBuses,
+        [36] = FieldGroupKeys.Motorcycles,
+        [37] = FieldGroupKeys.BoatsAndAircraft,
         [66] = FieldGroupKeys.Services,
         [96] = FieldGroupKeys.Jobs
     };

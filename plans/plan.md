@@ -809,9 +809,9 @@
 - `src/GazetaMarketplace.Core/Campos/Grupos/Carros.cs, Motos.cs, CaminhoesOnibus.cs, BarcosAeronaves.cs, Pecas.cs`
 
 **Acceptance Criteria**:
-- [ ] Carros e Motos: marca → modelo → ano → versão do catálogo (obrigatórios), quilometragem obrigatória e demais campos do Apêndice B; Motos também com cilindrada
-- [ ] Caminhões e Ônibus: ano do modelo e quilometragem obrigatórios; Barcos e aeronaves: ano, horas de uso e tipo obrigatórios
-- [ ] Peças: condição obrigatória, tipo de peça e cor; filtros específicos só em Carros e Motos (marca, modelo, ano, km) e em Caminhões e Ônibus (ano, km)
+- [x] Carros e Motos: marca → modelo → ano → versão do catálogo (obrigatórios), quilometragem obrigatória e demais campos do Apêndice B; Motos também com cilindrada
+- [x] Caminhões e Ônibus: ano do modelo e quilometragem obrigatórios; Barcos e aeronaves: ano, horas de uso e tipo obrigatórios
+- [x] Peças: condição obrigatória, tipo de peça e cor; filtros específicos só em Carros e Motos (marca, modelo, ano, km) e em Caminhões e Ônibus (ano, km)
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Fields/CarrosTests.Obrigatorios_MarcaModeloAnoVersaoKm`
@@ -820,6 +820,15 @@
 - `tests/GazetaMarketplace.Web.Tests/Fields/BarcosTests.HorasDeUso_NoLugarDeKm`
 - `tests/GazetaMarketplace.Web.Tests/Fields/PecasTests.Condicao_Obrigatoria_SemFiltrosDeVeiculo`
 - `tests/GazetaMarketplace.Web.Tests/Fields/FiltrosTests.FiltrosEspecificos_VemDoGrupo`
+
+**Decisões da implementação (aprovadas pelo Product Owner em 2026-10-03):**
+- **Cinco grupos** (`Cars`, `Motorcycles`, `TrucksAndBuses`, `BoatsAndAircraft`, `Parts`) em `Core/Fields/Groups/`, gravados por migration de dados `AssignFieldGroupsToVehiclesAndParts` nas categorias 33, 36, 34, 35, 37 e **3 (Autopeças)**; as filhas 38 a 42 herdam (A7 a). O registro tem 9 grupos.
+- **Chaves JSON** do ADR-002: `brandId`, `modelId`, `modelYear` (a mesma em Carros, Motos, Caminhões e ônibus e Barcos, para a coluna calculada `ModelYear` servir a todos), `versionId`, `km`; o Tipo de qualquer veículo é `vehicleTypeId`.
+- **Marca → Modelo → Ano → Versão** de Carros (catálogo de carros) e de Motos (catálogo de motos) são campos `CatalogItem` (nível e tipo de catálogo), sem consulta real até a 2.5.
+- **Ano do modelo** (Caminhões, Ônibus, Barcos) é `FieldType.ModelYear`: de 1950 ("1950 ou anterior", id 1950) até o ano atual + 1, gerado por `FieldLists.ModelYears(currentYear)` e validado por `ModelYearRules` com o `TimeProvider` do site no fuso de São Paulo.
+- **Filtros (A7 c):** Carros e Motos — marca, modelo (igualdade), ano e km (faixa); Caminhões e ônibus — ano e km; Barcos, Peças e demais — nenhum. Os filtráveis do sistema todo são exatamente `brandId`, `modelId`, `modelYear`, `km` e `areaM2` (as colunas calculadas do ADR-002).
+- **Barcos e aeronaves:** Horas de uso obrigatória no lugar de quilometragem. **Limites (suposições):** Km de 0 a 9.999.999; Horas de uso de 0 a 999.999; Comprimento, Largura e Altura de 0,01 a 999,99 m (2 casas).
+- **Vídeo do YouTube** continua fora (Out of Scope, Q5).
 
 **Dependencies**: 2.2
 

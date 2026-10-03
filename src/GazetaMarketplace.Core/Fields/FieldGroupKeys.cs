@@ -14,4 +14,15 @@ public static class FieldGroupKeys
     public const string GeneralProducts = "GeneralProducts";
 
     public const string RealEstate = "RealEstate";
+
+    public const string Cars = "Cars";
+
+    public const string Motorcycles = "Motorcycles";
+
+    public const string TrucksAndBuses = "TrucksAndBuses";
+
+    public const string BoatsAndAircraft = "BoatsAndAircraft";
+
+    /// <summary>Gravado em Autopeças (id 3); as filhas 38 a 42 herdam.</summary>
+    public const string Parts = "Parts";
 }

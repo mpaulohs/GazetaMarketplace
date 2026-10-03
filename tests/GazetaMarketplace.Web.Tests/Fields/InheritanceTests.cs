@@ -30,6 +30,42 @@ public sealed class InheritanceTests
     }
 
     [TestMethod]
+    public void Autopecas_UsaGrupoPecas_E_AsFilhasHerdam()
+    {
+        CategoryTreeSnapshot tree = CategoryTreeSnapshot.Build(Seed());
+
+        Assert.AreEqual(FieldGroupKeys.Parts, FieldGroupRegistry.Resolve(tree, 3).Key, "Autopeças define o grupo");
+        foreach (int id in new[] { 38, 39, 40, 41, 42 })
+        {
+            Assert.AreEqual(FieldGroupKeys.Parts, FieldGroupRegistry.Resolve(tree, id).Key, $"peça {id} herda de Autopeças");
+            Assert.IsNull(tree.Find(id).FieldGroup, $"peça {id} não tem grupo gravado: herda");
+        }
+    }
+
+    [TestMethod]
+    public void CategoriaNovaSobAutopecas_HerdaPecas_ESobCarros_HerdaCarros()
+    {
+        CategoryTreeSnapshot tree = WithExtra(
+            new CategoryRow(156, 3, "Faróis e lanternas", "farois-e-lanternas", 6, true, null, false),
+            new CategoryRow(157, 33, "Utilitários leves", "utilitarios-leves", 1, true, null, false));
+
+        Assert.AreEqual(FieldGroupKeys.Parts, FieldGroupRegistry.Resolve(tree, 156).Key);
+        Assert.AreEqual(FieldGroupKeys.Cars, FieldGroupRegistry.Resolve(tree, 157).Key);
+    }
+
+    [TestMethod]
+    public void VeiculosDaCarga_UsamSeusGruposProprios()
+    {
+        CategoryTreeSnapshot tree = CategoryTreeSnapshot.Build(Seed());
+
+        Assert.AreEqual(FieldGroupKeys.Cars, FieldGroupRegistry.Resolve(tree, 33).Key);
+        Assert.AreEqual(FieldGroupKeys.Motorcycles, FieldGroupRegistry.Resolve(tree, 36).Key);
+        Assert.AreEqual(FieldGroupKeys.TrucksAndBuses, FieldGroupRegistry.Resolve(tree, 34).Key);
+        Assert.AreEqual(FieldGroupKeys.TrucksAndBuses, FieldGroupRegistry.Resolve(tree, 35).Key);
+        Assert.AreEqual(FieldGroupKeys.BoatsAndAircraft, FieldGroupRegistry.Resolve(tree, 37).Key);
+    }
+
+    [TestMethod]
     public void CategoriaNova_HerdaOGrupoDoPai()
     {
         CategoryTreeSnapshot tree = WithExtra(

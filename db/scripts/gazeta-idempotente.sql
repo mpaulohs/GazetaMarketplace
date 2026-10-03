@@ -624,3 +624,76 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003172530_AssignFieldGroupsToVehiclesAndParts'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Parts''
+    WHERE [Id] = 3;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003172530_AssignFieldGroupsToVehiclesAndParts'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Cars''
+    WHERE [Id] = 33;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003172530_AssignFieldGroupsToVehiclesAndParts'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''TrucksAndBuses''
+    WHERE [Id] = 34;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003172530_AssignFieldGroupsToVehiclesAndParts'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''TrucksAndBuses''
+    WHERE [Id] = 35;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003172530_AssignFieldGroupsToVehiclesAndParts'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''Motorcycles''
+    WHERE [Id] = 36;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003172530_AssignFieldGroupsToVehiclesAndParts'
+)
+BEGIN
+    EXEC(N'UPDATE [Categories] SET [FieldGroup] = ''BoatsAndAircraft''
+    WHERE [Id] = 37;
+    SELECT @@ROWCOUNT');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003172530_AssignFieldGroupsToVehiclesAndParts'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261003172530_AssignFieldGroupsToVehiclesAndParts', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

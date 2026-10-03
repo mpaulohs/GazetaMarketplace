@@ -22,8 +22,33 @@ public enum FieldType
     Select = 5,
 
     /// <summary>Várias opções de uma lista; guarda os ids.</summary>
-    MultiSelect = 6
+    MultiSelect = 6,
+
+    /// <summary>Ano do modelo (<c>int</c>; o id é o próprio ano). A lista depende do ano atual: <see cref="FieldLists.ModelYears"/> e <see cref="ModelYearRules"/>.</summary>
+    ModelYear = 7,
+
+    /// <summary>Um nível da cadeia do catálogo de veículos (marca → modelo → ano → versão), descrito por <see cref="FieldDefinition.Catalog"/>. As consultas chegam na tarefa 2.5.</summary>
+    CatalogItem = 8
 }
+
+/// <summary>Qual catálogo de veículos o campo consulta.</summary>
+public enum CatalogKind
+{
+    Car = 1,
+    Motorcycle = 2
+}
+
+/// <summary>Em que nível da cadeia marca → modelo → ano → versão o campo está.</summary>
+public enum CatalogLevel
+{
+    Brand = 1,
+    Model = 2,
+    Year = 3,
+    Version = 4
+}
+
+/// <summary>A que parte do catálogo um campo <see cref="FieldType.CatalogItem"/> se liga.</summary>
+public sealed record CatalogReference(CatalogKind Kind, CatalogLevel Level);
 
 /// <summary>Como a busca usa o campo, quando usa (A7 c).</summary>
 public enum FieldFilter
@@ -55,6 +80,15 @@ public static class FieldLimits
 
     /// <summary>Quartos, Banheiros e Vagas: de 0 a 20. Suposição aprovada em 2026-10-03; revisar se aparecer caso real de mais de 20.</summary>
     public const int MaxCount = 20;
+
+    /// <summary>Quilometragem: de 0 a 9.999.999 km. Suposição aprovada em 2026-10-03; revisar se aparecer caso real fora da faixa.</summary>
+    public const int MaxKm = 9_999_999;
+
+    /// <summary>Horas de uso (barcos, aeronaves, máquinas): de 0 a 999.999. Suposição aprovada em 2026-10-03.</summary>
+    public const int MaxHoursOfUse = 999_999;
+
+    /// <summary>Comprimento, largura e altura em metros: de 0,01 a 999,99, com 2 casas. Suposição aprovada em 2026-10-03.</summary>
+    public const decimal MaxMeters = 999.99m;
 
     /// <summary>Área em m² (<c>decimal(12,2)</c> no banco): teto prático de 99.999.999,99 m², bem acima de qualquer fazenda da região.</summary>
     public const decimal MaxAreaM2 = 99_999_999.99m;
@@ -97,6 +131,9 @@ public sealed class FieldDefinition
     public SuggestionSource Suggestions { get; init; }
 
     public string HelpText { get; init; }
+
+    /// <summary>Só em campos <see cref="FieldType.CatalogItem"/>.</summary>
+    public CatalogReference Catalog { get; init; }
 
     public bool AppliesTo(int categoryId) => AppliesToCategories is null || AppliesToCategories.Contains(categoryId);
 

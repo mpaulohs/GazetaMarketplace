@@ -26,10 +26,16 @@ public sealed class ParityTests
     /// </summary>
     private static readonly Dictionary<int, string> ExpectedFieldGroups = new()
     {
+        [3] = "Parts",
         [26] = "RealEstate",
         [27] = "RealEstate",
         [30] = "RealEstate",
         [31] = "RealEstate",
+        [33] = "Cars",
+        [34] = "TrucksAndBuses",
+        [35] = "TrucksAndBuses",
+        [36] = "Motorcycles",
+        [37] = "BoatsAndAircraft",
         [66] = "Services",
         [96] = "Jobs"
     };

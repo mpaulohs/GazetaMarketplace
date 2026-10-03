@@ -179,6 +179,7 @@ public sealed class GroupsTests
             {
                 bool isList = field.Type is FieldType.Select or FieldType.MultiSelect;
                 Assert.AreEqual(isList, field.Options is not null || field.OptionsByCategory is not null, $"{group.Key}.{field.Key}: só campo de lista tem opções");
+                Assert.AreEqual(field.Type == FieldType.CatalogItem, field.Catalog is not null, $"{group.Key}.{field.Key}: só campo de catálogo tem referência ao catálogo");
                 if (field.Type == FieldType.Text)
                 {
                     Assert.IsNotNull(field.MaxLength, $"{group.Key}.{field.Key}: texto precisa de limite");
@@ -188,10 +189,10 @@ public sealed class GroupsTests
     }
 
     [TestMethod]
-    public void Grupos_ImplementadosNestaTarefa_SaoQuatro_ComChavesEstaveis()
+    public void Grupos_ImplementadosAteAgora_ComChavesEstaveis()
     {
         CollectionAssert.AreEquivalent(
-            new[] { "Services", "Jobs", "GeneralProducts", "RealEstate" },
+            new[] { "Services", "Jobs", "GeneralProducts", "RealEstate", "Cars", "Motorcycles", "TrucksAndBuses", "BoatsAndAircraft", "Parts" },
             FieldGroupRegistry.All.Select(g => g.Key).ToArray());
         Assert.IsNull(FieldGroupRegistry.Get("NaoExiste"));
         Assert.IsNull(FieldGroupRegistry.Get(null));

@@ -22,15 +22,51 @@ public sealed partial class ListsTests
 {
     private static readonly string[] FromGazetaOnline =
     [
-        nameof(FieldLists.ProductCondition), nameof(FieldLists.ApartmentType), nameof(FieldLists.HouseType), nameof(FieldLists.LandType),
-        nameof(FieldLists.CommercialType), nameof(FieldLists.PropertyTransactionType), nameof(FieldLists.ApartmentFeature),
-        nameof(FieldLists.LandFeature), nameof(FieldLists.CommercialFeature), nameof(FieldLists.ApartmentCondoFeature), nameof(FieldLists.HouseCondoFeature)
+        nameof(FieldLists.ProductCondition),
+        nameof(FieldLists.ApartmentType),
+        nameof(FieldLists.HouseType),
+        nameof(FieldLists.LandType),
+        nameof(FieldLists.CommercialType),
+        nameof(FieldLists.PropertyTransactionType),
+        nameof(FieldLists.ApartmentFeature),
+        nameof(FieldLists.LandFeature),
+        nameof(FieldLists.CommercialFeature),
+        nameof(FieldLists.ApartmentCondoFeature),
+        nameof(FieldLists.HouseCondoFeature),
+        nameof(FieldLists.CarFuel),
+        nameof(FieldLists.CarColor),
+        nameof(FieldLists.CarTransmission),
+        nameof(FieldLists.CarSteeringGear),
+        nameof(FieldLists.VehicleSteeringGear),
+        nameof(FieldLists.CarDoor),
+        nameof(FieldLists.CarEnginePower),
+        nameof(FieldLists.VehicleType),
+        nameof(FieldLists.TruckType),
+        nameof(FieldLists.BusType),
+        nameof(FieldLists.BoatType),
+        nameof(FieldLists.MotorcycleDisplacement),
+        nameof(FieldLists.OptionalItem),
+        nameof(FieldLists.TruckOptionalItem),
+        nameof(FieldLists.BusOptionalItem),
+        nameof(FieldLists.MotorcycleOptionalItem),
+        nameof(FieldLists.AdditionalInfo),
+        nameof(FieldLists.VehicleAdditionalInfo),
+        nameof(FieldLists.MotorcycleAdditionalInfo),
+        nameof(FieldLists.BoatAdditionalInfo),
+        nameof(FieldLists.PartCondition),
+        nameof(FieldLists.PartColor),
+        nameof(FieldLists.AutoPartType),
+        nameof(FieldLists.MotorcyclePartType),
+        nameof(FieldLists.BoatPartType)
     ];
 
     private static readonly string[] FromSpec = [nameof(FieldLists.ServiceType), nameof(FieldLists.JobArea)];
 
     [GeneratedRegex(@"^\| (\d+) \| (.+?) \|\s*$", RegexOptions.Multiline)]
     private static partial Regex RowPattern();
+
+    [GeneratedRegex(@"^(\d+) opções: (.+)$", RegexOptions.Multiline)]
+    private static partial Regex InlinePattern();
 
     private static FieldList Implemented(string name) =>
         (FieldList)typeof(FieldLists).GetField(name, BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
@@ -40,7 +76,26 @@ public sealed partial class ListsTests
         string text = File.ReadAllText(RepositoryHelper.Project("specs/discovery/gazetaonline-lookups.md"));
         Match section = Regex.Match(text, $@"### `{name}`[^\n]*\n(.*?)(?=\n### |\n## |\Z)", RegexOptions.Singleline);
         Assert.IsTrue(section.Success, $"lista {name} ausente de gazetaonline-lookups.md");
-        return [.. RowPattern().Matches(section.Groups[1].Value).Select(m => (int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture), m.Groups[2].Value.Trim()))];
+
+        // Formato 1: tabela "| Id | Opção |". Formato 2: uma linha "N opções: rótulo (id) · rótulo (id) · ..."
+        List<(int, string)> rows = [.. RowPattern().Matches(section.Groups[1].Value).Select(m => (int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture), m.Groups[2].Value.Trim()))];
+        if (rows.Count > 0)
+        {
+            return rows;
+        }
+
+        Match inline = InlinePattern().Match(section.Groups[1].Value);
+        Assert.IsTrue(inline.Success, $"lista {name} não está em tabela nem em linha única");
+        List<(int, string)> parsed = [];
+        foreach (string part in inline.Groups[2].Value.Split(" · "))
+        {
+            Match item = Regex.Match(part.Trim(), @"^(.*) \((\d+)\)$");
+            Assert.IsTrue(item.Success, $"opção ilegível em {name}: {part}");
+            parsed.Add((int.Parse(item.Groups[2].Value, CultureInfo.InvariantCulture), item.Groups[1].Value.Trim()));
+        }
+
+        Assert.AreEqual(int.Parse(inline.Groups[1].Value, CultureInfo.InvariantCulture), parsed.Count, $"a contagem declarada de {name} não bate com as opções");
+        return parsed;
     }
 
     /// <summary>As opções de uma linha da tabela do Apêndice B da SPEC: "a · b · c (nota)".</summary>
@@ -117,6 +172,16 @@ public sealed partial class ListsTests
         CollectionAssert.AreEqual(
             new[] { "Novo", "Usado - Excelente", "Usado - Bom", "Recondicionado", "Com defeito ou avarias" },
             FieldLists.ProductCondition.Options.Select(o => o.Label).ToArray());
+    }
+
+    [TestMethod]
+    public void ListasEmLinhaUnica_TemAContagemDeclarada()
+    {
+        Assert.HasCount(39, FieldLists.MotorcycleDisplacement.Options);
+        Assert.HasCount(20, FieldLists.OptionalItem.Options);
+        Assert.HasCount(13, FieldLists.CarEnginePower.Options);
+        Assert.AreEqual("Acima de 1.000", FieldLists.MotorcycleDisplacement.Find(39)!.Label);
+        Assert.AreEqual("4.0 ou mais", FieldLists.CarEnginePower.Find(13)!.Label);
     }
 
     [TestMethod]

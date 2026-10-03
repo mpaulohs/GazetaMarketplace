@@ -112,6 +112,18 @@ public sealed class MigrationsTests
         }
     }
 
+    [TestMethod]
+    public void MigrationDosGruposDeVeiculosEPecas_AtualizaSoAsSeisCategorias()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AssignFieldGroupsToVehiclesAndParts", StringComparison.Ordinal)));
+
+        Assert.AreEqual(6, System.Text.RegularExpressions.Regex.Matches(section, @"UPDATE \[Categories\] SET \[FieldGroup\]").Count);
+        foreach ((int id, string group) in new[] { (3, "Parts"), (33, "Cars"), (34, "TrucksAndBuses"), (35, "TrucksAndBuses"), (36, "Motorcycles"), (37, "BoatsAndAircraft") })
+        {
+            StringAssert.Contains(section.Replace("\r", string.Empty, StringComparison.Ordinal), $"[FieldGroup] = ''{group}''\n    WHERE [Id] = {id};");
+        }
+    }
+
     private static string[] Migrations
     {
         get

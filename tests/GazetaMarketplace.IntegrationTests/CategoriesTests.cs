@@ -41,7 +41,7 @@ public sealed class CategoriesTests
         Assert.AreEqual("servicos-grupo", all.Single(c => c.Id == 7).Slug);
         Assert.IsFalse(all.Any(c => c.Id is 24 or 25 or 32 or 79 or 80 or 82 or 83 or 91));
         Assert.IsTrue(all.All(c => c.IsSystem));
-        CollectionAssert.AreEquivalent(new[] { 26, 27, 30, 31, 66, 96 }, all.Where(c => c.FieldGroup is not null).Select(c => c.Id).ToArray());
+        CollectionAssert.AreEquivalent(new[] { 3, 26, 27, 30, 31, 33, 34, 35, 36, 37, 66, 96 }, all.Where(c => c.FieldGroup is not null).Select(c => c.Id).ToArray());
     }
 
     [TestMethod]
@@ -169,7 +169,7 @@ public sealed class CategoriesTests
         Assert.AreEqual(FieldGroupKeys.Services, FieldGroupRegistry.Resolve(snapshot, 66).Key);
         Assert.AreEqual(FieldGroupKeys.Jobs, FieldGroupRegistry.Resolve(snapshot, 96).Key);
         Assert.AreSame(FieldGroupRegistry.Default, FieldGroupRegistry.Resolve(snapshot, 135));
-        Assert.AreEqual(6, snapshot.All.Count(n => n.FieldGroup is not null && n.Id != createdId));
+        Assert.AreEqual(12, snapshot.All.Count(n => n.FieldGroup is not null && n.Id != createdId));
     }
 
     private static async Task AssertRejectedAsync(string connection, Category category)

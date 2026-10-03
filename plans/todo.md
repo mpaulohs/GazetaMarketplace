@@ -25,7 +25,7 @@
 ## Fase 2 — Categorias, campos e catálogo
 - [x] Task 2.1: Árvore de categorias e carga inicial
 - [x] Task 2.2: Grupos de campos: framework e grupos Serviços, Vagas, Produtos em geral e Imóveis
-- [ ] Task 2.3: Grupos de campos de veículos e peças
+- [x] Task 2.3: Grupos de campos de veículos e peças
 - [ ] Task 2.4: Grupos de campos de aluguel, telefonia, eletro, eletrônicos, roupas e máquinas
 - [ ] Task 2.5: Catálogo de veículos: tabelas, consulta encadeada e ferramenta de exportação
 - [ ] Task 2.6: Gerenciar categorias

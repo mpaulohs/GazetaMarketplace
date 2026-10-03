@@ -17,7 +17,12 @@ public static class FieldGroupRegistry
         ServicesGroup.Create(),
         JobsGroup.Create(),
         GeneralProductsGroup.Create(),
-        RealEstateGroup.Create()
+        RealEstateGroup.Create(),
+        CarsGroup.Create(),
+        MotorcyclesGroup.Create(),
+        TrucksAndBusesGroup.Create(),
+        BoatsAndAircraftGroup.Create(),
+        PartsGroup.Create()
     }.ToDictionary(g => g.Key, StringComparer.Ordinal);
 
     public static IReadOnlyCollection<FieldGroup> All => Groups.Values.ToList();
