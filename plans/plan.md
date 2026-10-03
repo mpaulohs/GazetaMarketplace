@@ -471,42 +471,48 @@
 **Objective**: Autenticar a equipe com Identity e cookie, com políticas de papel, bloqueio por tentativas e sessão de 30 minutos.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Infrastructure/Identidade/UsuarioIdentity.cs` (`IdentityUser<int>`) e `PapelIdentity.cs` (`IdentityRole<int>`), conforme ADR-003
-- `src/GazetaMarketplace.Infrastructure/Identidade/IdentityConfiguration.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/ContaController.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Conta/Entrar.cshtml`
-- src/GazetaMarketplace.Web/Program.cs (políticas Administrador e Redator)
+- `src/GazetaMarketplace.Infrastructure/Identidade/UsuarioIdentity.cs` (`IdentityUser<int>`) e `PapelIdentity.cs` (`IdentityRole<int>`), conforme ADR-003; configurações e `HasData` dos dois papéis em `Data/Configurations/`; migration `AdicionarIdentity` e `db/scripts/gazeta-idempotente.sql` regenerado
+- `src/GazetaMarketplace.Infrastructure/Data/AppDbContext.cs` (herda de `IdentityDbContext` e chama `base.OnModelCreating`)
+- `src/GazetaMarketplace.Core/Configuracao/AutenticacaoOptions.cs` (`Autenticacao:SessaoMinutos`, padrão 30, entre 1 e 120)
+- `src/GazetaMarketplace.Web/Seguranca/IdentidadeExtensions.cs` (Identity, cookie, políticas), `SignInManagerDaEquipe.cs`, `FabricaDeClaimsDaEquipe.cs`, `ContadorDeFalhasDeLogin.cs`, `PoliticasDeAcesso.cs` — a ligação do Identity fica no Web (decisão do Product Owner)
+- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/PainelControllerBase.cs`, `ContaController.cs` (entrar, sair, acesso negado) e `AnunciosController.cs` (**provisório**)
+- `src/GazetaMarketplace.Web/Areas/Painel/Views/Conta/Entrar.cshtml`, `AcessoNegado.cshtml` e `Anuncios/Index.cshtml`, `Fila.cshtml` (**provisórias**)
+- `src/GazetaMarketplace.Web/Program.cs` (`AddIdentidade`, `UseAuthentication`)
+
+**Decisões do Product Owner (2026-10-03)**:
+- **Bloqueio por origem conta falhas, não requisições:** `ContadorDeFalhasDeLogin`, em memória, 5 falhas em 15 minutos por IP, zerado pela entrada com sucesso, testado com relógio falso. O limitador "auth" da 0.4 (que conta toda requisição) não é usado no login, para uma redação atrás do mesmo IP poder entrar de manhã.
+- **Conta bloqueada pelo Identity mostra a mensagem genérica** ("E-mail ou senha inválidos, ou conta desativada"); o bloqueio é real e vai para o log, mas a tela não revela que a conta existe.
+- **Páginas "Meus anúncios" e "Fila de revisão" são provisórias** (título e menu), só para US-006-S01, S02 e S07 terem aonde chegar. A 4.4 troca "Meus anúncios" e a 4.1 troca a "Fila de revisão".
+- **Papéis por `HasData`** na migration, sem inicializador na partida. A política `Redator` aceita Redator e Administrador.
+- **`/painel/acesso-negado`** nasce aqui (faz parte da configuração do cookie); o cenário US-006-S10 continua na 1.3. O link "Esqueci minha senha" aponta para `/painel/esqueci-minha-senha`, criada na 1.4 (404 até lá).
+- **Implantação:** depois da 1.1 ainda não existe Administrador (nasce na 1.2). Publicar 1.1 e 1.2 juntas, nunca só a 1.1.
 
 **Acceptance Criteria**:
-- [ ] `@US-006-S01` (@happy): Redator entra no painel — o *Then* do SPEC é atendido
-- [ ] `@US-006-S02` (@happy): Administrador entra no painel — o *Then* do SPEC é atendido
-- [ ] `@US-006-S03` (@happy): Sair do painel — o *Then* do SPEC é atendido
-- [ ] `@US-006-S04` (@negative): E-mail ou senha incorretos — o *Then* do SPEC é atendido
-- [ ] `@US-006-S05` (@negative): Conta desativada — o *Then* do SPEC é atendido
-- [ ] `@US-006-S06` (@negative): Muitas tentativas de entrada — o *Then* do SPEC é atendido
-- [ ] `@US-006-S07` (@edge): Abrir uma página do painel sem estar logado — o *Then* do SPEC é atendido
-- [ ] `@US-006-S08` (@edge): Sessão expirada por inatividade — o *Then* do SPEC é atendido
-- [ ] Política de senha (8+, maiúscula, minúscula, número, símbolo), hash do Identity, bloqueio de conta por 5 falhas em 15 min, cookie `HttpOnly`/`Secure`/`SameSite=Lax` com expiração deslizante de 30 min e revalidação do `SecurityStamp` a cada 5 min
-- [ ] Redator cai em "Meus anúncios" e Administrador na "Fila de revisão"; "Sair" encerra a sessão e o botão Voltar não mostra o painel
-- [ ] Mensagem de falha sempre genérica (não revela se a conta existe nem se está desativada)
-- [ ] **RC-16:** o log registra cada entrada, saída, falha e bloqueio de login (sem a senha e com o e-mail mascarado)
-- [ ] **RC-18:** o endereço de retorno depois do login só é aceito se for local (`Url.IsLocalUrl`); qualquer outro vai para a página inicial do painel
+- [x] `@US-006-S01` (@happy): Redator entra no painel — o *Then* do SPEC é atendido
+- [x] `@US-006-S02` (@happy): Administrador entra no painel — o *Then* do SPEC é atendido
+- [x] `@US-006-S03` (@happy): Sair do painel — o *Then* do SPEC é atendido
+- [x] `@US-006-S04` (@negative): E-mail ou senha incorretos — o *Then* do SPEC é atendido
+- [x] `@US-006-S05` (@negative): Conta desativada — o *Then* do SPEC é atendido
+- [x] `@US-006-S06` (@negative): Muitas tentativas de entrada — o *Then* do SPEC é atendido
+- [x] `@US-006-S07` (@edge): Abrir uma página do painel sem estar logado — o *Then* do SPEC é atendido
+- [x] `@US-006-S08` (@edge): Sessão expirada por inatividade — o *Then* do SPEC é atendido
+- [x] Política de senha (8+, maiúscula, minúscula, número, símbolo), hash do Identity, bloqueio de conta por 5 falhas em 15 min, cookie `HttpOnly`/`Secure`/`SameSite=Lax` com expiração deslizante de 30 min e revalidação do `SecurityStamp` a cada 5 min
+- [x] Redator cai em "Meus anúncios" e Administrador na "Fila de revisão"; "Sair" encerra a sessão e o botão Voltar não mostra o painel
+- [x] Mensagem de falha sempre genérica (não revela se a conta existe nem se está desativada)
+- [x] **RC-16:** o log registra cada entrada, saída, falha e bloqueio de login (sem a senha e com o e-mail mascarado)
+- [x] **RC-18:** o endereço de retorno depois do login só é aceito se for local (`Url.IsLocalUrl`); qualquer outro vai para a página inicial do painel
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S01_RedatorEntraNoPainel` — `@US-006-S01`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S02_AdministradorEntraNoPainel` — `@US-006-S02`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S03_SairDoPainel` — `@US-006-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Equipe/ContaTestsE2E.US006S03_SairDoPainel` — `@US-006-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S04_EMailOuSenhaIncorretos` — `@US-006-S04`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S05_ContaDesativada` — `@US-006-S05`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S06_MuitasTentativasDeEntrada` — `@US-006-S06`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S07_AbrirUmaPaginaDoPainelSemEstarLogado` — `@US-006-S07`
-- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S08_SessaoExpiradaPorInatividade` — `@US-006-S08`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Equipe/ContaTestsE2E.US006S08_SessaoExpiradaPorInatividade` — `@US-006-S08` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Conta/SessaoTests.Cookie_Tem_HttpOnly_Secure_SameSite_E_30Min`
-- `tests/GazetaMarketplace.Web.Tests/Conta/SenhaTests.Politica_RejeitaSenhasFracas`
-- `tests/GazetaMarketplace.Web.Tests/Conta/ContaTests.FalhaEBloqueioDeLogin_SaoRegistradosNoLog`
-- `tests/GazetaMarketplace.Web.Tests/Conta/ContaTests.ReturnUrlExterno_E_Ignorado`
+- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S01` a `US006S08` — um teste por cenário (`@US-006-S01` a `@US-006-S08`), mais campos em branco, Redator na fila (acesso negado) e Administrador na área do Redator
+- `tests/GazetaMarketplace.Web.Tests/Equipe/ContaTests.US006S06_SeisPessoasDaMesmaRedacao_EntramDeManhaSemBloqueio` — o contador conta falhas
+- `tests/GazetaMarketplace.Web.Tests/Seguranca/ContadorDeFalhasDeLoginTests` (6 testes, relógio falso)
+- `tests/GazetaMarketplace.Web.Tests/Conta/SessaoTests.Cookie_Tem_HttpOnly_Secure_SameSite_E_30Min`, `SessaoMinutos_ConfiguraAExpiracao`, `SessaoMinutosForaDoIntervalo_ImpedeAPartida`, `UsuarioDesativado_PerdeAcessoAposRevalidacao`
+- `tests/GazetaMarketplace.Web.Tests/Conta/SenhaTests.Politica_RejeitaSenhasFracas` (+ hash e e-mail repetido)
+- `tests/GazetaMarketplace.Web.Tests/Conta/ContaTests.FalhaEBloqueioDeLogin_SaoRegistradosNoLog` e `EntradaESaida_SaoRegistradasNoLog_SemSenha` (RC-16)
+- `tests/GazetaMarketplace.Web.Tests/Conta/ContaTests.ReturnUrlExterno_E_Ignorado` (RC-18) e `ContaInexistente_SenhaErrada_Desativada_E_Bloqueada_RespondemIgual`
+- `tests/GazetaMarketplace.Web.Tests/Persistencia/IdentidadeModeloTests` e `MigrationsTests` (chave `int`, colunas, papéis, migration no script, modelo em dia)
+- `tests/GazetaMarketplace.Web.Tests/Configuracao/OpcoesTests.Autenticacao_*` (padrão 30, intervalo 1 a 120)
+- **E2E (rodam no `/test`, ignorados sem as variáveis):** `tests/GazetaMarketplace.Web.Tests.Playwright/Equipe/ContaTestsE2E.US006S03_SairDoPainel` e `US006S08_SessaoExpiradaPorInatividade`. Variáveis: `GAZETA_BASE_URL`, `GAZETA_E2E_EMAIL`, `GAZETA_E2E_SENHA` (conta no banco de teste) e, para o S08, `GAZETA_E2E_SESSAO_MINUTOS` igual ao `Autenticacao__SessaoMinutos` com que o site foi iniciado. Já passam localmente, sem conta: `EntrarE2E` (axe-core, CSP, rótulos e 320 px)
 
 **Dependencies**: 0.3, 0.4, 0.6, 0.7
 
@@ -1369,6 +1375,7 @@
 **Objective**: Fila de anúncios Em revisão (do mais antigo ao mais novo) e pré-visualização com a mesma aparência do site.
 
 **Files to modify**:
+- Trocar a página **provisória** `src/GazetaMarketplace.Web/Areas/Painel/Views/Anuncios/Fila.cshtml` (criada na 1.1) pela fila de revisão real; o Administrador cai nela depois de entrar (`RotasDoPainel.Fila`)
 - `src/GazetaMarketplace.Web/Areas/Painel/Controllers/FilaController.cs`
 - `src/GazetaMarketplace.Web/Areas/Painel/Views/Fila/*.cshtml`
 - `src/GazetaMarketplace.Core/Anuncios/FilaService.cs`
@@ -1493,6 +1500,7 @@
 **Objective**: Lista de trabalho com busca por título, filtro por situação e 20 por página, lida por um *read repository* em Dapper.
 
 **Files to modify**:
+- Trocar a página **provisória** `src/GazetaMarketplace.Web/Areas/Painel/Views/Anuncios/Index.cshtml` (criada na 1.1) pela lista real de "Meus anúncios"; o Redator cai nela depois de entrar (`RotasDoPainel.Anuncios`)
 - `src/GazetaMarketplace.Core/Anuncios/IPainelListaReadRepository.cs`
 - src/GazetaMarketplace.Infrastructure/Anuncios/PainelListaReadRepository.cs (Dapper: junção de anúncios, categorias e autor; filtros e ordenação dinâmicos)
 - `src/GazetaMarketplace.Core/Anuncios/IPainelListaReadRepository.cs`

@@ -87,6 +87,11 @@
   --bs-navbar-toggler-border-color: rgba(255, 255, 255, .75);
 }
 
+/* A marca do painel pode ser longa ("GazetaMarketplace · Área da equipe"): quebra em vez de estourar 320 px (NFR-17) */
+.cabecalho .navbar-brand {
+  white-space: normal;
+}
+
 .cabecalho .navbar-toggler {
   color: #fff;
   font-weight: 600;

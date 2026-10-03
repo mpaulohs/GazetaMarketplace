@@ -1,0 +1,9 @@
+@using GazetaMarketplace.Core.Equipe
+@{
+    // PROVISÓRIO: trocado pela lista de anúncios do painel na tarefa 4.4
+    string titulo = User.IsInRole(Papeis.Administrador) ? "Anúncios" : "Meus anúncios";
+    ViewData["Title"] = titulo;
+}
+
+<h1 class="fs-3">@titulo</h1>
+<p class="text-body-secondary">Esta página é provisória: a lista de anúncios chega junto com as próximas telas do painel.</p>

@@ -65,6 +65,7 @@ builder.Services.AddEncaminhamentoSeguro();
 // Nenhuma política CORS: site e endpoints JSON são da mesma origem (ARCHITECTURE.md §7)
 builder.Services.AddOpcoes(builder.Configuration, builder.Environment.IsProduction());
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddIdentidade();
 builder.Services.AddScoped<IUsuarioAtual, UsuarioAtualHttp>();
 builder.Services.AddCore();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -96,6 +97,7 @@ app.UseRouting();
 app.UseMiddleware<LimiteCorpoMiddleware>();
 app.UseRateLimiter();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

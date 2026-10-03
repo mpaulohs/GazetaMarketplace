@@ -54,6 +54,45 @@ public sealed class OpcoesTests
     }
 
     [TestMethod]
+    public async Task Autenticacao_SemValor_UsaPadraoDe30Minutos()
+    {
+        using IHost host = Montar(ConfiguracaoCompleta(), producao: false);
+
+        await host.StartAsync();
+
+        Assert.AreEqual(30, host.Services.GetRequiredService<IOptions<AutenticacaoOptions>>().Value.SessaoMinutos);
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("121")]
+    [DataRow("-5")]
+    public async Task Autenticacao_ForaDe1A120_FalhaNaPartida_EmQualquerAmbiente(string minutos)
+    {
+        Dictionary<string, string> valores = ConfiguracaoCompleta();
+        valores["Autenticacao:SessaoMinutos"] = minutos;
+
+        using IHost host = Montar(valores, producao: false);
+
+        OptionsValidationException erro = await Assert.ThrowsExactlyAsync<OptionsValidationException>(() => host.StartAsync());
+        StringAssert.Contains(erro.Message, "SessaoMinutos");
+    }
+
+    [TestMethod]
+    [DataRow("1")]
+    [DataRow("120")]
+    public async Task Autenticacao_NosLimites_Sobe(string minutos)
+    {
+        Dictionary<string, string> valores = ConfiguracaoCompleta();
+        valores["Autenticacao:SessaoMinutos"] = minutos;
+        using IHost host = Montar(valores, producao: false);
+
+        await host.StartAsync();
+
+        Assert.AreEqual(int.Parse(minutos, System.Globalization.CultureInfo.InvariantCulture), host.Services.GetRequiredService<IOptions<AutenticacaoOptions>>().Value.SessaoMinutos);
+    }
+
+    [TestMethod]
     public async Task Producao_SemChaveSendGrid_FalhaNaPartida()
     {
         Dictionary<string, string> valores = ConfiguracaoCompleta();

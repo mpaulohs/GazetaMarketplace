@@ -19,9 +19,15 @@ public static class RotasDoPainel
 
     public const string Configuracoes = "/painel/configuracoes";
 
-    /// <summary>Provisório até a tarefa 1.1 (entrar e sair).</summary>
+    /// <summary>Página inicial do Administrador. Provisória até a tarefa 4.1.</summary>
+    public const string Fila = "/painel/anuncios/fila";
+
     public const string Entrar = "/painel/entrar";
 
-    /// <summary>Provisório até a tarefa 1.1 (entrar e sair).</summary>
     public const string Sair = "/painel/sair";
+
+    public const string AcessoNegado = "/painel/acesso-negado";
+
+    /// <summary>Criada na tarefa 1.4; até lá o link do formulário de entrada leva a 404.</summary>
+    public const string EsqueciSenha = "/painel/esqueci-minha-senha";
 }

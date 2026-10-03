@@ -19,7 +19,7 @@ namespace GazetaMarketplace.Web.Tests.Playwright.Layout;
 [TestClass]
 [ExigeSiteNoAr]
 #pragma warning disable CA1515 // Test classes must be public for MSTest
-public class BaseCssTests : PageTest
+public class BaseCssTests : PaginaDoSite
 #pragma warning restore CA1515
 {
     private static readonly int[] _larguras = [320, 768, 1024, 1280];

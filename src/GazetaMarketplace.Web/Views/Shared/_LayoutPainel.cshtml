@@ -30,7 +30,7 @@
     <header class="cabecalho">
         <nav class="navbar navbar-expand-md" aria-label="Menu do painel">
             <div class="container">
-                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">Gazeta · Painel</a>
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">@(ViewData["Marca"] ?? "Gazeta · Painel")</a>
                 @if (logado)
                 {
                     <button class="navbar-toggler alvo-toque" type="button" data-bs-toggle="collapse" data-bs-target="#menu-painel" aria-controls="menu-painel" aria-expanded="false">
@@ -39,7 +39,7 @@
                     <div class="collapse navbar-collapse" id="menu-painel">
                         @await Component.InvokeAsync("MenuPainel")
                         <div class="ms-md-auto d-flex flex-column flex-md-row align-items-md-center gap-2 mt-2 mt-md-0">
-                            <span>@User.Identity.Name@(papel is null ? "" : " (" + papel + ")")</span>
+                            <span>@(User.FindFirst(GazetaMarketplace.Web.Seguranca.ClaimsDaEquipe.NomeCompleto)?.Value ?? User.Identity.Name)@(papel is null ? "" : " (" + papel + ")")</span>
                             <form method="post" action="@RotasDoPainel.Sair">
                                 @Html.AntiForgeryToken()
                                 <button class="btn btn-outline-light alvo-toque" type="submit"><i class="fa fa-sign-out me-1" aria-hidden="true"></i>Sair</button>
