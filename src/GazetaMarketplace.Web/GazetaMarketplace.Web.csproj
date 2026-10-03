@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\lib\autolist\Documentation\assets\plugins\iconfonts\fonts\ionicons\fonts\" />
+  </ItemGroup>
+
 </Project>
