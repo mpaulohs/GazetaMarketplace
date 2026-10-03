@@ -16,7 +16,7 @@
 
 ## Fase 1 — Equipe e acesso
 - [x] Task 1.1: Entrar e sair do painel, com bloqueio e sessão
-- [ ] Task 1.2: Primeiro acesso e Administrador inicial
+- [x] Task 1.2: Primeiro acesso e Administrador inicial
 - [ ] Task 1.3: Gerenciar usuários da equipe
 - [ ] Task 1.4: Recuperar senha esquecida por e-mail
 

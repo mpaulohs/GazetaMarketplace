@@ -26,12 +26,12 @@
                     <div class="mb-3">
                         <label class="form-label" asp-for="Email">E-mail <span aria-hidden="true">*</span></label>
                         <input class="form-control @(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "is-invalid" : "")" asp-for="Email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" aria-required="true" aria-describedby="erro-email" />
-                        <div class="invalid-feedback" id="erro-email" asp-validation-for="Email"></div>
+                        <span class="invalid-feedback" id="erro-email" asp-validation-for="Email"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" asp-for="Senha">Senha <span aria-hidden="true">*</span></label>
                         <input class="form-control @(ViewData.ModelState["Senha"]?.Errors.Count > 0 ? "is-invalid" : "")" asp-for="Senha" type="password" autocomplete="current-password" aria-required="true" aria-describedby="erro-senha" />
-                        <div class="invalid-feedback" id="erro-senha" asp-validation-for="Senha"></div>
+                        <span class="invalid-feedback" id="erro-senha" asp-validation-for="Senha"></span>
                     </div>
                     <button class="btn btn-primary w-100 alvo-toque" type="submit">Entrar</button>
                 </form>

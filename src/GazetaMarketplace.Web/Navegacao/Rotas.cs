@@ -28,6 +28,8 @@ public static class RotasDoPainel
 
     public const string AcessoNegado = "/painel/acesso-negado";
 
+    public const string DefinirSenha = "/painel/definir-senha";
+
     /// <summary>Criada na tarefa 1.4; até lá o link do formulário de entrada leva a 404.</summary>
     public const string EsqueciSenha = "/painel/esqueci-minha-senha";
 }

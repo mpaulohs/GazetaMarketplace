@@ -49,7 +49,15 @@ public static class IdentidadeExtensions
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager<SignInManagerDaEquipe>()
-            .AddClaimsPrincipalFactory<FabricaDeClaimsDaEquipe>();
+            .AddClaimsPrincipalFactory<FabricaDeClaimsDaEquipe>()
+            .AddErrorDescriber<DescritorDeErrosDaEquipe>()
+            .AddDefaultTokenProviders();
+
+        // NFR-09: link de redefinição de 1 hora (a troca de senha do primeiro acesso usa o mesmo mecanismo)
+        services.Configure<DataProtectionTokenProviderOptions>(opcoes => opcoes.TokenLifespan = TimeSpan.FromHours(1));
+
+        // S17: cria o primeiro Administrador a partir das variáveis de ambiente, se ainda não houver nenhum
+        services.AddHostedService<BootstrapAdminInitializer>();
 
         services.AddOptions<SecurityStampValidatorOptions>().Configure<TimeProvider>((opcoes, tempo) =>
         {

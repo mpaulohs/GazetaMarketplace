@@ -88,7 +88,11 @@ public sealed class ContaController(
             bool administrador = await usuarios.IsInRoleAsync(usuario, Papeis.Administrador);
             falhas.Zerar(origem);
             log.LogInformation("Entrada do usuário {UsuarioId} ({Papel})", usuario.Id, administrador ? Papeis.Administrador : Papeis.Redator);
-            return LocalRedirect(RetornoLocalOu(modelo.Retorno, PaginaInicialDe(administrador)));
+
+            // Senha provisória (S09): a troca vem antes de qualquer página, inclusive a que a pessoa tentava abrir
+            return usuario.MustChangePassword
+                ? LocalRedirect(RotasDoPainel.DefinirSenha)
+                : LocalRedirect(RetornoLocalOu(modelo.Retorno, PaginaInicialDe(administrador)));
         }
 
         RegistrarFalha(origem, modelo.Email, usuario, resultado);

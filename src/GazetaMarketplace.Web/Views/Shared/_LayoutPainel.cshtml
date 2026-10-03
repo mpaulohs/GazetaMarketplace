@@ -3,6 +3,7 @@
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     bool logado = User.Identity?.IsAuthenticated == true;
+    bool trocandoSenha = User.HasClaim(GazetaMarketplace.Web.Seguranca.ClaimsDaEquipe.DeveTrocarSenha, "1");
     string papel = User.IsInRole(Papeis.Administrador) ? Papeis.Administrador : User.IsInRole(Papeis.Redator) ? Papeis.Redator : null;
 }
 <!DOCTYPE html>
@@ -37,7 +38,10 @@
                         Menu
                     </button>
                     <div class="collapse navbar-collapse" id="menu-painel">
-                        @await Component.InvokeAsync("MenuPainel")
+                        @if (!trocandoSenha)
+                        {
+                            @await Component.InvokeAsync("MenuPainel")
+                        }
                         <div class="ms-md-auto d-flex flex-column flex-md-row align-items-md-center gap-2 mt-2 mt-md-0">
                             <span>@(User.FindFirst(GazetaMarketplace.Web.Seguranca.ClaimsDaEquipe.NomeCompleto)?.Value ?? User.Identity.Name)@(papel is null ? "" : " (" + papel + ")")</span>
                             <form method="post" action="@RotasDoPainel.Sair">

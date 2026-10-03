@@ -1,26 +1,26 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using GazetaMarketplace.Core.Equipe;
 using GazetaMarketplace.Infrastructure.Data;
 using GazetaMarketplace.Infrastructure.Identidade;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Serilog.Core;
 
 namespace GazetaMarketplace.Web.Tests.Suporte;
@@ -39,13 +39,19 @@ internal sealed class FabricaWeb : WebApplicationFactory<Program>
     private readonly string _pastaDeLogs = Path.Combine(Path.GetTempPath(), "gazeta-web-" + Guid.NewGuid().ToString("N"));
 
     // comBanco liga um SQLite em memória no lugar do SQL Server, com os papéis semeados, e um relógio controlável (Relogio)
-    public FabricaWeb(string ambiente = "Testing", Dictionary<string, string> configuracao = null, Action<IServiceCollection> servicos = null, bool comBanco = false)
+    public FabricaWeb(string ambiente = "Testing", Dictionary<string, string> configuracao = null, Action<IServiceCollection> servicos = null, bool comBanco = false, Action<AppDbContext> semear = null)
     {
         _comBanco = comBanco;
         if (comBanco)
         {
             _conexao = new SqliteConnection("DataSource=:memory:");
             _conexao.Open();
+
+            // O esquema precisa existir antes de o host subir: rotinas de partida (o Administrador inicial) já usam o banco
+            using AppDbContext contexto = new(
+                new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_conexao).Options, new UsuarioFalso(), Relogio);
+            contexto.Database.EnsureCreated();
+            semear?.Invoke(contexto);
         }
 
         _servicos = servicos;
@@ -98,16 +104,30 @@ internal sealed class FabricaWeb : WebApplicationFactory<Program>
         });
     }
 
-    protected override IHost CreateHost(IHostBuilder builder)
+    /// <summary>Insere uma conta direto no banco, para ser usada em <c>semear</c> (antes de o host subir).</summary>
+    public static void SemearUsuario(AppDbContext contexto, string email, int papelId, bool ativo = true)
     {
-        IHost host = base.CreateHost(builder);
-        if (_comBanco)
+        UsuarioIdentity usuario = new()
         {
-            using IServiceScope escopo = host.Services.CreateScope();
-            escopo.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
-        }
+            UserName = email,
+            NormalizedUserName = email.ToUpperInvariant(),
+            Email = email,
+            NormalizedEmail = email.ToUpperInvariant(),
+            FullName = "Semente",
+            IsActive = ativo,
+            SecurityStamp = Guid.NewGuid().ToString("N")
+        };
+        usuario.PasswordHash = new PasswordHasher<UsuarioIdentity>().HashPassword(usuario, "Senha@Forte1");
+        contexto.Users.Add(usuario);
+        contexto.SaveChanges();
+        contexto.UserRoles.Add(new IdentityUserRole<int> { UserId = usuario.Id, RoleId = papelId });
+        contexto.SaveChanges();
+    }
 
-        return host;
+    public async Task<IReadOnlyList<UsuarioIdentity>> ListarUsuariosAsync()
+    {
+        using IServiceScope escopo = Services.CreateScope();
+        return await escopo.ServiceProvider.GetRequiredService<AppDbContext>().Users.AsNoTracking().ToListAsync();
     }
 
     /// <summary>Cria uma conta da equipe direto no banco de testes (a tela de usuários só chega na 1.3).</summary>

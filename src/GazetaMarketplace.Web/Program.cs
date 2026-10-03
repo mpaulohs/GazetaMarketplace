@@ -1,20 +1,22 @@
 using System;
+using System.Globalization;
+using System.Linq;
 using GazetaMarketplace.Core;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Infrastructure;
 using GazetaMarketplace.Infrastructure.Configuracao;
+using GazetaMarketplace.Infrastructure.Identidade;
 using GazetaMarketplace.Infrastructure.Logging;
 using GazetaMarketplace.Web.Filters;
+using GazetaMarketplace.Web.HealthChecks;
 using GazetaMarketplace.Web.Middleware;
 using GazetaMarketplace.Web.Seguranca;
-using System.Globalization;
-using GazetaMarketplace.Web.HealthChecks;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,7 +24,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Core;
-using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -116,7 +117,7 @@ try
 {
     app.Run();
 }
-catch (Exception ex) when (ex is OptionsValidationException || ex is AggregateException { InnerExceptions: [OptionsValidationException, ..] })
+catch (Exception ex) when (ex is OptionsValidationException or BootstrapInvalidoException || ex is AggregateException { InnerExceptions: [OptionsValidationException, ..] })
 {
     // Configuração incompleta em Production: o site não sobe e o motivo fica no log (ADR-011)
     app.Logger.LogCritical(ex, "Configuração inválida; o site não foi iniciado.");

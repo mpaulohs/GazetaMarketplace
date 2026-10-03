@@ -532,28 +532,41 @@
 
 **Objective**: Obrigar a troca da senha provisória no primeiro acesso e criar o primeiro Administrador a partir das variáveis de ambiente.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Infrastructure/Identidade/BootstrapAdminInitializer.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Filters/MustChangePasswordFilter.cs`
-- `src/GazetaMarketplace.Web/Areas/Painel/Views/Conta/DefinirSenha.cshtml`
+**Decisões aprovadas**:
+- Qualquer conta no papel Administrador, ativa ou não, conta como "já existe Administrador". O inicializador não cria outro nem reativa a conta desativada.
+- Variáveis inválidas (e-mail malformado, senha fora da política, só uma das duas) com intenção de criar derrubam a partida com erro claro, sem repetir a senha. Banco indisponível só registra Error e o site sobe (`/health/ready` avisa). Sem variáveis, o banco não é tocado.
+- **Premissa (sem alterar o SPEC):** a nova senha não pode ser igual à provisória; a tela recusa com "A nova senha precisa ser diferente da provisória".
+- `AddDefaultTokenProviders()` com `TokenLifespan` de 1 hora (a 1.4 reaproveita o mesmo token de recuperação).
+- `IdentityErrorDescriber` próprio em pt-BR (`DescritorDeErrosDaEquipe`), reaproveitado pela 1.3 (US-014-S06).
+- A troca usa `GeneratePasswordResetTokenAsync` + `ResetPasswordAsync`, que valida a política antes de gravar: senha fraca deixa a provisória intacta.
+
+**Files modified/created**:
+- `src/GazetaMarketplace.Infrastructure/Identidade/BootstrapAdminInitializer.cs` (`IHostedService`; `BootstrapInvalidoException`)
+- `src/GazetaMarketplace.Web/Areas/Painel/Filters/MustChangePasswordFilter.cs` (aplicado em `PainelControllerBase`)
+- `src/GazetaMarketplace.Web/Areas/Painel/Controllers/SenhaController.cs`, `Models/DefinirSenhaViewModel.cs`, `Views/Senha/DefinirSenha.cshtml` (controller separado porque `[AllowAnonymous]` e `[Authorize]` não convivem na base)
+- `src/GazetaMarketplace.Web/Seguranca/DescritorDeErrosDaEquipe.cs`, `IdentidadeExtensions.cs`, `FabricaDeClaimsDaEquipe.cs` (claim `deve_trocar_senha`), `PoliticasDeAcesso.cs`
+- `ContaController` (entrada com troca pendente vai para `/painel/definir-senha`), `_LayoutPainel.cshtml` (menu oculto durante a troca), `Program.cs` (falha de bootstrap derruba a partida)
+- Correção encontrada pelos testes: `asp-validation-for` só funciona em `<span>`; as telas Entrar e DefinirSenha usavam `<div>` e a mensagem de campo não aparecia.
 
 **Acceptance Criteria**:
-- [ ] `@US-006-S09` (@edge): Primeiro acesso exige trocar a senha provisória — o *Then* do SPEC é atendido
-- [ ] Com `MustChangePassword = true`, qualquer página do painel leva a "Defina sua nova senha" até a troca
-- [ ] Na partida, se não existir Administrador e as variáveis `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword` existirem, o usuário é criado com troca obrigatória; nada é criado se já houver Administrador
-- [ ] A senha inicial nunca aparece no log
-- [ ] **RC-19:** se `Bootstrap__AdminEmail` ou `Bootstrap__AdminPassword` ainda existirem e já houver Administrador, o site registra Warning pedindo a remoção das variáveis
+- [x] `@US-006-S09` (@edge): Primeiro acesso exige trocar a senha provisória — o *Then* do SPEC é atendido
+- [x] Com `MustChangePassword = true`, qualquer página do painel leva a "Defina sua nova senha" até a troca
+- [x] Na partida, se não existir Administrador e as variáveis `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword` existirem, o usuário é criado com troca obrigatória; nada é criado se já houver Administrador
+- [x] A senha inicial nunca aparece no log
+- [x] **RC-19:** se `Bootstrap__AdminEmail` ou `Bootstrap__AdminPassword` ainda existirem e já houver Administrador, o site registra Warning pedindo a remoção das variáveis
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Equipe/PrimeiroAcessoTests.US006S09_PrimeiroAcessoExigeTrocarASenhaProvisoria` — `@US-006-S09`
-- `tests/GazetaMarketplace.Web.Tests/Conta/BootstrapAdminTests.SemAdministrador_ComVariaveis_CriaComTrocaObrigatoria`
-- `tests/GazetaMarketplace.Web.Tests/Conta/BootstrapAdminTests.ComAdministrador_NaoCriaOutro`
-- `tests/GazetaMarketplace.Web.Tests/Conta/BootstrapAdminTests.SenhaInicial_NaoApareceNoLog`
-- `tests/GazetaMarketplace.Web.Tests/Conta/BootstrapAdminTests.VariaveisRemanescentes_RegistramWarning`
+**Tests added** (253 no projeto Web.Tests, todos passando):
+- `Equipe/PrimeiroAcessoTests` — `US006S09` fluxo completo, filtro em todas as páginas, menu oculto com Sair disponível, senhas fracas recusadas com a provisória ainda valendo (atomicidade), nova igual à provisória, divergência/vazio, Administrador cai na fila, sem necessidade/anônimo, senhas fora do log
+- `Conta/BootstrapAdminTests` — criação, Administrador existente (ativo, desativado), só Redator, RC-19, variável única, senha fora do log, duas partidas, sem variáveis não toca o banco, senha fraca/e-mail inválido/variável única derrubam a partida, banco indisponível registra Error
+- `Conta/DescritorDeErrosTests` — mensagens em pt-BR, token de 1 hora, token de uso único, claim
+
+**Verificação por mutação** (cada quebra derrubou exatamente 1 teste; código restaurado e suíte verde): (a) só contas ativas contam como Administrador → `ComAdministradorDesativado_TambemNaoCriaOutro`; (b) troca por Remove+Add em vez de token → `SenhaFraca_E_Recusada_ESenhaProvisoriaContinuaValendo`; (c) sem o filtro → `EnquantoASenhaForProvisoria_TodaPaginaDoPainelLevaATroca`.
+
+**Não verificado aqui** (vai para `/test`): partida com variáveis contra SQL Server real e o script de migrations aplicado nele.
 
 **Dependencies**: 1.1
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Publicar localmente com as variáveis, entrar e ser levado à troca.
+**Verification**: Done when every test above passes, plus manual check: Publicar localmente com as variáveis, entrar e ser levado à troca.
 
 **Estimate**: M
 

@@ -15,4 +15,7 @@ public static class ClaimsDaEquipe
 {
     /// <summary>Nome completo mostrado no topo do painel.</summary>
     public const string NomeCompleto = "nome_completo";
+
+    /// <summary>"1" enquanto a senha for provisória; o filtro do painel não precisa ir ao banco para saber.</summary>
+    public const string DeveTrocarSenha = "deve_trocar_senha";
 }

@@ -41,14 +41,29 @@ internal static class ClienteDaEquipe
     }
 
     /// <summary>Clica em "Sair" (POST com o token que o layout do painel publica na página).</summary>
-    public static async Task<HttpResponseMessage> SairAsync(this HttpClient cliente)
+    public static async Task<HttpResponseMessage> SairAsync(this HttpClient cliente, string paginaComToken = "/painel/anuncios")
     {
-        string pagina = await cliente.GetStringAsync("/painel/anuncios");
+        string pagina = await cliente.GetStringAsync(paginaComToken);
         string token = Regex.Match(pagina, @"name=""request-verification-token""[^>]*content=""([^""]+)""").Groups[1].Value;
 
         using HttpRequestMessage requisicao = new(HttpMethod.Post, "/painel/sair");
         requisicao.Headers.Add("RequestVerificationToken", token);
         return await cliente.SendAsync(requisicao);
+    }
+
+    /// <summary>Preenche a tela "Defina sua nova senha" com o token antiforgery da própria página.</summary>
+    public static async Task<HttpResponseMessage> DefinirSenhaAsync(this HttpClient cliente, string nova, string confirmar = null)
+    {
+        string pagina = await cliente.GetStringAsync("/painel/definir-senha");
+        string token = Regex.Match(pagina, @"name=""__RequestVerificationToken""[^>]*value=""([^""]+)""").Groups[1].Value;
+
+        using FormUrlEncodedContent formulario = new(new Dictionary<string, string>
+        {
+            ["NovaSenha"] = nova,
+            ["ConfirmarSenha"] = confirmar ?? nova,
+            ["__RequestVerificationToken"] = token
+        });
+        return await cliente.PostAsync("/painel/definir-senha", formulario);
     }
 
     /// <summary>Caminho e consulta do redirecionamento; o cookie manda endereço absoluto, o controller manda relativo.</summary>
