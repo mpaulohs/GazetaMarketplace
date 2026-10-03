@@ -38,10 +38,45 @@ public sealed class MigrationsTests
     [TestMethod]
     public void MigrationInicial_CriaSoAAuditEntries()
     {
-        string script = Script();
+        string trecho = TrechoDaMigration("20261002230057_CriarAuditEntries");
 
-        StringAssert.Contains(script, "CREATE TABLE [AuditEntries]");
-        Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(script, @"CREATE TABLE \[(?!__EFMigrationsHistory)").Count);
+        StringAssert.Contains(trecho, "CREATE TABLE [AuditEntries]");
+        Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(trecho, @"CREATE TABLE \[").Count);
+    }
+
+    [TestMethod]
+    public void MigrationDoIdentity_CriaAsSeteTabelasEOsDoisPapeis()
+    {
+        string trecho = TrechoDaMigration("20261003030830_AdicionarIdentity");
+
+        foreach (string tabela in new[] { "AspNetRoles", "AspNetUsers", "AspNetRoleClaims", "AspNetUserClaims", "AspNetUserLogins", "AspNetUserRoles", "AspNetUserTokens" })
+        {
+            StringAssert.Contains(trecho, "CREATE TABLE [" + tabela + "]");
+        }
+
+        StringAssert.Contains(trecho, "[FullName] nvarchar(100) NOT NULL");
+        StringAssert.Contains(trecho, "N''Administrador''");
+        StringAssert.Contains(trecho, "N''Redator''");
+    }
+
+    [TestMethod]
+    public void ModeloDoCodigo_EstaEmDiaComASnapshotDasMigrations()
+    {
+        using AppDbContext contexto = new(
+            new DbContextOptionsBuilder<AppDbContext>().UseSqlServer("Server=(local);Database=Nenhum").Options,
+            new UsuarioFalso(), new RelogioFalso());
+
+        Assert.IsFalse(contexto.Database.HasPendingModelChanges(), "O modelo mudou sem migration: gere uma nova com 'dotnet-ef migrations add' (uma por mudança lógica).");
+    }
+
+    // Isola o trecho de uma migration no script idempotente: da guarda dela até a guarda da próxima
+    private static string TrechoDaMigration(string migration)
+    {
+        string script = Script();
+        int inicio = script.IndexOf("WHERE [MigrationId] = N'" + migration + "'", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, inicio, "migration ausente do script: " + migration);
+        int fim = script.IndexOf("COMMIT;", inicio, StringComparison.Ordinal);
+        return script.Substring(inicio, fim - inicio);
     }
 
     [TestMethod]

@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using GazetaMarketplace.Core.Entidades;
 using GazetaMarketplace.Core.Excecoes;
 using GazetaMarketplace.Core.Interfaces;
+using GazetaMarketplace.Infrastructure.Identidade;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -12,10 +14,10 @@ using Microsoft.EntityFrameworkCore.Metadata;
 namespace GazetaMarketplace.Infrastructure.Data;
 
 /// <summary>
-/// Contexto de escrita e de migrations (ADR-004). Auditoria automática em UTC, concorrência
-/// otimista por rowversion e auditoria de ações só de acréscimo.
+/// Contexto de escrita e de migrations (ADR-004), com as tabelas do Identity (ADR-003, chave <c>int</c>).
+/// Auditoria automática em UTC, concorrência otimista por rowversion e auditoria de ações só de acréscimo.
 /// </summary>
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<UsuarioIdentity, PapelIdentity, int>
 {
     private readonly IUsuarioAtual _usuarioAtual;
     private readonly TimeProvider _tempo;
@@ -36,6 +38,8 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Constrói as tabelas do Identity antes das configurações do projeto
+        base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         // Toda entidade editável tem rowversion (conflito vira ConflictException)
