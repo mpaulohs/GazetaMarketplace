@@ -92,7 +92,7 @@ public sealed class UsersTests
         string row = Row(html, "Ana Souza");
         StringAssert.Contains(row, AnaEmail);
         StringAssert.Contains(row, "Redator");
-        StringAssert.Contains(row, "Ativa");
+        StringAssert.Contains(row, "Conta ativa");
 
         AppUser ana = await FindAsync(factory, AnaEmail);
         Assert.IsTrue(ana.IsActive);
@@ -139,8 +139,8 @@ public sealed class UsersTests
 
         Assert.AreEqual("/painel/usuarios", (await DeactivateAsync(admin, ana.Id)).Destination());
         string html = await ListAsync(admin);
-        StringAssert.Contains(html, "A conta de Ana Souza foi desativada.");
-        StringAssert.Contains(Row(html, "Ana Souza"), "Desativada");
+        StringAssert.Contains(html, "Conta de Ana Souza desativada.");
+        StringAssert.Contains(Row(html, "Ana Souza"), "Conta desativada");
 
         // Não há exclusão: o cadastro (e, nas próximas tarefas, a autoria dos anúncios) continua com o nome dela
         Assert.AreEqual("Ana Souza", (await FindAsync(factory, AnaEmail)).FullName);
@@ -176,8 +176,8 @@ public sealed class UsersTests
         Assert.AreEqual("/painel/usuarios", reactivated.Destination());
 
         string html = await ListAsync(admin);
-        StringAssert.Contains(html, "A conta de Ana Souza foi reativada.");
-        StringAssert.Contains(Row(html, "Ana Souza"), "Ativa");
+        StringAssert.Contains(html, "Conta de Ana Souza reativada.");
+        StringAssert.Contains(Row(html, "Ana Souza"), "Conta ativa");
 
         using HttpClient anaClient = TeamClient.Create(factory);
         Assert.AreEqual("/painel/anuncios", (await anaClient.SignInAsync(AnaEmail, Password)).Destination());
@@ -240,7 +240,7 @@ public sealed class UsersTests
 
         StringAssert.Contains(await response.TextAsync(), "Você não pode desativar a sua própria conta");
         Assert.IsTrue((await FindAsync(factory, AdminEmail)).IsActive, "a conta continua ativa");
-        StringAssert.Contains(Row(await ListAsync(admin), "Marcos Silva"), "Ativa");
+        StringAssert.Contains(Row(await ListAsync(admin), "Marcos Silva"), "Conta ativa");
     }
 
     [TestMethod]
@@ -458,7 +458,7 @@ public sealed class UsersTests
         Assert.IsTrue(ana >= 0 && ana < bruno && bruno < marcos, "ordem alfabética");
         StringAssert.Contains(html, "aria-label=\"Desativar Ana Souza\"");
         StringAssert.Contains(html, "aria-label=\"Editar Bruno Lima\"");
-        StringAssert.Contains(Row(html, "Bruno Lima"), "Desativada");
+        StringAssert.Contains(Row(html, "Bruno Lima"), "Conta desativada");
     }
 
     [TestMethod]

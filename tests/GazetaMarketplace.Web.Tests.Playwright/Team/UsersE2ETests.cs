@@ -57,8 +57,8 @@ public class UsersE2ETests : SitePage
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = $"Desativar {name}?" })).ToBeVisibleAsync().ConfigureAwait(false);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Desativar" }).ClickAsync().ConfigureAwait(false);
 
-        await Expect(Page.GetByRole(AriaRole.Status)).ToContainTextAsync($"A conta de {name} foi desativada.").ConfigureAwait(false);
-        await Expect(Page.Locator("tr", new() { HasText = name })).ToContainTextAsync("Desativada").ConfigureAwait(false);
+        await Expect(Page.GetByRole(AriaRole.Status)).ToContainTextAsync($"Conta de {name} desativada.").ConfigureAwait(false);
+        await Expect(Page.Locator("tr", new() { HasText = name })).ToContainTextAsync("Conta desativada").ConfigureAwait(false);
 
         // A pessoa desativada não entra, mesmo com os dados certos
         IPage other = await Context.NewPageAsync().ConfigureAwait(false);

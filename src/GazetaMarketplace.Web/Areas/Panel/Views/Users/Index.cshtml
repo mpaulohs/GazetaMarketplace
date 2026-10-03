@@ -32,7 +32,7 @@
                     <td>@member.FullName</td>
                     <td>@member.Email</td>
                     <td>@member.Role</td>
-                    <td>@(member.IsActive ? "Ativa" : "Desativada")</td>
+                    <td>@(member.IsActive ? "Conta ativa" : "Conta desativada")</td>
                     <td>@await Html.PartialAsync("_UserActions", member, new ViewDataDictionary(ViewData) { ["CurrentUserId"] = Model.CurrentUserId })</td>
                 </tr>
             }
@@ -48,7 +48,7 @@
             <div class="card-body">
                 <p class="fw-semibold mb-0">@member.FullName</p>
                 <p class="mb-1 text-break">@member.Email</p>
-                <p class="mb-2">@member.Role · @(member.IsActive ? "Ativa" : "Desativada")</p>
+                <p class="mb-2">@member.Role · @(member.IsActive ? "Conta ativa" : "Conta desativada")</p>
                 @await Html.PartialAsync("_UserActions", member, new ViewDataDictionary(ViewData) { ["CurrentUserId"] = Model.CurrentUserId })
             </div>
         </li>

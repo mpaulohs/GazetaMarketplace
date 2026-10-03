@@ -94,7 +94,7 @@ public sealed class UsersController(IUserManagement management, ICurrentUser cur
             return Failure(result, new ConfirmDeactivationViewModel { Id = member.Id, FullName = member.FullName }, nameof(ConfirmDeactivation));
         }
 
-        return Saved($"A conta de {member.FullName} foi desativada.");
+        return Saved($"Conta de {member.FullName} desativada.");
     }
 
     [HttpPost("{id:int}/reativar")]
@@ -107,7 +107,7 @@ public sealed class UsersController(IUserManagement management, ICurrentUser cur
         }
 
         UserManagementResult result = await management.ReactivateAsync(id, cancellationToken);
-        return result.Succeeded ? Saved($"A conta de {member.FullName} foi reativada.") : Saved(result.Errors[0].Message);
+        return result.Succeeded ? Saved($"Conta de {member.FullName} reativada.") : Saved(result.Errors[0].Message);
     }
 
     [HttpGet("{id:int}/redefinir-senha")]
