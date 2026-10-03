@@ -171,7 +171,7 @@ Os diagramas estão em `architecture/diagrams/`:
 
 **AdPhotos** — `Id`, `AdId`, `SortOrder` (0 = capa), `StorageKey` (nome do arquivo, gerado — nunca o nome enviado), `Width`, `Height`, `SizeBytes`, `OriginalKey` (caminho do original em `_originals/`; **nulo depois da limpeza de 30 dias**), `CreatedAt`.
 
-**Catálogo de veículos** (ADR-008) — `VehicleBrands`, `VehicleModels`, `VehicleModelYears`, `VehicleVersions`, cada um com `Id`, nome, pai, `Kind` (carro/moto) e `Source` (origem dos dados, para a A5).
+**Catálogo de veículos** (ADR-008) — `VehicleBrands`, `VehicleModels`, `VehicleModelYears`, `VehicleVersions`. Chave primária e estrangeiras **compostas com `Kind`** (`car`/`moto`, porque os ids de carros e de motos podem coincidir); `VehicleModelYears` é tabela própria (há anos sem versões); `Source` registra a origem dos dados (A5). Ids vêm da origem, nunca são gerados.
 
 **Demais tabelas**
 

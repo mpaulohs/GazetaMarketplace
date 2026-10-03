@@ -736,3 +736,106 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003181509_AddVehicleCatalog'
+)
+BEGIN
+    CREATE TABLE [VehicleBrands] (
+        [Id] int NOT NULL,
+        [Kind] varchar(4) NOT NULL,
+        [Name] nvarchar(150) NOT NULL,
+        [Source] varchar(60) NOT NULL,
+        CONSTRAINT [PK_VehicleBrands] PRIMARY KEY ([Id], [Kind]),
+        CONSTRAINT [CK_VehicleBrands_Kind] CHECK ([Kind] IN ('car', 'moto'))
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003181509_AddVehicleCatalog'
+)
+BEGIN
+    CREATE TABLE [VehicleModels] (
+        [Id] int NOT NULL,
+        [Kind] varchar(4) NOT NULL,
+        [BrandId] int NOT NULL,
+        [Name] nvarchar(150) NOT NULL,
+        [Source] varchar(60) NOT NULL,
+        CONSTRAINT [PK_VehicleModels] PRIMARY KEY ([Id], [Kind]),
+        CONSTRAINT [CK_VehicleModels_Kind] CHECK ([Kind] IN ('car', 'moto')),
+        CONSTRAINT [FK_VehicleModels_VehicleBrands] FOREIGN KEY ([BrandId], [Kind]) REFERENCES [VehicleBrands] ([Id], [Kind]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003181509_AddVehicleCatalog'
+)
+BEGIN
+    CREATE TABLE [VehicleModelYears] (
+        [ModelId] int NOT NULL,
+        [Year] int NOT NULL,
+        [Kind] varchar(4) NOT NULL,
+        [Source] varchar(60) NOT NULL,
+        CONSTRAINT [PK_VehicleModelYears] PRIMARY KEY ([ModelId], [Year], [Kind]),
+        CONSTRAINT [CK_VehicleModelYears_Kind] CHECK ([Kind] IN ('car', 'moto')),
+        CONSTRAINT [FK_VehicleModelYears_VehicleModels] FOREIGN KEY ([ModelId], [Kind]) REFERENCES [VehicleModels] ([Id], [Kind]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003181509_AddVehicleCatalog'
+)
+BEGIN
+    CREATE TABLE [VehicleVersions] (
+        [Id] int NOT NULL,
+        [Kind] varchar(4) NOT NULL,
+        [ModelId] int NOT NULL,
+        [Year] int NOT NULL,
+        [Name] nvarchar(250) NOT NULL,
+        [Source] varchar(60) NOT NULL,
+        CONSTRAINT [PK_VehicleVersions] PRIMARY KEY ([Id], [Kind]),
+        CONSTRAINT [CK_VehicleVersions_Kind] CHECK ([Kind] IN ('car', 'moto')),
+        CONSTRAINT [FK_VehicleVersions_VehicleModelYears] FOREIGN KEY ([ModelId], [Year], [Kind]) REFERENCES [VehicleModelYears] ([ModelId], [Year], [Kind]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003181509_AddVehicleCatalog'
+)
+BEGIN
+    CREATE INDEX [IX_VehicleModels_BrandId_Kind] ON [VehicleModels] ([BrandId], [Kind]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003181509_AddVehicleCatalog'
+)
+BEGIN
+    CREATE INDEX [IX_VehicleModelYears_ModelId_Kind] ON [VehicleModelYears] ([ModelId], [Kind]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003181509_AddVehicleCatalog'
+)
+BEGIN
+    CREATE INDEX [IX_VehicleVersions_ModelId_Year_Kind] ON [VehicleVersions] ([ModelId], [Year], [Kind]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003181509_AddVehicleCatalog'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261003181509_AddVehicleCatalog', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A ferramenta fica fora da solução do site (tools/); o teste a referencia por caminho -->
+    <ProjectReference Include="..\..\tools\VehicleCatalogExport\VehicleCatalogExport.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\sample-catalog.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

@@ -7,6 +7,7 @@ using GazetaMarketplace.Core.Entities;
 using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Settings;
+using GazetaMarketplace.Core.VehicleCatalog;
 using GazetaMarketplace.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +51,14 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
     public DbSet<Category> Categories => Set<Category>();
 
     public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
+
+    public DbSet<VehicleBrand> VehicleBrands => Set<VehicleBrand>();
+
+    public DbSet<VehicleModel> VehicleModels => Set<VehicleModel>();
+
+    public DbSet<VehicleModelYear> VehicleModelYears => Set<VehicleModelYear>();
+
+    public DbSet<VehicleVersion> VehicleVersions => Set<VehicleVersion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Ferramenta de exportação do catálogo de veículos (ADR-008). Fica fora da solução do site (GazetaMarketplace.slnx):
+       é rodada por quem exporta, na própria máquina; os projetos de teste a referenciam por caminho. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>VehicleCatalogExport</RootNamespace>
+    <AssemblyName>VehicleCatalogExport</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="VehicleCatalogExport.Tests" />
+    <InternalsVisibleTo Include="GazetaMarketplace.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

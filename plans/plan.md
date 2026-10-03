@@ -890,14 +890,14 @@
 - tools/VehicleCatalogExport/CargaEmLote.cs (Dapper, só em desenvolvimento e teste)
 
 **Acceptance Criteria**:
-- [ ] Endpoints `listVehicleBrands`, `listVehicleModels`, `listVehicleModelYears` e `listVehicleVersions` conforme `architecture/api/openapi.yaml`, públicos e com resposta em ordem definida
-- [ ] Cada registro tem `Source` (origem); a troca de fonte não muda código de tela nem de regra
-- [ ] A ferramenta para sem gerar nada se faltar a variável de conexão ou se a conexão falhar; descarta órfãos e lista-os num relatório; o script gerado é idempotente (`MERGE`)
-- [ ] Nenhuma credencial do GazetaOnline existe no repositório (a antiga não é usada)
-- [ ] A leitura da origem usa Dapper e nunca escreve na origem; a carga em lote **recusa** rodar contra o banco de produção (cadeia de conexão marcada como produção) e traz o comentário `// Dapper: carga em lote; o EF Core geraria um INSERT por linha`
-- [ ] A carga em lote é idempotente (`MERGE`) e deixa a mesma contagem que o script gerado
-- [ ] A leitura da origem usa Dapper e nunca escreve na origem; a carga em lote **recusa** rodar contra o banco de produção (cadeia de conexão marcada como produção) e traz o comentário `// Dapper: carga em lote; o EF Core geraria um INSERT por linha`
-- [ ] A carga em lote é idempotente (`MERGE`) e deixa a mesma contagem que o script gerado
+- [x] Endpoints `listVehicleBrands`, `listVehicleModels`, `listVehicleModelYears` e `listVehicleVersions` conforme `architecture/api/openapi.yaml`, públicos e com resposta em ordem definida
+- [x] Cada registro tem `Source` (origem); a troca de fonte não muda código de tela nem de regra
+- [x] A ferramenta para sem gerar nada se faltar a variável de conexão ou se a conexão falhar; descarta órfãos e lista-os num relatório; o script gerado é idempotente (`MERGE`)
+- [x] Nenhuma credencial do GazetaOnline existe no repositório (a antiga não é usada)
+- [x] A leitura da origem usa Dapper e nunca escreve na origem; a carga em lote **recusa** rodar contra o banco de produção (cadeia de conexão marcada como produção) e traz o comentário `// Dapper: carga em lote; o EF Core geraria um INSERT por linha`
+- [x] A carga em lote é idempotente (`MERGE`) e deixa a mesma contagem que o script gerado
+- [x] A leitura da origem usa Dapper e nunca escreve na origem; a carga em lote **recusa** rodar contra o banco de produção (cadeia de conexão marcada como produção) e traz o comentário `// Dapper: carga em lote; o EF Core geraria um INSERT por linha`
+- [x] A carga em lote é idempotente (`MERGE`) e deixa a mesma contagem que o script gerado
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Catalog/EndpointsTests.Marcas_PorTipo_EmOrdemAlfabetica`
@@ -913,6 +913,15 @@
 - `tests/VehicleCatalogExport.Tests/CargaEmLoteTests.Lote_CarregaCatalogoEmBancoDeTeste_EConfereContagem (TestContainers, roda no /test)`
 - `tests/VehicleCatalogExport.Tests/BatchLoadTests.RecusaBancoMarcadoComoProducao`
 - `tests/VehicleCatalogExport.Tests/CargaEmLoteTests.RodarDuasVezes_NaoDuplica (TestContainers, roda no /test)`
+
+**Implementado em 2026-10-03 (decisões do Product Owner)**:
+- **Chave composta (Id, Kind) em todas as tabelas.** `CarBrands` e `MotorcycleBrands` são tabelas separadas no GazetaOnline e cada uma numera a partir de 1, então a Honda de carros e a Honda de motos podem ter o mesmo id. O esquema da origem **nunca foi lido** (não há esquema no repositório), então a unicidade global dos ids não pôde ser confirmada e a chave composta ficou. `VehicleBrands` e `VehicleModels` têm chave (Id, Kind); `VehicleModelYears`, (ModelId, Year, Kind); `VehicleVersions`, (Id, Kind); cada chave estrangeira também leva o tipo.
+- **Ano em tabela própria** (`VehicleModelYears`), com as versões ligadas por chave estrangeira composta: existem anos sem versões.
+- **Consequência no contrato:** os três endpoints filhos passaram a exigir `kind` (`car` ou `moto`) além do id, porque o id sozinho não diz de qual tipo é. `openapi.yaml` atualizado (parâmetro `VehicleKind` e resposta 400).
+- Marca existente sem modelos, modelo sem anos e ano sem versões devolvem **200 com lista vazia**; item que não existe devolve **404**; `kind` ausente ou inválido e ano fora de 1950 a 2100 devolvem **400**.
+- Cache de 10 minutos por consulta (só o que existe entra no cache); respostas HTTP com `Cache-Control: public, max-age=600`.
+- Ferramenta `tools/VehicleCatalogExport` (fora da solução; testada por `tests/VehicleCatalogExport.Tests`, que está na solução): `export` gera o script `MERGE` idempotente e `load` carrega em lote, só em Development ou Testing, rodando os mesmos `MERGE` numa transação.
+- **Catálogo reduzido de teste:** `tests/VehicleCatalogExport.Tests/Data/sample-catalog.sql` simula a origem (10 marcas, 45 modelos, 214 anos, 307 versões) com ids que colidem entre carros e motos e os casos de borda; `db/seed/sample/vehicle-catalog-sample.sql` é o script gerado dele (`Source = 'sample'`) e um teste confere que está em dia. **A exportação real fica para o lançamento**, quando a A5 e o acesso somente leitura estiverem resolvidos.
 
 **Dependencies**: 2.1, 0.6
 

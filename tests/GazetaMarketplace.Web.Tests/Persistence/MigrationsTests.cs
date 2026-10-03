@@ -135,6 +135,24 @@ public sealed class MigrationsTests
         Assert.DoesNotContain("INSERT INTO [SiteSettings]", section, "o telefone nasce vazio: o Administrador precisa informá-lo (US-015)");
     }
 
+    [TestMethod]
+    public void MigrationDoCatalogoDeVeiculos_CriaAsQuatroTabelas_ComChavesCompostasEOTipoEmTodas_ESemLinhas()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddVehicleCatalog", StringComparison.Ordinal))).Replace("\r", string.Empty, StringComparison.Ordinal);
+
+        Assert.AreEqual(4, System.Text.RegularExpressions.Regex.Matches(section, @"CREATE TABLE \[").Count);
+        StringAssert.Contains(section, "CONSTRAINT [PK_VehicleBrands] PRIMARY KEY ([Id], [Kind])");
+        StringAssert.Contains(section, "CONSTRAINT [PK_VehicleModels] PRIMARY KEY ([Id], [Kind])");
+        StringAssert.Contains(section, "CONSTRAINT [PK_VehicleModelYears] PRIMARY KEY ([ModelId], [Year], [Kind])");
+        StringAssert.Contains(section, "CONSTRAINT [PK_VehicleVersions] PRIMARY KEY ([Id], [Kind])");
+        StringAssert.Contains(section, "FOREIGN KEY ([BrandId], [Kind]) REFERENCES [VehicleBrands] ([Id], [Kind])");
+        StringAssert.Contains(section, "FOREIGN KEY ([ModelId], [Kind]) REFERENCES [VehicleModels] ([Id], [Kind])");
+        StringAssert.Contains(section, "FOREIGN KEY ([ModelId], [Year], [Kind]) REFERENCES [VehicleModelYears] ([ModelId], [Year], [Kind])");
+        Assert.AreEqual(4, System.Text.RegularExpressions.Regex.Matches(section, @"\[Kind\] IN \('car', 'moto'\)").Count, "o tipo só pode ser car ou moto, em todas as tabelas");
+        Assert.DoesNotContain("IDENTITY", section, "os ids vêm da origem, nunca são gerados");
+        Assert.DoesNotContain("INSERT INTO [Vehicle", section, "as tabelas nascem vazias: a carga é um passo à parte");
+    }
+
     private static string[] Migrations
     {
         get

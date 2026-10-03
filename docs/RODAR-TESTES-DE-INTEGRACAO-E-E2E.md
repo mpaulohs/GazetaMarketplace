@@ -16,6 +16,14 @@
 dotnet run --project tests/GazetaMarketplace.Web.Tests
 ```
 
+## Testes da ferramenta de exportação do catálogo
+
+```bash
+dotnet run --project tests/VehicleCatalogExport.Tests      # 43 testes, sem Docker
+```
+
+Os testes que precisam do SQL Server (origem simulada, script, carga em lote, endpoints) ficam em `tests/GazetaMarketplace.IntegrationTests/VehicleCatalogTests.cs` e rodam com os de integração, logo abaixo. Para gerar de novo o script de exemplo (`db/seed/sample/vehicle-catalog-sample.sql`), veja `db/seed/README.md`.
+
 ## Testes de integração (SQL Server em contêiner)
 
 ```bash

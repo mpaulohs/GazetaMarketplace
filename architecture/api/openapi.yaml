@@ -177,13 +177,7 @@ paths:
       description: Público (usado no formulário do anúncio e no filtro de marca da busca). Resposta cacheável por 10 minutos.
       operationId: listVehicleBrands
       parameters:
-        - name: kind
-          in: query
-          required: true
-          schema:
-            type: string
-            enum: [car, moto]
-            example: car
+        - $ref: '#/components/parameters/VehicleKind'
       responses:
         '200':
           description: Marcas em ordem alfabética
@@ -208,6 +202,9 @@ paths:
       tags: [Catálogo de veículos]
       summary: Modelos de uma marca
       operationId: listVehicleModels
+      description: |
+        O `kind` é obrigatório porque carros e motos vêm de tabelas separadas que numeram os ids a partir de 1: a Honda de carros e a Honda de
+        motos podem ter o mesmo `brandId`. Marca existente sem modelos devolve lista vazia; marca inexistente devolve 404.
       parameters:
         - name: brandId
           in: path
@@ -216,6 +213,7 @@ paths:
             type: integer
             minimum: 1
             example: 21
+        - $ref: '#/components/parameters/VehicleKind'
       responses:
         '200':
           description: Modelos em ordem alfabética
@@ -230,6 +228,8 @@ paths:
                   name: Civic
                 - id: 305
                   name: Fit
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -240,6 +240,7 @@ paths:
       tags: [Catálogo de veículos]
       summary: Anos disponíveis de um modelo
       operationId: listVehicleModelYears
+      description: O `kind` é obrigatório (ver `listVehicleModels`). Modelo existente sem anos devolve lista vazia; modelo inexistente devolve 404.
       parameters:
         - name: modelId
           in: path
@@ -248,6 +249,7 @@ paths:
             type: integer
             minimum: 1
             example: 301
+        - $ref: '#/components/parameters/VehicleKind'
       responses:
         '200':
           description: Anos em ordem decrescente
@@ -259,6 +261,8 @@ paths:
                   type: integer
                   example: 2018
               example: [2021, 2020, 2019, 2018]
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -285,6 +289,10 @@ paths:
             minimum: 1950
             maximum: 2100
             example: 2018
+        - $ref: '#/components/parameters/VehicleKind'
+      description: |
+        O `kind` é obrigatório (ver `listVehicleModels`). Ano existente sem versões devolve lista vazia; modelo ou ano inexistente devolve 404;
+        ano fora de 1950 a 2100 devolve 400.
       responses:
         '200':
           description: Versões em ordem alfabética
@@ -297,6 +305,8 @@ paths:
               example:
                 - id: 90412
                   name: EXL 2.0 Flex Automático
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -473,6 +483,15 @@ components:
       description: Token antiforgery lido da página (meta `request-verification-token`)
 
   parameters:
+    VehicleKind:
+      name: kind
+      in: query
+      required: true
+      description: Tipo de veículo. Carros e motos têm ids próprios que podem coincidir.
+      schema:
+        type: string
+        enum: [car, moto]
+        example: car
     AdId:
       name: adId
       in: path

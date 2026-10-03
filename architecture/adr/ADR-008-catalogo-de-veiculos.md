@@ -42,3 +42,10 @@ Revisit this decision when **any** of the following becomes true:
 - **Uso no site:** `IVehicleCatalog` (Core) com as consultas encadeadas; lidas do banco e mantidas em cache de memória por 10 minutos; endpoint `GET /api/v1/vehicle-catalog/brands?kind=car`, `…/brands/{id}/models`, `…/models/{id}/years`, `…/years/{id}/versions` para o formulário.
 - **Anúncio:** o JSON de atributos guarda os ids (`brandId`, `modelId`, `modelYear`, `versionId`); as colunas calculadas de filtro (ADR-002) usam `brandId`, `modelId` e `modelYear`.
 - **Reimplementation flag:** não se aplica — o catálogo tem uma só representação (as tabelas carregadas).
+
+## Amendment 2026-10-03 (tarefa 2.5)
+- **Chave composta com o tipo.** Carros e motos vêm de tabelas separadas do GazetaOnline, cada uma numerando a partir de 1. Toda tabela do catálogo tem `Kind` na chave primária e nas chaves estrangeiras: `VehicleBrands (Id, Kind)`, `VehicleModels (Id, Kind)`, `VehicleModelYears (ModelId, Year, Kind)`, `VehicleVersions (Id, Kind)`. O esquema da origem nunca foi lido, então não se sabe se os ids são globalmente únicos; a chave composta vale nos dois casos.
+- **Contrato:** `GET …/brands/{id}/models`, `…/models/{id}/years` e `…/models/{id}/years/{year}/versions` exigem `kind=car|moto`. Sem ele o id não identifica o item.
+- **Ano em tabela própria**, para existirem anos sem versões.
+- **Carga em lote:** executa os mesmos `MERGE` do script numa transação (uma só implementação da regra); recusa ambiente que não seja Development ou Testing e cadeia de conexão com "prod".
+- **Esquema da origem presumido:** ver `plans/BACKLOG.md`; só `OriginReader.cs` conhece a origem.

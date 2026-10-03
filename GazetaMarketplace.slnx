@@ -8,5 +8,6 @@
     <Project Path="tests/GazetaMarketplace.IntegrationTests/GazetaMarketplace.IntegrationTests.csproj" />
     <Project Path="tests/GazetaMarketplace.Web.Tests.Playwright/GazetaMarketplace.Web.Tests.Playwright.csproj" />
     <Project Path="tests/GazetaMarketplace.Web.Tests/GazetaMarketplace.Web.Tests.csproj" />
+    <Project Path="tests/VehicleCatalogExport.Tests/VehicleCatalogExport.Tests.csproj" />
   </Folder>
 </Solution>
