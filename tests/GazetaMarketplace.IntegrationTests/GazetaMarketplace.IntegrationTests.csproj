@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="MSTest" />
+    <PackageReference Include="Testcontainers.MsSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GazetaMarketplace.Core\GazetaMarketplace.Core.csproj" />
+    <ProjectReference Include="..\..\src\GazetaMarketplace.Infrastructure\GazetaMarketplace.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\GazetaMarketplace.Web\GazetaMarketplace.Web.csproj" />
+  </ItemGroup>
+
+</Project>
