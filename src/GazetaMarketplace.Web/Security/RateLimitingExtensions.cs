@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -20,6 +21,12 @@ public static class RateLimitingExtensions
 
     private static readonly string[] StaticPrefixes = ["/lib/", "/css/", "/js/", "/images/", "/favicon.ico"];
 
+    /// <summary>Pedidos por minuto e por IP quando <c>RateLimiting:GlobalPerMinute</c> não está configurada: 100 (rules/security.md).</summary>
+    public const int DefaultGlobalPerMinute = 100;
+
+    /// <summary>Chave de configuração do limite global. Existe para a suíte E2E (que faz centenas de pedidos de um IP só) rodar contra o site publicado.</summary>
+    public const string GlobalPerMinuteKey = "RateLimiting:GlobalPerMinute";
+
     public static IServiceCollection AddRateLimiters(this IServiceCollection services)
     {
         services.AddRateLimiter(options =>
@@ -30,7 +37,7 @@ public static class RateLimitingExtensions
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
                 IsStaticFile(context.Request.Path)
                     ? RateLimitPartition.GetNoLimiter("estaticos")
-                    : RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(100, TimeSpan.FromMinutes(1))));
+                    : RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(GlobalPerMinute(context), TimeSpan.FromMinutes(1))));
 
             options.AddPolicy(AuthPolicy, context =>
                 RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(5, TimeSpan.FromMinutes(15))));
@@ -40,6 +47,13 @@ public static class RateLimitingExtensions
 
         return services;
     }
+
+    // Lido quando a janela de um IP é criada (não na partida): a configuração do host de teste só existe depois que o Program.cs rodou.
+    // Ausente, zero, negativa ou ilegível vale 100. O limite de login e de recuperação de senha (5 por 15 min) não é configurável.
+    private static int GlobalPerMinute(HttpContext context) =>
+        int.TryParse(context.RequestServices.GetRequiredService<IConfiguration>()[GlobalPerMinuteKey], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int configured) && configured > 0
+            ? configured
+            : DefaultGlobalPerMinute;
 
     private static FixedWindowRateLimiterOptions Window(int limit, TimeSpan duration) => new()
     {

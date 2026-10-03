@@ -58,6 +58,7 @@ export SendGrid__ApiKey=chave-de-teste  SendGrid__FromEmail=noreply@exemplo.com.
 export Bootstrap__AdminEmail=e2e.admin@exemplo.com.br  Bootstrap__AdminPassword='<senha-do-admin>'
 export Authentication__SessionMinutes=1        # só para o teste de sessão expirada
 export Site__BaseUrl=https://localhost:5443    # obrigatório em Production: endereço que vai nos links dos e-mails
+export RateLimiting__GlobalPerMinute=1000      # só no site do E2E: a suíte faz centenas de pedidos de um IP só (o padrão de produção é 100 por minuto)
 export SendGrid__BaseUrl=http://localhost:5990 # só nos E2E: o SendGrid "de mentira" que o teste de recuperação de senha abre
 cd /caminho/publish && dotnet GazetaMarketplace.Web.dll
 ```
@@ -87,7 +88,7 @@ Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecove
 docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '<senha-sa>' -C -d gazeta_e2e -I -Q "DELETE FROM PasswordRecoveryAttempts"
 ```
 
-O limite global de 100 pedidos por minuto por IP também conta tudo que a suíte faz: espere um minuto entre duas rodadas.
+O limite global de 100 pedidos por minuto por IP também conta tudo que a suíte faz, e a suíte já passa disso: o site do E2E sobe com `RateLimiting__GlobalPerMinute=1000` (ver a lista de variáveis acima). O limite de login e de recuperação de senha (5 por 15 minutos) não é configurável.
 
 ## Regenerar o script das migrations
 
@@ -96,6 +97,7 @@ Depois de criar uma migration, rode `db/scripts/gerar-script.sh`. Ele chama `dot
 ## Publicação (para o runbook de implantação)
 
 - **Script de banco:** aplicar `db/scripts/gazeta-idempotente.sql` com `sqlcmd -I` (redundância defensiva; o script já liga o `QUOTED_IDENTIFIER`).
+- **Limite de pedidos do E2E:** `RateLimiting__GlobalPerMinute=1000` só no site de teste. Sem isso, a suíte completa recebe 429 em páginas de login e os testes caem por tempo esgotado. Em produção a chave não existe e vale 100.
 - **Endereço do site:** definir `Site__BaseUrl` (https). Sem ele o site não sobe em Production, por segurança: o link do e-mail de redefinição de senha não pode nascer do cabeçalho Host.
 - **Arquivos estáticos:** em Production, os arquivos estáticos só saem da saída publicada. Rodar os testes de CSS contra a pasta publicada, nunca contra o código-fonte.
 

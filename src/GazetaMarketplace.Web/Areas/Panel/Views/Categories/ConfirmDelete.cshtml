@@ -1,0 +1,22 @@
+@model ConfirmDeleteViewModel
+@{
+    ViewData["Title"] = "Confirmar exclusão";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="fs-3 mb-3">Excluir @Model.Name?</h1>
+                <p>Essa ação não pode ser desfeita. A categoria some da lista e do site.</p>
+
+                <form asp-area="Panel" asp-action="Delete" asp-route-id="@Model.Id" method="post">
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary alvo-toque" asp-area="Panel" asp-action="Index">Cancelar</a>
+                        <button class="btn btn-danger alvo-toque" type="submit">Excluir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

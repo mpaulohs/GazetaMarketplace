@@ -68,6 +68,16 @@ public static class CategoryRules
         return duplicate ? CategoryViolation.DuplicateName : CategoryViolation.None;
     }
 
+    /// <summary>
+    /// A categoria nunca pode ser excluída (A7 b): veio da carga inicial <b>e</b> define o próprio grupo de campos. Categorias que só herdam o grupo
+    /// (por exemplo as peças sob Autopeças) e as criadas pelo Administrador seguem as regras comuns.
+    /// </summary>
+    public static bool IsProtectedFromDeletion(CategoryNode node)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        return node.IsSystem && node.FieldGroup is not null;
+    }
+
     /// <summary>Nome comparável: sem acento, sem diferença de maiúscula e com espaços colapsados ("Acessórios" e " acessorios " são o mesmo nome).</summary>
     public static string ComparisonKey(string name)
     {

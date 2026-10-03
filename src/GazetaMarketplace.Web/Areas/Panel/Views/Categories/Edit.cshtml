@@ -1,0 +1,29 @@
+@model CategoryFormViewModel
+@{
+    ViewData["Title"] = "Editar categoria";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="fs-3 mb-3">Editar categoria</h1>
+                @await Html.PartialAsync("_GeneralError")
+                <p class="mb-3"><strong>Categoria pai:</strong> @(Model.ParentName ?? "Nenhuma (categoria principal)")</p>
+
+                <form asp-area="Panel" asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="Name">Nome <span aria-hidden="true">*</span></label>
+                        <input class="form-control @(ViewData.ModelState["Name"]?.Errors.Count > 0 ? "is-invalid" : "")" asp-for="Name" autocomplete="off" maxlength="100" aria-required="true" aria-invalid="@(ViewData.ModelState["Name"]?.Errors.Count > 0 ? "true" : null)" aria-describedby="name-help error-Name" />
+                        @await Html.PartialAsync("_FieldErrors", "Name")
+                        <p class="form-text" id="name-help">Renomear mantém os anúncios e o endereço da categoria.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary alvo-toque" asp-area="Panel" asp-action="Index">Cancelar</a>
+                        <button class="btn btn-primary alvo-toque" type="submit">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

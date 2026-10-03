@@ -78,6 +78,39 @@ public sealed class RateLimiterTests
     }
 
     [TestMethod]
+    [DataRow("250", 250)]
+    [DataRow("3", 3)]
+    [DataRow("0", 100)]
+    [DataRow("-5", 100)]
+    [DataRow("muitos", 100)]
+    public async Task LimiteGlobal_PodeSerConfigurado_ValoresInvalidosVoltamParaCem(string configured, int effective)
+    {
+        using WebFactory factory = new(configuration: new Dictionary<string, string> { ["RateLimiting:GlobalPerMinute"] = configured });
+        using HttpClient client = factory.CreateClient();
+
+        for (int i = 1; i <= effective; i++)
+        {
+            Assert.AreEqual(HttpStatusCode.OK, (await Send(client, "/api/v1/teste/log", "198.51.100.7")).StatusCode, "pedido " + i);
+        }
+
+        Assert.AreEqual(HttpStatusCode.TooManyRequests, (await Send(client, "/api/v1/teste/log", "198.51.100.7")).StatusCode);
+    }
+
+    [TestMethod]
+    public async Task LimiteDeLoginERecuperacao_NaoMudaComOLimiteGlobalConfigurado()
+    {
+        using WebFactory factory = new(configuration: new Dictionary<string, string> { ["RateLimiting:GlobalPerMinute"] = "1000" });
+        using HttpClient client = factory.CreateClient();
+
+        for (int i = 1; i <= 5; i++)
+        {
+            Assert.AreEqual(HttpStatusCode.OK, (await Send(client, "/api/v1/teste/auth", "198.51.100.8")).StatusCode, "tentativa " + i);
+        }
+
+        Assert.AreEqual(HttpStatusCode.TooManyRequests, (await Send(client, "/api/v1/teste/auth", "198.51.100.8")).StatusCode);
+    }
+
+    [TestMethod]
     public async Task ArquivosEstaticos_NaoConsomemOLimiteGlobal()
     {
         using WebFactory factory = new();

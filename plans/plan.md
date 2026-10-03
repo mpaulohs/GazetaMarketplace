@@ -944,26 +944,26 @@
 **Files to modify**:
 - `src/GazetaMarketplace.Web/Areas/Panel/Controllers/CategoriesController.cs`
 - `src/GazetaMarketplace.Web/Areas/Panel/Views/Categories/*.cshtml`
-- `src/GazetaMarketplace.Core/Categories/CategoryService.cs`
+- `src/GazetaMarketplace.Core/Categories/` (`ICategoryManagement`, `ICategoryUsage`, `CategoryRules.IsProtectedFromDeletion`) e `src/GazetaMarketplace.Infrastructure/Categories/` (`CategoryManagement`, `PendingAdsCategoryUsage`)
 - `src/GazetaMarketplace.Web/wwwroot/js/pages/categories-index.js`
 
 **Acceptance Criteria**:
-- [ ] `@US-013-S01` (@happy): Criar uma subcategoria — o *Then* do SPEC é atendido
-- [ ] `@US-013-S02` (@happy): Criar uma categoria principal — o *Then* do SPEC é atendido
-- [ ] `@US-013-S03` (@happy): Renomear uma categoria — o *Then* do SPEC é atendido
-- [ ] `@US-013-S04` (@happy): Mudar a ordem das categorias — o *Then* do SPEC é atendido
-- [ ] `@US-013-S05` (@happy): Excluir uma categoria vazia — o *Then* do SPEC é atendido
-- [ ] `@US-013-S06` (@negative): Nome de categoria repetido — o *Then* do SPEC é atendido
-- [ ] `@US-013-S07` (@negative): Nome de categoria vazio — o *Then* do SPEC é atendido
-- [ ] `@US-013-S08` (@negative): Excluir categoria que tem anúncios — o *Then* do SPEC é atendido
-- [ ] `@US-013-S09` (@negative): Excluir categoria que tem subcategorias — o *Then* do SPEC é atendido
-- [ ] `@US-013-S10` (@negative): Categorias com características específicas não podem ser excluídas — o *Then* do SPEC é atendido
-- [ ] `@US-013-S11` (@edge): Categorias têm até três níveis — o *Then* do SPEC é atendido
-- [ ] Criar categoria principal, subcategoria e terceiro nível; quarto nível é impedido pela lista "Categoria pai"
-- [ ] Só se exclui categoria sem subcategorias e sem anúncios; o bloqueio por campos específicos vale só para categorias da carga inicial que definem o próprio grupo (A7 b)
-- [ ] Renomear mantém os anúncios; reordenar só entre irmãs e vale no site
-- [ ] Nome único por grupo; nome vazio recusado; apenas Administrador acessa
-- [ ] **RC-16:** criar, renomear, reordenar e excluir categoria gravam em `AuditEntries`
+- [x] `@US-013-S01` (@happy): Criar uma subcategoria — o *Then* do SPEC é atendido
+- [x] `@US-013-S02` (@happy): Criar uma categoria principal — o *Then* do SPEC é atendido
+- [x] `@US-013-S03` (@happy): Renomear uma categoria — o *Then* do SPEC é atendido
+- [x] `@US-013-S04` (@happy): Mudar a ordem das categorias — o *Then* do SPEC é atendido
+- [x] `@US-013-S05` (@happy): Excluir uma categoria vazia — o *Then* do SPEC é atendido
+- [x] `@US-013-S06` (@negative): Nome de categoria repetido — o *Then* do SPEC é atendido
+- [x] `@US-013-S07` (@negative): Nome de categoria vazio — o *Then* do SPEC é atendido
+- [x] `@US-013-S08` (@negative): Excluir categoria que tem anúncios — o *Then* do SPEC é atendido
+- [x] `@US-013-S09` (@negative): Excluir categoria que tem subcategorias — o *Then* do SPEC é atendido
+- [x] `@US-013-S10` (@negative): Categorias com características específicas não podem ser excluídas — o *Then* do SPEC é atendido
+- [x] `@US-013-S11` (@edge): Categorias têm até três níveis — o *Then* do SPEC é atendido
+- [x] Criar categoria principal, subcategoria e terceiro nível; quarto nível é impedido pela lista "Categoria pai"
+- [x] Só se exclui categoria sem subcategorias e sem anúncios; o bloqueio por campos específicos vale só para categorias da carga inicial que definem o próprio grupo (A7 b)
+- [x] Renomear mantém os anúncios; reordenar só entre irmãs e vale no site
+- [x] Nome único por grupo; nome vazio recusado; apenas Administrador acessa
+- [x] **RC-16:** criar, renomear, reordenar e excluir categoria gravam em `AuditEntries`
 
 **Tests to add**:
 - `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.US013S01_CriarUmaSubcategoria` — `@US-013-S01`
@@ -981,6 +981,16 @@
 - `tests/GazetaMarketplace.Web.Tests/Categories/ExclusaoTests.BloqueioPorCamposEspecificos_SoParaCategoriasDaCargaComGrupoProprio`
 - `tests/GazetaMarketplace.Web.Tests/Categories/OrdemTests.Reordenar_SoEntreIrmas`
 - `tests/GazetaMarketplace.Web.Tests/Categories/CategoriesTests.CriarRenomearReordenarExcluir_GravamAuditoria`
+
+**Implementado em 2026-10-03 (decisões do Product Owner)**:
+- **Anúncios por categoria (`ICategoryUsage`).** A tabela `Ads` só nasce na 3.1; até lá a implementação provisória devolve zero. A 3.1 troca por uma consulta em `Ads` e o teste S08 passa a rodar contra anúncios de verdade (hoje usa um duplo que devolve 3).
+- **Subcategoria dentro de uma folha:** permitida só se a folha não tiver anúncios; ela deixa de aceitar anúncio (`IsPostable = 0`, auditado em `category.change_postable`). Com anúncios, recusa com "Mova antes os anúncios desta categoria" (mensagem que não está na SPEC).
+- **Ordem dos bloqueios da exclusão:** campos específicos, depois subcategorias, depois anúncios. O bloqueio por campos específicos aparece **ao clicar em "Excluir"**, sem janela de confirmação (S10 não tem passo de confirmação); S08 e S09 mostram a mensagem depois de confirmar.
+- **Renomear mantém o slug**, para as URLs públicas não quebrarem.
+- **Mover por botões em formulário comum** (POST/redirecionar/GET), com `role="status"` ("X agora está antes de Y") e âncora no item; com JavaScript o foco volta ao botão usado. Empates na ordem da carga viram posições de 10 em 10 antes da troca.
+- Toda operação lê o estado atual do **banco** (nunca o cache de 10 minutos), roda em transação `Serializable` e esvazia o cache da árvore ao terminar. Auditoria (RC-16) em `category.create`, `category.rename`, `category.move`, `category.delete` e `category.change_postable`, com anterior e novo, na mesma transação.
+- A parte "o visitante vê" dos cenários S01 a S05 (página inicial, página de categoria) chega com as telas públicas (fase 5); aqui fica provado que a **árvore em cache** que elas vão ler já reflete cada mudança na hora.
+- **Ponto da SPEC a corrigir:** o cenário S08 usa "Motos" como categoria com anúncios, mas Motos (id 36) é da carga e define o próprio grupo de campos; pela A7 b e pela ordem de bloqueios decidida, ela mostra a mensagem de campos específicos, não a de anúncios. Os testes de S08 usam uma categoria sem grupo próprio.
 
 **Dependencies**: 2.1, 2.2, 1.1
 

@@ -37,6 +37,8 @@ public static class ServiceCollectionExtensions
             sql => sql.EnableRetryOnFailure(maxRetryCount: 3)));
         services.AddSingleton<CategoryTree>();
         services.AddSingleton<ICategoryTree>(provider => provider.GetRequiredService<CategoryTree>());
+        services.AddSingleton<ICategoryUsage, PendingAdsCategoryUsage>(); // provisório até a 3.1 (anúncios)
+        services.AddScoped<ICategoryManagement, CategoryManagement>();
         services.AddSingleton<SiteSettingsStore>();
         services.AddSingleton<ISiteSettings>(provider => provider.GetRequiredService<SiteSettingsStore>());
         services.AddScoped<ISiteSettingsManagement, SiteSettingsManagement>();

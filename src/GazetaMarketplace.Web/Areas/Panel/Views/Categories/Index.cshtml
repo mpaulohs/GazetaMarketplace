@@ -1,0 +1,109 @@
+@model CategoriesIndexViewModel
+@{
+    ViewData["Title"] = "Categorias";
+    int depth = 0;
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h1 class="fs-3 mb-0">Categorias</h1>
+    <a class="btn btn-primary alvo-toque" asp-area="Panel" asp-action="New">Nova categoria</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success" role="status" data-focus-id="@Model.FocusId">@Model.Message</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.Alert))
+{
+    <div class="alert alert-danger" role="alert">@Model.Alert</div>
+}
+
+@* A ordem da lista é a ordem em que as categorias aparecem no site. Subcategorias ficam em listas aninhadas (o nível é anunciado). *@
+<div class="card"><div class="card-body p-2 p-md-3">
+<ul class="list-unstyled mb-0 categorias-arvore">
+@foreach (CategoryRowViewModel row in Model.Rows)
+{
+    if (depth == 0)
+    {
+        depth = 1;
+        @:<li>
+    }
+    else if (row.Depth > depth)
+    {
+        depth = row.Depth;
+        @Html.Raw("<ul class=\"list-unstyled ms-3 ms-md-4\"><li>")
+    }
+    else
+    {
+        while (depth > row.Depth)
+        {
+            depth--;
+            @Html.Raw("</li></ul>")
+        }
+
+        @Html.Raw("</li><li>")
+    }
+
+    <div class="d-flex flex-wrap align-items-center gap-2 py-2 border-bottom" id="categoria-@row.Id">
+        <div class="flex-grow-1">
+            <span class="visually-hidden">@(row.ParentName is null ? "Categoria principal: " : $"Subcategoria de {row.ParentName}: ")</span>
+            <span class="@(row.Depth == 1 ? "fw-semibold" : "")">@row.Name</span>
+            <span class="text-body-secondary small ms-2">@(row.AdsCount == 1 ? "1 anúncio" : $"{row.AdsCount} anúncios")</span>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            @if (row.IsFirst)
+            {
+                <button class="btn btn-outline-secondary btn-sm alvo-toque opacity-50" type="button" id="mover-@row.Id-cima" aria-disabled="true" aria-label="Mover @row.Name para cima"><i class="fa fa-arrow-up" aria-hidden="true"></i></button>
+            }
+            else
+            {
+                <form asp-area="Panel" asp-action="Move" asp-route-id="@row.Id" asp-route-direction="cima" method="post">
+                    <button class="btn btn-outline-secondary btn-sm alvo-toque" type="submit" id="mover-@row.Id-cima" aria-label="Mover @row.Name para cima"><i class="fa fa-arrow-up" aria-hidden="true"></i></button>
+                </form>
+            }
+            @if (row.IsLast)
+            {
+                <button class="btn btn-outline-secondary btn-sm alvo-toque opacity-50" type="button" id="mover-@row.Id-baixo" aria-disabled="true" aria-label="Mover @row.Name para baixo"><i class="fa fa-arrow-down" aria-hidden="true"></i></button>
+            }
+            else
+            {
+                <form asp-area="Panel" asp-action="Move" asp-route-id="@row.Id" asp-route-direction="baixo" method="post">
+                    <button class="btn btn-outline-secondary btn-sm alvo-toque" type="submit" id="mover-@row.Id-baixo" aria-label="Mover @row.Name para baixo"><i class="fa fa-arrow-down" aria-hidden="true"></i></button>
+                </form>
+            }
+            <a class="btn btn-outline-secondary btn-sm alvo-toque" asp-area="Panel" asp-action="Edit" asp-route-id="@row.Id" aria-label="Editar @row.Name">Editar</a>
+            @* Categoria protegida (data-confirm="false"): o link vai direto à mensagem, sem janela de confirmação *@
+            <a class="btn btn-outline-danger btn-sm alvo-toque" asp-area="Panel" asp-action="ConfirmDelete" asp-route-id="@row.Id" aria-label="Excluir @row.Name"
+               data-action="delete" data-category-name="@row.Name" data-confirm="@(row.IsProtected ? "false" : "true")">Excluir</a>
+        </div>
+    </div>
+}
+@if (Model.Rows.Count > 0)
+{
+    while (depth > 1)
+    {
+        depth--;
+        @Html.Raw("</li></ul>")
+    }
+
+    @Html.Raw("</li>")
+}
+</ul>
+</div></div>
+
+<dialog id="dialogo-exclusao" role="alertdialog" aria-labelledby="dialogo-titulo" aria-describedby="dialogo-texto" class="p-4 rounded border-0 shadow">
+    <form method="post" data-dialog-form>
+        @Html.AntiForgeryToken()
+        <h2 class="fs-5" id="dialogo-titulo">Confirmar exclusão</h2>
+        <p id="dialogo-texto">Excluir a categoria "<span data-dialog-name></span>"? Essa ação não pode ser desfeita.</p>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary alvo-toque" type="button" data-dialog-cancel autofocus>Cancelar</button>
+            <button class="btn btn-danger alvo-toque" type="submit">Excluir</button>
+        </div>
+    </form>
+</dialog>
+
+@section Scripts {
+    <script type="module" src="~/js/pages/categories-index.js" asp-append-version="true"></script>
+}

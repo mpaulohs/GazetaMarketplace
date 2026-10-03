@@ -1,0 +1,38 @@
+@model CategoryFormViewModel
+@{
+    ViewData["Title"] = "Nova categoria";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="fs-3 mb-3">Nova categoria</h1>
+                @await Html.PartialAsync("_GeneralError")
+
+                <form asp-area="Panel" asp-action="New" method="post" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="Name">Nome <span aria-hidden="true">*</span></label>
+                        <input class="form-control @(ViewData.ModelState["Name"]?.Errors.Count > 0 ? "is-invalid" : "")" asp-for="Name" autocomplete="off" maxlength="100" aria-required="true" aria-invalid="@(ViewData.ModelState["Name"]?.Errors.Count > 0 ? "true" : null)" aria-describedby="error-Name" />
+                        @await Html.PartialAsync("_FieldErrors", "Name")
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="ParentId">Categoria pai</label>
+                        <select class="form-select @(ViewData.ModelState["ParentId"]?.Errors.Count > 0 ? "is-invalid" : "")" asp-for="ParentId" aria-describedby="parent-help error-ParentId">
+                            @foreach (ParentOption option in Model.Parents)
+                            {
+                                <option value="@option.Id" selected="@(option.Id == Model.ParentId)">@option.Label</option>
+                            }
+                        </select>
+                        @await Html.PartialAsync("_FieldErrors", "ParentId")
+                        <p class="form-text" id="parent-help">Deixe em "Nenhuma" para criar uma categoria principal. As categorias vão até o terceiro nível.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary alvo-toque" asp-area="Panel" asp-action="Index">Cancelar</a>
+                        <button class="btn btn-primary alvo-toque" type="submit">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -192,3 +192,42 @@ Todas foram desfeitas depois (o `MERGE` foi mutado duas vezes, uma em cada camad
 - **Colisão de nome `Program`:** a ferramenta tinha instruções de nível superior, o que criava um segundo tipo `Program` e quebrava o `WebApplicationFactory` do projeto de integração; o ponto de entrada virou a classe `ExportEntryPoint`.
 - A geração do script de exemplo com a ferramenta de verdade (contra um SQL Server) e o teste que compara o resultado com o arquivo versionado fecham o ciclo: se o gerador mudar, o teste diz para gerar de novo (`db/seed/README.md`).
 - Fumaça no site publicado: o script de exemplo aplicado duas vezes ao banco do E2E (segunda vez: 0 linhas afetadas) e os endpoints respondendo; as linhas foram removidas depois.
+
+## Tarefa 2.6 — gerenciar categorias (US-013)
+
+> **Em resumo:** 596 testes unitários, 43 da ferramenta de catálogo, 57 de integração (SQL Server real) e 36 de navegador passam. Das seis mutações planejadas, cinco derrubam testes e uma (a segunda chamada que esvazia o cache) **sobrevive por ser redundante de propósito**; a mutação que remove as duas chamadas derruba 15 testes. A tela `/painel/categorias` é nova: entram 9 testes de navegador.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site | 596 | 596 | 0 |
+| Ferramenta (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 57 | 57 | 0 |
+| E2E (Playwright, site publicado em Production) | 36 | 36 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| Criar sem a checagem de nome repetido | `US013S06_NomeRepetido_EmQualquerCaixaOuAcento_ENoMesmoGrupo` (o índice único do banco só pega o nome idêntico; as variações de caixa e acento exigem a regra do serviço) |
+| Aceitar o quarto nível (`MaxDepth = 4`) | 2 (`US013S11…`, `QuartoNivel_E_Recusado`) |
+| Excluir ignorando as subcategorias | 2 (`US013S09…`, ordem dos bloqueios) |
+| Mover sem restringir às irmãs | 5 |
+| Renomear sem gravar a auditoria | `CriarRenomearReordenarExcluir_GravamAuditoria…` |
+| Excluir sem gravar o valor anterior | `CriarRenomearReordenarExcluir_GravamAuditoria…` |
+| Tirar a chamada `tree.Invalidate()` do serviço | **nenhum** — sobrevive: o `AppDbContext` já esvazia o cache dentro do `SaveChanges`, então a chamada do serviço (feita depois do commit) é uma segunda defesa |
+| Tirar as duas chamadas (serviço e `AppDbContext`) | 15 (a árvore em cache deixa de refletir criar, renomear, mover e excluir) |
+
+Todas foram desfeitas depois. Três mutações não compilavam de primeira (código inalcançável, parâmetro não lido) e foram refeitas; os números acima são só os das versões que compilaram.
+
+**O que cada camada prova**
+
+- Unitários: os onze cenários S01 a S11; auditoria com anterior e novo e sem rastro nas recusas e nas operações sem efeito; nome repetido por caixa e acento; nome vazio e longo; quarto nível forjado por POST; pai inexistente; subcategoria dentro de folha com e sem anúncios; slug único e inalterado ao renomear; ordem dos bloqueios; regra de proteção (exatamente as 12 categorias da carga com grupo próprio); mover só entre irmãs, empates, primeiro e último; Redator e anônimo barrados, inclusive por POST direto; antiforgery; 404 em todas as ações; listas aninhadas, nomes acessíveis, botões inativos nos extremos, janela de confirmação só para quem pode ser excluída; limite global configurável (e valores inválidos voltam a 100).
+- Integração: fluxo completo com a identidade continuando em 156, auditoria e cache; duas pessoas criando o mesmo nome (6 rodadas); a mesma categoria principal (maiúscula e minúscula); dois movimentos juntos sem empate nem irmã perdida (6 rodadas); excluir o pai enquanto outra pessoa cria uma filha (6 rodadas, nunca filha sem pai); o banco recusa apagar pai com filhas por SQL direto (erro 547).
+- E2E: criar principal, renomear e excluir pela janela; subcategoria e terceiro nível (a lista de pai não mostra o terceiro nível); mover com status e foco no botão usado, com a ordem original restaurada; nome repetido e vazio com `aria-invalid`; excluir com subcategorias (bloqueio depois de confirmar); campos específicos (bloqueio direto, sem janela, e renomear continua); janela com foco inicial em Cancelar, Esc e Cancelar sem excluir, foco devolvido ao botão e Axe com a janela aberta; Axe na lista e no formulário e sem rolagem horizontal em 320 px; fluxo inteiro sem JavaScript.
+
+**Achados desta rodada**
+
+1. **Bug pego pelo teste: `data-confirm=""`.** O atributo vazio ainda casa com o seletor `[data-confirm]`, então a categoria protegida abria a janela de confirmação em vez de ir direto à mensagem. O valor agora é `"true"`/`"false"` e o JavaScript seleciona `[data-confirm='true']`.
+2. **Foco perdido depois de mover.** O endereço leva a âncora `#categoria-N` e o navegador move o foco para ela ao terminar de carregar, depois de o módulo rodar. O foco agora é devolvido depois do evento `load`.
+3. **Contraste.** Os botões "Editar" e "Excluir" sobre o fundo da página (`#f1f5fd`) ficavam abaixo de 4,5:1 (Axe). A árvore passou a ficar dentro de um cartão branco.
+4. **Limite global de pedidos.** A suíte completa passou de 100 pedidos por minuto de um IP só e começou a receber 429 em páginas de login. O limite ficou configurável (`RateLimiting:GlobalPerMinute`, padrão 100); só o site do E2E usa 1000. O limite de login e de recuperação de senha não mudou.
+5. **Rolagem animada.** O Bootstrap rola até a âncora com animação e a lista tem ~150 itens; o Playwright via os botões "instáveis". Os E2E de categorias rodam com movimento reduzido (BACKLOG avalia `scroll-behavior: auto` nesta tela).
+6. **SPEC S08 × A7 b.** O exemplo do S08 ("Motos tem 3 anúncios") bate com a proteção por campos específicos; ver BACKLOG.
