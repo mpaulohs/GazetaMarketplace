@@ -92,8 +92,8 @@ public sealed class BaseCssTests
     {
         string css = Normalize(BaseCss());
         string page = Token(css, "--app-page-bg");
-        string degrade = Token(css, "--app-gradient-header", string.Empty);
-        List<string> gradientStops = [.. Regex.Matches(degrade, "#[0-9a-fA-F]{6}").Select(m => m.Value)];
+        string gradient = Token(css, "--app-gradient-header", string.Empty);
+        List<string> gradientStops = [.. Regex.Matches(gradient, "#[0-9a-fA-F]{6}").Select(m => m.Value)];
 
         Assert.AreEqual(2, gradientStops.Count, "o degradê tem duas cores");
         foreach (string stop in gradientStops)
@@ -101,7 +101,7 @@ public sealed class BaseCssTests
             Assert.IsTrue(Contrast("#ffffff", stop) >= 4.5, "branco sobre " + stop);
         }
 
-        (string name, string text, string background, double minimo)[] pares =
+        (string name, string text, string background, double minimum)[] pairs =
         [
             ("texto", Token(css, "--bs-body-color"), page, 4.5),
             ("texto secundário na página", Token(css, "--bs-secondary-color"), page, 4.5),
@@ -117,10 +117,10 @@ public sealed class BaseCssTests
             ("accent", Token(css, "--app-accent"), "#ffffff", 4.5)
         ];
 
-        foreach ((string name, string text, string background, double minimo) in pares)
+        foreach ((string name, string text, string background, double minimum) in pairs)
         {
             double contrast = Contrast(text, background);
-            Assert.IsTrue(contrast >= minimo, $"{name}: {text} sobre {background} = {contrast.ToString("0.00", CultureInfo.InvariantCulture)}:1 (mínimo {minimo})");
+            Assert.IsTrue(contrast >= minimum, $"{name}: {text} sobre {background} = {contrast.ToString("0.00", CultureInfo.InvariantCulture)}:1 (mínimo {minimum})");
         }
     }
 
@@ -134,9 +134,9 @@ public sealed class BaseCssTests
             .Contains(".cabecalho :focus-visible, .rodape :focus-visible { outline: var(--app-on-dark-focus); }", StringComparison.Ordinal));
     }
 
-    private static string Token(string cssNormalizado, string name, string defaultValue = null)
+    private static string Token(string normalizedCss, string name, string defaultValue = null)
     {
-        Match m = Regex.Match(cssNormalizado, Regex.Escape(name) + @":\s*([^;]+);");
+        Match m = Regex.Match(normalizedCss, Regex.Escape(name) + @":\s*([^;]+);");
         return m.Success
             ? m.Groups[1].Value.Trim()
             : defaultValue ?? throw new InvalidOperationException("token ausente: " + name);

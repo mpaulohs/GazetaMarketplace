@@ -24,6 +24,6 @@ public sealed class CultureTests
         using JsonDocument json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.AreEqual("pt-BR", json.RootElement.GetProperty("culture").GetString());
         Assert.AreEqual("pt-BR", json.RootElement.GetProperty("ui").GetString());
-        Assert.AreEqual("1234,5", json.RootElement.GetProperty("numero").GetString());
+        Assert.AreEqual("1234,5", json.RootElement.GetProperty("number").GetString());
     }
 }

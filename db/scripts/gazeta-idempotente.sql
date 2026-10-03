@@ -68,7 +68,7 @@ GO
 BEGIN TRANSACTION;
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE TABLE [AspNetRoles] (
@@ -82,7 +82,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE TABLE [AspNetUsers] (
@@ -110,7 +110,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE TABLE [AspNetRoleClaims] (
@@ -125,7 +125,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE TABLE [AspNetUserClaims] (
@@ -140,7 +140,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE TABLE [AspNetUserLogins] (
@@ -155,7 +155,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE TABLE [AspNetUserRoles] (
@@ -169,7 +169,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE TABLE [AspNetUserTokens] (
@@ -184,7 +184,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'ConcurrencyStamp', N'Name', N'NormalizedName') AND [object_id] = OBJECT_ID(N'[AspNetRoles]'))
@@ -198,7 +198,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE INDEX [IX_AspNetRoleClaims_RoleId] ON [AspNetRoleClaims] ([RoleId]);
@@ -206,7 +206,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     EXEC(N'CREATE UNIQUE INDEX [RoleNameIndex] ON [AspNetRoles] ([NormalizedName]) WHERE [NormalizedName] IS NOT NULL');
@@ -214,7 +214,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE INDEX [IX_AspNetUserClaims_UserId] ON [AspNetUserClaims] ([UserId]);
@@ -222,7 +222,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE INDEX [IX_AspNetUserLogins_UserId] ON [AspNetUserLogins] ([UserId]);
@@ -230,7 +230,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE INDEX [IX_AspNetUserRoles_RoleId] ON [AspNetUserRoles] ([RoleId]);
@@ -238,7 +238,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     CREATE INDEX [EmailIndex] ON [AspNetUsers] ([NormalizedEmail]);
@@ -246,7 +246,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     EXEC(N'CREATE UNIQUE INDEX [UserNameIndex] ON [AspNetUsers] ([NormalizedUserName]) WHERE [NormalizedUserName] IS NOT NULL');
@@ -254,11 +254,11 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261003030830_AdicionarIdentity'
+    WHERE [MigrationId] = N'20261003030830_AddIdentity'
 )
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-    VALUES (N'20261003030830_AdicionarIdentity', N'10.0.12');
+    VALUES (N'20261003030830_AddIdentity', N'10.0.12');
 END;
 
 COMMIT;

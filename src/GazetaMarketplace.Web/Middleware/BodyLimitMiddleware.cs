@@ -22,10 +22,10 @@ public sealed class BodyLimitMiddleware(RequestDelegate next)
         }
 
         // Cobre também corpo em partes (sem Content-Length) onde o servidor suporta o recurso
-        IHttpMaxRequestBodySizeFeature recurso = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
-        if (recurso is { IsReadOnly: false })
+        IHttpMaxRequestBodySizeFeature feature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+        if (feature is { IsReadOnly: false })
         {
-            recurso.MaxRequestBodySize = LimitInBytes;
+            feature.MaxRequestBodySize = LimitInBytes;
         }
 
         if (context.Request.ContentLength > LimitInBytes)

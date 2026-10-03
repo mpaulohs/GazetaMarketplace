@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using GazetaMarketplace.Core.Entities;
 using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Interfaces;
-using GazetaMarketplace.Infrastructure.Identidade;
+using GazetaMarketplace.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -17,7 +17,7 @@ namespace GazetaMarketplace.Infrastructure.Data;
 /// Contexto de escrita e de migrations (ADR-004), com as tabelas do Identity (ADR-003, chave <c>int</c>).
 /// Auditoria automática em UTC, concorrência otimista por rowversion e auditoria de ações só de acréscimo.
 /// </summary>
-public class AppDbContext : IdentityDbContext<UsuarioIdentity, PapelIdentity, int>
+public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
 {
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _time;
@@ -43,9 +43,9 @@ public class AppDbContext : IdentityDbContext<UsuarioIdentity, PapelIdentity, in
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         // Toda entidade editável tem rowversion (conflito vira ConflictException)
-        foreach (IMutableEntityType tipo in modelBuilder.Model.GetEntityTypes().Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType)))
+        foreach (IMutableEntityType type in modelBuilder.Model.GetEntityTypes().Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType)))
         {
-            modelBuilder.Entity(tipo.ClrType).Property(nameof(BaseEntity.RowVersion)).IsRowVersion();
+            modelBuilder.Entity(type.ClrType).Property(nameof(BaseEntity.RowVersion)).IsRowVersion();
         }
     }
 

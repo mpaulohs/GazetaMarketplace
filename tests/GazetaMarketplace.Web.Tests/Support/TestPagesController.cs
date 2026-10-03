@@ -10,7 +10,7 @@ public sealed class TestPagesController : Controller
     public IActionResult PublicPage() => View();
 
     [HttpGet("teste/painel")]
-    public IActionResult Painel() => View();
+    public IActionResult Panel() => View();
 
     [HttpGet("teste/estados")]
     public IActionResult States() => View();

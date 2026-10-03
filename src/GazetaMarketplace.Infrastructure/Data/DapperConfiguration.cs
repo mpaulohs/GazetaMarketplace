@@ -24,7 +24,7 @@ public static class DapperConfiguration
     }
 
     /// <summary>Conexão e transação atuais do <see cref="DbContext"/> (a transação é nula se não houver uma aberta).</summary>
-    public static (DbConnection Connection, DbTransaction Transacao) GetConnectionAndTransaction(this DbContext context)
+    public static (DbConnection Connection, DbTransaction Transaction) GetConnectionAndTransaction(this DbContext context)
     {
         IDbContextTransaction current = context.Database.CurrentTransaction;
         return (context.Database.GetDbConnection(), current?.GetDbTransaction());

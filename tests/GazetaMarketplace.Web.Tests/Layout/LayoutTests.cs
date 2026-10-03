@@ -48,8 +48,8 @@ public sealed class LayoutTests
     {
         string html = await DownloadAsync("/teste/publica");
 
-        Match primeiro = Regex.Match(html, @"<a\b[^>]*>");
-        StringAssert.Contains(primeiro.Value, "href=\"#conteudo\"");
+        Match first = Regex.Match(html, @"<a\b[^>]*>");
+        StringAssert.Contains(first.Value, "href=\"#conteudo\"");
     }
 
     [TestMethod]
@@ -76,12 +76,12 @@ public sealed class LayoutTests
             Assert.AreEqual(0, Regex.Matches(html, @"@import|url\(\s*['""]?(https?:)?//", RegexOptions.IgnoreCase).Count, path);
 
             // Todo CSS e JS referenciado é servido pelo próprio site e não puxa nada de fora
-            foreach (Match recurso in Regex.Matches(html, @"(?:src|href)=""(/[^""#]+\.(?:css|js))(?:\?[^""]*)?"""))
+            foreach (Match resource in Regex.Matches(html, @"(?:src|href)=""(/[^""#]+\.(?:css|js))(?:\?[^""]*)?"""))
             {
-                HttpResponseMessage response = await client.GetAsync(recurso.Groups[1].Value + "?" + "v=1");
-                Assert.IsTrue(response.IsSuccessStatusCode, recurso.Groups[1].Value + " não foi servido");
+                HttpResponseMessage response = await client.GetAsync(resource.Groups[1].Value + "?" + "v=1");
+                Assert.IsTrue(response.IsSuccessStatusCode, resource.Groups[1].Value + " não foi servido");
                 string content = await response.Content.ReadAsStringAsync();
-                Assert.AreEqual(0, Regex.Matches(content, @"@import\s+(url\()?['""]?(https?:)?//|url\(\s*['""]?https?://").Count, recurso.Groups[1].Value);
+                Assert.AreEqual(0, Regex.Matches(content, @"@import\s+(url\()?['""]?(https?:)?//|url\(\s*['""]?https?://").Count, resource.Groups[1].Value);
             }
         }
     }

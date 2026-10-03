@@ -3,7 +3,7 @@
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     bool signedIn = User.Identity?.IsAuthenticated == true;
-    bool changingPassword = User.HasClaim(GazetaMarketplace.Web.Security.ClaimsDaEquipe.DeveTrocarSenha, "1");
+    bool changingPassword = User.HasClaim(GazetaMarketplace.Web.Security.TeamClaims.MustChangePassword, "1");
     string role = User.IsInRole(RoleNames.Administrator) ? RoleNames.Administrator : User.IsInRole(RoleNames.Writer) ? RoleNames.Writer : null;
 }
 <!DOCTYPE html>
@@ -43,7 +43,7 @@
                             @await Component.InvokeAsync("PanelMenu")
                         }
                         <div class="ms-md-auto d-flex flex-column flex-md-row align-items-md-center gap-2 mt-2 mt-md-0">
-                            <span>@(User.FindFirst(GazetaMarketplace.Web.Security.ClaimsDaEquipe.NomeCompleto)?.Value ?? User.Identity.Name)@(role is null ? "" : " (" + role + ")")</span>
+                            <span>@(User.FindFirst(GazetaMarketplace.Web.Security.TeamClaims.FullName)?.Value ?? User.Identity.Name)@(role is null ? "" : " (" + role + ")")</span>
                             <form method="post" action="@PanelRoutes.SignOut">
                                 @Html.AntiForgeryToken()
                                 <button class="btn btn-outline-light alvo-toque" type="submit"><i class="fa fa-sign-out me-1" aria-hidden="true"></i>Sair</button>

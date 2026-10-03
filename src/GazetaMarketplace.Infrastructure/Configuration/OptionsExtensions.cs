@@ -27,7 +27,7 @@ public static class OptionsExtensions
         services.AddOptions<BootstrapOptions>().Bind(configuration.GetSection(BootstrapOptions.SectionName));
 
         // Não é segredo e tem padrão: o intervalo é validado em qualquer ambiente
-        services.AddOptions<AutenticacaoOptions>().Bind(configuration.GetSection(AutenticacaoOptions.SectionName))
+        services.AddOptions<AuthenticationOptions>().Bind(configuration.GetSection(AuthenticationOptions.SectionName))
             .ValidateDataAnnotations().ValidateOnStart();
 
         return services;

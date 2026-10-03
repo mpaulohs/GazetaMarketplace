@@ -45,10 +45,10 @@ public sealed partial class MaskingEnricher : ILogEventEnricher
             StructureValue structure => new StructureValue(
                 structure.Properties.Select(p => new LogEventProperty(p.Name, Sanitize(p.Name, p.Value))), structure.TypeTag),
             SequenceValue sequence => new SequenceValue(sequence.Elements.Select(e => Sanitize(string.Empty, e))),
-            DictionaryValue dictionary => new DictionaryValue(dictionary.Elements.Select(par =>
+            DictionaryValue dictionary => new DictionaryValue(dictionary.Elements.Select(pair =>
                 new KeyValuePair<ScalarValue, LogEventPropertyValue>(
-                    par.Key,
-                    par.Key.Value is string key ? Sanitize(key, par.Value) : Sanitize(string.Empty, par.Value)))),
+                    pair.Key,
+                    pair.Key.Value is string key ? Sanitize(key, pair.Value) : Sanitize(string.Empty, pair.Value)))),
             _ => value
         };
     }

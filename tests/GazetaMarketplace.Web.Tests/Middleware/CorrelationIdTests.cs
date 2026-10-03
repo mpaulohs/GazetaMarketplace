@@ -19,8 +19,8 @@ public sealed class CorrelationIdTests
 
         HttpResponseMessage response = await client.GetAsync("/api/v1/teste/log");
 
-        Assert.IsTrue(response.Headers.TryGetValues("X-Correlation-ID", out var valores));
-        string id = valores.Single();
+        Assert.IsTrue(response.Headers.TryGetValues("X-Correlation-ID", out var values));
+        string id = values.Single();
         Assert.IsFalse(string.IsNullOrWhiteSpace(id));
 
         // cada linha de log da requisição leva o mesmo id

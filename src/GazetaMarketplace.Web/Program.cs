@@ -5,7 +5,7 @@ using GazetaMarketplace.Core;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Infrastructure;
 using GazetaMarketplace.Infrastructure.Configuration;
-using GazetaMarketplace.Infrastructure.Identidade;
+using GazetaMarketplace.Infrastructure.Identity;
 using GazetaMarketplace.Infrastructure.Logging;
 using GazetaMarketplace.Web.Filters;
 using GazetaMarketplace.Web.HealthChecks;
@@ -82,7 +82,7 @@ app.UseWhen(
     api => api.UseMiddleware<ExceptionHandlingMiddleware>());
 app.UseWhen(
     context => !context.Request.Path.StartsWithSegments("/api"),
-    paginas => paginas.UseExceptionHandler("/Home/Error"));
+    pages => pages.UseExceptionHandler("/Home/Error"));
 
 app.UseHttpsRedirection();
 // Sem providers: ignora Accept-Language e cookies, a cultura é sempre pt-BR

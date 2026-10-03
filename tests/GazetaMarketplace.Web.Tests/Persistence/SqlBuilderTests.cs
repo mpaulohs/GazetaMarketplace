@@ -69,12 +69,12 @@ public sealed class SqlBuilderTests
     {
         SqlQuery outsideList = Base().OrderBy("preco; DROP TABLE Ads", "desc; --", Allowed, "a.PublishedAt DESC").Build();
         SqlQuery invalidDirection = Base().OrderBy("preco", "sideways", Allowed, "a.PublishedAt DESC").Build();
-        SqlQuery valida = Base().OrderBy("preco", "desc", Allowed, "a.PublishedAt DESC").Build();
+        SqlQuery valid = Base().OrderBy("preco", "desc", Allowed, "a.PublishedAt DESC").Build();
 
         StringAssert.EndsWith(outsideList.Sql, "ORDER BY a.PublishedAt DESC");
         Assert.DoesNotContain("DROP", outsideList.Sql);
         StringAssert.EndsWith(invalidDirection.Sql, "ORDER BY a.PriceCents ASC");
-        StringAssert.EndsWith(valida.Sql, "ORDER BY a.PriceCents DESC");
+        StringAssert.EndsWith(valid.Sql, "ORDER BY a.PriceCents DESC");
     }
 
     [TestMethod]

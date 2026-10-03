@@ -32,14 +32,14 @@ public sealed class TestApiController(ILogger<TestApiController> logger) : Contr
 
     [HttpGet("auth")]
     [EnableRateLimiting("auth")]
-    public IActionResult Autenticacao() => Ok();
+    public IActionResult Authentication() => Ok();
 
     [HttpGet("cultura")]
     public IActionResult Culture() => Ok(new
     {
         culture = CultureInfo.CurrentCulture.Name,
         ui = CultureInfo.CurrentUICulture.Name,
-        numero = 1234.5m.ToString(CultureInfo.CurrentCulture)
+        number = 1234.5m.ToString(CultureInfo.CurrentCulture)
     });
 
     [HttpGet("ip")]
@@ -64,10 +64,10 @@ public sealed class TestApiController(ILogger<TestApiController> logger) : Contr
         return Ok(new { bytes = copy.Length });
     }
 
-    [HttpGet("erro/{tipo}")]
-    public IActionResult Error(string tipo)
+    [HttpGet("erro/{type}")]
+    public IActionResult Error(string type)
     {
-        throw tipo switch
+        throw type switch
         {
             "notfound" => new NotFoundException("Anúncio", 42),
             "conflict" => new ConflictException("Nome de categoria repetido"),

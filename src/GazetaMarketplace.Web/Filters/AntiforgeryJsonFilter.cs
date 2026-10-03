@@ -44,6 +44,6 @@ public sealed class AntiforgeryJsonFilter : IAsyncAuthorizationFilter, IOrderedF
         }
     }
 
-    private static bool IsSafeMethod(string metodo) =>
-        HttpMethods.IsGet(metodo) || HttpMethods.IsHead(metodo) || HttpMethods.IsOptions(metodo) || HttpMethods.IsTrace(metodo);
+    private static bool IsSafeMethod(string method) =>
+        HttpMethods.IsGet(method) || HttpMethods.IsHead(method) || HttpMethods.IsOptions(method) || HttpMethods.IsTrace(method);
 }

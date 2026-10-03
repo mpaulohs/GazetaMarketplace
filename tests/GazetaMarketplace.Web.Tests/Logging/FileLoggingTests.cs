@@ -53,9 +53,9 @@ public sealed class FileLoggingTests
         Directory.CreateDirectory(folder);
         try
         {
-            for (int dia = 1; dia <= 20; dia++)
+            for (int day = 1; day <= 20; day++)
             {
-                File.WriteAllText(Path.Combine(folder, $"gazeta-202001{dia:00}.json"), "{}");
+                File.WriteAllText(Path.Combine(folder, $"gazeta-202001{day:00}.json"), "{}");
             }
 
             using (Logger logger = SerilogConfiguration.Configure(new LoggerConfiguration(), folder, production: true).CreateLogger())

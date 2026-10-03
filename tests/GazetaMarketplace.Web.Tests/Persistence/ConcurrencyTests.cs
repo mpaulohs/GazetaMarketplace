@@ -14,16 +14,16 @@ public sealed class ConcurrencyTests
     public async Task DuasEdicoes_DaMesmaLinha_GeramConflito()
     {
         using TestDatabase database = new();
-        using TestAppDbContext primeiro = database.NewContext();
+        using TestAppDbContext first = database.NewContext();
         using TestAppDbContext second = database.NewContext();
-        primeiro.Entities.Add(new TestEntity { Name = "original" });
-        await primeiro.SaveChangesAsync();
+        first.Entities.Add(new TestEntity { Name = "original" });
+        await first.SaveChangesAsync();
 
-        TestEntity fromFirst = await primeiro.Entities.FindAsync(1);
+        TestEntity fromFirst = await first.Entities.FindAsync(1);
         TestEntity fromSecond = await second.Entities.FindAsync(1);
         fromFirst.Name = "da primeira pessoa";
         fromSecond.Name = "da segunda pessoa";
-        await primeiro.SaveChangesAsync();
+        await first.SaveChangesAsync();
 
         ConflictException error = await Assert.ThrowsExactlyAsync<ConflictException>(() => second.SaveChangesAsync());
         Assert.AreEqual("CONFLICT", error.Code);

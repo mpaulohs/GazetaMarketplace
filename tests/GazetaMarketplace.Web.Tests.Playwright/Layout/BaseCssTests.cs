@@ -55,11 +55,11 @@ public class BaseCssTests : SitePage
     {
         await Page.GotoAsync(Url("/")).ConfigureAwait(false);
 
-        string cor = await Page.GetByRole(AriaRole.Searchbox, new() { Name = "Buscar anúncios" })
+        string color = await Page.GetByRole(AriaRole.Searchbox, new() { Name = "Buscar anúncios" })
             .EvaluateAsync<string>("e => getComputedStyle(e).borderTopColor").ConfigureAwait(false);
 
-        Assert.AreEqual("rgb(108, 117, 125)", cor);
-        Assert.IsTrue(Contrast(cor, "rgb(255, 255, 255)") >= 3.0, "a borda do campo precisa de 3:1 (WCAG 1.4.11)");
+        Assert.AreEqual("rgb(108, 117, 125)", color);
+        Assert.IsTrue(Contrast(color, "rgb(255, 255, 255)") >= 3.0, "a borda do campo precisa de 3:1 (WCAG 1.4.11)");
     }
 
     [TestMethod]
@@ -166,21 +166,21 @@ public class BaseCssTests : SitePage
     [TestMethod]
     public async Task PaginaInicial_SoFazRequisicoesAoProprioSite()
     {
-        List<string> externas = [];
+        List<string> external = [];
         string host = new Uri(Url("/")).Host;
         Page.Request += (_, request) =>
         {
             Uri uri = new(request.Url);
             if (uri.Scheme.StartsWith("http", StringComparison.Ordinal) && !string.Equals(uri.Host, host, StringComparison.OrdinalIgnoreCase))
             {
-                externas.Add(request.Url);
+                external.Add(request.Url);
             }
         };
 
         await Page.GotoAsync(Url("/")).ConfigureAwait(false);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
 
-        CollectionAssert.AreEqual(Array.Empty<string>(), externas.ToArray(), "o site buscou algo fora do próprio domínio (Google Fonts, CDN...)");
+        CollectionAssert.AreEqual(Array.Empty<string>(), external.ToArray(), "o site buscou algo fora do próprio domínio (Google Fonts, CDN...)");
     }
 
     private static double Contrast(string a, string b)

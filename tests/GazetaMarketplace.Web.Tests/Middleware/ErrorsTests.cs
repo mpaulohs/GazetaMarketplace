@@ -22,12 +22,12 @@ public sealed class ErrorsTests
     [DataRow("unauthorized", 401, "UNAUTHORIZED")]
     [DataRow("cep", 503, "CEP_SERVICE_UNAVAILABLE")]
     [DataRow("inesperado", 500, "INTERNAL_ERROR")]
-    public async Task CadaExcecao_MapeiaParaSeuCodigoEStatus(string tipo, int status, string code)
+    public async Task CadaExcecao_MapeiaParaSeuCodigoEStatus(string type, int status, string code)
     {
         using WebFactory factory = new();
         using HttpClient client = factory.CreateClient();
 
-        HttpResponseMessage response = await client.GetAsync("/api/v1/teste/erro/" + tipo);
+        HttpResponseMessage response = await client.GetAsync("/api/v1/teste/erro/" + type);
 
         Assert.AreEqual((HttpStatusCode)status, response.StatusCode);
         Assert.AreEqual("application/problem+json", response.Content.Headers.ContentType.MediaType);
@@ -35,9 +35,9 @@ public sealed class ErrorsTests
         JsonElement root = json.RootElement;
         Assert.AreEqual(status, root.GetProperty("status").GetInt32());
         Assert.AreEqual(code, root.GetProperty("code").GetString());
-        Assert.AreEqual("/api/v1/teste/erro/" + tipo, root.GetProperty("instance").GetString());
+        Assert.AreEqual("/api/v1/teste/erro/" + type, root.GetProperty("instance").GetString());
         Assert.AreEqual(response.Headers.GetValues("X-Correlation-ID").Single(), root.GetProperty("traceId").GetString());
-        if (tipo == "validation")
+        if (type == "validation")
         {
             Assert.AreEqual("E-mail inválido", root.GetProperty("errors").GetProperty("email")[0].GetString());
         }

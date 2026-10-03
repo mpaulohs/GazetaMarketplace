@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Data;
-using GazetaMarketplace.Infrastructure.Identidade;
+using GazetaMarketplace.Infrastructure.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -107,7 +107,7 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
     /// <summary>Insere uma conta direto no banco, para ser usada em <c>semear</c> (antes de o host subir).</summary>
     public static void SeedUser(AppDbContext context, string email, int roleId, bool active = true)
     {
-        UsuarioIdentity user = new()
+        AppUser user = new()
         {
             UserName = email,
             NormalizedUserName = email.ToUpperInvariant(),
@@ -117,26 +117,26 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
             IsActive = active,
             SecurityStamp = Guid.NewGuid().ToString("N")
         };
-        user.PasswordHash = new PasswordHasher<UsuarioIdentity>().HashPassword(user, "Senha@Forte1");
+        user.PasswordHash = new PasswordHasher<AppUser>().HashPassword(user, "Senha@Forte1");
         context.Users.Add(user);
         context.SaveChanges();
         context.UserRoles.Add(new IdentityUserRole<int> { UserId = user.Id, RoleId = roleId });
         context.SaveChanges();
     }
 
-    public async Task<IReadOnlyList<UsuarioIdentity>> ListUsersAsync()
+    public async Task<IReadOnlyList<AppUser>> ListUsersAsync()
     {
         using IServiceScope scope = Services.CreateScope();
         return await scope.ServiceProvider.GetRequiredService<AppDbContext>().Users.AsNoTracking().ToListAsync();
     }
 
     /// <summary>Cria uma conta da equipe direto no banco de testes (a tela de usuários só chega na 1.3).</summary>
-    public async Task<UsuarioIdentity> CreateUserAsync(
+    public async Task<AppUser> CreateUserAsync(
         string email, string name, string password, string role, bool active = true, bool mustChangePassword = false)
     {
         using IServiceScope scope = Services.CreateScope();
-        UserManager<UsuarioIdentity> users = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
-        UsuarioIdentity user = new() { UserName = email, Email = email, FullName = name, IsActive = active, MustChangePassword = mustChangePassword };
+        UserManager<AppUser> users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+        AppUser user = new() { UserName = email, Email = email, FullName = name, IsActive = active, MustChangePassword = mustChangePassword };
 
         IdentityResult created = await users.CreateAsync(user, password);
         if (!created.Succeeded)
@@ -148,11 +148,11 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
         return user;
     }
 
-    public async Task UpdateUserAsync(string email, Action<UsuarioIdentity> change)
+    public async Task UpdateUserAsync(string email, Action<AppUser> change)
     {
         using IServiceScope scope = Services.CreateScope();
-        UserManager<UsuarioIdentity> users = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
-        UsuarioIdentity user = await users.FindByEmailAsync(email);
+        UserManager<AppUser> users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+        AppUser user = await users.FindByEmailAsync(email);
         change(user);
         await users.UpdateAsync(user);
     }

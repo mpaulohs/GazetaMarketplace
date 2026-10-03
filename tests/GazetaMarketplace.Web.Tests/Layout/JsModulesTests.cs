@@ -21,21 +21,21 @@ public sealed class JsModulesTests
         string[] modules = Directory.GetFiles(RepositoryRoot.Wwwroot("js"), "*.js", SearchOption.AllDirectories);
 
         Assert.IsTrue(modules.Length >= 2, "esperava ao menos api.js e layout.js; a varredura não pode ser vazia");
-        foreach (string modulo in modules)
+        foreach (string module in modules)
         {
-            Match finding = _dangerous.Match(File.ReadAllText(modulo));
-            Assert.IsFalse(finding.Success, Path.GetFileName(modulo) + " usa " + finding.Value + " (RC-17: montar com textContent ou <template>)");
+            Match finding = _dangerous.Match(File.ReadAllText(module));
+            Assert.IsFalse(finding.Success, Path.GetFileName(module) + " usa " + finding.Value + " (RC-17: montar com textContent ou <template>)");
         }
     }
 
     [TestMethod]
     public void Modulos_SaoModulosEs_SemGlobais()
     {
-        foreach (string modulo in Directory.GetFiles(RepositoryRoot.Wwwroot("js"), "*.js", SearchOption.AllDirectories))
+        foreach (string module in Directory.GetFiles(RepositoryRoot.Wwwroot("js"), "*.js", SearchOption.AllDirectories))
         {
-            string text = File.ReadAllText(modulo);
-            Assert.IsFalse(Regex.IsMatch(text, @"^\s*var\s", RegexOptions.Multiline), Path.GetFileName(modulo) + " usa var");
-            Assert.IsFalse(Regex.IsMatch(text, @"\bwindow\.[A-Za-z_]+\s*="), Path.GetFileName(modulo) + " cria global");
+            string text = File.ReadAllText(module);
+            Assert.IsFalse(Regex.IsMatch(text, @"^\s*var\s", RegexOptions.Multiline), Path.GetFileName(module) + " usa var");
+            Assert.IsFalse(Regex.IsMatch(text, @"\bwindow\.[A-Za-z_]+\s*="), Path.GetFileName(module) + " cria global");
         }
     }
 

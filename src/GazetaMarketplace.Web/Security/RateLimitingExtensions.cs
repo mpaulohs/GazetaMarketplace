@@ -41,9 +41,9 @@ public static class RateLimitingExtensions
         return services;
     }
 
-    private static FixedWindowRateLimiterOptions Window(int limite, TimeSpan duration) => new()
+    private static FixedWindowRateLimiterOptions Window(int limit, TimeSpan duration) => new()
     {
-        PermitLimit = limite,
+        PermitLimit = limit,
         Window = duration,
         QueueLimit = 0
     };

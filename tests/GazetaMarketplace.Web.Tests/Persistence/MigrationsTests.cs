@@ -47,7 +47,7 @@ public sealed class MigrationsTests
     [TestMethod]
     public void MigrationDoIdentity_CriaAsSeteTabelasEOsDoisPapeis()
     {
-        string section = MigrationSection("20261003030830_AdicionarIdentity");
+        string section = MigrationSection("20261003030830_AddIdentity");
 
         foreach (string table in new[] { "AspNetRoles", "AspNetUsers", "AspNetRoleClaims", "AspNetUserClaims", "AspNetUserLogins", "AspNetUserRoles", "AspNetUserTokens" })
         {

@@ -62,8 +62,8 @@ public sealed class AntiforgeryTests
         invalid.Headers.Add("RequestVerificationToken", "token-falso");
         Assert.AreEqual(HttpStatusCode.BadRequest, (await client.SendAsync(invalid)).StatusCode);
 
-        using HttpRequestMessage valido = new(HttpMethod.Post, "/api/v1/teste/escrita") { Content = JsonContent.Create(new { a = 1 }) };
-        valido.Headers.Add("RequestVerificationToken", token);
-        Assert.AreEqual(HttpStatusCode.OK, (await client.SendAsync(valido)).StatusCode);
+        using HttpRequestMessage valid = new(HttpMethod.Post, "/api/v1/teste/escrita") { Content = JsonContent.Create(new { a = 1 }) };
+        valid.Headers.Add("RequestVerificationToken", token);
+        Assert.AreEqual(HttpStatusCode.OK, (await client.SendAsync(valid)).StatusCode);
     }
 }

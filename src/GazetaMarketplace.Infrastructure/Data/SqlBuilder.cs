@@ -80,8 +80,8 @@ public sealed partial class SqlBuilder
 
         if (key is not null && allowed.TryGetValue(key, out string column))
         {
-            string sentido = string.Equals(direction, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
-            _ordering = Validate(column) + " " + sentido;
+            string sqlDirection = string.Equals(direction, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+            _ordering = Validate(column) + " " + sqlDirection;
         }
         else
         {

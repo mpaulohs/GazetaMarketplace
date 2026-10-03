@@ -84,7 +84,7 @@ namespace GazetaMarketplace.Infrastructure.Data.Migrations
                     b.ToTable("AuditEntries", (string)null);
                 });
 
-            modelBuilder.Entity("GazetaMarketplace.Infrastructure.Identidade.PapelIdentity", b =>
+            modelBuilder.Entity("GazetaMarketplace.Infrastructure.Identity.AppRole", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -130,7 +130,7 @@ namespace GazetaMarketplace.Infrastructure.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("GazetaMarketplace.Infrastructure.Identidade.UsuarioIdentity", b =>
+            modelBuilder.Entity("GazetaMarketplace.Infrastructure.Identity.AppUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -318,7 +318,7 @@ namespace GazetaMarketplace.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("GazetaMarketplace.Infrastructure.Identidade.PapelIdentity", null)
+                    b.HasOne("GazetaMarketplace.Infrastructure.Identity.AppRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -327,7 +327,7 @@ namespace GazetaMarketplace.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
-                    b.HasOne("GazetaMarketplace.Infrastructure.Identidade.UsuarioIdentity", null)
+                    b.HasOne("GazetaMarketplace.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -336,7 +336,7 @@ namespace GazetaMarketplace.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
-                    b.HasOne("GazetaMarketplace.Infrastructure.Identidade.UsuarioIdentity", null)
+                    b.HasOne("GazetaMarketplace.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -345,13 +345,13 @@ namespace GazetaMarketplace.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("GazetaMarketplace.Infrastructure.Identidade.PapelIdentity", null)
+                    b.HasOne("GazetaMarketplace.Infrastructure.Identity.AppRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GazetaMarketplace.Infrastructure.Identidade.UsuarioIdentity", null)
+                    b.HasOne("GazetaMarketplace.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -360,7 +360,7 @@ namespace GazetaMarketplace.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.HasOne("GazetaMarketplace.Infrastructure.Identidade.UsuarioIdentity", null)
+                    b.HasOne("GazetaMarketplace.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

@@ -21,14 +21,14 @@ public sealed class FontsAndThemeTests
     [DataRow("400")]
     [DataRow("600")]
     [DataRow("700")]
-    public async Task Poppins_Woff2_EhServidaPeloProprioSite(string peso)
+    public async Task Poppins_Woff2_EhServidaPeloProprioSite(string weight)
     {
         using WebFactory factory = new();
         using HttpClient client = factory.CreateClient();
 
         string css = await client.GetStringAsync("/css/poppins.css");
-        Match face = Regex.Match(css, @"font-weight:\s*" + peso + @";[\s\S]*?url\(""([^""]+\.woff2)""\)");
-        Assert.IsTrue(face.Success, "sem @font-face da Poppins " + peso);
+        Match face = Regex.Match(css, @"font-weight:\s*" + weight + @";[\s\S]*?url\(""([^""]+\.woff2)""\)");
+        Assert.IsTrue(face.Success, "sem @font-face da Poppins " + weight);
 
         // O endereço do CSS é relativo a /css/poppins.css
         string url = new Uri(new Uri("https://localhost/css/poppins.css"), face.Groups[1].Value).AbsolutePath;
@@ -111,13 +111,13 @@ public sealed class FontsAndThemeTests
         foreach (string path in _pages)
         {
             string html = await client.GetStringAsync(path);
-            List<string> recursos = Regex.Matches(html, @"(?:href|src)=""([^""]+\.(?:css|js))(?:\?[^""]*)?""").Select(m => m.Groups[1].Value).ToList();
+            List<string> resources = Regex.Matches(html, @"(?:href|src)=""([^""]+\.(?:css|js))(?:\?[^""]*)?""").Select(m => m.Groups[1].Value).ToList();
 
-            Assert.IsTrue(recursos.Count >= 8, path + ": poucos recursos, a regex falhou?");
-            foreach (string recurso in recursos)
+            Assert.IsTrue(resources.Count >= 8, path + ": poucos recursos, a regex falhou?");
+            foreach (string resource in resources)
             {
-                string name = recurso.ToLowerInvariant();
-                Assert.IsFalse(forbidden.Any(p => name.Contains(p, StringComparison.Ordinal)), path + " carrega " + recurso);
+                string name = resource.ToLowerInvariant();
+                Assert.IsFalse(forbidden.Any(p => name.Contains(p, StringComparison.Ordinal)), path + " carrega " + resource);
             }
         }
     }

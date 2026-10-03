@@ -57,9 +57,9 @@ public sealed class SecretsTests
         StringAssert.Contains(header, "git");
         StringAssert.Contains(header, "cofre de senhas");
 
-        MatchCollection valores = Regex.Matches(text, @"<environmentVariable\s+name=""[^""]+""\s+value=""([^""]*)""");
-        Assert.IsGreaterThan(0, valores.Count);
-        foreach (Match m in valores)
+        MatchCollection values = Regex.Matches(text, @"<environmentVariable\s+name=""[^""]+""\s+value=""([^""]*)""");
+        Assert.IsGreaterThan(0, values.Count);
+        foreach (Match m in values)
         {
             string value = m.Groups[1].Value;
             bool placeholder = value.StartsWith('(') || value == "Production";

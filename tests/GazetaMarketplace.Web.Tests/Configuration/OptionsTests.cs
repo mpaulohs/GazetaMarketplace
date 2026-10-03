@@ -27,11 +27,11 @@ public sealed class OptionsTests
         ["SendGrid:FromEmail"] = "noreply@exemplo.com.br"
     };
 
-    private static IHost Assemble(Dictionary<string, string> valores, bool production, bool withEnvironmentVariables = false)
+    private static IHost Assemble(Dictionary<string, string> values, bool production, bool withEnvironmentVariables = false)
     {
         // DisableDefaults: o teste não lê appsettings nem variáveis de ambiente da máquina
         HostApplicationBuilder builder = new(new HostApplicationBuilderSettings { DisableDefaults = true });
-        builder.Configuration.AddInMemoryCollection(valores);
+        builder.Configuration.AddInMemoryCollection(values);
         if (withEnvironmentVariables)
         {
             builder.Configuration.AddEnvironmentVariables();
@@ -44,10 +44,10 @@ public sealed class OptionsTests
     [TestMethod]
     public async Task Producao_SemPastaDeFotos_FalhaNaPartida()
     {
-        Dictionary<string, string> valores = FullConfiguration();
-        valores.Remove("PhotoStorage:BasePath");
+        Dictionary<string, string> values = FullConfiguration();
+        values.Remove("PhotoStorage:BasePath");
 
-        using IHost host = Assemble(valores, production: true);
+        using IHost host = Assemble(values, production: true);
 
         OptionsValidationException error = await Assert.ThrowsExactlyAsync<OptionsValidationException>(() => host.StartAsync());
         StringAssert.Contains(error.Message, "BasePath");
@@ -60,7 +60,7 @@ public sealed class OptionsTests
 
         await host.StartAsync();
 
-        Assert.AreEqual(30, host.Services.GetRequiredService<IOptions<AutenticacaoOptions>>().Value.SessaoMinutos);
+        Assert.AreEqual(30, host.Services.GetRequiredService<IOptions<AuthenticationOptions>>().Value.SessionMinutes);
     }
 
     [TestMethod]
@@ -69,13 +69,13 @@ public sealed class OptionsTests
     [DataRow("-5")]
     public async Task Autenticacao_ForaDe1A120_FalhaNaPartida_EmQualquerAmbiente(string minutes)
     {
-        Dictionary<string, string> valores = FullConfiguration();
-        valores["Autenticacao:SessaoMinutos"] = minutes;
+        Dictionary<string, string> values = FullConfiguration();
+        values["Authentication:SessionMinutes"] = minutes;
 
-        using IHost host = Assemble(valores, production: false);
+        using IHost host = Assemble(values, production: false);
 
         OptionsValidationException error = await Assert.ThrowsExactlyAsync<OptionsValidationException>(() => host.StartAsync());
-        StringAssert.Contains(error.Message, "SessaoMinutos");
+        StringAssert.Contains(error.Message, "SessionMinutes");
     }
 
     [TestMethod]
@@ -83,22 +83,22 @@ public sealed class OptionsTests
     [DataRow("120")]
     public async Task Autenticacao_NosLimites_Sobe(string minutes)
     {
-        Dictionary<string, string> valores = FullConfiguration();
-        valores["Autenticacao:SessaoMinutos"] = minutes;
-        using IHost host = Assemble(valores, production: false);
+        Dictionary<string, string> values = FullConfiguration();
+        values["Authentication:SessionMinutes"] = minutes;
+        using IHost host = Assemble(values, production: false);
 
         await host.StartAsync();
 
-        Assert.AreEqual(int.Parse(minutes, System.Globalization.CultureInfo.InvariantCulture), host.Services.GetRequiredService<IOptions<AutenticacaoOptions>>().Value.SessaoMinutos);
+        Assert.AreEqual(int.Parse(minutes, System.Globalization.CultureInfo.InvariantCulture), host.Services.GetRequiredService<IOptions<AuthenticationOptions>>().Value.SessionMinutes);
     }
 
     [TestMethod]
     public async Task Producao_SemChaveSendGrid_FalhaNaPartida()
     {
-        Dictionary<string, string> valores = FullConfiguration();
-        valores.Remove("SendGrid:ApiKey");
+        Dictionary<string, string> values = FullConfiguration();
+        values.Remove("SendGrid:ApiKey");
 
-        using IHost host = Assemble(valores, production: true);
+        using IHost host = Assemble(values, production: true);
 
         OptionsValidationException error = await Assert.ThrowsExactlyAsync<OptionsValidationException>(() => host.StartAsync());
         StringAssert.Contains(error.Message, "ApiKey");
@@ -107,12 +107,12 @@ public sealed class OptionsTests
     [TestMethod]
     public async Task Producao_SemConexaoPastaDeLogsOuChaves_FalhaNaPartida()
     {
-        Dictionary<string, string> valores = FullConfiguration();
-        valores.Remove("ConnectionStrings:DefaultConnection");
-        valores.Remove("Logging:FileDirectory");
-        valores.Remove("DataProtection:KeysDirectory");
+        Dictionary<string, string> values = FullConfiguration();
+        values.Remove("ConnectionStrings:DefaultConnection");
+        values.Remove("Logging:FileDirectory");
+        values.Remove("DataProtection:KeysDirectory");
 
-        using IHost host = Assemble(valores, production: true);
+        using IHost host = Assemble(values, production: true);
 
         // Várias opções inválidas: o ValidateOnStart junta os erros num AggregateException
         AggregateException error = await Assert.ThrowsExactlyAsync<AggregateException>(() => host.StartAsync());
@@ -153,10 +153,10 @@ public sealed class OptionsTests
         try
         {
             Environment.SetEnvironmentVariable(variable, "/do/ambiente");
-            Dictionary<string, string> valores = FullConfiguration();
-            valores["PhotoStorage:BasePath"] = "/do/appsettings";
+            Dictionary<string, string> values = FullConfiguration();
+            values["PhotoStorage:BasePath"] = "/do/appsettings";
 
-            using IHost host = Assemble(valores, production: true, withEnvironmentVariables: true);
+            using IHost host = Assemble(values, production: true, withEnvironmentVariables: true);
 
             Assert.AreEqual("/do/ambiente", host.Services.GetRequiredService<IOptions<PhotoStorageOptions>>().Value.BasePath);
         }

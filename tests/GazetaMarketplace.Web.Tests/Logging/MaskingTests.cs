@@ -13,7 +13,7 @@ namespace GazetaMarketplace.Web.Tests.Logging;
 public sealed class MaskingTests
 #pragma warning restore CA1515
 {
-    private static (ILogger Logger, CollectorSink Coletor) Create()
+    private static (ILogger Logger, CollectorSink Collector) Create()
     {
         CollectorSink collector = new();
         ILogger logger = new LoggerConfiguration()
