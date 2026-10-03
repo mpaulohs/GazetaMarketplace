@@ -178,7 +178,7 @@ Os diagramas estão em `architecture/diagrams/`:
 | Tabela | Uso |
 |---|---|
 | `AspNetUsers` e tabelas do Identity | Equipe: + `FullName`, `IsActive`, `MustChangePassword` (S6, S17). **Chave `int IDENTITY`** (`AppUser : IdentityUser<int>`, `AppRole : IdentityRole<int>`), como todas as demais tabelas; `CreatedBy`, `UpdatedBy` e `ActorId` das auditorias são `int` nulo (nulo = ação do sistema) |
-| `SiteSettings` | Linha única: telefone/WhatsApp do site (US-015) |
+| `SiteSettings` | Chave-valor (`Key` única, `Value`): hoje só `site.phone`, o telefone/WhatsApp do site (US-015), guardado só com dígitos; pronta para novas chaves |
 | `CepCache` | `Cep` PK, `City`, `Uf`, `FetchedAt`; validade 30 dias (NFR-24) |
 | `Cities` | Lista oficial de municípios por UF (IBGE), para o preenchimento manual e a padronização do nome |
 | `AuditEntries` | Quem fez o quê e quando: publicar, rejeitar, despublicar, arquivar, mudar categoria, criar ou desativar usuário (`principles-and-practices.md` §4.6) |
