@@ -119,6 +119,70 @@ public class BaseCssTests : PageTest
         Assert.AreEqual(0, resultado.Violations.Length, string.Join("; ", resultado.Violations.Select(v => v.Id + ": " + v.Help)));
     }
 
+    [TestMethod]
+    public async Task Fonte_Poppins_EstaCarregada_DoProprioSite()
+    {
+        await Page.GotoAsync(Url("/")).ConfigureAwait(false);
+
+        bool carregada = await Page.EvaluateAsync<bool>(
+            "async () => { await document.fonts.ready; return document.fonts.check('16px Poppins') && document.fonts.check('600 16px Poppins'); }").ConfigureAwait(false);
+        string familia = await Page.Locator("body").EvaluateAsync<string>("e => getComputedStyle(e).fontFamily").ConfigureAwait(false);
+        int faces = await Page.EvaluateAsync<int>(
+            "() => [...document.fonts].filter(f => f.family.replace(/\"/g, '') === 'Poppins' && f.status === 'loaded').length").ConfigureAwait(false);
+
+        Assert.IsTrue(carregada, "a Poppins 400 e 600 não carregaram");
+        StringAssert.Contains(familia, "Poppins");
+        Assert.IsTrue(faces >= 2, $"esperava ao menos 2 pesos carregados, vieram {faces}");
+    }
+
+    [TestMethod]
+    public async Task Icones_FontAwesome_CarregamDoProprioSite()
+    {
+        await Page.GotoAsync(Url("/")).ConfigureAwait(false);
+
+        bool carregada = await Page.EvaluateAsync<bool>(
+            "async () => { await document.fonts.ready; return document.fonts.check('14px FontAwesome'); }").ConfigureAwait(false);
+        string conteudo = await Page.Locator("i.fa-search").First.EvaluateAsync<string>("e => getComputedStyle(e, '::before').content").ConfigureAwait(false);
+
+        Assert.IsTrue(carregada, "a fonte do Font Awesome não carregou");
+        Assert.AreNotEqual("none", conteudo);
+    }
+
+    [TestMethod]
+    public async Task Cabecalho_TemODegradeEOBotaoPrimarioComContraste()
+    {
+        await Page.GotoAsync(Url("/")).ConfigureAwait(false);
+
+        string fundo = await Page.Locator("header.cabecalho").EvaluateAsync<string>("e => getComputedStyle(e).backgroundImage").ConfigureAwait(false);
+        string[] botao = (await Page.GetByRole(AriaRole.Button, new() { Name = "Buscar" })
+            .EvaluateAsync<string>("e => { const c = getComputedStyle(e); return c.backgroundColor + '|' + c.color; }").ConfigureAwait(false)).Split('|');
+
+        StringAssert.Contains(fundo, "linear-gradient");
+        Assert.AreEqual("rgb(215, 34, 19)", botao[0]);
+        Assert.AreEqual("rgb(255, 255, 255)", botao[1]);
+        Assert.IsTrue(Contraste(botao[1], botao[0]) >= 4.5, "texto branco sobre o botão primário");
+    }
+
+    [TestMethod]
+    public async Task PaginaInicial_SoFazRequisicoesAoProprioSite()
+    {
+        List<string> externas = [];
+        string host = new Uri(Url("/")).Host;
+        Page.Request += (_, requisicao) =>
+        {
+            Uri uri = new(requisicao.Url);
+            if (uri.Scheme.StartsWith("http", StringComparison.Ordinal) && !string.Equals(uri.Host, host, StringComparison.OrdinalIgnoreCase))
+            {
+                externas.Add(requisicao.Url);
+            }
+        };
+
+        await Page.GotoAsync(Url("/")).ConfigureAwait(false);
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
+
+        CollectionAssert.AreEqual(Array.Empty<string>(), externas.ToArray(), "o site buscou algo fora do próprio domínio (Google Fonts, CDN...)");
+    }
+
     private static double Contraste(string a, string b)
     {
         double la = Luminancia(a);

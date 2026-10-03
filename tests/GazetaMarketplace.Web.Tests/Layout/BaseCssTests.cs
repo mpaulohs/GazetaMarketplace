@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using GazetaMarketplace.Web.Tests.Suporte;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -64,6 +65,81 @@ public sealed class BaseCssTests
 
         Assert.IsTrue(foco >= 3.0 && Math.Abs(foco - 6.44) < 0.05, "foco " + foco.ToString("0.00", CultureInfo.InvariantCulture));
         Assert.IsTrue(borda >= 3.0 && Math.Abs(borda - 4.69) < 0.05, "borda " + borda.ToString("0.00", CultureInfo.InvariantCulture));
+    }
+
+    [TestMethod]
+    public void Primaria_ComTextoBranco_PassaAA_ComOsValoresDeclaradosNoBaseCss()
+    {
+        string css = Normalizar(BaseCss());
+        string primaria = Token(css, "--bs-primary");
+
+        Assert.AreEqual("#d72213", primaria);
+        double contraste = Contraste("#ffffff", primaria);
+        Assert.IsTrue(contraste >= 4.5 && Math.Abs(contraste - 5.09) < 0.05, "branco sobre a primária: " + contraste.ToString("0.00", CultureInfo.InvariantCulture));
+        Assert.IsTrue(Contraste("#ffffff", Token(css, "--bs-btn-hover-bg", "#b81d10")) >= 4.5, "botão primário em hover");
+    }
+
+    [TestMethod]
+    public void PrimariaOriginalDoTemplate_FalhariaOAA()
+    {
+        // Documenta por que #e72a1a foi trocada: o teste quebra se alguém a devolver
+        Assert.IsTrue(Contraste("#ffffff", "#e72a1a") < 4.5);
+        Assert.IsTrue(Contraste("#6d7e9c", "#ffffff") < 4.5);
+    }
+
+    [TestMethod]
+    public void ParesDeCorDoTema_PassamNoContrasteMinimo_LendoOBaseCss()
+    {
+        string css = Normalizar(BaseCss());
+        string pagina = Token(css, "--app-page-bg");
+        string degrade = Token(css, "--app-gradient-header", string.Empty);
+        List<string> pontasDoDegrade = [.. Regex.Matches(degrade, "#[0-9a-fA-F]{6}").Select(m => m.Value)];
+
+        Assert.AreEqual(2, pontasDoDegrade.Count, "o degradê tem duas cores");
+        foreach (string ponta in pontasDoDegrade)
+        {
+            Assert.IsTrue(Contraste("#ffffff", ponta) >= 4.5, "branco sobre " + ponta);
+        }
+
+        (string nome, string texto, string fundo, double minimo)[] pares =
+        [
+            ("texto", Token(css, "--bs-body-color"), pagina, 4.5),
+            ("texto secundário na página", Token(css, "--bs-secondary-color"), pagina, 4.5),
+            ("texto secundário no branco", Token(css, "--bs-secondary-color"), "#ffffff", 4.5),
+            ("link", Token(css, "--bs-link-color"), pagina, 4.5),
+            ("link em hover", Token(css, "--bs-link-hover-color"), pagina, 4.5),
+            ("code", Token(css, "--bs-code-color"), pagina, 4.5),
+            ("rodapé", Token(css, "--app-footer-color"), Token(css, "--app-footer-bg"), 4.5),
+            ("primária como texto no branco", Token(css, "--bs-primary"), "#ffffff", 4.5),
+            ("foco na página", Regex.Match(Token(css, "--app-focus-outline", string.Empty), "#[0-9a-fA-F]{6}").Value, pagina, 3.0),
+            ("foco no branco", Regex.Match(Token(css, "--app-focus-outline", string.Empty), "#[0-9a-fA-F]{6}").Value, "#ffffff", 3.0),
+            ("borda de campo na página", Token(css, "--app-input-border-color"), pagina, 3.0),
+            ("accent", Token(css, "--app-accent"), "#ffffff", 4.5)
+        ];
+
+        foreach ((string nome, string texto, string fundo, double minimo) in pares)
+        {
+            double contraste = Contraste(texto, fundo);
+            Assert.IsTrue(contraste >= minimo, $"{nome}: {texto} sobre {fundo} = {contraste.ToString("0.00", CultureInfo.InvariantCulture)}:1 (mínimo {minimo})");
+        }
+    }
+
+    [TestMethod]
+    public void FocoSobreFundoEscuro_EBranco()
+    {
+        string css = Normalizar(BaseCss());
+
+        StringAssert.Contains(css, "--app-on-dark-focus: 2px solid #fff;");
+        Assert.IsTrue(Normalizar(File.ReadAllText(RaizDoRepositorio.Wwwroot("css", "components", "layout.css")))
+            .Contains(".cabecalho :focus-visible, .rodape :focus-visible { outline: var(--app-on-dark-focus); }", StringComparison.Ordinal));
+    }
+
+    private static string Token(string cssNormalizado, string nome, string padrao = null)
+    {
+        Match m = Regex.Match(cssNormalizado, Regex.Escape(nome) + @":\s*([^;]+);");
+        return m.Success
+            ? m.Groups[1].Value.Trim()
+            : padrao ?? throw new InvalidOperationException("token ausente: " + nome);
     }
 
     private static string Normalizar(string css)
