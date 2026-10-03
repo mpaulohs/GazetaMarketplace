@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GazetaMarketplace.IntegrationTests;
 
-/// <summary>Entidade só de teste: ainda não existe entidade editável real (a primeira é Ads, na tarefa 3.1).</summary>
+/// <summary>Entidade só de teste para provar o rowversion isoladamente (a entidade real é Ads; ver AdServiceConcurrencyTests).</summary>
 internal sealed class TestEntity : BaseEntity
 {
     public string Name { get; set; }

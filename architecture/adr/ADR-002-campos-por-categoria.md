@@ -44,3 +44,6 @@ Revisit this decision when **any** of the following becomes true:
 
 ## Revision note (2026-10-03)
 `AreaM2` passou de `int` para `decimal(12,2)` em 2026-10-03. **Motivo:** precisão de imóveis (o GazetaOnline guarda 2 casas decimais; `int` perderia, por exemplo, 450,75 m²). A coluna calculada `AreaM2` é criada com `decimal(12,2)` na tarefa 3.1; o campo `areaM2` do grupo Imóveis é `FieldType.Decimal` com 2 casas, mínimo 0,01 e máximo 99.999.999,99. Os filtros de faixa da busca (`s-amin`, `s-amax`) aceitam decimais. A expressão `CAST(JSON_VALUE(...) AS decimal(12,2))` e a definição do campo no C# são as duas representações da regra e entram no teste diferencial de colunas calculadas (`rules/testing.md`, paridade de dupla implementação).
+
+## Revision note (2026-10-03): TRY_CAST
+As colunas calculadas usam `TRY_CAST`, não `CAST`: `TRY_CAST(JSON_VALUE(Attributes, '$.<campo>') AS <tipo>)`. **Motivo:** um valor malformado no JSON (por exemplo `km` = "abc") vira `NULL` em vez de derrubar o `INSERT` com erro de conversão. A validação do formulário (3.3) é a primeira defesa; a coluna é a segunda. O teste diferencial cobre a classe "valor malformado". Diferença conhecida: o SQL aceita um número entre aspas (`"12"` vira 12) e o C# estrito não; por isso a 3.3 precisa recusar texto em campo numérico.

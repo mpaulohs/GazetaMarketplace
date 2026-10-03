@@ -3,9 +3,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Infrastructure.Data.Seeds;
 using GazetaMarketplace.Web.Tests.Support;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GazetaMarketplace.Web.Tests.Categories;
@@ -19,6 +21,7 @@ public sealed class DeletionTests
     private const int Imoveis = 1;
     private const int Autopecas = 3;
     private const int Ciclismo = 58;
+    private const int Academia = 59;
     private const int Terrenos = 30;
     private const int PecasParaCarros = 38;
 
@@ -45,8 +48,11 @@ public sealed class DeletionTests
     [TestMethod]
     public async Task US013S08_ComAnuncios_Recusa_ComAContagemNaMensagem() // @US-013-S08
     {
-        using PanelFixture panel = await PanelFixture.StartAsync();
-        panel.Usage.Counts[Ciclismo] = 3;
+        using PanelFixture panel = await PanelFixture.StartAsync(realAds: true);
+        await panel.AddAdAsync(Ciclismo);
+        await panel.AddAdAsync(Ciclismo, AdStatus.Published);
+        await panel.AddAdAsync(Ciclismo, AdStatus.Archived);
+        await panel.AddAdAsync(Academia, AdStatus.Rejected);
 
         string html = await panel.FollowAsync(await panel.DeleteAsync(Ciclismo));
 
@@ -54,21 +60,58 @@ public sealed class DeletionTests
         Assert.IsTrue(await ExistsAsync(panel, Ciclismo), "a categoria continua na lista");
         StringAssert.Contains(html, ">Ciclismo<");
 
-        panel.Usage.Counts[Ciclismo] = 1;
-        StringAssert.Contains(await panel.FollowAsync(await panel.DeleteAsync(Ciclismo)), "Não é possível excluir: 1 anúncio usa esta categoria");
+        StringAssert.Contains(await panel.FollowAsync(await panel.DeleteAsync(Academia)), "Não é possível excluir: 1 anúncio usa esta categoria");
+        Assert.IsEmpty(await panel.AuditAsync(), "recusar não deixa rastro");
     }
 
     [TestMethod]
     public async Task US013S08_AnuncioEmQualquerSituacao_ContaParaOBloqueio_NoMesmoNumeroDaColuna()
     {
-        using PanelFixture panel = await PanelFixture.StartAsync();
-        panel.Usage.Counts[58] = 5; // Ciclismo
+        using PanelFixture panel = await PanelFixture.StartAsync(realAds: true);
+        foreach (byte status in AdStatus.All)
+        {
+            await panel.AddAdAsync(Ciclismo, status); // rascunho, em revisão, publicado, rejeitado e arquivado
+        }
 
         string index = await panel.IndexAsync();
-        string html = await panel.FollowAsync(await panel.DeleteAsync(58));
+        string html = await panel.FollowAsync(await panel.DeleteAsync(Ciclismo));
 
         StringAssert.Contains(index, "5 anúncios");
         StringAssert.Contains(html, "Não é possível excluir: 5 anúncios usam esta categoria");
+    }
+
+    [TestMethod]
+    public async Task RascunhoSemCategoria_NaoImpedeExcluirNenhumaCategoria()
+    {
+        using PanelFixture panel = await PanelFixture.StartAsync(realAds: true);
+        await panel.CreateAsync("Colecionáveis", null);
+        int id = (await panel.FindByNameAsync("Colecionáveis")).Id;
+
+        await panel.WithDbAsync(async db =>
+        {
+            int author = await db.Users.Select(u => u.Id).FirstAsync();
+            db.Ads.Add(AdFactory.At(AdStatus.Draft, author, "Só o título"));
+            await db.SaveChangesAsync();
+            return 0;
+        });
+        string html = await panel.FollowAsync(await panel.DeleteAsync(id));
+
+        StringAssert.Contains(html, "Categoria Colecionáveis excluída.");
+    }
+
+    [TestMethod]
+    public async Task AChaveEstrangeiraDosAnuncios_ImpedeApagarACategoriaPorFora()
+    {
+        using PanelFixture panel = await PanelFixture.StartAsync(realAds: true);
+        await panel.AddAdAsync(Ciclismo);
+
+        await Assert.ThrowsExactlyAsync<DbUpdateException>(() => panel.WithDbAsync(async db =>
+        {
+            db.Categories.Remove(await db.Categories.SingleAsync(c => c.Id == Ciclismo));
+            await db.SaveChangesAsync();
+            return 0;
+        }));
+        Assert.IsTrue(await ExistsAsync(panel, Ciclismo));
     }
 
     [TestMethod]

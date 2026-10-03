@@ -279,3 +279,38 @@ Todas foram desfeitas depois.
 **Também conferido na verificação:** o script `db/scripts/gazeta-idempotente.sql` aplicado em SQL Server real termina com 9 migrations e 65 categorias com grupo; `git status` não mostra mudança em `appsettings*.json`, `Program.cs` nem `docker-compose*.yml`; as quatro suítes passam ao mesmo tempo (619 + 43 + 57 + 36).
 
 **Pendências que seguem abertas (todas no `plans/BACKLOG.md`):** exportação real do catálogo (A5); esquema presumido da origem; `ICategoryUsage` real e o autocomplete de marcas na Fase 3; mensagem "Mova antes os anúncios desta categoria" fora da SPEC; caches por processo; suposições de limites numéricos.
+
+## Tarefa 3.1 — modelo do anúncio, situações e autoria
+
+> **Em resumo:** 714 testes unitários (95 novos), 43 da ferramenta de catálogo, 81 de integração (24 novos, SQL Server real) e 36 de navegador passam. As seis mutações derrubam testes. O esquema real de `Ads` (colunas calculadas, `CHECK`s, chaves estrangeiras, índices) só existe no SQL Server, então é provado na integração; o script idempotente também foi aplicado com `sqlcmd -I` num SQL Server real (10 migrations, 5 colunas calculadas).
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 714 | 714 | 0 |
+| Ferramenta (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 81 | 81 | 0 |
+| E2E (Playwright, site publicado em Production) | 36 | 36 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| Passagem extra `Arquivado → Rascunho` | 5 (`StatusTests` ×4, `AuthorshipTests`) |
+| Redator edita anúncio de outro / em qualquer situação | `AuthorshipTests.Redator_EditaOsProprios…` |
+| `Normalizer` deixando de tirar o acento (descarta a categoria errada) | 8 (`NormalizerTests`, `AdEntityTests`) |
+| Caminho `$.modelYear` trocado por `$.year` na migration | 4 de integração (`ComputedColumnsDifferentialTests` ×2, `AdsSchemaTests` ×2) |
+| `AdsCategoryUsage` contando só os publicados | 4 (`AdsCategoryUsageTests` ×2, `DeletionTests` S08 ×2) |
+| Preço zero aceito | `PriceTests.ZeroNegativoEAcimaDoTeto…` |
+
+Todas foram desfeitas depois. A mutação do `AdsCategoryUsage` não compilava na primeira versão (nome sem `using`) e foi refeita; o resultado acima é o da versão que compilou.
+
+**O que cada camada prova**
+
+- Unitários: as 25 combinações de situação, com as 9 passagens do Apêndice A (e `Arquivado` definitivo); a matriz de leitura e edição por papel, autoria e situação; o serviço (Redator de outro recebe 403, Redator não publica, passagem inexistente é conflito, motivo obrigatório ao rejeitar, trilha e auditoria, recusa sem rastro, reenvio limpa a rejeição); o `Normalizer`; `AdAttributes` estrito no tipo; preço nulo, nunca zero; o modelo sem campo de pessoa do vendedor, também nos 18 grupos (NFR-19); `AdsCategoryUsage` em todas as situações; US-013-S08 e "subcategoria numa folha com anúncios" contra anúncios reais; o texto da migration `AddAds`.
+- Integração: colunas calculadas persistidas com `TRY_CAST`; índices do §6.4 (filtrado e descendente); o banco recusa JSON inválido, array, `Status` fora de 1 a 5, preço zero, negativo ou acima do teto, CEP, UF, título e descrição malformados; as chaves estrangeiras sem cascata (categoria, autor, quem decidiu, anúncio com foto); `UQ_AdPhotos_StorageKey`; **teste diferencial**: para Carros, Motos, Caminhões e Ônibus e Imóveis, 11 classes de entrada (presente, zero, máximo, negativo, texto, decimal em campo inteiro, estouro, nulo, objeto, lista, booleano), cada coluna igual ao que o C# lê; completude: os caminhos das colunas são exatamente os campos filtráveis dos grupos; dois administradores decidindo o mesmo anúncio e clique duplo em enviar (6 rodadas cada): só um vence, o outro recebe `Conflict` e não deixa rastro; edição velha não sobrescreve a nova; excluir a categoria enquanto outra pessoa cria um anúncio nela (6 rodadas) nunca deixa anúncio sem categoria.
+
+**Achados desta rodada**
+
+1. **Número entre aspas.** O SQL converte `"12"` (e `" 7 "`) em número; o `AdAttributes` estrito lê "ausente". O teste documenta a diferença e o BACKLOG manda a 3.3 recusar texto em campo numérico.
+2. **`ISJSON` e escalares.** Um escalar (`42`) falha antes do `CHECK` (erro 13609 da coluna calculada) e um array passa no `ISJSON`; por isso o `CHECK` exige também que o texto comece com `{`.
+3. **Caminho do JSON diferencia maiúsculas.** `"Km"` e `"KM"` não preenchem `$.km`.
+4. **Chaves estrangeiras em SQLite.** O SQLite dos testes unitários também as aplica; os anúncios de teste com quem publicou ou rejeitou precisam de contas de verdade.
+5. **Os erros do SQL Server variam:** truncamento é 2628 no SQL Server 2022 (não 8152), e o `CHECK` falha com 547 só quando a coluna calculada não falha antes.

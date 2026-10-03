@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Entities;
 using GazetaMarketplace.Core.Team;
@@ -16,7 +17,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GazetaMarketplace.Web.Tests.Categories;
 
-/// <summary>Quantos anúncios cada categoria tem, definido pelo teste (a tabela de anúncios só nasce na 3.1).</summary>
+/// <summary>Quantos anúncios cada categoria tem, definido pelo teste. Só para as telas que mostram a contagem; as regras de exclusão rodam contra anúncios reais (<c>realAds</c>).</summary>
 internal sealed class FakeCategoryUsage : ICategoryUsage
 {
     public Dictionary<int, int> Counts { get; } = [];
@@ -46,13 +47,17 @@ internal sealed class PanelFixture : System.IDisposable
 
     public HttpClient Admin { get; }
 
-    public static async Task<PanelFixture> StartAsync()
+    /// <param name="realAds">Usa a contagem real de anúncios (<c>AdsCategoryUsage</c>) em vez da contagem definida pelo teste.</param>
+    public static async Task<PanelFixture> StartAsync(bool realAds = false)
     {
         FakeCategoryUsage usage = new();
         WebFactory factory = new(withDatabase: true, services: services =>
         {
-            services.RemoveAll<ICategoryUsage>();
-            services.AddSingleton<ICategoryUsage>(usage);
+            if (!realAds)
+            {
+                services.RemoveAll<ICategoryUsage>();
+                services.AddSingleton<ICategoryUsage>(usage);
+            }
         });
         await factory.CreateUserAsync(AdminEmail, "Marcos Silva", Password, RoleNames.Administrator);
         await factory.CreateUserAsync(WriterEmail, "Ana Souza", Password, RoleNames.Writer);
@@ -94,6 +99,20 @@ internal sealed class PanelFixture : System.IDisposable
     {
         using IServiceScope scope = Factory.Services.CreateScope();
         return await work(scope.ServiceProvider.GetRequiredService<AppDbContext>());
+    }
+
+    /// <summary>Grava um anúncio de verdade na categoria, já na situação pedida, escrito pela Ana (Redator).</summary>
+    public async Task<int> AddAdAsync(int categoryId, byte status = AdStatus.Draft)
+    {
+        return await WithDbAsync(async db =>
+        {
+            int author = await db.Users.Where(u => u.Email == WriterEmail).Select(u => u.Id).SingleAsync();
+            int decider = await db.Users.Where(u => u.Email == AdminEmail).Select(u => u.Id).SingleAsync();
+            Ad ad = AdFactory.At(status, author, "Anúncio de teste", categoryId, decider);
+            db.Ads.Add(ad);
+            await db.SaveChangesAsync();
+            return ad.Id;
+        });
     }
 
     public Task<Category> FindAsync(int id) => WithDbAsync(db => db.Categories.AsNoTracking().SingleOrDefaultAsync(c => c.Id == id));

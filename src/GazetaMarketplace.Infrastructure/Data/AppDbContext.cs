@@ -2,12 +2,14 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Entities;
 using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Core.VehicleCatalog;
+using GazetaMarketplace.Infrastructure.Data.Configurations;
 using GazetaMarketplace.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -60,11 +62,21 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
 
     public DbSet<VehicleVersion> VehicleVersions => Set<VehicleVersion>();
 
+    public DbSet<Ad> Ads => Set<Ad>();
+
+    public DbSet<AdPhoto> AdPhotos => Set<AdPhoto>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Constrói as tabelas do Identity antes das configurações do projeto
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        // Colunas calculadas por JSON e CHECKs só existem no SQL Server; os testes unitários em SQLite rodam sem eles
+        if (!Database.IsSqlServer())
+        {
+            AdConfiguration.RemoveSqlServerOnlyFeatures(modelBuilder);
+        }
 
         // Toda entidade editável tem rowversion (conflito vira ConflictException)
         foreach (IMutableEntityType type in modelBuilder.Model.GetEntityTypes().Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType)))
@@ -145,6 +157,11 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
                 entry.Entity.UpdatedAt = now;
                 entry.Entity.UpdatedBy = user;
             }
+        }
+
+        foreach (EntityEntry<AdPhoto> photo in ChangeTracker.Entries<AdPhoto>().Where(e => e.State == EntityState.Added))
+        {
+            photo.Entity.CreatedAt = now;
         }
 
         // RC-16: a auditoria de ações só recebe acréscimos

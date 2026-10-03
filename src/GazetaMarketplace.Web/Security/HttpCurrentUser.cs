@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GazetaMarketplace.Core.Interfaces;
+using GazetaMarketplace.Core.Team;
 using Microsoft.AspNetCore.Http;
 
 namespace GazetaMarketplace.Web.Security;
@@ -9,6 +10,8 @@ public sealed class HttpCurrentUser(IHttpContextAccessor accessor) : ICurrentUse
 {
     public int? UserId =>
         int.TryParse(accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
+
+    public bool IsAdministrator => accessor.HttpContext?.User.IsInRole(RoleNames.Administrator) == true;
 
     public string CorrelationId => accessor.HttpContext?.TraceIdentifier;
 }

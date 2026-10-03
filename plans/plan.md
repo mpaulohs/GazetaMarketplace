@@ -1083,30 +1083,34 @@
 
 **Objective**: Criar a entidade do anúncio com atributos em JSON, colunas calculadas e indexadas, colunas de busca normalizadas e o serviço que controla situações e autoria.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Core/Ads/Anuncio.cs, SituacaoAnuncio.cs, AnuncioService.cs`
+**Files modified** (nomes em inglês, pelo glossário):
+- `src/GazetaMarketplace.Core/Ads/` — `AdStatus`, `AdStatusRules`, `AdAccess`, `Ad`, `AdPhoto`, `AdAttributes`, `IAdService`, `AdMessages`
 - `src/GazetaMarketplace.Core/Search/Normalizer.cs`
-- src/GazetaMarketplace.Infrastructure/Data/Configurations/AnuncioConfiguration.cs (colunas calculadas e índices do §6.4)
-- src/GazetaMarketplace.Infrastructure/Data/Migrations/ (AdsSchema)
+- `src/GazetaMarketplace.Infrastructure/Data/Configurations/AdConfiguration.cs, AdPhotoConfiguration.cs` (colunas calculadas, CHECKs e índices do §6.4)
+- `src/GazetaMarketplace.Infrastructure/Ads/AdService.cs`, `Categories/AdsCategoryUsage.cs` (substitui `PendingAdsCategoryUsage`)
+- `src/GazetaMarketplace.Infrastructure/Data/Migrations/` (`AddAds`) e `db/scripts/gazeta-idempotente.sql`
+- `ICurrentUser.IsAdministrator`, `SqlFragments.PublishedStatus = AdStatus.Published`
 
 **Acceptance Criteria**:
-- [ ] `Ads` com `PriceCents bigint NULL` (nulo = sem preço), `Attributes` JSON válido (`ISJSON`), colunas calculadas `VehicleBrandId`, `VehicleModelId`, `ModelYear`, `Km`, `AreaM2` indexadas e `TitleSearch`/`DescriptionSearch` preenchidos só pelo C#
-- [ ] Transições de situação: Rascunho → Em revisão → Publicado ou Rejeitado; Publicado → Rascunho (despublicar) ou Arquivado; Arquivado é definitivo; transição inválida devolve `CONFLICT`
-- [ ] O Redator só lê e altera os próprios anúncios em Rascunho ou Rejeitado; a checagem fica no serviço, não só no controller
-- [ ] O modelo não tem campo de nome, telefone ou e-mail de vendedor ou comprador (NFR-19)
-- [ ] **Teste diferencial** (ADR-002): uma coluna calculada devolve exatamente o que o C# gravou em todos os grupos com filtro
+- [x] `Ads` com `PriceCents bigint NULL` (nulo = sem preço), `Attributes` JSON de objeto (`ISJSON` + chave `{`), colunas calculadas `VehicleBrandId`, `VehicleModelId`, `ModelYear`, `Km`, `AreaM2` persistidas, indexadas e com `TRY_CAST`; `TitleSearch`/`DescriptionSearch` preenchidos só pelo C#
+- [x] Transições de situação: Rascunho → Em revisão → Publicado ou Rejeitado; Publicado → Rascunho (despublicar) ou Arquivado; Arquivado é definitivo; transição inválida devolve `CONFLICT` (as 9 passagens do Apêndice A)
+- [x] O Redator **lê os próprios anúncios em qualquer situação** e **edita só em Rascunho ou Rejeitado**; o Administrador lê todos e edita os que não estão Arquivados (D2: o texto anterior, "só lê e altera Rascunho ou Rejeitado", contradizia a US-008-S12); a checagem fica no serviço, não só no controller
+- [x] O modelo não tem campo de nome, telefone ou e-mail de vendedor ou comprador (NFR-19)
+- [x] **Teste diferencial** (ADR-002): uma coluna calculada devolve exatamente o que o C# lê, em todos os grupos com filtro (`ComputedColumnsDifferentialTests`, SQL Server real)
+- [x] `ICategoryUsage` passa a contar anúncios reais em qualquer situação; a US-013-S08 roda contra anúncios de verdade
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Ads/StatusTests.TransicoesValidas_E_Invalidas`
-- `tests/GazetaMarketplace.Web.Tests/Ads/AutoriaTests.Redator_NaoLeAnuncioDeOutro_NoServico`
-- `tests/GazetaMarketplace.Web.Tests/Ads/NormalizerTests.RemoveAcentos_E_MinusculasNaBusca`
-- `tests/GazetaMarketplace.Web.Tests/Ads/PrivacidadeTests.Modelo_NaoTemCamposDePessoaDoVendedor`
-- `tests/GazetaMarketplace.Web.Tests/Ads/PriceTests.Servico_GravaNulo_NuncaZero`
-- `tests/GazetaMarketplace.Web.Tests/Ads/ColunasCalculadasDiferencialTests.CadaGrupoComFiltro_ClassesDeEntrada (TestContainers, roda no /test)`
+**Tests added**: `Web.Tests/Ads/` (`StatusTests`, `AuthorshipTests`, `PrivacyTests`, `PriceTests`, `AdAttributesTests`, `AdEntityTests`, `AdServiceTests`, `AdsCategoryUsageTests`), `Web.Tests/Search/NormalizerTests`, `DeletionTests` e `CategoriesTests` com anúncios reais, `MigrationsTests.MigrationDosAnuncios…`; `IntegrationTests/` (`AdsSchemaTests`, `ComputedColumnsDifferentialTests` com a completude, `AdServiceConcurrencyTests`, `AdsCategoryUsageTests`, `ScriptTests` com 10 migrations).
+
+**Decisões aprovadas pelo Product Owner (2026-10-03):**
+- **D1** `CategoryId` aceita nulo no banco (US-008-S07); o envio para revisão exige categoria postável (ARCHITECTURE §6.2 atualizado).
+- **D2** Redator lê o próprio em qualquer situação e edita só em Rascunho ou Rejeitado (a SPEC precisa de emenda; ver BACKLOG).
+- **D3** `TRY_CAST` nas colunas calculadas (emenda do ADR-002).
+- **D4** `TransitionAsync` genérico e protegido; reenviar um rejeitado limpa `Rejected*`; despublicar limpa `Published*`; motivo da rejeição de até 500 caracteres (suposição).
+- **D5** `Attributes` como `string`; `AdPhotos.AdId` e todas as FKs `Restrict`; `CHECK LEN(Description) <= 6000`; `SizeBytes` é o da versão de 1600 px.
 
 **Dependencies**: 2.1, 2.2, 2.3, 0.6
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Conferir o esquema gerado e os índices do §6.4 do ARCHITECTURE.
+**Verification**: Done when every test under "Tests added" passes, plus manual check: Conferir o esquema gerado e os índices do §6.4 do ARCHITECTURE. **Feito em 2026-10-03.**
 
 **Estimate**: L
 

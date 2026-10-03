@@ -25,5 +25,7 @@ internal sealed class SystemUser : ICurrentUser
 {
     public int? UserId => null;
 
+    public bool IsAdministrator => false;
+
     public string CorrelationId => null;
 }

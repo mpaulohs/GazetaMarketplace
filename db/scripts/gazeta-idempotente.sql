@@ -1382,3 +1382,186 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE TABLE [Ads] (
+        [Id] int NOT NULL IDENTITY,
+        [CategoryId] int NULL,
+        [Status] tinyint NOT NULL,
+        [Title] nvarchar(120) NOT NULL,
+        [Description] nvarchar(max) NULL,
+        [PriceCents] bigint NULL,
+        [Cep] char(8) NULL,
+        [City] nvarchar(80) NULL,
+        [Uf] char(2) NULL,
+        [LocationManual] bit NOT NULL,
+        [Attributes] nvarchar(max) NOT NULL,
+        [VehicleBrandId] AS TRY_CAST(JSON_VALUE([Attributes], '$.brandId') AS int) PERSISTED,
+        [VehicleModelId] AS TRY_CAST(JSON_VALUE([Attributes], '$.modelId') AS int) PERSISTED,
+        [ModelYear] AS TRY_CAST(JSON_VALUE([Attributes], '$.modelYear') AS int) PERSISTED,
+        [Km] AS TRY_CAST(JSON_VALUE([Attributes], '$.km') AS int) PERSISTED,
+        [AreaM2] AS TRY_CAST(JSON_VALUE([Attributes], '$.areaM2') AS decimal(12,2)) PERSISTED,
+        [TitleSearch] nvarchar(200) NULL,
+        [DescriptionSearch] nvarchar(max) NULL,
+        [AuthorId] int NOT NULL,
+        [SentAt] datetime2 NULL,
+        [PublishedAt] datetime2 NULL,
+        [PublishedById] int NULL,
+        [RejectedAt] datetime2 NULL,
+        [RejectedById] int NULL,
+        [RejectionReason] nvarchar(500) NULL,
+        [ArchivedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [CreatedBy] int NULL,
+        [UpdatedAt] datetime2 NULL,
+        [UpdatedBy] int NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_Ads] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_Ads_Attributes] CHECK (ISJSON([Attributes]) = 1 AND LEFT(LTRIM([Attributes]), 1) = '{'),
+        CONSTRAINT [CK_Ads_Cep] CHECK ([Cep] IS NULL OR ([Cep] NOT LIKE '%[^0-9]%' AND LEN([Cep]) = 8)),
+        CONSTRAINT [CK_Ads_Description] CHECK ([Description] IS NULL OR LEN([Description]) <= 6000),
+        CONSTRAINT [CK_Ads_PriceCents] CHECK ([PriceCents] IS NULL OR ([PriceCents] > 0 AND [PriceCents] <= 9999999999)),
+        CONSTRAINT [CK_Ads_Status] CHECK ([Status] BETWEEN 1 AND 5),
+        CONSTRAINT [CK_Ads_Title] CHECK (LEN(LTRIM(RTRIM([Title]))) > 0),
+        CONSTRAINT [CK_Ads_Uf] CHECK ([Uf] IS NULL OR ([Uf] NOT LIKE '%[^A-Za-z]%' AND LEN([Uf]) = 2)),
+        CONSTRAINT [FK_Ads_AspNetUsers_AuthorId] FOREIGN KEY ([AuthorId]) REFERENCES [AspNetUsers] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_Ads_AspNetUsers_PublishedById] FOREIGN KEY ([PublishedById]) REFERENCES [AspNetUsers] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_Ads_AspNetUsers_RejectedById] FOREIGN KEY ([RejectedById]) REFERENCES [AspNetUsers] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_Ads_Categories_CategoryId] FOREIGN KEY ([CategoryId]) REFERENCES [Categories] ([Id]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE TABLE [AdPhotos] (
+        [Id] int NOT NULL IDENTITY,
+        [AdId] int NOT NULL,
+        [SortOrder] int NOT NULL,
+        [StorageKey] varchar(100) NOT NULL,
+        [Width] int NOT NULL,
+        [Height] int NOT NULL,
+        [SizeBytes] int NOT NULL,
+        [OriginalKey] varchar(260) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        CONSTRAINT [PK_AdPhotos] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_AdPhotos_Size] CHECK ([Width] > 0 AND [Height] > 0 AND [SizeBytes] > 0),
+        CONSTRAINT [CK_AdPhotos_SortOrder] CHECK ([SortOrder] >= 0),
+        CONSTRAINT [FK_AdPhotos_Ads_AdId] FOREIGN KEY ([AdId]) REFERENCES [Ads] ([Id]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_AdPhotos_AdId_SortOrder] ON [AdPhotos] ([AdId], [SortOrder]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE UNIQUE INDEX [UQ_AdPhotos_StorageKey] ON [AdPhotos] ([StorageKey]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_AreaM2] ON [Ads] ([AreaM2]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_AuthorId_Status_UpdatedAt] ON [Ads] ([AuthorId], [Status], [UpdatedAt]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_CategoryId] ON [Ads] ([CategoryId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_Km] ON [Ads] ([Km]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_PublishedById] ON [Ads] ([PublishedById]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_RejectedById] ON [Ads] ([RejectedById]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_Status_CategoryId_PublishedAt] ON [Ads] ([Status], [CategoryId], [PublishedAt] DESC);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    EXEC(N'CREATE INDEX [IX_Ads_Status_PriceCents] ON [Ads] ([Status], [PriceCents]) WHERE [PriceCents] IS NOT NULL');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_Status_Uf_City] ON [Ads] ([Status], [Uf], [City]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_VehicleBrandId_ModelYear] ON [Ads] ([VehicleBrandId], [ModelYear]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003233141_AddAds'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261003233141_AddAds', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

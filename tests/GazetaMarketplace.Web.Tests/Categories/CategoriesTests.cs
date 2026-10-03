@@ -2,6 +2,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Entities;
 using GazetaMarketplace.Web.Tests.Support;
@@ -188,8 +189,9 @@ public sealed class CategoriesTests
     [TestMethod]
     public async Task SubcategoriaDentroDeUmaFolhaComAnuncios_Recusa_ENadaMuda()
     {
-        using PanelFixture panel = await PanelFixture.StartAsync();
-        panel.Usage.Counts[Motos] = 2;
+        using PanelFixture panel = await PanelFixture.StartAsync(realAds: true);
+        await panel.AddAdAsync(Motos);
+        await panel.AddAdAsync(Motos, AdStatus.Published);
         int before = await panel.CountAsync();
 
         HttpResponseMessage response = await panel.CreateAsync("Scooters", Motos);

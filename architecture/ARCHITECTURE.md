@@ -154,7 +154,7 @@ Os diagramas estão em `architecture/diagrams/`:
 | Coluna | Tipo | Regra |
 |---|---|---|
 | `Id` | `int` PK | Aparece no endereço público |
-| `CategoryId` | `int` FK | Precisa ser `IsPostable` |
+| `CategoryId` | `int` NULL, FK → Categories | Nulo só no rascunho que ainda não escolheu categoria (US-008-S07: rascunho só com o título); o envio para revisão exige uma categoria `IsPostable` (US-009). Emenda de 2026-10-03 |
 | `Status` | `tinyint` | 1 Rascunho · 2 Em revisão · 3 Publicado · 4 Rejeitado · 5 Arquivado (S5) |
 | `Title` | `nvarchar(120)` | 90 em Vagas; limite por grupo (ADR-002) |
 | `Description` | `nvarchar(max)` | 6000 em Serviços e Vagas; nas demais, 5000 (valor do `/arch`, resolve a parte de S13) |
@@ -163,7 +163,7 @@ Os diagramas estão em `architecture/diagrams/`:
 | `City`, `Uf` | `nvarchar(80)`, `char(2)` | Padronizadas (regra da US-008) |
 | `LocationManual` | `bit` | Cidade/UF manual por falha do CEP (selo) |
 | `Attributes` | `nvarchar(max)` + `CHECK (ISJSON(Attributes)=1)` | Campos do grupo, em JSON (ADR-002) |
-| `VehicleBrandId`, `VehicleModelId`, `ModelYear`, `Km`, `AreaM2` | colunas calculadas persistidas a partir do JSON (`AreaM2` é `decimal(12,2)`, ADR-002) | Só as usadas em filtro; indexadas |
+| `VehicleBrandId`, `VehicleModelId`, `ModelYear`, `Km`, `AreaM2` | colunas calculadas persistidas a partir do JSON com `TRY_CAST(JSON_VALUE(...))` (`AreaM2` é `decimal(12,2)`; valor malformado vira `NULL`, ADR-002) | Só as usadas em filtro; indexadas |
 | `TitleSearch`, `DescriptionSearch` | `nvarchar(200)`, `nvarchar(max)` | Título e descrição sem acento e em minúsculas, para a busca; preenchidos só pela aplicação (ADR-006) |
 | `AuthorId` | FK → AspNetUsers | Dono do anúncio (S10) |
 | `SentAt`, `PublishedAt`, `PublishedById`, `RejectedAt`, `RejectedById`, `RejectionReason`, `ArchivedAt` | | Rastro de decisão (S10); motivo visível ao autor (S9) |
@@ -276,6 +276,7 @@ As páginas Razor mostram as mensagens do SPEC na própria tela; os endpoints JS
 | Perfil de publicação (`.pubxml`) | `<SkipExtraFilesOnServer>true</SkipExtraFilesOnServer>` (equivale a desmarcar "Remover arquivos adicionais no destino"); `MSDeploySkipRules` para qualquer pasta de dados que precise ficar dentro do site; exclusão de `appsettings.Development.json`; `EnvironmentName=Production`; `*.pubxml.user` fora do git |
 | Pasta de fotos | Fora da raiz do site (`PhotoStorage__BasePath`, por exemplo `h:\root\home\<conta>\www\gazeta-fotos`); caminho e permissão de escrita a confirmar (AR-01). Estrutura: `<adId>/<photoId>_1600.webp` e `<adId>/<photoId>_480.webp` (permanentes) e `_originals/<yyyy-MM>/<guid>.<ext>` (30 dias) |
 | Logs e chaves | `Logging__FileDirectory` e `DataProtection__KeysDirectory`, também fora da raiz |
+| Sessão do banco | As colunas calculadas persistidas e indexadas de `Ads` exigem `ARITHABORT ON` e `QUOTED_IDENTIFIER ON` nas escritas (padrão do driver .NET). **Checklist de publicação:** confirmar que o servidor de produção usa esses dois ajustes; o script roda com `sqlcmd -I` |
 | Banco | Migrations aplicadas por **script idempotente** gerado pelo EF (`dotnet ef migrations script --idempotent`), executado na ferramenta de SQL do provedor; nunca `Database.Migrate()` na inicialização em produção |
 | Runtime | *Framework-dependent* se o .NET 10 estiver instalado no servidor; senão *self-contained* `win-x64` (AR-02) |
 | Docker | Só no desenvolvimento (SQL Server local e testes com TestContainers); não usado em produção |

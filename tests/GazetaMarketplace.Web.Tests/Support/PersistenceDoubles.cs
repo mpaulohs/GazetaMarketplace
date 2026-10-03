@@ -16,5 +16,7 @@ internal sealed class FakeCurrentUser : ICurrentUser
 {
     public int? UserId { get; set; }
 
+    public bool IsAdministrator { get; set; }
+
     public string CorrelationId { get; set; }
 }

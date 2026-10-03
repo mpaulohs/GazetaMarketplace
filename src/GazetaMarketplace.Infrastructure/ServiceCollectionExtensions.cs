@@ -1,9 +1,11 @@
 using System;
+using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Core.VehicleCatalog;
+using GazetaMarketplace.Infrastructure.Ads;
 using GazetaMarketplace.Infrastructure.Categories;
 using GazetaMarketplace.Infrastructure.Data;
 using GazetaMarketplace.Infrastructure.Email;
@@ -37,7 +39,8 @@ public static class ServiceCollectionExtensions
             sql => sql.EnableRetryOnFailure(maxRetryCount: 3)));
         services.AddSingleton<CategoryTree>();
         services.AddSingleton<ICategoryTree>(provider => provider.GetRequiredService<CategoryTree>());
-        services.AddSingleton<ICategoryUsage, PendingAdsCategoryUsage>(); // provisório até a 3.1 (anúncios)
+        services.AddScoped<ICategoryUsage, AdsCategoryUsage>();
+        services.AddScoped<IAdService, AdService>();
         services.AddScoped<ICategoryManagement, CategoryManagement>();
         services.AddSingleton<SiteSettingsStore>();
         services.AddSingleton<ISiteSettings>(provider => provider.GetRequiredService<SiteSettingsStore>());

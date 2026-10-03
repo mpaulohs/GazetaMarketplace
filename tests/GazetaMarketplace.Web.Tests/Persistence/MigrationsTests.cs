@@ -148,6 +148,44 @@ public sealed class MigrationsTests
     }
 
     [TestMethod]
+    public void MigrationDosAnuncios_CriaAdsEAdPhotos_ComColunasCalculadasChecksEIndicesDoArchitecture()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddAds", StringComparison.Ordinal))).Replace("\r", string.Empty, StringComparison.Ordinal);
+
+        Assert.AreEqual(2, System.Text.RegularExpressions.Regex.Matches(section, @"CREATE TABLE \[").Count);
+        StringAssert.Contains(section, "CREATE TABLE [Ads]");
+        StringAssert.Contains(section, "CREATE TABLE [AdPhotos]");
+
+        // As cinco colunas calculadas persistidas, com TRY_CAST (emenda do ADR-002)
+        foreach ((string column, string path, string type) in new[] { ("VehicleBrandId", "brandId", "int"), ("VehicleModelId", "modelId", "int"), ("ModelYear", "modelYear", "int"), ("Km", "km", "int"), ("AreaM2", "areaM2", "decimal(12,2)") })
+        {
+            StringAssert.Contains(section, $"[{column}] AS TRY_CAST(JSON_VALUE([Attributes], '$.{path}') AS {type}) PERSISTED", column);
+        }
+
+        Assert.DoesNotContain("AS CAST(", section, "CAST derrubaria o INSERT com um valor malformado no JSON");
+        StringAssert.Contains(section, "ISJSON([Attributes]) = 1 AND LEFT(LTRIM([Attributes]), 1) = '{'");
+        StringAssert.Contains(section, "[Status] BETWEEN 1 AND 5");
+        StringAssert.Contains(section, "[PriceCents] > 0 AND [PriceCents] <= 9999999999");
+        StringAssert.Contains(section, "LEN([Description]) <= 6000");
+
+        foreach (string index in new[]
+        {
+            "IX_Ads_Status_CategoryId_PublishedAt", "IX_Ads_Status_Uf_City", "IX_Ads_Status_PriceCents", "IX_Ads_VehicleBrandId_ModelYear", "IX_Ads_Km", "IX_Ads_AreaM2",
+            "IX_Ads_AuthorId_Status_UpdatedAt", "IX_Ads_CategoryId", "IX_Ads_PublishedById", "IX_Ads_RejectedById", "IX_AdPhotos_AdId_SortOrder", "UQ_AdPhotos_StorageKey"
+        })
+        {
+            StringAssert.Contains(section, $"[{index}]", index);
+        }
+
+        StringAssert.Contains(section, "[PriceCents] IS NOT NULL", "índice de preço filtrado: Serviços ficam de fora");
+        StringAssert.Contains(section, "[PublishedAt] DESC");
+        Assert.DoesNotContain("ON DELETE CASCADE", section, "nenhuma exclusão em cascata");
+        Assert.DoesNotContain("INSERT INTO [Ads]", section, "nenhum anúncio de exemplo");
+        Assert.DoesNotContain("INSERT INTO [AdPhotos]", section);
+        Assert.DoesNotContain("[CategoryId] int NOT NULL", section, "rascunho só com o título não tem categoria (D1)");
+    }
+
+    [TestMethod]
     public void MigrationDasConfiguracoes_CriaSoASiteSettings_ComChaveUnica_ESemLinhasIniciais()
     {
         string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddSiteSettings", StringComparison.Ordinal)));

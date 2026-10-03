@@ -34,7 +34,7 @@
 ## Checkpoint 2 — Categorias e catálogo completos
 
 ## Fase 3 — Anúncios (equipe)
-- [ ] Task 3.1: Modelo do anúncio, situações e autorização por autoria
+- [x] Task 3.1: Modelo do anúncio, situações e autorização por autoria
 - [ ] Task 3.2: Consulta de CEP no servidor, com cache e lista de municípios
 - [ ] Task 3.3: Criar e editar rascunho do anúncio
 - [ ] Task 3.4: Processamento e armazenamento de fotos
