@@ -584,51 +584,53 @@
 
 **Objective**: Tela de usuários do Administrador: criar, mudar papel, desativar, reativar e redefinir a senha, sempre com ao menos um Administrador ativo.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/UsersController.cs`
-- `src/GazetaMarketplace.Web/Areas/Panel/Views/Users/*.cshtml`
-- `src/GazetaMarketplace.Core/Team/UserService.cs`
-- `src/GazetaMarketplace.Web/wwwroot/js/pages/users-index.js`
+**Decisões**:
+- As regras ficam em `IUserManagement` (Core) e `UserManagement` (Infrastructure), não no controller: o Core não conhece o Identity.
+- Cada operação que escreve roda numa transação **serializável**: contar os Administradores ativos e escrever dependem um do outro, e duas requisições ao mesmo tempo não podem se rebaixar juntas.
+- As mensagens de e-mail repetido e e-mail inválido seguem o texto exato da SPEC ("Já existe um usuário com este e-mail", "Informe um e-mail válido"); o `TeamIdentityErrorDescriber` da 1.2 foi alinhado.
+- Reativar não pede nova senha nem troca obrigatória (S04); só zera o bloqueio por tentativas. Redefinir senha também destrava a conta.
+- A edição muda só o papel (wireframe): nome e e-mail aparecem, mas não se editam nesta versão.
+- A auditoria grava `user.create`, `user.change_role`, `user.deactivate`, `user.reactivate` e `user.reset_password` com o id do ator e do alvo; os valores são só papel e situação. **Nunca** vão para a auditoria a senha nem o e-mail. Recusas de regra (desativar a si mesmo, último Administrador) gravam resultado Negado; erro de preenchimento do formulário não grava nada, porque nada mudou.
+- Confirmar a desativação e redefinir a senha são **páginas**, não janelas: o fluxo completo funciona sem JavaScript (`frontend.md`). As janelas do wireframe (`alertdialog`/`dialog`) e o módulo `users-index.js` ficam como melhoria futura (BACKLOG); por isso a tarefa não cria JavaScript.
+
+**Files created/modified**:
+- `src/GazetaMarketplace.Core/Team/IUserManagement.cs`, `TeamMember.cs`, `UserManagementResult.cs`, `UserManagementMessages.cs`
+- `src/GazetaMarketplace.Infrastructure/Identity/UserManagement.cs`; registro em `ServiceCollectionExtensions.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/UsersController.cs` (`[Route("painel/usuarios")]`, política Administrator)
+- `src/GazetaMarketplace.Web/Areas/Panel/Models/UserViewModels.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Users/Index.cshtml`, `New.cshtml`, `Edit.cshtml`, `ConfirmDeactivation.cshtml`, `ResetPassword.cshtml`, `_UserActions.cshtml`; `Views/Shared/_FieldErrors.cshtml`, `_GeneralError.cshtml`
+- `src/GazetaMarketplace.Web/Security/TeamIdentityErrorDescriber.cs` (mensagens da SPEC)
 
 **Acceptance Criteria**:
-- [ ] `@US-014-S01` (@happy): Criar uma conta de Redator — o *Then* do SPEC é atendido
-- [ ] `@US-014-S02` (@happy): Mudar o papel de um usuário — o *Then* do SPEC é atendido
-- [ ] `@US-014-S03` (@happy): Desativar uma conta — o *Then* do SPEC é atendido
-- [ ] `@US-014-S04` (@happy): Reativar uma conta — o *Then* do SPEC é atendido
-- [ ] `@US-014-S05` (@negative): E-mail já cadastrado — o *Then* do SPEC é atendido
-- [ ] `@US-014-S06` (@negative): Senha provisória fraca — o *Then* do SPEC é atendido
-- [ ] `@US-014-S07` (@negative): E-mail em formato inválido — o *Then* do SPEC é atendido
-- [ ] `@US-014-S08` (@negative): Desativar a própria conta — o *Then* do SPEC é atendido
-- [ ] `@US-014-S09` (@negative): Remover o último administrador — o *Then* do SPEC é atendido
-- [ ] `@US-014-S10` (@happy): Redefinir a senha de alguém da equipe — o *Then* do SPEC é atendido
-- [ ] `@US-006-S10` (@negative): Redator tenta abrir uma página exclusiva do administrador — o *Then* do SPEC é atendido
-- [ ] Criar conta com senha provisória na mesma política de senha; e-mail único e válido
-- [ ] Desativar encerra as sessões em até 5 min; ninguém desativa a própria conta; sempre resta ao menos um Administrador ativo
-- [ ] Redefinir senha: muda a senha, encerra as sessões, exige troca no próximo acesso e registra em `AuditEntries`; o botão não aparece para a própria pessoa nem para contas desativadas
-- [ ] Redator que abre uma página exclusiva do Administrador recebe "Você não tem permissão" (US-006-S10)
-- [ ] **RC-16:** criar, mudar papel, desativar, reativar e redefinir senha gravam em `AuditEntries` o ator, a ação, o alvo e o resultado
+- [x] `@US-014-S01` (@happy): Criar uma conta de Redator — o *Then* do SPEC é atendido
+- [x] `@US-014-S02` (@happy): Mudar o papel de um usuário — o *Then* do SPEC é atendido
+- [x] `@US-014-S03` (@happy): Desativar uma conta — o *Then* do SPEC é atendido (a parte "os anúncios continuam existindo" só ganha prova com anúncios, na Fase 3; aqui o cadastro permanece, pois não há exclusão)
+- [x] `@US-014-S04` (@happy): Reativar uma conta — o *Then* do SPEC é atendido
+- [x] `@US-014-S05` (@negative): E-mail já cadastrado — o *Then* do SPEC é atendido
+- [x] `@US-014-S06` (@negative): Senha provisória fraca — o *Then* do SPEC é atendido
+- [x] `@US-014-S07` (@negative): E-mail em formato inválido — o *Then* do SPEC é atendido
+- [x] `@US-014-S08` (@negative): Desativar a própria conta — o *Then* do SPEC é atendido
+- [x] `@US-014-S09` (@negative): Remover o último administrador — o *Then* do SPEC é atendido
+- [x] `@US-014-S10` (@happy): Redefinir a senha de alguém da equipe — o *Then* do SPEC é atendido
+- [x] `@US-006-S10` (@negative): Redator tenta abrir uma página exclusiva do administrador — o *Then* do SPEC é atendido (provado com `/painel/usuarios`; a página Categorias só existe na 2.6)
+- [x] Criar conta com senha provisória na mesma política de senha; e-mail único e válido
+- [x] Desativar encerra as sessões em até 5 min; ninguém desativa a própria conta; sempre resta ao menos um Administrador ativo
+- [x] Redefinir senha: muda a senha, encerra as sessões, exige troca no próximo acesso e registra em `AuditEntries`; o botão não aparece para a própria pessoa nem para contas desativadas
+- [x] Redator que abre uma página exclusiva do Administrador recebe "Você não tem permissão" (US-006-S10)
+- [x] **RC-16:** criar, mudar papel, desativar, reativar e redefinir senha gravam em `AuditEntries` o ator, a ação, o alvo e o resultado
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S01_CriarUmaContaDeRedator` — `@US-014-S01`
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S02_MudarOPapelDeUmUsuario` — `@US-014-S02`
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S03_DesativarUmaConta` — `@US-014-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Team/UsersE2ETests.US014S03_DesativarUmaConta` — `@US-014-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S04_ReativarUmaConta` — `@US-014-S04`
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S05_EMailJaCadastrado` — `@US-014-S05`
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S06_SenhaProvisoriaFraca` — `@US-014-S06`
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S07_EMailEmFormatoInvalido` — `@US-014-S07`
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S08_DesativarAPropriaConta` — `@US-014-S08`
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S09_RemoverOUltimoAdministrador` — `@US-014-S09`
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US014S10_RedefinirASenhaDeAlguemDaEquipe` — `@US-014-S10`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Team/UsersE2ETests.US014S10_RedefinirASenhaDeAlguemDaEquipe` — `@US-014-S10` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests.US006S10_RedatorTentaAbrirUmaPaginaExclusivaDoAdministrador` — `@US-006-S10`
-- `tests/GazetaMarketplace.Web.Tests/Users/AuditingTests.RedefinirSenha_RegistraQuemEQuando`
-- `tests/GazetaMarketplace.Web.Tests/Users/SessionTests.UsuarioDesativado_PerdeAcessoAposRevalidacao`
-- `tests/GazetaMarketplace.Web.Tests/Users/UsersTests.CriarMudarPapelDesativarReativar_GravamAuditoria`
+**Tests added** (282 no projeto Web.Tests, todos passando):
+- `tests/GazetaMarketplace.Web.Tests/Team/UsersTests` — `US014S01` a `US014S10`, `US006S10`, sessão aberta de conta desativada, dois Administradores, Administrador desativado não conta, Administrador desativado com sessão aberta não desativa o último, senha fraca na redefinição, botão ausente para a própria pessoa e conta desativada, nome em branco/longo, papel desconhecido, 404, ordem da lista, escrita sem token antiforgery
+- `tests/GazetaMarketplace.Web.Tests/Team/UserAuditTests` — cinco ações gravam ator/ação/alvo/resultado, `RedefinirSenha_RegistraQuemEQuando`, sem senha nem e-mail na auditoria, recusas gravam Negado, erro de formulário não grava
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Team/UsersE2ETests` — `US014S03` e `US014S10` (rodam no `/test`; precisam de `GAZETA_BASE_URL` e de um Administrador em `GAZETA_E2E_EMAIL`/`GAZETA_E2E_PASSWORD`)
+
+**Verificação por mutação** (cada quebra derrubou ao menos 1 teste; código restaurado): sem a regra do último Administrador na troca de papel (4 testes); sem a mesma regra ao desativar (1); sem a recusa de desativar a si mesmo (2); redefinir senha sem exigir troca (1); desativar sem auditoria (1); tela de usuários sem a política Administrator (1).
+
+**Não verificado aqui** (vai para `/test`): a transação serializável contra o SQL Server real (o SQLite dos testes serializa tudo, então a corrida entre dois pedidos simultâneos só se prova lá) e os E2E.
 
 **Dependencies**: 1.1, 1.2
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Criar, desativar e redefinir contas no navegador.
+**Verification**: Done when every test above passes, plus manual check: Criar, desativar e redefinir contas no navegador.
 
 **Estimate**: L
 

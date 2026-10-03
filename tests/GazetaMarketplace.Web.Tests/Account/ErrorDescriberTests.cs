@@ -30,9 +30,9 @@ public sealed class ErrorDescriberTests
         Assert.AreEqual("PasswordTooShort", shortError.Code);
         Assert.AreEqual("A senha precisa ter 8 caracteres ou mais.", shortError.Description);
         Assert.AreEqual("PasswordRequiresUpper", describer.PasswordRequiresUpper().Code);
-        Assert.AreEqual("Já existe uma conta com este e-mail.", describer.DuplicateEmail("a@b.com").Description);
-        Assert.AreEqual("Já existe uma conta com este e-mail.", describer.DuplicateUserName("a@b.com").Description);
-        Assert.AreEqual("E-mail em formato inválido.", describer.InvalidEmail("x").Description);
+        Assert.AreEqual("Já existe um usuário com este e-mail", describer.DuplicateEmail("a@b.com").Description);
+        Assert.AreEqual("Já existe um usuário com este e-mail", describer.DuplicateUserName("a@b.com").Description);
+        Assert.AreEqual("Informe um e-mail válido", describer.InvalidEmail("x").Description);
     }
 
     [TestMethod]

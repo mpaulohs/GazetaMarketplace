@@ -66,6 +66,21 @@ internal static class TeamClient
         return await client.PostAsync("/painel/definir-senha", form);
     }
 
+    /// <summary>
+    /// Envia um formulário do painel: busca o token antiforgery na página do formulário (<paramref name="formPage"/>) e faz o POST
+    /// em <paramref name="action"/>. Sem campos, serve para os botões que só confirmam (desativar, reativar).
+    /// </summary>
+    public static async Task<HttpResponseMessage> PostFormAsync(
+        this HttpClient client, string formPage, string action, IDictionary<string, string> fields = null)
+    {
+        string page = await client.GetStringAsync(formPage);
+        string token = Regex.Match(page, @"name=""__RequestVerificationToken""[^>]*value=""([^""]+)""").Groups[1].Value;
+
+        Dictionary<string, string> body = new(fields ?? new Dictionary<string, string>()) { ["__RequestVerificationToken"] = token };
+        using FormUrlEncodedContent form = new(body);
+        return await client.PostAsync(action, form);
+    }
+
     /// <summary>Caminho e consulta do redirecionamento; o cookie manda endereço absoluto, o controller manda relativo.</summary>
     public static string Destination(this HttpResponseMessage response) =>
         response.Headers.Location.IsAbsoluteUri ? response.Headers.Location.PathAndQuery : response.Headers.Location.OriginalString;

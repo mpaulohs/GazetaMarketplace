@@ -1,0 +1,22 @@
+@model TeamMember
+@* Ações da linha. A própria pessoa não tem "Redefinir senha" (ela usa a recuperação normal) e conta desativada só pode ser reativada. *@
+@{
+    bool self = Model.Id == (int)ViewData["CurrentUserId"];
+}
+<div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-secondary btn-sm alvo-toque" asp-area="Panel" asp-action="Edit" asp-route-id="@Model.Id" aria-label="Editar @Model.FullName">Editar</a>
+    @if (Model.IsActive)
+    {
+        @if (!self)
+        {
+            <a class="btn btn-outline-secondary btn-sm alvo-toque" asp-area="Panel" asp-action="ResetPassword" asp-route-id="@Model.Id" aria-label="Redefinir senha de @Model.FullName">Redefinir senha</a>
+        }
+        <a class="btn btn-outline-danger btn-sm alvo-toque" asp-area="Panel" asp-action="ConfirmDeactivation" asp-route-id="@Model.Id" aria-label="Desativar @Model.FullName">Desativar</a>
+    }
+    else
+    {
+        <form asp-area="Panel" asp-action="Reactivate" asp-route-id="@Model.Id" method="post">
+            <button class="btn btn-outline-primary btn-sm alvo-toque" type="submit" aria-label="Reativar @Model.FullName">Reativar</button>
+        </form>
+    }
+</div>

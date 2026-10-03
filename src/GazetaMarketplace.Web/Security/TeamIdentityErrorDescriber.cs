@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace GazetaMarketplace.Web.Security;
 
-/// <summary>Mensagens do Identity em português (política de senha do NFR-07 e e-mail repetido). Os códigos não mudam.</summary>
+/// <summary>Mensagens do Identity em português (política de senha do NFR-07 e e-mail repetido, com o texto da SPEC). Os códigos não mudam.</summary>
 public sealed class TeamIdentityErrorDescriber : IdentityErrorDescriber
 {
     public override IdentityError DefaultError() => Error(nameof(DefaultError), "Não foi possível concluir a operação. Tente de novo.");
@@ -24,13 +24,13 @@ public sealed class TeamIdentityErrorDescriber : IdentityErrorDescriber
     public override IdentityError PasswordRequiresUniqueChars(int uniqueChars) =>
         Error(nameof(PasswordRequiresUniqueChars), string.Format(CultureInfo.InvariantCulture, "A senha precisa ter ao menos {0} caracteres diferentes.", uniqueChars));
 
-    public override IdentityError InvalidEmail(string email) => Error(nameof(InvalidEmail), "E-mail em formato inválido.");
+    public override IdentityError InvalidEmail(string email) => Error(nameof(InvalidEmail), "Informe um e-mail válido");
 
-    public override IdentityError InvalidUserName(string userName) => Error(nameof(InvalidUserName), "E-mail em formato inválido.");
+    public override IdentityError InvalidUserName(string userName) => Error(nameof(InvalidUserName), "Informe um e-mail válido");
 
-    public override IdentityError DuplicateUserName(string userName) => Error(nameof(DuplicateUserName), "Já existe uma conta com este e-mail.");
+    public override IdentityError DuplicateUserName(string userName) => Error(nameof(DuplicateUserName), "Já existe um usuário com este e-mail");
 
-    public override IdentityError DuplicateEmail(string email) => Error(nameof(DuplicateEmail), "Já existe uma conta com este e-mail.");
+    public override IdentityError DuplicateEmail(string email) => Error(nameof(DuplicateEmail), "Já existe um usuário com este e-mail");
 
     public override IdentityError InvalidToken() => Error(nameof(InvalidToken), "O link não é mais válido.");
 

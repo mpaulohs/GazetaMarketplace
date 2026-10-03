@@ -1,0 +1,50 @@
+@model NewUserViewModel
+@{
+    ViewData["Title"] = "Novo usuário";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="fs-3 mb-3">Novo usuário</h1>
+                @await Html.PartialAsync("_GeneralError")
+
+                <form asp-area="Panel" asp-action="New" method="post" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="FullName">Nome <span aria-hidden="true">*</span></label>
+                        <input class="form-control @(ViewData.ModelState["FullName"]?.Errors.Count > 0 ? "is-invalid" : "")" asp-for="FullName" autocomplete="off" maxlength="100" aria-required="true" aria-describedby="error-FullName" />
+                        @await Html.PartialAsync("_FieldErrors", "FullName")
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="Email">E-mail <span aria-hidden="true">*</span></label>
+                        <input class="form-control @(ViewData.ModelState["Email"]?.Errors.Count > 0 ? "is-invalid" : "")" asp-for="Email" type="email" autocomplete="off" autocapitalize="none" aria-required="true" aria-describedby="error-Email" />
+                        @await Html.PartialAsync("_FieldErrors", "Email")
+                    </div>
+                    <fieldset class="mb-3">
+                        <legend class="form-label fs-6">Papel <span aria-hidden="true">*</span></legend>
+                        <div class="form-check">
+                            <input class="form-check-input" asp-for="Role" type="radio" value="@RoleNames.Writer" id="role-writer" />
+                            <label class="form-check-label" for="role-writer">@RoleNames.Writer</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" asp-for="Role" type="radio" value="@RoleNames.Administrator" id="role-administrator" />
+                            <label class="form-check-label" for="role-administrator">@RoleNames.Administrator</label>
+                        </div>
+                        @await Html.PartialAsync("_FieldErrors", "Role")
+                    </fieldset>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="ProvisionalPassword">Senha provisória <span aria-hidden="true">*</span></label>
+                        <input class="form-control @(ViewData.ModelState["ProvisionalPassword"]?.Errors.Count > 0 ? "is-invalid" : "")" asp-for="ProvisionalPassword" type="password" autocomplete="new-password" aria-required="true" aria-describedby="password-help error-ProvisionalPassword" />
+                        @await Html.PartialAsync("_FieldErrors", "ProvisionalPassword")
+                        <p class="form-text" id="password-help">Informe a senha à pessoa fora do sistema. Ela precisará trocá-la no primeiro acesso. Requisitos: 8 caracteres ou mais, maiúscula, minúscula, número e símbolo.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary alvo-toque" asp-area="Panel" asp-action="Index">Cancelar</a>
+                        <button class="btn btn-primary alvo-toque" type="submit">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

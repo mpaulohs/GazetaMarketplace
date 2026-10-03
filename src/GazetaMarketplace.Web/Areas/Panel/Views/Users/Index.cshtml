@@ -1,0 +1,56 @@
+@model UsersIndexViewModel
+@{
+    ViewData["Title"] = "Usuários";
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h1 class="fs-3 mb-0">Usuários da equipe</h1>
+    <a class="btn btn-primary alvo-toque" asp-area="Panel" asp-action="New">Novo usuário</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success" role="status">@Model.Message</div>
+}
+
+@* Tela larga: tabela *@
+<div class="table-responsive d-none d-md-block">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">E-mail</th>
+                <th scope="col">Papel</th>
+                <th scope="col">Situação</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (TeamMember member in Model.Members)
+            {
+                <tr>
+                    <td>@member.FullName</td>
+                    <td>@member.Email</td>
+                    <td>@member.Role</td>
+                    <td>@(member.IsActive ? "Ativa" : "Desativada")</td>
+                    <td>@await Html.PartialAsync("_UserActions", member, new ViewDataDictionary(ViewData) { ["CurrentUserId"] = Model.CurrentUserId })</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@* Celular: um cartão por pessoa *@
+<ul class="list-unstyled d-md-none">
+    @foreach (TeamMember member in Model.Members)
+    {
+        <li class="card mb-3">
+            <div class="card-body">
+                <p class="fw-semibold mb-0">@member.FullName</p>
+                <p class="mb-1 text-break">@member.Email</p>
+                <p class="mb-2">@member.Role · @(member.IsActive ? "Ativa" : "Desativada")</p>
+                @await Html.PartialAsync("_UserActions", member, new ViewDataDictionary(ViewData) { ["CurrentUserId"] = Model.CurrentUserId })
+            </div>
+        </li>
+    }
+</ul>

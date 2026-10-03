@@ -1,6 +1,8 @@
 using System;
 using GazetaMarketplace.Core.Interfaces;
+using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Data;
+using GazetaMarketplace.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +29,7 @@ public static class ServiceCollectionExtensions
             sql => sql.EnableRetryOnFailure(maxRetryCount: 3)));
         services.AddDapper(configuration);
         services.AddScoped<IAuditLog, AuditLog>();
+        services.AddScoped<IUserManagement, UserManagement>();
         services.AddScoped<IDatabaseReadiness, EfDatabaseReadiness>();
 
         return services;

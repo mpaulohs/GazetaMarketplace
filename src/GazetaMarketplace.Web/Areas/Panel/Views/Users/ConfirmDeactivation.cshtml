@@ -1,0 +1,23 @@
+@model ConfirmDeactivationViewModel
+@{
+    ViewData["Title"] = "Confirmar desativação";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="fs-3 mb-3">Desativar @Model.FullName?</h1>
+                @await Html.PartialAsync("_GeneralError")
+                <p>A pessoa deixa de entrar no painel. Os anúncios dela continuam existindo, com o nome dela como autor.</p>
+
+                <form asp-area="Panel" asp-action="Deactivate" asp-route-id="@Model.Id" method="post">
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary alvo-toque" asp-area="Panel" asp-action="Index">Cancelar</a>
+                        <button class="btn btn-danger alvo-toque" type="submit">Desativar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

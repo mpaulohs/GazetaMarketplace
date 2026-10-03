@@ -1,0 +1,14 @@
+@model string
+@* Todas as mensagens de um campo, uma por linha (a lista de requisitos da senha pede mais de uma). Cada uma é anunciada como alerta. *@
+@{
+    var entry = ViewData.ModelState[Model];
+}
+@if (entry is { Errors.Count: > 0 })
+{
+    <ul class="list-unstyled small text-danger mb-0 mt-1" id="error-@Model" role="alert">
+        @foreach (var error in entry.Errors)
+        {
+            <li>@error.ErrorMessage</li>
+        }
+    </ul>
+}
