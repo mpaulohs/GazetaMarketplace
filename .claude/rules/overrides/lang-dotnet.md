@@ -37,6 +37,33 @@ These settings live in `Directory.Build.props`; project files must not override 
 
 ---
 
+## Idioma: código em inglês, texto do usuário em português
+
+O público é brasileiro, mas o código é escrito em **inglês americano**. A regra decide pelo lugar onde o nome aparece:
+
+| Onde | Idioma | Exemplo |
+|------|--------|---------|
+| Classes, interfaces, records, enums, métodos, propriedades, campos, variáveis, parâmetros, constantes | **Inglês** | `UserManagement`, `IUserManagement`, `MustChangePassword`, `failedAttempts` |
+| Namespaces, pastas de código, nomes de arquivo `.cs` | **Inglês** | `Infrastructure/Identity/`, `Core/Team/`, `Core/Configuration/` |
+| ViewModels e DTOs (tipo e propriedades) | **Inglês** | `ChangePasswordViewModel.NewPassword` |
+| Views `.cshtml`, pastas de view, controllers | **Inglês** (nome do arquivo e da pasta); texto interno em português | `Views/Users/Index.cshtml`, `AccountController` |
+| Chaves de `appsettings.json` e variáveis de ambiente | **Inglês** | `Authentication:SessionMinutes`, `Bootstrap__AdminEmail` |
+| Tabelas e colunas do banco, índices, constraints | **Inglês** | `Users`, `AuditEntries`, `MustChangePassword` |
+| Claims e nomes de política de autorização | **Inglês** | `must_change_password`, `full_name` |
+| Códigos de erro e identificadores de log (nome da propriedade estruturada) | **Inglês** | `{UserId}` |
+| Classes de teste, helpers, fakes e campos de apoio dos testes | **Inglês** | `UsersTests`, `WebFactory`, `FakeClock` |
+| **Rotas de URL** | **Português** (o usuário vê na barra de endereço) | `/painel/entrar`, `/painel/usuarios` |
+| **Texto de interface**: rótulo, botão, título, mensagem de erro e de sucesso, e-mail enviado | **Português** | "E-mail ou senha inválidos, ou conta desativada" |
+| Comentários XML e `//` | Português é aceito (inglês também) | |
+
+Consequências práticas:
+- A rota em português é declarada de forma explícita no atributo (`[Route("painel/usuarios")]`); o nome do controller e da action seguem em inglês.
+- O texto exibido ao usuário nunca é usado como identificador. Quando uma regra precisa de um nome estável (claim, código de erro, valor de papel guardado no banco), esse nome é em inglês.
+- O nome de papel guardado no banco (`Administrador`, `Redator`) é **dado**, não identificador de código: o nome da constante é em inglês, o valor muda só por migration e ADR.
+- Renomear um identificador nunca altera uma rota, uma tabela, uma coluna ou um texto de interface.
+
+---
+
 ## Asynchronous code
 
 - Every asynchronous method returns `Task` / `Task<T>` / `ValueTask<T>` (never `async void`, except event handlers) and its name **ends in `Async`**.
