@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Política do ImageMagick para as fotos (ADR-005, RC-2). Tudo é recusado ("none" em "*"); só entram os cinco formatos aceitos, lidos e escritos
+     (a saída é WebP). MVG, MSL, SVG, URL, HTTP, TEXT, EPHEMERAL e os demais ficam de fora. Além da política, o site força o decodificador pelo formato
+     que a assinatura do arquivo já decidiu, então um arquivo nunca é lido por um decodificador diferente do esperado. -->
+<policymap>
+  <policy domain="coder" rights="none" pattern="*" />
+  <policy domain="coder" rights="read | write" pattern="{JPEG,JPG,PNG,GIF,WEBP,HEIC,HEIF}" />
+  <policy domain="delegate" rights="none" pattern="*" />
+  <policy domain="filter" rights="none" pattern="*" />
+  <policy domain="path" rights="none" pattern="@*" />
+  <policy domain="path" rights="none" pattern="|*" />
+</policymap>

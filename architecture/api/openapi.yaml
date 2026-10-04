@@ -449,7 +449,8 @@ paths:
       summary: Arquivo de uma foto (não é JSON)
       description: |
         Entrega a versão WebP da foto. Anúncio publicado: público, com cache longo (o nome muda quando a foto muda).
-        Outras situações: só a equipe com acesso ao anúncio. Os originais (`_originals/`) não têm rota.
+        Outras situações: só a equipe com acesso ao anúncio (`Cache-Control: private, no-store`). Os originais (`_originals/`) não têm rota.
+        Limite próprio de 300 pedidos por minuto por IP (fora do limite global de 100).
       operationId: getPhotoFile
       parameters:
         - $ref: '#/components/parameters/AdId'
@@ -476,6 +477,8 @@ paths:
                 format: binary
         '404':
           description: Foto inexistente ou de anúncio que o público não pode ver (mesma resposta nos dois casos)
+        '429':
+          description: Mais de 300 pedidos de foto por minuto do mesmo IP (`Retry-After`)
 
   /health/live:
     get:

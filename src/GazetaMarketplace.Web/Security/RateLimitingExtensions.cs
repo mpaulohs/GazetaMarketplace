@@ -25,6 +25,13 @@ public static class RateLimitingExtensions
 
     public const int CepPerMinute = 30;
 
+    /// <summary>Política da entrega de fotos: <c>[EnableRateLimiting("fotos")]</c>. 300 por minuto <b>por IP</b>: cabe uma página de 24 cards com 2 fotos (48 pedidos) várias vezes e ainda trava quem tenta enumerar os ids.</summary>
+    public const string PhotoPolicy = "fotos";
+
+    public const int PhotosPerMinute = 300;
+
+    private static readonly string[] OwnLimitPrefixes = ["/fotos/"];
+
     private static readonly string[] StaticPrefixes = ["/lib/", "/css/", "/js/", "/images/", "/favicon.ico"];
 
     /// <summary>Pedidos por minuto e por IP quando <c>RateLimiting:GlobalPerMinute</c> não está configurada: 100 (rules/security.md).</summary>
@@ -41,7 +48,7 @@ public static class RateLimitingExtensions
 
             // Uma página com dezenas de cards já passaria de 100 arquivos: os estáticos não contam
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-                IsStaticFile(context.Request.Path)
+                IsStaticFile(context.Request.Path) || HasOwnLimit(context.Request.Path)
                     ? RateLimitPartition.GetNoLimiter("estaticos")
                     : RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(GlobalPerMinute(context), TimeSpan.FromMinutes(1))));
 
@@ -53,6 +60,9 @@ public static class RateLimitingExtensions
                 RateLimitPartition.GetFixedWindowLimiter(
                     context.User.FindFirstValue(ClaimTypes.NameIdentifier) is { } user ? "u:" + user : "ip:" + ClientIp(context),
                     _ => Window(CepPerMinute, TimeSpan.FromMinutes(1))));
+
+            options.AddPolicy(PhotoPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(PhotosPerMinute, TimeSpan.FromMinutes(1))));
 
             options.OnRejected = RespondTooManyRequestsAsync;
         });
@@ -73,6 +83,20 @@ public static class RateLimitingExtensions
         Window = duration,
         QueueLimit = 0
     };
+
+    // As fotos têm a própria política; contar também no limite global faria uma página de cards estourar os 100
+    private static bool HasOwnLimit(PathString path)
+    {
+        foreach (string prefix in OwnLimitPrefixes)
+        {
+            if (path.StartsWithSegments(prefix.TrimEnd('/')))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static bool IsStaticFile(PathString path)
     {

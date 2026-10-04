@@ -13,7 +13,10 @@ public sealed record AdActor(int? UserId, bool IsAdministrator);
 /// </remarks>
 public static class AdAccess
 {
-    public static bool CanView(AdActor actor, Ad ad) => actor.IsAdministrator || IsAuthor(actor, ad);
+    public static bool CanView(AdActor actor, Ad ad) => CanView(actor, ad.AuthorId);
+
+    /// <summary>A mesma regra de leitura quando só o autor do anúncio é conhecido (a entrega de fotos não carrega o anúncio inteiro).</summary>
+    public static bool CanView(AdActor actor, int authorId) => actor.IsAdministrator || (actor.UserId is { } id && id == authorId);
 
     public static bool CanEdit(AdActor actor, Ad ad)
     {

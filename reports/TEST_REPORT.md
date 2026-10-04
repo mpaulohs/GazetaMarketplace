@@ -388,3 +388,47 @@ Todas foram desfeitas depois (os 165 testes da tarefa passam de novo depois de d
 4. **`innerHTML` é proibido por teste (RC-17).** A troca de categoria usa `DOMParser` para ler a parcial do servidor e passa os nós para a página.
 5. **Máscara de caixa eletrônico:** digitar `1500` deixa `15,00` (dígitos entram pela direita). O comportamento é o aprovado (D1); registrado no BACKLOG para o Product Owner confirmar.
 6. **O cache de 30 dias do CEP vale entre rodadas do E2E.** A asserção "uma consulta ao ViaCEP" passou a ser "no máximo uma"; para contar de novo, limpar `CepCache` (documentado).
+
+## Tarefa 3.4 — processamento, armazenamento e entrega de fotos (ADR-005)
+
+> **Em resumo:** 1.084 testes unitários (92 novos), 43 da ferramenta de catálogo, 27 da `CitiesImport.Tests`, 95 de integração (1 novo, SQL Server real) e 48 de navegador (sem teste novo: a tarefa não tem tela; a suíte inteira foi rodada de novo como regressão) passam. As sete mutações planejadas, mais uma extra, derrubam testes. **O HEIC dos testes é sintético** (um quadro x265 numa caixa HEIF montada à mão, 885 bytes); a verificação com um HEIC de iPhone de verdade e a prova na hospedagem Windows (AR-05) seguem pendentes (BACKLOG).
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.084 | 1.084 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 95 | 95 | 0 |
+| E2E (Playwright, site publicado em Production) | 48 | 48 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| Conteúdo sem assinatura tratado como JPEG (a extensão, na prática, decidindo) | 2 (`QuemNaoEUmDosCincoFormatos…`, `ArquivoFalsoComExtensaoJpg…`) |
+| Metadados mantidos (sem `Strip`) | 2 (`Gps_NaoSobrevive_NasVersoes`, `NoArquivoGravado_OGps…`) |
+| Formato da chave de foto frouxo (aceita `../`, `_originals/`, maiúsculas) | 7 (`ChaveForaDoFormato…`, `ChaveDeOriginalForaDoFormato…`) |
+| Limite de 50 milhões de pixels removido | 2 (`ImagemAcimaDoLimiteDePixels…`, `CincoMilhoesDePixelsNoLimite…`) |
+| Limpeza depois de falha no meio removida | `FalhaNoMeio_ApagaArquivosGravados` |
+| Toda foto tratada como de anúncio publicado | 8 (`AnuncioNaoPublicado_…` em 4 situações × 2 testes) |
+| Política do ImageMagick sem o "nega tudo" | 8 (`DecodificadoresNaoUsados_…`, `DecodificadoresDeTexto…`, `Politica_Embutida…`) |
+| (extra) Limite de 2 decodificações ao mesmo tempo virando 100 | `DecodificacoesAoMesmoTempo_NuncaPassamDoLimite` |
+
+Todas foram desfeitas depois.
+
+**O que cada camada prova**
+
+- Assinaturas: JPEG, PNG, GIF87a/89a, WebP e HEIC (marcas `heic`, `heix`, `hevc`, e `mif1`/`msf1` só com marca de HEIC compatível); PDF, SVG, MVG, RIFF que não é WebP, AVIF, MP4 e arquivos cortados no cabeçalho não têm formato. Arquivo falso nunca chega ao disco.
+- Versões: 3000 × 2000 → 1600 × 1067 e 480 × 320; foto menor não é ampliada; o arquivo gerado é **byte a byte** o WebP de qualidade 80 feito direto (e menor que o de 95); orientação 6 do EXIF gira 40 × 20 para 20 × 40; GIF animado de 3 quadros vira 1 (o vermelho); PNG transparente mantém o alfa; 8 envios ao mesmo tempo gravam 24 arquivos com chaves diferentes e nenhum `.tmp`.
+- Metadados: o JPEG de teste tem mesmo latitude, longitude, fabricante e texto no EXIF (teste de controle); nas duas versões não há EXIF, XMP nem o texto em lugar nenhum dos bytes; no original gravado o texto continua (por isso nenhuma rota o serve).
+- Segurança: PNG de 8000 × 8000 (64 milhões de pixels, 279 KB) recusado em menos de 2 s sem decodificar; 10.000 × 5.000 passa e 10.001 × 5.000 não; lado de 20.001 px recusado; 12 decodificadores (SVG, MVG, MSL, URL, HTTP, TEXT, EPHEMERAL, MSVG, PS, PDF…) recusados pela política, por prefixo, em arquivo que existe; SVG/MVG com assinatura de JPEG na frente recusados como "não foi possível ler" (o formato é imposto); 11 chaves de armazenamento e 6 de original fora do formato recusadas sem tocar no disco; todo arquivo gravado casa com `^12/[0-9a-f]{32}_(1600|480).webp$` ou `_originals/AAAA-MM/<guid>.<ext>`.
+- Falhas: falha ao gravar as versões apaga o original já gravado; falha na miniatura apaga a versão grande e o erro original sobe (não o da limpeza); JPEG, PNG, GIF e WebP cortados em 60% recusados; 10 MB exatos passam e 10 MB + 1 byte não chegam ao processador; fluxo sem tamanho conhecido é lido só até o limite; arquivo vazio tem mensagem própria; HEIC quebrado ou sem a biblioteca devolve a mensagem de HEIC.
+- Entrega: publicado → `public, max-age=31536000, immutable`, `image/webp`, bytes iguais ao arquivo; Rascunho, Em revisão, Rejeitado e Arquivado → 404 **idêntico** (status, cabeçalho de cache, tipo e tamanho) ao de foto inexistente para anônimo e para outro Redator, e 200 com `no-store, private` para o autor e o Administrador; foto de outro anúncio 404; 9 tentativas de chegar a `_originals/` 404; 7 tentativas de sair da pasta e 12 rotas com id ou tamanho inválido 404; arquivo sumido do disco 404 (não 500); 300 pedidos passam acima do limite global de 100, o 301º recebe 429 com `Retry-After`, `/painel/entrar` continua 200 e outro IP não é afetado.
+- Integração: a consulta foto × anúncio com as chaves estrangeiras reais, publicado público, rascunho 404 para anônimo e 200 privado para o autor logado, foto trocada de anúncio 404.
+
+**Achados desta rodada**
+
+1. **O ImageMagick não sobrescreve arquivos de configuração que já existem.** A mutação "sem nega-tudo" só era derrubada pelo teste que lê o texto da política; os de comportamento passavam porque sobrava uma pasta `_magick` antiga com a política certa. Em produção, uma política nova numa versão nova do site seria ignorada. A pasta agora leva o hash da política (`_magick/<hash>`), com teste.
+2. **Arquivo cortado vira foto pela metade.** O ImageMagick devolve a parte lida e só avisa; o teste de JPEG cortado passou sem erro na primeira versão. Os avisos de fim prematuro agora recusam a foto (JPEG, PNG, GIF e WebP conferidos).
+3. **O limite de recurso de largura já recusa no decodificador de PNG** ("Invalid IHDR data" acima de 20.000 px), então a mensagem pode ser a de "dimensões" ou a de "não foi possível ler"; a recusa é o que vale.
+4. **Defesa em profundidade escondia a mutação do formato da chave.** O confinamento do caminho (`Confine`) também recusa `../`, então o teste só derruba a mutação com chaves que passam por ele (maiúsculas, `0/`, sufixo `.webp`); incluídas.
+5. **Memória:** 512 MB para o ImageMagick e 200 MB por foto de 50 milhões de pixels pedem um teto de decodificações ao mesmo tempo; o limite é 2 por processo (não estava no plano; sem ele, 3 envios grandes ao mesmo tempo estouram o limite e viram erro).
+6. **A API do Magick.NET 14 mudou** (`ColorProfile.SRGB` obsoleto, tamanhos `uint`, `IExifProfile`); o código usa `ColorProfiles.SRGB`.

@@ -1221,43 +1221,34 @@
 
 **NFRs covered**: `NFR-12`, `NFR-05`
 
-**References**: ADR-005, architecture/api/openapi.yaml#getPhotoFile
+**References**: ADR-005 (nota de revisão de 2026-10-04), architecture/api/openapi.yaml#getPhotoFile
 
 **Objective**: Validar pelo conteúdo, converter HEIC, gerar as duas versões WebP sem metadados, gravar fora da raiz e servir pelo controller.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Core/Fotos/IPhotoStorage.cs, IImageProcessor.cs`
-- `src/GazetaMarketplace.Infrastructure/Fotos/FileSystemPhotoStorage.cs, MagickImageProcessor.cs`
-- `src/GazetaMarketplace.Web/Controllers/PhotosController.cs`
+**Decisões aprovadas (2026-10-04)**: pacote `Magick.NET-Q8-x64` 14.17.2 · `StorageKey` = base `<adId>/<guid>` e o código acrescenta `_1600.webp`/`_480.webp` (original em `_originals/<yyyy-MM>/<guid>.<ext>`) · política do ImageMagick só com JPEG, PNG, GIF, WebP, HEIC/HEIF e leitura forçada ao formato da assinatura · EXIF, sRGB, sem metadados, qualidade 80, GIF no primeiro quadro, nunca amplia · entrega com cache público só no publicado (`private, no-store` no resto), 404 igual, `_originals/` sem rota · limite próprio de 300/min por IP em vez de isentar `/fotos/` · HEIC de teste montado à mão (x265 + caixa HEIF) · arquivos órfãos para a 3.6.
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Core/Photos/` — `PhotoFormat`, `PhotoSignature`, `PhotoLimits`, `PhotoMessages`, `IImageProcessor`, `IPhotoStorage`, `IPhotoIngestion`, `IPhotoDelivery`
+- `src/GazetaMarketplace.Infrastructure/Photos/` — `MagickImageProcessor`, `MagickRuntime`, `policy.xml` (embutido), `FileSystemPhotoStorage`, `PhotoIngestion`, `PhotoDelivery`
+- `src/GazetaMarketplace.Web/Controllers/PhotosController.cs` · `Security/RateLimitingExtensions.cs` (`PhotoPolicy`)
+- `src/GazetaMarketplace.Core/Ads/AdAccess.cs` (`CanView` por autor) · `Directory.Packages.props`, `GazetaMarketplace.Infrastructure.csproj`
 
 **Acceptance Criteria**:
-- [ ] A assinatura do arquivo (JPEG, PNG, GIF, WebP, HEIC/HEIF) decide o formato, nunca a extensão; arquivo falso com extensão `.jpg` é recusado
-- [ ] Cada foto vira `<adId>/<photoId>_1600.webp` e `<adId>/<photoId>_480.webp` (qualidade 80), orientação corrigida pelo EXIF e **todos os metadados removidos**; GIF animado vira o primeiro quadro
-- [ ] O original fica em `_originals/<yyyy-MM>/<guid>.<ext>`; **nenhuma rota serve `_originals/`**
-- [ ] Foto de anúncio publicado é pública com `Cache-Control: public, max-age=31536000, immutable`; de outra situação, só a equipe com acesso; resposta 404 igual para "não existe" e "não pode ver"
-- [ ] Falha no meio apaga os arquivos já gravados; HEIC que a biblioteca não lê devolve `VALIDATION_ERROR` com mensagem clara (AR-05)
-- [ ] **RC-2:** a decodificação usa limites de recurso do Magick.NET (no máximo 50 milhões de pixels, memória e tempo limitados) e uma política que deixa ligados só os decodificadores de JPEG, PNG, GIF, WebP e HEIC/HEIF; MVG, MSL, SVG, URL, HTTP, TEXT e EPHEMERAL ficam desligados
-- [ ] **RC-4:** o caminho de todo arquivo de foto usa só ids numéricos e nomes gerados, e o caminho final é conferido: precisa ficar dentro de `PhotoStorage__BasePath`
+- [x] A assinatura do arquivo (JPEG, PNG, GIF, WebP, HEIC/HEIF) decide o formato, nunca a extensão; arquivo falso com extensão `.jpg` é recusado
+- [x] Cada foto vira `<StorageKey>_1600.webp` e `<StorageKey>_480.webp` (qualidade 80), orientação corrigida pelo EXIF e **todos os metadados removidos**; GIF animado vira o primeiro quadro
+- [x] O original fica em `_originals/<yyyy-MM>/<guid>.<ext>`; **nenhuma rota serve `_originals/`**
+- [x] Foto de anúncio publicado é pública com `Cache-Control: public, max-age=31536000, immutable`; de outra situação, só a equipe com acesso; resposta 404 igual para "não existe" e "não pode ver"
+- [x] Falha no meio apaga os arquivos já gravados; HEIC que a biblioteca não lê devolve `VALIDATION_ERROR` com mensagem clara (AR-05)
+- [x] **RC-2:** limites de recurso (50 milhões de pixels e 20.000 px de lado conferidos antes de decodificar, 512 MB, 30 s, 2 decodificações ao mesmo tempo) e política que deixa ligados só os cinco formatos
+- [x] **RC-4:** o caminho de todo arquivo de foto usa só ids numéricos e GUIDs gerados, e o caminho final é conferido dentro de `PhotoStorage__BasePath`
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Photos/FormatoTests.Assinatura_DecideOFormato_NaoAExtensao`
-- `tests/GazetaMarketplace.Web.Tests/Photos/FormatoTests.Heic_E_ConvertidoParaWebP`
-- `tests/GazetaMarketplace.Web.Tests/Photos/MetadadosTests.Gps_NaoSobrevive_NasVersoes`
-- `tests/GazetaMarketplace.Web.Tests/Photos/VersoesTests.Gera1600e480_Webp_Qualidade80`
-- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.OriginaisNaoTemRota`
-- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.AnuncioNaoPublicado_Devolve404IgualAoInexistente`
-- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.Publicado_TemCacheLongo`
-- `tests/GazetaMarketplace.Web.Tests/Photos/FailureTests.FalhaNoMeio_ApagaArquivosGravados`
-- `tests/GazetaMarketplace.Web.Tests/Photos/HeicTests.BibliotecaNativaAusente_DevolveMensagemClara`
-- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosSecurityTests.ImagemAcimaDoLimiteDePixels_E_Recusada`
-- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosSecurityTests.DecodificadoresNaoUsados_EstaoDesligados`
-- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosSecurityTests.ArquivoSvgOuMvgComExtensaoJpg_E_Recusado`
-- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.TentativaDeSairDaPastaBase_E_Recusada`
-- `tests/GazetaMarketplace.Web.Tests/Photos/EntregaTests.RotaComIdNaoNumerico_Devolve404`
+**Tests added** (nomes reais, em `Web.Tests/Photos/` salvo indicação):
+- `FormatoTests` (assinaturas, falsos `.jpg`, HEIC → WebP, original com a extensão detectada) · `MetadadosTests` (GPS, XMP e texto do EXIF fora das versões, dentro do original) · `VersoesTests` (1600/480, nunca amplia, qualidade 80 igual à codificação direta, orientação, GIF, alfa, envios simultâneos) · `FailureTests` (falha no meio, cortado em JPEG/PNG/GIF/WebP, 10 MB exatos, fluxo infinito, vazio, no máximo 2 decodificações) · `HeicTests` · `PhotosSecurityTests` (pixels, lado, 14 decodificadores desligados, política, hash da pasta de configuração, chaves e caminhos) · `EntregaTests` (cache, 404 igual, `_originals/`, saída da pasta, ids não numéricos, arquivo sumido, 300/min por IP e fora do global)
+- `IntegrationTests/PhotoDeliveryTests` — entrega contra o SQL Server e o disco de verdade
 
 **Dependencies**: 3.1, 0.2
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Enviar um HEIC de iPhone e conferir as duas versões e a ausência de GPS.
+**Verification**: Done when every test under "Tests added" passes. Verificação manual com um HEIC de iPhone de verdade (orientação, perfil de cor e GPS) fica pendente: o arquivo de teste é sintético (BACKLOG).
 
 **Estimate**: L
 

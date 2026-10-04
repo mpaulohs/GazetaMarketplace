@@ -14,6 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Photos\Fixtures\sample.heic" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\GazetaMarketplace.Core\GazetaMarketplace.Core.csproj" />
     <ProjectReference Include="..\..\src\GazetaMarketplace.Web\GazetaMarketplace.Web.csproj" />
     <ProjectReference Include="..\..\src\GazetaMarketplace.Infrastructure\GazetaMarketplace.Infrastructure.csproj" />

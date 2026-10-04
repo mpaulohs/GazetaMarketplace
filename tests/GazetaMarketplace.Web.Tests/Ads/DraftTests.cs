@@ -28,11 +28,20 @@ internal sealed class DraftSite : IDisposable
 
     public HttpClient Admin => Harness.Admin;
 
-    public static async Task<DraftSite> StartAsync(int? requestsPerMinute = null)
+    public static async Task<DraftSite> StartAsync(int? requestsPerMinute = null, string photoFolder = null)
     {
-        CepHarness harness = await CepHarness.StartAsync(configuration: requestsPerMinute is { } limit
-            ? new Dictionary<string, string> { ["RateLimiting:GlobalPerMinute"] = limit.ToString(System.Globalization.CultureInfo.InvariantCulture) }
-            : null);
+        Dictionary<string, string> configuration = [];
+        if (requestsPerMinute is { } limit)
+        {
+            configuration["RateLimiting:GlobalPerMinute"] = limit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        if (photoFolder is not null)
+        {
+            configuration["PhotoStorage:BasePath"] = photoFolder;
+        }
+
+        CepHarness harness = await CepHarness.StartAsync(configuration: configuration);
         await harness.WithDbAsync(async db =>
         {
             SmallCatalog.Seed(db);

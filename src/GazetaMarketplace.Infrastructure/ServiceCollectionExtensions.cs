@@ -4,6 +4,7 @@ using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Configuration;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Location;
+using GazetaMarketplace.Core.Photos;
 using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Core.VehicleCatalog;
@@ -46,6 +47,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICategoryUsage, AdsCategoryUsage>();
         services.AddScoped<IAdService, AdService>();
         services.AddScoped<IAdDraftService, AdDraftService>();
+
+        // Fotos (ADR-005): a biblioteca de imagem e o disco ficam atrás de interfaces do Core
+        services.AddSingleton<IImageProcessor, Photos.MagickImageProcessor>();
+        services.AddSingleton<IPhotoStorage, Photos.FileSystemPhotoStorage>();
+        services.AddScoped<IPhotoIngestion, Photos.PhotoIngestion>();
+        services.AddScoped<IPhotoDelivery, Photos.PhotoDelivery>();
 
         // CEP (ADR-007): uma tentativa de até 5 s por chamada; a nova tentativa é da tela. O endereço base só muda nos testes de ponta a ponta
         services.AddHttpClient<ICepLookup, ViaCepLookup>((provider, http) =>

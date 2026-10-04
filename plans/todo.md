@@ -37,7 +37,7 @@
 - [x] Task 3.1: Modelo do anúncio, situações e autorização por autoria
 - [x] Task 3.2: Consulta de CEP no servidor, com cache e lista de municípios
 - [x] Task 3.3: Criar e editar rascunho do anúncio
-- [ ] Task 3.4: Processamento e armazenamento de fotos
+- [x] Task 3.4: Processamento e armazenamento de fotos
 - [ ] Task 3.5: Enviar, reordenar e remover fotos do anúncio
 - [ ] Task 3.6: Limpeza diária dos originais de foto
 - [ ] Task 3.7: Enviar anúncio para revisão
