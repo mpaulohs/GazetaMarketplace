@@ -32,6 +32,7 @@
         </div>
     }
     @await Html.PartialAsync("_GeneralError")
+    @await Html.PartialAsync("_Pendings", Model)
     @if (hasErrors)
     {
         <div class="alert alert-danger" role="alert" tabindex="-1" data-error-summary>Não foi possível salvar. Corrija os campos destacados abaixo.</div>
@@ -77,6 +78,11 @@
 
     <div class="d-flex flex-wrap gap-2 mt-4">
         <button class="btn btn-primary alvo-toque" type="submit" form="anuncio-form" data-submit-button>@Model.SubmitLabel</button>
+        @if (Model.CanSubmit)
+        {
+            @* Nunca fica desabilitado por pendência: o clique salva e mostra o que falta *@
+            <button class="btn btn-outline-primary alvo-toque" type="submit" form="anuncio-form" data-submit-button data-submit-review asp-area="Panel" asp-controller="Ads" asp-action="SubmitForReview" asp-route-id="@Model.Id" formnovalidate>Enviar para revisão</button>
+        }
         <button class="btn btn-outline-secondary alvo-toque somente-sem-js" type="submit" form="anuncio-form" id="atualizar-campos" asp-area="Panel" asp-controller="Ads"
                 asp-action="@(Model.IsNew ? "RefreshNew" : "Refresh")" asp-route-id="@Model.Id" formnovalidate>Atualizar campos</button>
     </div>

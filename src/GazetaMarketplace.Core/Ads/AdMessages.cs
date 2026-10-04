@@ -43,4 +43,20 @@ public static class AdMessages
     public static string DescriptionTooLong(string label, int max) => $"Use no máximo {max} caracteres em \"{label}\"";
 
     public static string TooManyPhotosForCategory(int max) => $"Esta categoria aceita no máximo {max} fotos; remova fotos antes de trocar";
+
+    public const string CategoryRequired = "Escolha uma categoria";
+
+    /// <summary>"Informe a descrição" (SPEC, S22); em Serviços e Vagas, onde o campo se chama "Informações adicionais", o nome do campo.</summary>
+    public static string DescriptionRequired(string label) => label == "Descrição" ? "Informe a descrição" : $"Informe as {label.ToLowerInvariant()}";
+
+    public static string PriceRequired(string label) => label == "Salário" ? "Informe o salário" : "Informe o preço";
+
+    public const string CepRequired = "Informe o CEP";
+
+    public static string PhotosRequired(int min) => min == 1 ? "Adicione ao menos 1 foto" : $"Adicione ao menos {min} fotos";
+
+    public const string AlreadySubmitted = "Este anúncio já foi enviado para revisão";
+
+    public const string Submitted = "Anúncio enviado para revisão";
 }
+

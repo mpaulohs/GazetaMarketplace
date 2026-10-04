@@ -25,7 +25,7 @@ internal static class RealEstateGroup
                 Key = "propertyTypeId",
                 Label = "Tipo",
                 Type = FieldType.Select,
-                Required = true,
+                Required = true, RequiredMessage = "Informe o tipo do imóvel",
                 OptionsByCategory = new Dictionary<int, FieldList>
                 {
                     [Apartments] = FieldLists.ApartmentType,
@@ -34,13 +34,13 @@ internal static class RealEstateGroup
                     [Commercial] = FieldLists.CommercialType
                 }
             },
-            new FieldDefinition { Key = "transactionTypeId", Label = "Vender ou alugar", Type = FieldType.Select, Required = true, Options = FieldLists.PropertyTransactionType },
+            new FieldDefinition { Key = "transactionTypeId", Label = "Vender ou alugar", Type = FieldType.Select, Required = true, RequiredMessage = "Informe se o imóvel é para vender ou alugar", Options = FieldLists.PropertyTransactionType },
             new FieldDefinition
             {
                 Key = "bedrooms",
                 Label = "Quartos",
                 Type = FieldType.Integer,
-                Required = true,
+                Required = true, RequiredMessage = "Informe o número de quartos",
                 Min = 0, // 0 = kitnet
                 Max = FieldLimits.MaxCount,
                 AppliesToCategories = new HashSet<int> { Apartments, Houses }

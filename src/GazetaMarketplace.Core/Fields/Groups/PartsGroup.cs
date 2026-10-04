@@ -14,7 +14,7 @@ internal static class PartsGroup
         Name = "Peças",
         Fields =
         [
-            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, Options = FieldLists.PartCondition },
+            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a condição", Options = FieldLists.PartCondition },
             new FieldDefinition
             {
                 Key = "partTypeId",

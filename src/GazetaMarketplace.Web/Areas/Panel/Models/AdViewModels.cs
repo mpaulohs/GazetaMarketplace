@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Fields;
 using GazetaMarketplace.Core.Location;
 using GazetaMarketplace.Core.Photos;
@@ -159,6 +160,12 @@ public sealed class AdFormViewModel
 
     public int PhotoCount => Photos.Count;
 
+    /// <summary>O que falta para enviar à revisão (preenchido quando a pessoa pediu o envio e o servidor recusou).</summary>
+    public IReadOnlyList<AdPending> Pendings { get; init; } = [];
+
+    /// <summary>Se a tela oferece "Enviar para revisão": só num anúncio já gravado, editável e de uma situação que o Apêndice A deixa passar a Em revisão (Rascunho ou Rejeitado). O Administrador edita um anúncio Em revisão, mas não o reenvia.</summary>
+    public bool CanSubmit => !IsNew && !ReadOnly && AdStatusRules.Find(Status, Core.Ads.AdStatus.InReview) is not null;
+
     /// <summary>Se a tela oferece enviar, trocar a capa e remover: só num anúncio já gravado, editável e de categoria com fotos.</summary>
     public bool CanManagePhotos => !IsNew && !ReadOnly && PhotoLimit > 0;
 
@@ -179,3 +186,6 @@ public sealed class AdFormViewModel
     /// <summary>Se a categoria <b>escolhida no formulário</b> (ainda que não salva) aceita fotos; muda na hora com a troca de categoria.</summary>
     public bool HasPhotos => Group is null || Group.MaxPhotos > 0;
 }
+
+/// <summary>A página de confirmação do envio à revisão.</summary>
+public sealed record SubmitConfirmationViewModel(int Id, string Title);

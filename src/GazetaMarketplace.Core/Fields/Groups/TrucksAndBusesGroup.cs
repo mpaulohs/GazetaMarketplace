@@ -17,13 +17,13 @@ internal static class TrucksAndBusesGroup
         Name = "Caminhões e ônibus",
         Fields =
         [
-            new FieldDefinition { Key = "modelYear", Label = "Ano do modelo", Type = FieldType.ModelYear, Required = true, Min = ModelYearRules.MinYear, Filter = FieldFilter.Range },
+            new FieldDefinition { Key = "modelYear", Label = "Ano do modelo", Type = FieldType.ModelYear, Required = true, RequiredMessage = "Informe o ano do modelo", Min = ModelYearRules.MinYear, Filter = FieldFilter.Range },
             new FieldDefinition
             {
                 Key = "km",
                 Label = "Quilometragem",
                 Type = FieldType.Integer,
-                Required = true,
+                Required = true, RequiredMessage = "Informe a quilometragem",
                 Min = 0,
                 Max = FieldLimits.MaxKm,
                 Filter = FieldFilter.Range

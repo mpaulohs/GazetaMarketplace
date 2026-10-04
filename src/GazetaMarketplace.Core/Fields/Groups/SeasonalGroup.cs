@@ -14,9 +14,9 @@ internal static class SeasonalGroup
         Name = "Temporada",
         Fields =
         [
-            new FieldDefinition { Key = "seasonalTypeId", Label = "Tipo", Type = FieldType.Select, Required = true, Options = FieldLists.SeasonalType },
-            Count("bedrooms", "Quartos", required: true),
-            new FieldDefinition { Key = "guests", Label = "Acomoda quantas pessoas", Type = FieldType.Integer, Required = true, Min = 1, Max = MaxGuests },
+            new FieldDefinition { Key = "seasonalTypeId", Label = "Tipo", Type = FieldType.Select, Required = true, RequiredMessage = "Informe o tipo de hospedagem", Options = FieldLists.SeasonalType },
+            Count("bedrooms", "Quartos", required: true, requiredMessage: "Informe o número de quartos"),
+            new FieldDefinition { Key = "guests", Label = "Acomoda quantas pessoas", Type = FieldType.Integer, Required = true, RequiredMessage = "Informe quantas pessoas o imóvel acomoda", Min = 1, Max = MaxGuests },
             Count("bathrooms", "Banheiros", required: false),
             Count("parkingSpaces", "Vagas", required: false),
             new FieldDefinition { Key = "paymentTypeId", Label = "Forma de pagamento", Type = FieldType.Select, Options = FieldLists.SeasonalPaymentType },
@@ -24,6 +24,6 @@ internal static class SeasonalGroup
         ]
     };
 
-    private static FieldDefinition Count(string key, string label, bool required) =>
-        new() { Key = key, Label = label, Type = FieldType.Integer, Required = required, Min = 0, Max = FieldLimits.MaxCount };
+    private static FieldDefinition Count(string key, string label, bool required, string requiredMessage = null) =>
+        new() { Key = key, Label = label, Type = FieldType.Integer, Required = required, RequiredMessage = requiredMessage, Min = 0, Max = FieldLimits.MaxCount };
 }

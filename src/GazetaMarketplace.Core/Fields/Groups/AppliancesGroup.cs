@@ -22,7 +22,7 @@ internal static class AppliancesGroup
                 Key = "typeId",
                 Label = "Tipo",
                 Type = FieldType.Select,
-                Required = true,
+                Required = true, RequiredMessage = "Informe o tipo",
                 OptionsByCategory = new Dictionary<int, FieldList>
                 {
                     [128] = FieldLists.AirConditionerType,
@@ -34,9 +34,9 @@ internal static class AppliancesGroup
                     [134] = FieldLists.PersonalCareApplianceType
                 }
             },
-            new FieldDefinition { Key = "brand", Label = "Marca", Type = FieldType.Text, Required = true, MaxLength = BrandMaxLength, Suggestions = SuggestionSource.Brands },
-            new FieldDefinition { Key = "voltageId", Label = "Voltagem", Type = FieldType.Select, Required = true, Options = FieldLists.ApplianceVoltage },
-            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, Options = FieldLists.ProductCondition },
+            new FieldDefinition { Key = "brand", Label = "Marca", Type = FieldType.Text, Required = true, RequiredMessage = "Informe a marca", MaxLength = BrandMaxLength, Suggestions = SuggestionSource.Brands },
+            new FieldDefinition { Key = "voltageId", Label = "Voltagem", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a voltagem", Options = FieldLists.ApplianceVoltage },
+            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a condição", Options = FieldLists.ProductCondition },
             new FieldDefinition
             {
                 Key = "capacityId",

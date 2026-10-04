@@ -15,7 +15,7 @@ internal static class CarsGroup
                 Key = "km",
                 Label = "Quilometragem",
                 Type = FieldType.Integer,
-                Required = true,
+                Required = true, RequiredMessage = "Informe a quilometragem",
                 Min = 0,
                 Max = FieldLimits.MaxKm,
                 Filter = FieldFilter.Range

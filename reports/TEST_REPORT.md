@@ -529,3 +529,48 @@ Todas foram desfeitas depois (arquivos restaurados; compilação limpa e a suít
 2. **A limpeza só enxerga o que o site gera.** O armazenamento lista apenas arquivos com nome no formato do site, então `_magick/` e qualquer arquivo alheio nem chegam à rotina de apagar; o teste cobre dez formatos diferentes de "arquivo estranho".
 3. **Pasta recém-esvaziada:** apagar o último arquivo muda a data da pasta para agora, então a regra de 24 horas a deixa para o dia seguinte (testado com dois dias do relógio manual).
 4. **`dotnet format` foi aplicado só aos arquivos da tarefa** (`--include`), sem tocar nos 14 arquivos antigos do achado do BOM.
+
+## Tarefa 3.7 — enviar anúncio para revisão (US-009)
+
+> **Em resumo:** 1.163 testes unitários (27 novos), 43 da ferramenta de catálogo, 27 da `CitiesImport.Tests`, 102 de integração (1 novo, SQL Server real) e 60 de navegador (5 novos) passam. As seis mutações planejadas e duas extras foram todas derrubadas. Veredito: **aprovado**.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.163 | 1.163 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 102 | 102 | 0 |
+| E2E (Playwright, site publicado em Production) | 60 | 60 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| M1 Não exigir foto fora de Vagas | 4 (`Vagas_NaoExigeFoto…`, `AOrdemDaListaEADaTela`, `US009S02`, `ConfirmacaoEPostDeConfirmacao…`) |
+| M2 Exigir preço também em Serviços | 2 (`Vagas_NaoExigeFoto_Servicos_NaoExigePreco`, clique duplo em paralelo) |
+| M3 Enviar sem olhar as pendências | `ConfirmacaoEPostDeConfirmacao_ConferemDeNovoNoServidor…` |
+| M4 Sem a idempotência do "já enviado" | `US009S05` e `CliqueDuploEmParalelo…` |
+| M5 Reenvio sem limpar o motivo da rejeição | `US009S04` |
+| M6 Enviar sem conferir o acesso | `Acesso_OutroRedatorEmRevisaoEPublicado_Recusam…` |
+| (extra) M7 Frase "Informe o quilometragem" | 4 (`Carros_ExigemMarca…`, `AOrdemDaListaEADaTela`, `TodoCampoObrigatorioTemFrasePropria…`, `US009S03`) |
+| (extra) M8 Perder a corrida e não reconhecer o envio do outro | `QuatroPedidosDeConfirmacaoAoMesmoTempo…` (integração) |
+
+Duas mutações (M3 e M4) não compilavam na primeira forma (código inalcançável é erro com `TreatWarningsAsErrors`) e foram refeitas; todas foram desfeitas e a compilação final ficou limpa (0 avisos, 0 erros).
+
+**O que cada camada prova**
+
+- S01: o rascunho completo vai à página de confirmação, o POST muda a situação para Em revisão e a mensagem "Anúncio enviado para revisão" aparece; o anúncio passa a somente leitura para o Redator.
+- S02/S03: a lista mostra só o que falta, na ordem título, categoria, descrição, preço, CEP, foto e campos do grupo, cada item com link para o campo; a situação continua Rascunho. Em Carros a falta da quilometragem mostra só "Informe a quilometragem".
+- S04: o rejeitado corrigido volta a Em revisão, o motivo é limpo e `SentAt` é gravado; a auditoria guarda o histórico.
+- S05: clique duplo e pedidos em paralelo geram uma passagem e uma auditoria `ad.submit`; a segunda vez diz "Este anúncio já foi enviado para revisão". No SQL Server real, 4 pedidos simultâneos × 3 rodadas também terminam em uma passagem, sem erro.
+- O botão "Enviar para revisão" salva o formulário antes de conferir (mesmo com pendências) e só aparece depois do primeiro "Salvar rascunho"; formulário inválido volta com o erro ao lado do campo.
+- A página de confirmação e o POST reconferem as pendências no servidor; acesso: outro Redator, Em revisão e Publicado são recusados e o Administrador não reenvia (409).
+- As 41 frases de `RequiredMessage` são conferidas uma a uma (artigo e gênero certos) e nenhum campo obrigatório fica sem frase.
+- E2E: fluxo completo com navegador, foco levado ao campo pelo link da pendência, botão "Enviando…" travado, fluxo inteiro sem JavaScript por formulários comuns, axe sem violações e sem rolagem horizontal em 320 px.
+
+**Achados desta rodada**
+
+1. **Terrenos e área:** o wireframe cita "Terrenos exige área", mas `areaM2` não é obrigatória nos dados; os testes seguem os dados (BACKLOG).
+2. **Administrador:** edita Em revisão e Publicado, mas não reenvia; o botão não aparece e o servidor recusa.
+3. **S04 sem E2E:** rejeitar só existe pela fila da 4.1; até lá o cenário é provado por teste HTTP com o anúncio rejeitado semeado.
+4. **Contraste do "Cancelar":** em `btn-outline-secondary` direto sobre o fundo da página dava 4,29; a confirmação ficou dentro de um `.card`.
+5. **Flake isolado:** `US008S03` falhou uma vez (613 ms) numa rodada, passou isolado e nas duas rodadas completas seguintes (60/60); acompanhar.
+6. **`dotnet format` aplicado só aos arquivos da tarefa** (`--include`), sem tocar nos 14 arquivos antigos do achado do BOM.

@@ -1349,33 +1349,35 @@
 
 **Objective**: Conferir as pendências do grupo de campos e mudar a situação para Em revisão sem duplicar o envio.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Core/Ads/SubmitForReviewService.cs`
-- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/_Pendencias.cshtml`
-- `src/GazetaMarketplace.Web/wwwroot/js/pages/ad-edit.js`
+**Decisões aprovadas (2026-10-04)**: D1 página própria de confirmação (funciona com e sem JavaScript; diálogo pode vir depois) · D2 "Enviar para revisão" salva o formulário e depois confere as pendências · D3 cada campo obrigatório tem `RequiredMessage` (textos da SPEC como estão; os demais redigidos e revisados pelo Product Owner) · D4 o botão só aparece depois do primeiro "Salvar rascunho" · D5 clique duplo é idempotente ("Este anúncio já foi enviado para revisão"; a garantia vem do `RowVersion`).
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Core/Ads/AdSubmission.cs` (`IAdSubmission`, `SubmitResult`, `SubmitOutcome`, `AdPending`) · `AdSubmissionRules.cs` (regra pura `Pending`) · `AdMessages.cs`
+- `src/GazetaMarketplace.Infrastructure/Ads/AdSubmission.cs` (`CheckAsync`, `SubmitAsync`) · `ServiceCollectionExtensions.cs`
+- `src/GazetaMarketplace.Core/Fields/FieldDefinition.cs` (`RequiredMessage`) e os 17 arquivos de `Fields/Groups/` (33 campos obrigatórios com frase própria)
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs` (`SubmitForReview`, `ConfirmSubmit`, `Submit`), `Models/AdFormFactory.cs`, `Models/AdViewModels.cs`
+- `Views/Ads/Edit.cshtml`, `_Pendings.cshtml`, `ConfirmSubmit.cshtml`, `Index.cshtml` (mensagem de sucesso provisória), `_Photos.cshtml` (âncora `#fotos`), `_ViewImports.cshtml`
+- `wwwroot/js/pages/ad-edit.js` (foco na pendência, botão "Enviando…") · `ad-confirm.js`
 
 **Acceptance Criteria**:
-- [ ] `@US-009-S01` (@happy): Enviar um rascunho completo para revisão — o *Then* do SPEC é atendido
-- [ ] `@US-009-S02` (@negative): Enviar um rascunho incompleto — o *Then* do SPEC é atendido
-- [ ] `@US-009-S03` (@negative): Faltam características obrigatórias da categoria — o *Then* do SPEC é atendido
-- [ ] `@US-009-S04` (@edge): Reenviar um anúncio rejeitado depois de corrigi-lo — o *Then* do SPEC é atendido
-- [ ] `@US-009-S05` (@edge): Clicar duas vezes em enviar — o *Then* do SPEC é atendido
-- [ ] Pendências: título, descrição, preço maior que zero (exceto Serviços), categoria, CEP válido, ao menos 1 foto (exceto Vagas) e os campos obrigatórios do grupo, cada uma com link para o campo
-- [ ] O botão de envio nunca fica desabilitado por pendência: o clique mostra a lista; a situação só muda quando está tudo certo
-- [ ] Reenviar um anúncio rejeitado depois de corrigir leva a Em revisão; clique duplo gera uma única entrada na fila
+- [x] `@US-009-S01` (@happy): Enviar um rascunho completo para revisão — o *Then* do SPEC é atendido
+- [x] `@US-009-S02` (@negative): Enviar um rascunho incompleto — o *Then* do SPEC é atendido
+- [x] `@US-009-S03` (@negative): Faltam características obrigatórias da categoria — o *Then* do SPEC é atendido
+- [x] `@US-009-S04` (@edge): Reenviar um anúncio rejeitado depois de corrigi-lo — o *Then* do SPEC é atendido (no banco e na página do anúncio; a tela de rejeição é da 4.1)
+- [x] `@US-009-S05` (@edge): Clicar duas vezes em enviar — o *Then* do SPEC é atendido
+- [x] Pendências na ordem título, categoria, descrição, preço (exceto Serviços), CEP, ao menos 1 foto (exceto Vagas) e campos obrigatórios do grupo, cada uma com link para o campo
+- [x] O botão de envio nunca fica desabilitado por pendência: o clique mostra a lista; a situação só muda quando está tudo certo
+- [x] Reenviar um anúncio rejeitado leva a Em revisão, limpa o motivo e grava `SentAt`; clique duplo gera uma única passagem e uma única auditoria `ad.submit`
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S01_EnviarUmRascunhoCompletoParaRevisao` — `@US-009-S01`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S02_EnviarUmRascunhoIncompleto` — `@US-009-S02`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S03_FaltamCaracteristicasObrigatoriasDaCategoria` — `@US-009-S03`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S04_ReenviarUmAnuncioRejeitadoDepoisDeCorrigiLo` — `@US-009-S04`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/SubmitForReviewTests.US009S05_ClicarDuasVezesEmEnviar` — `@US-009-S05`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/SubmitForReviewE2ETests.US009S05_ClicarDuasVezesEmEnviar` — `@US-009-S05` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Ads/PendenciasTests.Vagas_NaoExigeFoto_Servicos_NaoExigePreco`
+**Tests added** (nomes reais):
+- `Web.Tests/Ads/SubmitForReviewTests` — 12 testes: `US009S01` a `US009S05`, clique duplo em paralelo, formulário salvo antes da conferência, formulário inválido, botão (aparece após o primeiro salvar, não na leitura), reconferência no servidor, acesso, Administrador
+- `Web.Tests/Ads/PendingTests` — regras puras: rascunho completo, Vagas sem foto e Serviços sem preço, Carros, Terrenos e Apartamentos, informações adicionais, preço vazio (zero nem chega ao banco), CEP, sem categoria, ordem da lista e da tela, as 41 frases de `RequiredMessage` (artigo certo, nenhum campo de fora), fallback pelo rótulo
+- `IntegrationTests/SubmitForReviewConcurrencyTests` — 4 confirmações simultâneas × 3 rodadas no SQL Server real: uma passagem, uma auditoria, nenhum erro
+- `Web.Tests.Playwright/Ads/SubmitForReviewE2ETests` — S01, S02/S03, S05, fluxo sem JavaScript, axe e 320 px (S04 não tem E2E: rejeitar só existe pela fila da 4.1)
 
 **Dependencies**: 3.3, 3.5
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Enviar um anúncio incompleto e um completo.
+**Verification**: Done when every test under "Tests added" passes (unitários 1163, integração 102, E2E 60) e as 8 mutações são mortas.
 
 **Estimate**: M
 

@@ -16,8 +16,23 @@ if (formulario) {
   localizacao(formulario);
   envio(formulario);
 
-  // Depois de uma recusa do servidor, o foco vai para o primeiro campo com erro
-  (formulario.querySelector("[aria-invalid='true']") ?? document.querySelector("[data-error-summary]"))?.focus();
+  pendencias();
+
+  // Depois de uma recusa do servidor, o foco vai para a lista de pendências ou para o primeiro campo com erro
+  (document.querySelector("[data-pendings]") ?? formulario.querySelector("[aria-invalid='true']") ?? document.querySelector("[data-error-summary]"))?.focus();
+}
+
+/** Cada item da lista de pendências leva o foco ao campo indicado (o link sozinho só rola a página). */
+function pendencias() {
+  for (const link of document.querySelectorAll("[data-pending-link]")) {
+    link.addEventListener("click", (evento) => {
+      const alvo = document.getElementById(link.getAttribute("href").slice(1));
+      if (!alvo) return;
+      evento.preventDefault();
+      alvo.scrollIntoView({ block: "center" });
+      alvo.focus();
+    });
+  }
 }
 
 /** Guarda o que foi digitado, por nome de campo, para devolver depois que a região for refeita. */
@@ -206,22 +221,25 @@ function trocarCidade(atual, cidades, textoVazio) {
   atual.replaceWith(novo);
 }
 
-/** Trava o botão enquanto envia, para um clique duplo não criar dois rascunhos. */
+/** Trava os botões de salvar e enviar enquanto envia, para um clique duplo não criar dois rascunhos nem dois envios. */
 function envio(form) {
-  // O botão fica fora do <form> (as fotos têm formulários próprios entre os dois) e o liga pelo atributo form
-  const botao = document.querySelector("[data-submit-button]");
-  if (!botao) return;
-  const rotulo = botao.textContent;
+  const botoes = [...document.querySelectorAll("[data-submit-button]")];
+  if (botoes.length === 0) return;
+  const rotulos = new Map(botoes.map((botao) => [botao, botao.textContent]));
   form.addEventListener("submit", (evento) => {
-    // "Atualizar campos" também envia o formulário, mas não deve travar o botão de salvar
-    if (evento.submitter && evento.submitter !== botao) return;
-    botao.disabled = true;
-    botao.textContent = "Salvando…";
+    // "Atualizar campos" também envia o formulário, mas não deve travar os botões
+    if (evento.submitter && !botoes.includes(evento.submitter)) return;
+    for (const botao of botoes) {
+      botao.disabled = true;
+      if (botao === evento.submitter) botao.textContent = botao.dataset.submitReview === undefined ? "Salvando…" : "Enviando…";
+    }
   });
 
-  // Voltar pelo histórico traz a página do cache com o botão ainda travado
+  // Voltar pelo histórico traz a página do cache com os botões ainda travados
   window.addEventListener("pageshow", () => {
-    botao.disabled = false;
-    botao.textContent = rotulo;
+    for (const [botao, rotulo] of rotulos) {
+      botao.disabled = false;
+      botao.textContent = rotulo;
+    }
   });
 }

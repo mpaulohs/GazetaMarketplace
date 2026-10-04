@@ -12,17 +12,17 @@ internal static class BoatsAndAircraftGroup
         Name = "Barcos e aeronaves",
         Fields =
         [
-            new FieldDefinition { Key = "modelYear", Label = "Ano do modelo", Type = FieldType.ModelYear, Required = true, Min = ModelYearRules.MinYear },
+            new FieldDefinition { Key = "modelYear", Label = "Ano do modelo", Type = FieldType.ModelYear, Required = true, RequiredMessage = "Informe o ano do modelo", Min = ModelYearRules.MinYear },
             new FieldDefinition
             {
                 Key = "hoursOfUse",
                 Label = "Horas de uso",
                 Type = FieldType.Integer,
-                Required = true,
+                Required = true, RequiredMessage = "Informe as horas de uso",
                 Min = 0,
                 Max = FieldLimits.MaxHoursOfUse
             },
-            new FieldDefinition { Key = "vehicleTypeId", Label = "Tipo", Type = FieldType.Select, Required = true, Options = FieldLists.BoatType },
+            new FieldDefinition { Key = "vehicleTypeId", Label = "Tipo", Type = FieldType.Select, Required = true, RequiredMessage = "Informe o tipo", Options = FieldLists.BoatType },
             new FieldDefinition { Key = "fuelId", Label = "Combustível", Type = FieldType.Select, Options = FieldLists.CarFuel },
             Meters("lengthMeters", "Comprimento (m)"),
             Meters("widthMeters", "Largura (m)"),

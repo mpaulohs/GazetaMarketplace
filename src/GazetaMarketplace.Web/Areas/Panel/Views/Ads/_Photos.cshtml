@@ -9,7 +9,7 @@
 @* Anúncio novo e categoria sem fotos (Vagas) não têm galeria: a regra aparece no formulário (_AdGroupRegion) *@
 @if (!Model.IsNew && Model.PhotoLimit > 0)
 {
-<section class="fotos mt-4" aria-labelledby="titulo-fotos" data-photos
+<section class="fotos mt-4" id="fotos" tabindex="-1" aria-labelledby="titulo-fotos" data-photos
          data-upload-url="@(manage ? Url.Content("~/api/v1/ads/" + adId + "/photos") : null)" data-max="@Model.PhotoLimit" data-max-bytes="@PhotoLimits.MaxBytes">
         <h2 class="fs-5" id="titulo-fotos" data-photo-heading>Fotos (@Model.PhotoCount de @Model.PhotoLimit)</h2>
         <div class="visually-hidden" role="status" data-photo-status></div>

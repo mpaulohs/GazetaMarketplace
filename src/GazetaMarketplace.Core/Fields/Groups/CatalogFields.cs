@@ -9,18 +9,19 @@ internal static class CatalogFields
 {
     public static FieldDefinition[] Chain(CatalogKind kind) =>
     [
-        Field("brandId", "Marca", kind, CatalogLevel.Brand),
-        Field("modelId", "Modelo", kind, CatalogLevel.Model),
-        Field("modelYear", "Ano", kind, CatalogLevel.Year),
-        Field("versionId", "Versão", kind, CatalogLevel.Version)
+        Field("brandId", "Marca", "Informe a marca", kind, CatalogLevel.Brand),
+        Field("modelId", "Modelo", "Informe o modelo", kind, CatalogLevel.Model),
+        Field("modelYear", "Ano", "Informe o ano", kind, CatalogLevel.Year),
+        Field("versionId", "Versão", "Informe a versão", kind, CatalogLevel.Version)
     ];
 
-    private static FieldDefinition Field(string key, string label, CatalogKind kind, CatalogLevel level) => new()
+    private static FieldDefinition Field(string key, string label, string requiredMessage, CatalogKind kind, CatalogLevel level) => new()
     {
         Key = key,
         Label = label,
         Type = FieldType.CatalogItem,
         Required = true,
+        RequiredMessage = requiredMessage,
         Catalog = new CatalogReference(kind, level),
         // Marca e Modelo filtram por igualdade e o ano por faixa (A7 c); a versão não filtra
         Filter = level switch

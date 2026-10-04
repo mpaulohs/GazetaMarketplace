@@ -15,7 +15,7 @@ internal static class GeneralProductsGroup
         Name = "Produtos em geral",
         Fields =
         [
-            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, Options = FieldLists.ProductCondition },
+            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a condição", Options = FieldLists.ProductCondition },
             new FieldDefinition
             {
                 Key = "productType",

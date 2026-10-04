@@ -1,0 +1,14 @@
+@model AdFormViewModel
+@* O que falta para enviar à revisão (US-009-S02, S03). Recebe o foco ao aparecer; cada item é um link para o campo. *@
+@if (Model.Pendings.Count > 0)
+{
+    <div class="alert alert-warning" role="alert" tabindex="-1" data-pendings>
+        <p class="fw-semibold mb-2">@(Model.Pendings.Count == 1 ? "Falta 1 item para enviar este anúncio para revisão:" : $"Faltam {Model.Pendings.Count} itens para enviar este anúncio para revisão:")</p>
+        <ul class="mb-0">
+            @foreach (AdPending pending in Model.Pendings)
+            {
+                <li><a href="#@pending.Target" data-pending-link>@pending.Message</a></li>
+            }
+        </ul>
+    </div>
+}

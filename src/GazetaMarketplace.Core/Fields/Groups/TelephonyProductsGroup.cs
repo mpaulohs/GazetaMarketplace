@@ -19,7 +19,7 @@ internal static class TelephonyProductsGroup
                 Key = "typeId",
                 Label = "Tipo",
                 Type = FieldType.Select,
-                Required = true,
+                Required = true, RequiredMessage = "Informe o tipo",
                 OptionsByCategory = new Dictionary<int, FieldList>
                 {
                     [44] = FieldLists.PhoneAccessoryType,
@@ -28,7 +28,7 @@ internal static class TelephonyProductsGroup
                     [48] = FieldLists.LandlinePhoneType
                 }
             },
-            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, Options = FieldLists.ProductCondition },
+            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a condição", Options = FieldLists.ProductCondition },
             new FieldDefinition
             {
                 Key = "compatibleBrandIds",

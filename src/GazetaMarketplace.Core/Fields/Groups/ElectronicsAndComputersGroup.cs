@@ -14,8 +14,8 @@ internal static class ElectronicsAndComputersGroup
         Name = "Eletrônicos e informática",
         Fields =
         [
-            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, Options = FieldLists.ProductCondition },
-            new FieldDefinition { Key = "brand", Label = "Marca", Type = FieldType.Text, Required = true, MaxLength = TextMaxLength, Suggestions = SuggestionSource.Brands },
+            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a condição", Options = FieldLists.ProductCondition },
+            new FieldDefinition { Key = "brand", Label = "Marca", Type = FieldType.Text, Required = true, RequiredMessage = "Informe a marca", MaxLength = TextMaxLength, Suggestions = SuggestionSource.Brands },
             new FieldDefinition { Key = "model", Label = "Modelo", Type = FieldType.Text, MaxLength = TextMaxLength }
         ]
     };

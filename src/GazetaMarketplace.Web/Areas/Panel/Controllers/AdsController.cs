@@ -21,9 +21,11 @@ namespace GazetaMarketplace.Web.Areas.Panel.Controllers;
 /// (<see cref="IAdService"/>), não por esta tela. "Meus anúncios" e a "Fila de revisão" continuam provisórios até as tarefas 4.4 e 4.1.
 /// </summary>
 [Route("painel/anuncios")]
-public sealed class AdsController(IAdService ads, IAdDraftService drafts, AdFormFactory forms, ICurrentUser currentUser) : PanelControllerBase
+public sealed class AdsController(IAdService ads, IAdDraftService drafts, IAdSubmission submissions, AdFormFactory forms, ICurrentUser currentUser) : PanelControllerBase
 {
-    private const string MessageKey = "AdsMessage";
+    /// <summary>Chave do aviso de sucesso no TempData; a página "Meus anúncios" (provisória) também a lê.</summary>
+    public const string MessageKey = "AdsMessage";
+
     private const string WarningKey = "AdsWarning";
 
     [HttpGet("")]
@@ -57,7 +59,7 @@ public sealed class AdsController(IAdService ads, IAdDraftService drafts, AdForm
     }
 
     [HttpGet("{id:int}/editar")]
-    public async Task<IActionResult> Edit(int id, [FromQuery] bool manual, CancellationToken cancellationToken)
+    public async Task<IActionResult> Edit(int id, [FromQuery] bool manual, [FromQuery] bool pendencias, CancellationToken cancellationToken)
     {
         try
         {
@@ -68,7 +70,8 @@ public sealed class AdsController(IAdService ads, IAdDraftService drafts, AdForm
             string warning = TempData[WarningKey] as string;
             if (AdAccess.CanEdit(actor, ad))
             {
-                return View(await forms.BuildAsync(ad, values, false, null, message, warning, manual, cancellationToken));
+                IReadOnlyList<AdPending> pending = pendencias && AdStatusRules.Find(ad.Status, AdStatus.InReview) is not null ? await submissions.CheckAsync(id, cancellationToken) : null;
+                return View(await forms.BuildAsync(ad, values, false, null, message, warning, manual, cancellationToken, pending));
             }
 
             string reason = ad.Status == AdStatus.InReview ? AdMessages.InReviewReadOnly : AdMessages.NotEditable;
@@ -85,7 +88,86 @@ public sealed class AdsController(IAdService ads, IAdDraftService drafts, AdForm
     }
 
     [HttpPost("{id:int}/editar")]
-    public async Task<IActionResult> Save(int id, AdFormSubmission submission, CancellationToken cancellationToken)
+    public Task<IActionResult> Save(int id, AdFormSubmission submission, CancellationToken cancellationToken) =>
+        SaveThenAsync(id, submission, result => Task.FromResult(Saved(result)), cancellationToken);
+
+    /// <summary>
+    /// "Enviar para revisão" (US-009): salva o formulário como "Salvar rascunho" (o que a pessoa vê é o que vale) e confere as pendências do que ficou gravado.
+    /// Com pendências, volta à edição com a lista; sem pendências, vai à página de confirmação. A situação só muda no POST de confirmação.
+    /// </summary>
+    [HttpPost("{id:int}/enviar")]
+    public Task<IActionResult> SubmitForReview(int id, AdFormSubmission submission, CancellationToken cancellationToken) =>
+        SaveThenAsync(id, submission, async result =>
+        {
+            SetLocationWarning(result);
+            IReadOnlyList<AdPending> pending = await submissions.CheckAsync(id, cancellationToken);
+            return pending.Count > 0
+                ? RedirectToAction(nameof(Edit), new { id, pendencias = "true" })
+                : RedirectToAction(nameof(ConfirmSubmit), new { id });
+        }, cancellationToken);
+
+    /// <summary>A confirmação do envio. Confere de novo no servidor: se entre a tela anterior e esta algo mudou, volta à lista de pendências.</summary>
+    [HttpGet("{id:int}/enviar/confirmar")]
+    public async Task<IActionResult> ConfirmSubmit(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            IReadOnlyList<AdPending> pending = await submissions.CheckAsync(id, cancellationToken);
+            if (pending.Count > 0)
+            {
+                return RedirectToAction(nameof(Edit), new { id, pendencias = "true" });
+            }
+
+            Ad ad = await ads.GetAsync(id, cancellationToken);
+            return View(new SubmitConfirmationViewModel(id, ad.Title));
+        }
+        catch (ForbiddenException ex)
+        {
+            return NoPermission(ex.Message);
+        }
+        catch (ConflictException ex)
+        {
+            Response.StatusCode = StatusCodes.Status409Conflict;
+            return View("NoPermission", ex.Message);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpPost("{id:int}/enviar/confirmar")]
+    public async Task<IActionResult> Submit(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            SubmitResult result = await submissions.SubmitAsync(id, cancellationToken);
+            if (result.Outcome == SubmitOutcome.HasPending)
+            {
+                return RedirectToAction(nameof(Edit), new { id, pendencias = "true" });
+            }
+
+            // O clique duplo cai aqui na segunda vez: o resultado é "já foi enviado", não um erro
+            TempData[MessageKey] = result.Outcome == SubmitOutcome.Sent ? AdMessages.Submitted : AdMessages.AlreadySubmitted;
+            return RedirectToAction(nameof(Index));
+        }
+        catch (ForbiddenException ex)
+        {
+            return NoPermission(ex.Message);
+        }
+        catch (ConflictException ex)
+        {
+            Response.StatusCode = StatusCodes.Status409Conflict;
+            return View("NoPermission", ex.Message);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    // Salva o formulário (as mesmas recusas de "Salvar rascunho") e, se salvou, deixa a continuação decidir para onde ir
+    private async Task<IActionResult> SaveThenAsync(int id, AdFormSubmission submission, Func<AdDraftResult, Task<IActionResult>> onSaved, CancellationToken cancellationToken)
     {
         if (!BindingIsValid())
         {
@@ -95,7 +177,7 @@ public sealed class AdsController(IAdService ads, IAdDraftService drafts, AdForm
         try
         {
             AdDraftResult result = await drafts.UpdateAsync(id, DecodeRowVersion(submission.RowVersion), ToInput(submission), cancellationToken);
-            return Saved(result);
+            return await onSaved(result);
         }
         catch (ValidationException ex)
         {
@@ -202,6 +284,12 @@ public sealed class AdsController(IAdService ads, IAdDraftService drafts, AdForm
     private IActionResult Saved(AdDraftResult result)
     {
         TempData[MessageKey] = AdMessages.DraftSaved;
+        SetLocationWarning(result);
+        return RedirectToAction(nameof(Edit), new { id = result.Id, manual = result.Location == LocationOutcome.CepUnavailable ? true : (bool?)null });
+    }
+
+    private void SetLocationWarning(AdDraftResult result)
+    {
         switch (result.Location)
         {
             case LocationOutcome.CepNotFound:
@@ -211,8 +299,6 @@ public sealed class AdsController(IAdService ads, IAdDraftService drafts, AdForm
                 TempData[WarningKey] = "Não foi possível buscar o CEP. Preencha Cidade e UF manualmente.";
                 break;
         }
-
-        return RedirectToAction(nameof(Edit), new { id = result.Id, manual = result.Location == LocationOutcome.CepUnavailable ? true : (bool?)null });
     }
 
     private async Task<IActionResult> Invalid(int? id, AdFormSubmission submission, ValidationException exception, CancellationToken cancellationToken)

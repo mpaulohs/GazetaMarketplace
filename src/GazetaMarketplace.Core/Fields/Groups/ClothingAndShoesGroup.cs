@@ -14,13 +14,13 @@ internal static class ClothingAndShoesGroup
         Name = "Roupas e calçados",
         Fields =
         [
-            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, Options = FieldLists.ProductCondition },
+            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a condição", Options = FieldLists.ProductCondition },
             new FieldDefinition
             {
                 Key = "sizeId",
                 Label = "Tamanho",
                 Type = FieldType.Select,
-                Required = true,
+                Required = true, RequiredMessage = "Informe o tamanho",
                 OptionsByCategory = new Dictionary<int, FieldList>
                 {
                     [64] = FieldLists.ClothingSize, // roupas esportivas

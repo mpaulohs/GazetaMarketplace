@@ -14,7 +14,7 @@ internal static class MachineryGroup
         Name = "Máquinas",
         Fields =
         [
-            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, Options = FieldLists.ProductCondition },
+            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a condição", Options = FieldLists.ProductCondition },
             new FieldDefinition { Key = "brand", Label = "Marca", Type = FieldType.Text, MaxLength = BrandMaxLength, Suggestions = SuggestionSource.Brands },
             new FieldDefinition { Key = "manufactureYear", Label = "Ano de fabricação", Type = FieldType.ManufactureYear },
             new FieldDefinition { Key = "hoursOfUse", Label = "Horas de uso", Type = FieldType.Integer, Min = 0, Max = FieldLimits.MaxHoursOfUse }

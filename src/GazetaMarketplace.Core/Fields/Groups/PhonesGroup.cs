@@ -11,9 +11,9 @@ internal static class PhonesGroup
         Name = "Celulares",
         Fields =
         [
-            new FieldDefinition { Key = "brandId", Label = "Marca", Type = FieldType.Select, Required = true, Options = FieldLists.PhoneBrand },
-            new FieldDefinition { Key = "model", Label = "Modelo", Type = FieldType.Text, Required = true, MaxLength = ModelMaxLength },
-            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, Options = FieldLists.ProductCondition },
+            new FieldDefinition { Key = "brandId", Label = "Marca", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a marca", Options = FieldLists.PhoneBrand },
+            new FieldDefinition { Key = "model", Label = "Modelo", Type = FieldType.Text, Required = true, RequiredMessage = "Informe o modelo", MaxLength = ModelMaxLength },
+            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a condição", Options = FieldLists.ProductCondition },
             new FieldDefinition { Key = "storageId", Label = "Armazenamento", Type = FieldType.Select, Options = FieldLists.PhoneStorage },
             new FieldDefinition { Key = "colorId", Label = "Cor", Type = FieldType.Select, Options = FieldLists.PhoneColor },
             new FieldDefinition { Key = "batteryHealthId", Label = "Saúde da bateria", Type = FieldType.Select, Options = FieldLists.PhoneBatteryHealth }

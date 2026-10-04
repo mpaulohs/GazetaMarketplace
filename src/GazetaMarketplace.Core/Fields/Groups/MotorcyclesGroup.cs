@@ -15,12 +15,12 @@ internal static class MotorcyclesGroup
                 Key = "km",
                 Label = "Quilometragem",
                 Type = FieldType.Integer,
-                Required = true,
+                Required = true, RequiredMessage = "Informe a quilometragem",
                 Min = 0,
                 Max = FieldLimits.MaxKm,
                 Filter = FieldFilter.Range
             },
-            new FieldDefinition { Key = "displacementId", Label = "Cilindrada", Type = FieldType.Select, Required = true, Options = FieldLists.MotorcycleDisplacement },
+            new FieldDefinition { Key = "displacementId", Label = "Cilindrada", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a cilindrada", Options = FieldLists.MotorcycleDisplacement },
             new FieldDefinition { Key = "colorId", Label = "Cor", Type = FieldType.Select, Options = FieldLists.CarColor },
             new FieldDefinition { Key = "optionalItemIds", Label = "Opcionais", Type = FieldType.MultiSelect, Options = FieldLists.MotorcycleOptionalItem },
             new FieldDefinition { Key = "additionalInfoIds", Label = "Informações adicionais do veículo", Type = FieldType.MultiSelect, Options = FieldLists.MotorcycleAdditionalInfo }

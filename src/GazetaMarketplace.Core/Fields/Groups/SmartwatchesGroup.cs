@@ -9,8 +9,8 @@ internal static class SmartwatchesGroup
         Name = "Smartwatches",
         Fields =
         [
-            new FieldDefinition { Key = "brandId", Label = "Marca", Type = FieldType.Select, Required = true, Options = FieldLists.SmartwatchBrand },
-            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, Options = FieldLists.ProductCondition }
+            new FieldDefinition { Key = "brandId", Label = "Marca", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a marca", Options = FieldLists.SmartwatchBrand },
+            new FieldDefinition { Key = "conditionId", Label = "Condição", Type = FieldType.Select, Required = true, RequiredMessage = "Informe a condição", Options = FieldLists.ProductCondition }
         ]
     };
 }

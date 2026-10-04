@@ -112,6 +112,12 @@ public sealed class FieldDefinition
 
     public bool Required { get; init; }
 
+    /// <summary>
+    /// A frase da lista de pendências quando o campo obrigatório está vazio ("Informe a quilometragem"). Uma frase própria por campo, e não "Informe {rótulo}",
+    /// porque o artigo muda com o gênero ("a quilometragem", "o modelo"). Todo campo obrigatório tem uma (um teste confere).
+    /// </summary>
+    public string RequiredMessage { get; init; }
+
     /// <summary>Lista de opções comum a todas as categorias do grupo (Select e MultiSelect).</summary>
     public FieldList Options { get; init; }
 

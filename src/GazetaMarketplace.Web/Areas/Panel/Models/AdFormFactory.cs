@@ -60,7 +60,8 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
 
     /// <summary>Monta a tela. <paramref name="ad"/> é nulo no anúncio novo.</summary>
     public async Task<AdFormViewModel> BuildAsync(
-        Ad ad, AdFormSubmission values, bool readOnly, string readOnlyMessage, string message, string warning, bool forceManual, CancellationToken cancellationToken)
+        Ad ad, AdFormSubmission values, bool readOnly, string readOnlyMessage, string message, string warning, bool forceManual, CancellationToken cancellationToken,
+        IReadOnlyList<AdPending> pendings = null)
     {
         ArgumentNullException.ThrowIfNull(values);
         CategoryTreeSnapshot snapshot = await tree.GetAsync(cancellationToken);
@@ -104,7 +105,8 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
             Photos = ad is null ? [] : await photos.ListAsync(ad.Id, cancellationToken),
             PhotoLimit = photoGroup.MaxPhotos,
             Message = message,
-            Warning = warning
+            Warning = warning,
+            Pendings = pendings ?? []
         };
     }
 
