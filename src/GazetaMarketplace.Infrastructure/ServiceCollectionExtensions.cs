@@ -2,8 +2,8 @@ using System;
 using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Configuration;
-using GazetaMarketplace.Core.Location;
 using GazetaMarketplace.Core.Interfaces;
+using GazetaMarketplace.Core.Location;
 using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Core.VehicleCatalog;
@@ -45,6 +45,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICategoryTree>(provider => provider.GetRequiredService<CategoryTree>());
         services.AddScoped<ICategoryUsage, AdsCategoryUsage>();
         services.AddScoped<IAdService, AdService>();
+        services.AddScoped<IAdDraftService, AdDraftService>();
 
         // CEP (ADR-007): uma tentativa de até 5 s por chamada; a nova tentativa é da tela. O endereço base só muda nos testes de ponta a ponta
         services.AddHttpClient<ICepLookup, ViaCepLookup>((provider, http) =>

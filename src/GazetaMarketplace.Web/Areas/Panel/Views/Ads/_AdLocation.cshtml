@@ -1,0 +1,63 @@
+@model AdFormViewModel
+@{
+    bool cepError = ViewData.ModelState["Cep"]?.Errors.Count > 0;
+    bool cityError = ViewData.ModelState["City"]?.Errors.Count > 0;
+    bool ufError = ViewData.ModelState["Uf"]?.Errors.Count > 0;
+    bool manual = Model.LocationManual;
+}
+<fieldset class="mb-3" data-location>
+    <legend class="fs-5">Localização</legend>
+    <input type="hidden" name="LocationManual" value="@(manual ? "true" : "false")" data-location-manual />
+    <input type="hidden" name="LocationCep" value="@Model.LocationCep" data-location-cep />
+    <div class="row g-3">
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="cep">CEP <span aria-hidden="true">*</span></label>
+            <input class="form-control @(cepError ? "is-invalid" : "")" id="cep" name="Cep" value="@Model.Cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" data-cep-input
+                   aria-invalid="@(cepError ? "true" : null)" aria-describedby="cep-status@(cepError ? " error-Cep" : "")" />
+            <div class="form-text" id="cep-status" role="status" data-cep-status>@(manual ? "Não foi possível buscar o CEP. Preencha Cidade e UF manualmente." : "A cidade e a UF são preenchidas a partir do CEP.")</div>
+            @await Html.PartialAsync("_FieldErrors", "Cep")
+        </div>
+
+        <div class="col-12 col-sm-8 col-md-5" data-auto-location hidden="@manual">
+            <label class="form-label" for="cidade">Cidade (automático)</label>
+            <input class="form-control" id="cidade" name="City" value="@Model.City" readonly disabled="@manual" data-city-auto />
+        </div>
+        <div class="col-12 col-sm-4 col-md-3" data-auto-location hidden="@manual">
+            <label class="form-label" for="uf">UF (automático)</label>
+            <input class="form-control" id="uf" name="Uf" value="@Model.Uf" readonly disabled="@manual" data-uf-auto />
+        </div>
+
+        <div class="col-4 col-md-3" data-manual-location hidden="@(!manual)">
+            <label class="form-label" for="uf-manual">UF <span aria-hidden="true">*</span></label>
+            <select class="form-select @(ufError ? "is-invalid" : "")" id="uf-manual" name="Uf" disabled="@(!manual)" data-uf-manual
+                    aria-invalid="@(ufError ? "true" : null)" aria-describedby="@(ufError ? "error-Uf" : null)">
+                <option value="">Escolha a UF</option>
+                @foreach (var state in Model.States)
+                {
+                    <option value="@state.Uf" selected="@(state.Uf == Model.Uf)">@state.Uf</option>
+                }
+            </select>
+            @await Html.PartialAsync("_FieldErrors", "Uf")
+        </div>
+        <div class="col-8 col-md-5" data-manual-location hidden="@(!manual)">
+            <label class="form-label" for="cidade-manual">Cidade <span aria-hidden="true">*</span></label>
+            @if (Model.CityOptions.Count > 0 || string.IsNullOrEmpty(Model.Uf))
+            {
+                <select class="form-select @(cityError ? "is-invalid" : "")" id="cidade-manual" name="City" disabled="@(!manual)" data-city-manual
+                        aria-invalid="@(cityError ? "true" : null)" aria-describedby="@(cityError ? "error-City" : null)">
+                    <option value="">@(string.IsNullOrEmpty(Model.Uf) ? "Escolha a UF primeiro" : "Escolha a cidade")</option>
+                    @foreach (string city in Model.CityOptions)
+                    {
+                        <option value="@city" selected="@(city == Model.City)">@city</option>
+                    }
+                </select>
+            }
+            else
+            {
+                <input class="form-control @(cityError ? "is-invalid" : "")" id="cidade-manual" name="City" value="@Model.City" maxlength="80" autocomplete="off" disabled="@(!manual)" data-city-manual
+                       aria-invalid="@(cityError ? "true" : null)" aria-describedby="@(cityError ? "error-City" : null)" />
+            }
+            @await Html.PartialAsync("_FieldErrors", "City")
+        </div>
+    </div>
+</fieldset>

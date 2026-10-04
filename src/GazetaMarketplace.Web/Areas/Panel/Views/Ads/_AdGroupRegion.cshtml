@@ -1,0 +1,87 @@
+@model AdFormViewModel
+@* O trecho do formulário que muda com a categoria. Também é devolvido sozinho por GET /painel/anuncios/campos para o JavaScript trocar na hora. *@
+@{
+    FieldGroup group = Model.Group;
+    bool titleError = ViewData.ModelState["Title"]?.Errors.Count > 0;
+    bool descriptionError = ViewData.ModelState["Description"]?.Errors.Count > 0;
+    bool priceError = ViewData.ModelState["Price"]?.Errors.Count > 0;
+    int titleLength = Model.Title?.Length ?? 0;
+    int descriptionLength = Model.Description?.Length ?? 0;
+}
+<div class="mb-3">
+    <label class="form-label" for="titulo">Título <span aria-hidden="true">*</span></label>
+    <input class="form-control @(titleError ? "is-invalid" : "")" id="titulo" name="Title" value="@Model.Title" maxlength="@group.TitleMaxLength" autocomplete="off"
+           aria-invalid="@(titleError ? "true" : null)" aria-describedby="@(group.TitleHelp is null ? "" : "ajuda-titulo ")contador-titulo@(titleError ? " error-Title" : "")"
+           data-counter-input />
+    <div class="d-flex justify-content-between gap-2">
+        <div>
+            @await Html.PartialAsync("_FieldErrors", "Title")
+            @if (group.TitleHelp is not null)
+            {
+                <p class="form-text mb-0" id="ajuda-titulo">@group.TitleHelp</p>
+            }
+        </div>
+        <span class="form-text text-nowrap" id="contador-titulo" data-counter-for="titulo" data-counter-max="@group.TitleMaxLength">@titleLength/@group.TitleMaxLength</span>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label" for="descricao">@group.DescriptionLabel <span aria-hidden="true">*</span></label>
+    <textarea class="form-control @(descriptionError ? "is-invalid" : "")" id="descricao" name="Description" rows="6" maxlength="@group.DescriptionMaxLength"
+              placeholder="@group.DescriptionPlaceholder" aria-invalid="@(descriptionError ? "true" : null)"
+              aria-describedby="@(group.DescriptionHelp is null ? "" : "ajuda-descricao ")contador-descricao@(descriptionError ? " error-Description" : "")"
+              data-counter-input>@Model.Description</textarea>
+    <div class="d-flex justify-content-between gap-2">
+        <div>
+            @await Html.PartialAsync("_FieldErrors", "Description")
+            @if (group.DescriptionHelp is not null)
+            {
+                <p class="form-text mb-0" id="ajuda-descricao">@group.DescriptionHelp</p>
+            }
+        </div>
+        <span class="form-text text-nowrap" id="contador-descricao" data-counter-for="descricao" data-counter-max="@group.DescriptionMaxLength">@descriptionLength/@group.DescriptionMaxLength</span>
+    </div>
+</div>
+
+@if (Model.HasPrice)
+{
+    <div class="mb-3">
+        <label class="form-label" for="preco">@Model.PriceLabel <span aria-hidden="true">*</span></label>
+        <input class="form-control @(priceError ? "is-invalid" : "")" id="preco" name="Price" value="@Model.Price" inputmode="decimal" autocomplete="off" data-price-input
+               aria-invalid="@(priceError ? "true" : null)" aria-describedby="ajuda-preco@(priceError ? " error-Price" : "")" />
+        @await Html.PartialAsync("_FieldErrors", "Price")
+        <p class="form-text" id="ajuda-preco">@(Model.PriceLabel == "Salário" ? "É o salário oferecido; no site aparece como \"Salário\". Informe em reais, por exemplo 2.800,00." : "Informe em reais, por exemplo 62.000,00.")</p>
+    </div>
+}
+else
+{
+    <p class="form-text">Este tipo de anúncio não tem preço.</p>
+}
+
+@if (Model.Fields.Count > 0)
+{
+    <fieldset class="mb-3">
+        <legend class="fs-5">Detalhes: @group.Name</legend>
+        <div class="row g-3">
+            @foreach (AdFieldViewModel field in Model.Fields)
+            {
+                <div class="@(field.Kind == AdFieldKind.MultiSelect ? "col-12" : "col-12 col-md-6")">
+                    @await Html.PartialAsync("_AdField", field)
+                </div>
+            }
+        </div>
+    </fieldset>
+}
+
+<section class="mb-3" aria-labelledby="titulo-fotos">
+    @if (Model.HasPhotos)
+    {
+        <h2 class="fs-5" id="titulo-fotos">Fotos (@Model.PhotoCount de @group.MaxPhotos)</h2>
+        <p class="form-text mb-0">Este anúncio aceita até @group.MaxPhotos fotos (JPG, PNG, WebP, GIF ou HEIC, até 10 MB cada). O envio de fotos será liberado em uma próxima versão do painel.</p>
+    }
+    else
+    {
+        <h2 class="fs-5" id="titulo-fotos">Fotos</h2>
+        <p class="form-text mb-0">Vagas de emprego não têm fotos.</p>
+    }
+</section>

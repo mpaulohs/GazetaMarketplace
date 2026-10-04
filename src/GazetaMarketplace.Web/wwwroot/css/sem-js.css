@@ -7,3 +7,7 @@
 .navbar-toggler {
   display: none;
 }
+
+.somente-sem-js {
+  display: inline-block;
+}

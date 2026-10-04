@@ -1170,55 +1170,46 @@
 
 **Objective**: Formulário do anúncio que muda conforme o grupo de campos, com preço em centavos, contadores, CEP e preenchimento manual.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs`
-- src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/Edit.cshtml (+ parciais por grupo)
-- `src/GazetaMarketplace.Web/wwwroot/js/pages/ad-edit.js`
-- `src/GazetaMarketplace.Web/wwwroot/js/modules/price.js, counter.js`
-- `src/GazetaMarketplace.Core/Ads/AdDraftService.cs`
+**Decisões aprovadas (2026-10-04)**: D1 o campo de preço envia sempre notação brasileira e o servidor tem **um só leitor** (`PriceText`; número sem vírgula = reais), a máscara do navegador só formata ao digitar · D2 as sugestões de Marca e Tipo de produto ficam para a 3.3b (campos de texto simples aqui) · D3 o bloco de fotos só informa (envio é da 3.5) e o botão "Enviar para revisão" é da 3.7 · D4 cidade/UF do navegador nunca são aceitas sem conferência: UF existe, cidade está na lista da UF (ou é só padronizada se a UF não tem lista); sem cidade/UF o servidor consulta o CEP (CEP inexistente salva pendente; serviço fora do ar reabre no modo manual) · D5 sem JavaScript, "Atualizar campos" refaz o formulário sem salvar · D6 auditoria `ad.create` / `ad.update` só com os **nomes** dos campos alterados, categoria e preço em valor; título e descrição não entram · D7 a cadeia marca → modelo → ano → versão é conferida ao salvar (pode estar incompleta no rascunho) · D8 inteiros aceitam milhar com ponto ("45.000"), decimais aceitam vírgula ("450,75"); texto ou formato errado é recusado, nunca gravado · D9 trocar de categoria com mais fotos que o limite do grupo novo é recusado · D10 lista de categorias em `<optgroup>` por categoria principal, só as 124 postáveis.
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Core/Ads/` — `IAdDraftService.cs` (`AdDraftInput`, `AdDraftResult`, `LocationOutcome`), `AdFormRules.cs`, `AdMessages.cs` (novas mensagens), `AdAttributes.cs` (`long` e `GetRaw`)
+- `src/GazetaMarketplace.Core/Fields/FieldValueParser.cs` · `src/GazetaMarketplace.Core/Formatting/PriceText.cs`
+- `src/GazetaMarketplace.Infrastructure/Ads/AdDraftService.cs` (+ registro em `ServiceCollectionExtensions`)
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs` · `Models/AdViewModels.cs`, `Models/AdFormFactory.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/` — `Edit`, `Read`, `NoPermission`, `Index` e as parciais `_AdGroupRegion`, `_AdField`, `_AdLocation`
+- `src/GazetaMarketplace.Web/wwwroot/js/pages/ad-edit.js` · `js/modules/price.js`, `counter.js`, `catalog-chain.js` · `css/pages/ads-edit.css` · `somente-sem-js` em `layout.css` e `sem-js.css`
+- `_FieldErrors.cshtml` passou a pôr o `role="alert"` numa `div` (o `role` no `<ul>` deixava os `<li>` órfãos para o leitor de tela)
 
 **Acceptance Criteria**:
-- [ ] `@US-008-S01` (@happy): Salvar um rascunho completo — o *Then* do SPEC é atendido
-- [ ] `@US-008-S07` (@edge): Salvar um rascunho só com o título — o *Then* do SPEC é atendido
-- [ ] `@US-008-S08` (@negative): Salvar sem título — o *Then* do SPEC é atendido
-- [ ] `@US-008-S09` (@edge): Campos mudam conforme a categoria — o *Then* do SPEC é atendido
-- [ ] `@US-008-S10` (@negative): Redator tenta editar anúncio de outro redator — o *Then* do SPEC é atendido
-- [ ] `@US-008-S11` (@edge): Corrigir um anúncio rejeitado — o *Then* do SPEC é atendido
-- [ ] `@US-008-S12` (@edge): Anúncio em revisão não pode ser editado pelo Redator — o *Then* do SPEC é atendido
-- [ ] `@US-008-S13` (@edge): Administrador corrige o preço de um anúncio publicado — o *Then* do SPEC é atendido
-- [ ] `@US-008-S14` (@negative): Serviço de CEP fora do ar — o *Then* do SPEC é atendido
-- [ ] O formulário se refaz ao trocar a categoria (campos, limites de título e descrição, limite de fotos), mantendo os campos comuns; o foco fica na lista "Categoria"
-- [ ] Preço com máscara estilo banco, até R$ 99.999.999,99, salvo em centavos; Serviços não têm o campo; Vagas mostram a ajuda de salário
-- [ ] Rascunho salva só com o título; sem título nada é criado
-- [ ] Com o CEP fora do ar (duas falhas), UF e cidade viram listas, o anúncio recebe o selo de conferência e o envio sem cidade mostra a pendência
-- [ ] Redator não abre anúncio de outro; Administrador edita qualquer anúncio não arquivado; anúncio em revisão é somente leitura para o Redator
-- [ ] Textos digitados são gravados e exibidos como texto puro
-- [ ] **RC-14:** os formulários usam ViewModels próprios sem `Status`, `AuthorId`, `PublishedAt` nem campos de decisão; o servidor copia só os campos permitidos
+- [x] `@US-008-S01` (@happy): Salvar um rascunho completo — o *Then* do SPEC é atendido
+- [x] `@US-008-S07` (@edge): Salvar um rascunho só com o título — o *Then* do SPEC é atendido
+- [x] `@US-008-S08` (@negative): Salvar sem título — o *Then* do SPEC é atendido
+- [x] `@US-008-S09` (@edge): Campos mudam conforme a categoria — o *Then* do SPEC é atendido
+- [x] `@US-008-S10` (@negative): Redator tenta editar anúncio de outro redator — o *Then* do SPEC é atendido
+- [x] `@US-008-S11` (@edge): Corrigir um anúncio rejeitado — o *Then* do SPEC é atendido
+- [x] `@US-008-S12` (@edge): Anúncio em revisão não pode ser editado pelo Redator — o *Then* do SPEC é atendido
+- [x] `@US-008-S13` (@edge): Administrador corrige o preço de um anúncio publicado — o *Then* do SPEC é atendido
+- [x] `@US-008-S14` (@negative): Serviço de CEP fora do ar — o *Then* do SPEC é atendido (a pendência "Informe a cidade" no envio é da 3.7)
+- [x] O formulário se refaz ao trocar a categoria (campos, limites de título e descrição, limite de fotos), mantendo os campos comuns; o foco fica na lista "Categoria"
+- [x] Preço com máscara estilo banco, até R$ 99.999.999,99, salvo em centavos; Serviços não têm o campo; Vagas mostram a ajuda de salário
+- [x] Rascunho salva só com o título; sem título nada é criado
+- [x] Com o CEP fora do ar (duas falhas), UF e cidade viram listas e o anúncio recebe o selo de conferência (`LocationManual`)
+- [x] Redator não abre anúncio de outro; Administrador edita qualquer anúncio não arquivado; anúncio em revisão é somente leitura para o Redator
+- [x] Textos digitados são gravados e exibidos como texto puro
+- [x] **RC-14:** o formulário (`AdFormSubmission`) não tem `Status`, `AuthorId`, `PublishedAt` nem campo de decisão; o servidor copia só os campos permitidos
+- [x] Texto em campo numérico é recusado em vez de gravado (BACKLOG da 3.1); o teto de preço validado é R$ 99.999.999,99
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S01_SalvarUmRascunhoCompleto` — `@US-008-S01`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/DraftE2ETests.US008S01_SalvarUmRascunhoCompleto` — `@US-008-S01` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S07_SalvarUmRascunhoSoComOTitulo` — `@US-008-S07`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S08_SalvarSemTitulo` — `@US-008-S08`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S09_CamposMudamConformeACategoria` — `@US-008-S09`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/DraftE2ETests.US008S09_CamposMudamConformeACategoria` — `@US-008-S09` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S10_RedatorTentaEditarAnuncioDeOutroRedator` — `@US-008-S10`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S11_CorrigirUmAnuncioRejeitado` — `@US-008-S11`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S12_AnuncioEmRevisaoNaoPodeSerEditadoPeloRedator` — `@US-008-S12`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S13_AdministradorCorrigeOPrecoDeUmAnuncioPublicado` — `@US-008-S13`
-- `tests/GazetaMarketplace.Web.Tests/Anúncios/DraftTests.US008S14_ServicoDeCEPForaDoAr` — `@US-008-S14`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Anúncios/DraftE2ETests.US008S14_ServicoDeCEPForaDoAr` — `@US-008-S14` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Ads/PriceMaskTests.Digitos_ViramCentavos`
-- `tests/GazetaMarketplace.Web.Tests/Ads/ContadorTests.Vagas_Titulo90_E_InformacoesAdicionais6000`
-- `tests/GazetaMarketplace.Web.Tests/Ads/XssTests.TituloEDescricao_SaoExibidosComoTexto`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Ads/PrecoMascaraE2ETests.Mascara_ViraReaisComCentavos (E2E, /test)`
-- `tests/GazetaMarketplace.Web.Tests/Ads/DraftTests.PostComStatusEAutorNoCorpo_NaoAlteraSituacaoNemAutor`
-- `tests/GazetaMarketplace.Web.Tests/Ads/ArchitectureTests.ViewModelsDeEdicao_NaoTemCamposDeDecisao`
-- `tests/GazetaMarketplace.Web.Tests/Ads/PrecoHandoffTests.MascaraDoPrecoJs_EnviaDigitos_ServidorGravaCentavos (produtor: `price.js`; consumidor: serviço de anúncio)`
+**Tests added** (nomes reais):
+- `Web.Tests/Ads/DraftTests` — S01, S07, S08, S09 (fragmento e "Atualizar campos"), S10, S11, S12, S13, S14, XSS, `PostComSituacaoEAutorNoCorpo_NaoAlteraNada`, várias opções, tipo errado → recusa (nunca 500), CEP resolvido no servidor, CEP inexistente, cidade forjada
+- `Web.Tests/Ads/AdDraftServiceTests` — limites por grupo, preço, texto em campo numérico, cadeia do catálogo, endereço (D4), troca de categoria e fotos, auditoria sem conteúdo, nada mudou = nada gravado
+- `Web.Tests/Ads/FieldValueParserTests` · `Web.Tests/Formatting/PriceTextTests` (inclui a "passagem" da máscara) · `Web.Tests/Ads/FormRenderingTests` (todos os grupos × todos os tipos de campo: rótulo, nome, ids únicos, `aria-describedby` e erro) · `Web.Tests/Architecture/EditViewModelsTests`
+- `IntegrationTests/DraftIntegrationTests` — colunas calculadas depois de salvar pelo formulário, duas telas ao mesmo tempo (6 rodadas), versão velha recusada, categoria apagada no meio, auditoria junto com o anúncio
+- `Web.Tests.Playwright/Ads/DraftE2ETests` — S01 completo, S09 sem recarregar, máscara de preço, contadores, S08, S14 com ViaCEP de mentira, CEP inexistente, sem JavaScript, Axe (formulário, vagas, com erros, 320 px)
 
 **Dependencies**: 3.1, 3.2, 2.5, 0.7
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Criar um anúncio de Carros, um de Serviços e um de Vagas no navegador.
+**Verification**: Done when every test under "Tests added" passes, plus manual check: Criar um anúncio de Carros, um de Serviços e um de Vagas no navegador.
 
 **Estimate**: L
 

@@ -50,9 +50,14 @@ public sealed class AdAttributes
 
     public bool Contains(string key) => _values.ContainsKey(key);
 
+    /// <summary>O valor do campo como JSON (para comparar duas versões do anúncio), ou nulo se ausente.</summary>
+    public string GetRaw(string key) => _values[key]?.ToJsonString();
+
     public AdAttributes Set(string key, int value) => Put(key, JsonValue.Create(value));
 
     public AdAttributes Set(string key, decimal value) => Put(key, JsonValue.Create(value));
+
+    public AdAttributes Set(string key, long value) => Put(key, JsonValue.Create(value));
 
     public AdAttributes Set(string key, string value) => Put(key, value is null ? null : JsonValue.Create(value));
 
@@ -66,6 +71,12 @@ public sealed class AdAttributes
     }
 
     public bool TryGetInt(string key, out int value)
+    {
+        value = 0;
+        return _values[key] is JsonValue node && node.TryGetValue(out value);
+    }
+
+    public bool TryGetLong(string key, out long value)
     {
         value = 0;
         return _values[key] is JsonValue node && node.TryGetValue(out value);

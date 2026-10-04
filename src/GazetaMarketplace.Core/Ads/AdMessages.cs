@@ -19,4 +19,28 @@ public static class AdMessages
         $"Não é possível mudar o anúncio de \"{AdStatus.Label(from)}\" para \"{AdStatus.Label(to)}\"";
 
     public const string TitleRequired = "Informe um título";
+
+    public const string DraftSaved = "Rascunho salvo";
+
+    public const string CategoryInvalid = "Escolha uma categoria da lista";
+
+    public const string CategoryGone = "A categoria escolhida não existe mais. Escolha outra";
+
+    public const string PriceOutOfRange = "Informe um preço entre R$ 0,01 e R$ 99.999.999,99";
+
+    public const string PriceInvalid = "Informe o preço em reais, por exemplo 62.000,00";
+
+    public const string CityRequiredWithUf = "Informe a cidade";
+
+    public const string UfInvalid = "Escolha um estado da lista";
+
+    public const string CityNotInUf = "Escolha uma cidade da lista";
+
+    public const string LocationOnlyWithCep = "Informe o CEP para definir a cidade";
+
+    public static string TitleTooLong(int max) => $"O título pode ter no máximo {max} caracteres";
+
+    public static string DescriptionTooLong(string label, int max) => $"Use no máximo {max} caracteres em \"{label}\"";
+
+    public static string TooManyPhotosForCategory(int max) => $"Esta categoria aceita no máximo {max} fotos; remova fotos antes de trocar";
 }

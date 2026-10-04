@@ -121,3 +121,8 @@
 .rodape a {
   color: #fff;
 }
+
+/* Só aparece sem JavaScript (o sem-js.css, carregado dentro de <noscript>, o mostra de novo): por exemplo, "Atualizar campos" no formulário do anúncio */
+.somente-sem-js {
+  display: none;
+}

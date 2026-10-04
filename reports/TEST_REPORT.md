@@ -350,3 +350,41 @@ Todas foram desfeitas depois.
 1. **O limitador rodava antes da autenticação.** A política `cep` (por usuário) via todo mundo como anônimo e agrupava por IP: o teste "outro usuário não é afetado" pegou. O `UseRateLimiter` passou para depois do `UseAuthentication` (BACKLOG).
 2. **O cookie redirecionava chamadas `/api` para a página de entrada.** O contrato pede 401 e 403 em JSON; em `/api` agora são ProblemDetails e as páginas seguem redirecionando (testado nos dois sentidos).
 3. **Código IBGE × UF.** A validação de que os dois primeiros dígitos do código são os da UF confere todos os 40 códigos da amostra (escritos de memória) contra a UF informada; nomes e dígitos finais seguem a conferir na carga real.
+
+## Tarefa 3.3 — criar e editar o rascunho do anúncio (US-008)
+
+> **Em resumo:** 992 testes unitários (168 novos), 43 da ferramenta de catálogo, 27 da `CitiesImport.Tests`, 94 de integração (6 novos, SQL Server real) e 48 de navegador (9 novos) passam. As seis mutações planejadas derrubam testes. O ViaCEP real não foi consultado (o ambiente bloqueia o host): o E2E usa um ViaCEP de mentira. **Não houve migration nova**, então o script e a contagem de 11 migrations não mudam.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 992 | 992 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 94 | 94 | 0 |
+| E2E (Playwright, site publicado em Production, ViaCEP de mentira) | 48 | 48 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| Preço lido em centavos em vez de reais (`62000` valendo R$ 620,00) | 26 (`PriceTextTests`, `AdDraftServiceTests`, `DraftTests`) |
+| `AuthorId` aceito no formulário que recebe o POST | 2 (`FormularioDeEdicao_NaoTemCamposDeDecisao`, `OFormularioEnviaSoTexto…`) |
+| Limite de título do grupo ignorado (sempre 120) | `LimiteDoTitulo_VemDoGrupoDaCategoria` (Vagas com 91) |
+| Texto aceito e gravado em campo numérico | 11 (quase todos em `FieldValueParserTests`) |
+| Trocar de categoria mantendo os campos do grupo antigo | `TrocarDeCategoria_MantemOsCamposComunsEDescartaOsDoGrupoAnterior` |
+| Cidade do CEP não aplicada pelo servidor quando o JavaScript não rodou | 5 (`Cep_SemCidadeDoNavegador…`, `Cep_QueMudouDepoisDaCidade…`, `Cep_ResolvidoNoServidor…`, `US008S01…` ×2) |
+
+Todas foram desfeitas depois (os 165 testes da tarefa passam de novo depois de desfeitas). Uma primeira tentativa da sexta mutação não compilava (parâmetro sem uso, aviso como erro) e mostrava o resultado da mutação anterior; foi refeita com uma variante que compila.
+
+**O que cada camada prova**
+
+- Unitários: `PriceText` (notação brasileira; `62000` e `62.000` são reais; `12.5`, `62.00`, `1,2,3` recusados; número gigante não estoura), `FieldValueParser` (inteiro com milhar em ponto, decimal com vírgula, dinheiro em centavos como `long`, opção fora da lista, várias opções sem repetir, ano do modelo até o ano que vem, ano de fabricação até o atual, tipo desconhecido falha alto); `AdDraftServiceTests` (limites por grupo — Vagas 90/6000, Serviços 120/6000, demais 120/5000 —, CRLF contando 1, Serviços sem preço, preço zero/teto/texto, cadeia do catálogo em carros e motos, CEP resolvido no servidor, cidade forjada, UF sem lista padronizada, modo manual com selo, Rejeitado continua Rejeitado, Administrador não muda a situação nem o autor, em revisão e arquivado não salvam, troca de categoria descarta o grupo antigo, limite de fotos, auditoria só com nomes de campos, salvar sem mudar nada não grava nem audita); `DraftTests` pelo site de teste (as nove cenas S01 a S14 da tela, XSS no formulário e na leitura, `Status`/`AuthorId`/`PublishedAt` no corpo sem efeito, tipo errado no corpo vira recusa e nunca erro 500); `FormRenderingTests` renderiza **as 124 categorias** (todos os 18 grupos e os 9 tipos de campo) e confere rótulo, nome, ids sem repetição, mensagem de erro ligada por `aria-describedby` e que toda referência de `aria-describedby` aponta para um id que existe.
+- Integração: o que o formulário grava (`45.000`, `1.450,75`) alimenta as colunas calculadas do catálogo, do km e da área com o valor certo; duas telas salvando o mesmo anúncio ao mesmo tempo (6 rodadas) — uma grava, a outra recebe Conflito, sem rastro na auditoria; a versão velha do formulário é recusada; categoria apagada entre a conferência e a gravação vira recusa de categoria; anúncio e auditoria saem juntos.
+- E2E: jornada completa com recarga (só o que o servidor guardou aparece) e nenhuma resposta ≥ 400 do próprio site; troca de categoria sem recarregar a página, com o foco de volta em "Categoria"; máscara de preço, contadores "X/N" (a quebra de linha conta 1), CEP fora do ar com "tentativa 2 de 2" e UF/cidade em listas, CEP inexistente sem abrir o manual, **todo o caminho sem JavaScript** (botão "Atualizar campos", salvar, cidade resolvida no servidor), Axe WCAG 2.1 AA no formulário de carros, no de vagas e com erros, e sem rolagem horizontal em 320 px.
+
+**Achados desta rodada**
+
+1. **`role="alert"` no `<ul>` deixava os `<li>` órfãos** (Axe: `listitem`). A mensagem de erro agora fica numa `div` com o `role` e a lista dentro; vale também para as telas antigas que usam `_FieldErrors`.
+2. **Contraste do erro fora de um cartão.** O texto de erro (`text-danger` sobre o fundo `#f1f5fd` da página) ficava abaixo de 4,5:1. O formulário passou a ficar dentro de um `card` branco, como as outras telas do painel.
+3. **O rótulo "UF (automático)" estourava 1 px em 320 px.** As colunas de cidade e UF empilham abaixo de 576 px.
+4. **`innerHTML` é proibido por teste (RC-17).** A troca de categoria usa `DOMParser` para ler a parcial do servidor e passa os nós para a página.
+5. **Máscara de caixa eletrônico:** digitar `1500` deixa `15,00` (dígitos entram pela direita). O comportamento é o aprovado (D1); registrado no BACKLOG para o Product Owner confirmar.
+6. **O cache de 30 dias do CEP vale entre rodadas do E2E.** A asserção "uma consulta ao ViaCEP" passou a ser "no máximo uma"; para contar de novo, limpar `CepCache` (documentado).

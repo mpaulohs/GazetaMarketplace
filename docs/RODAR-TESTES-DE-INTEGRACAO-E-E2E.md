@@ -64,7 +64,18 @@ export ViaCep__BaseUrl=http://localhost:5991/ws/ # só nos E2E: o ViaCEP "de men
 cd /caminho/publish && dotnet GazetaMarketplace.Web.dll
 ```
 
-3. O Administrador criado pela partida nasce com troca de senha obrigatória; para os E2E, desligue a exigência (use `-I` aqui também):
+3. Carregar o catálogo de veículos e as cidades de exemplo. O formulário do anúncio (`DraftE2ETests`) escolhe Marca → Modelo → Ano e Cidade/UF, e o banco do E2E nasce vazio dessas tabelas. Os dois scripts são idempotentes; use `-I`:
+
+```bash
+docker cp db/seed/sample/vehicle-catalog-sample.sql gazeta-e2e-sql:/tmp/v.sql
+docker cp db/seed/sample/cities-sample.sql gazeta-e2e-sql:/tmp/c.sql
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -i /tmp/v.sql
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -i /tmp/c.sql
+```
+
+O `sample` do catálogo e das cidades é só para teste: nunca vai para produção (ver `db/seed/README.md`).
+
+4. O Administrador criado pela partida nasce com troca de senha obrigatória; para os E2E, desligue a exigência (use `-I` aqui também):
 
 ```bash
 docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -I -Q "UPDATE AspNetUsers SET MustChangePassword = 0"
@@ -82,7 +93,7 @@ export GAZETA_E2E_VIACEP_PORT=5991             # igual à porta de ViaCep__BaseU
 dotnet run --project tests/GazetaMarketplace.Web.Tests.Playwright
 ```
 
-Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecoveryE2ETests` exige também `GAZETA_E2E_SENDGRID_PORT` e `CepE2ETests`, `GAZETA_E2E_VIACEP_PORT`). `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**; `SettingsE2ETests` também (e muda o telefone do site no banco de teste).
+Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecoveryE2ETests` exige também `GAZETA_E2E_SENDGRID_PORT`; `CepE2ETests` e `DraftE2ETests`, `GAZETA_E2E_VIACEP_PORT`). `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**; `SettingsE2ETests` também (e muda o telefone do site no banco de teste). `DraftE2ETests` cria rascunhos com título único no banco de teste e não os apaga (não há exclusão de rascunho na v1).
 
 **Rodando a suíte mais de uma vez em menos de uma hora no mesmo banco:** o site limita a recuperação de senha a 10 pedidos por hora por IP e `US007` passa a falhar por tempo esgotado. Antes de rodar de novo, limpe a tabela:
 

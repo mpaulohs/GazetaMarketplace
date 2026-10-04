@@ -1,0 +1,10 @@
+/* Formulário do anúncio (US-008). O que o Bootstrap cobre fica com as classes dele; aqui só o que ele não tem. */
+.ads-edit__opcoes {
+  display: grid;
+  gap: 0.25rem 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.ads-edit__texto {
+  white-space: pre-wrap;
+}

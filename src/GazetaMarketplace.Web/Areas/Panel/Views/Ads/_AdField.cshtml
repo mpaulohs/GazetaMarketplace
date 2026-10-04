@@ -1,0 +1,54 @@
+@model AdFieldViewModel
+@{
+    bool invalid = ViewData.ModelState[Model.Name]?.Errors.Count > 0;
+    string describedBy = (Model.HelpText is null ? "" : Model.HelpId + " ") + (invalid ? Model.ErrorId : "");
+}
+@switch (Model.Kind)
+{
+    case AdFieldKind.Text:
+    case AdFieldKind.Number:
+        <label class="form-label" for="@Model.Id">@Model.Label @if (Model.Required) { <span aria-hidden="true">*</span> }</label>
+        <input class="form-control @(invalid ? "is-invalid" : "")" id="@Model.Id" name="@Model.Name" value="@Model.Value" inputmode="@Model.InputMode"
+               maxlength="@Model.MaxLength" autocomplete="off" aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(describedBy.Trim().Length == 0 ? null : describedBy.Trim())" />
+        break;
+    case AdFieldKind.Select:
+        <label class="form-label" for="@Model.Id">@Model.Label @if (Model.Required) { <span aria-hidden="true">*</span> }</label>
+        <select class="form-select @(invalid ? "is-invalid" : "")" id="@Model.Id" name="@Model.Name" disabled="@Model.Disabled" data-catalog-kind="@Model.CatalogKind" data-catalog-level="@Model.CatalogLevel"
+                aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(describedBy.Trim().Length == 0 ? null : describedBy.Trim())">
+            <option value="">@(Model.Disabled ? "Escolha o campo anterior primeiro" : "Selecione")</option>
+            @foreach (AdOption option in Model.Options)
+            {
+                <option value="@option.Value" selected="@option.Selected">@option.Label</option>
+            }
+        </select>
+        break;
+    case AdFieldKind.MultiSelect:
+        <fieldset aria-describedby="@(describedBy.Trim().Length == 0 ? null : describedBy.Trim())">
+            <legend class="form-label fs-6">@Model.Label @if (Model.Required) { <span aria-hidden="true">*</span> }</legend>
+            <div class="ads-edit__opcoes">
+                @foreach (AdOption option in Model.Options)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="@(Model.Id)-@option.Value" name="@Model.Name" value="@option.Value" checked="@option.Selected" />
+                        <label class="form-check-label" for="@(Model.Id)-@option.Value">@option.Label</label>
+                    </div>
+                }
+            </div>
+        </fieldset>
+        break;
+}
+@if (invalid)
+{
+    <div id="@Model.ErrorId" role="alert">
+        <ul class="list-unstyled small text-danger mb-0 mt-1">
+            @foreach (var error in ViewData.ModelState[Model.Name].Errors)
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+@if (Model.HelpText is not null)
+{
+    <p class="form-text mb-0" id="@Model.HelpId">@Model.HelpText</p>
+}

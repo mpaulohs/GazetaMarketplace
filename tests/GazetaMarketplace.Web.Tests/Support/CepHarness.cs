@@ -69,10 +69,10 @@ internal sealed class CepHarness : IDisposable
 
     public HttpClient Admin { get; }
 
-    public static async Task<CepHarness> StartAsync(Action<IServiceCollection> extraServices = null, bool fakeLookup = true)
+    public static async Task<CepHarness> StartAsync(Action<IServiceCollection> extraServices = null, bool fakeLookup = true, Dictionary<string, string> configuration = null)
     {
         FakeCepLookup lookup = new();
-        WebFactory factory = new(withDatabase: true, services: services =>
+        WebFactory factory = new(withDatabase: true, configuration: configuration, services: services =>
         {
             if (fakeLookup)
             {
