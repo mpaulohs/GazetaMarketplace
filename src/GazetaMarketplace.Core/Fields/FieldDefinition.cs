@@ -112,6 +112,9 @@ public sealed class FieldDefinition
 
     public bool Required { get; init; }
 
+    /// <summary>Categorias em que o campo é obrigatório mesmo com <see cref="Required"/> falso (a Área só é obrigatória em Terrenos). Nulo = nenhuma.</summary>
+    public IReadOnlySet<int> RequiredForCategories { get; init; }
+
     /// <summary>
     /// A frase da lista de pendências quando o campo obrigatório está vazio ("Informe a quilometragem"). Uma frase própria por campo, e não "Informe {rótulo}",
     /// porque o artigo muda com o gênero ("a quilometragem", "o modelo"). Todo campo obrigatório tem uma (um teste confere).
@@ -143,6 +146,9 @@ public sealed class FieldDefinition
 
     /// <summary>Só em campos <see cref="FieldType.CatalogItem"/>.</summary>
     public CatalogReference Catalog { get; init; }
+
+    /// <summary>Se o campo é obrigatório para enviar à revisão nesta categoria (e só vale onde <see cref="AppliesTo"/> é verdadeiro).</summary>
+    public bool IsRequiredFor(int categoryId) => Required || (RequiredForCategories is not null && RequiredForCategories.Contains(categoryId));
 
     public bool AppliesTo(int categoryId) => AppliesToCategories is null || AppliesToCategories.Contains(categoryId);
 

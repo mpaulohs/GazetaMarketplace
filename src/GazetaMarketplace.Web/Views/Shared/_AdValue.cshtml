@@ -1,0 +1,18 @@
+@model AdValueViewModel
+
+@* Preço, Salário ou Tipo do serviço (design-system §5.3). No card o texto é do tamanho do corpo; no detalhe, grande. *@
+@switch (Model.Value.Kind)
+{
+    case GazetaMarketplace.Core.Ads.AdValueKind.Salary:
+        <p class="ad-valor mb-1" data-ad-value="salario">
+            <span class="@(Model.Large ? "fs-6" : "small") text-body-secondary">@Model.Value.Label</span>
+            <span class="@(Model.Large ? "fs-3" : "") fw-bold ad-valor__texto">@Model.Value.Text</span>
+        </p>
+        break;
+    case GazetaMarketplace.Core.Ads.AdValueKind.ServiceType:
+        <p class="ad-valor mb-1 fw-semibold @(Model.Large ? "fs-4" : "")" data-ad-value="tipo">@Model.Value.Text</p>
+        break;
+    default:
+        <p class="ad-valor mb-1 fw-bold ad-valor__texto @(Model.Large ? "fs-3" : "")" data-ad-value="preco">@Model.Value.Text</p>
+        break;
+}

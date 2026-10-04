@@ -89,7 +89,7 @@ public sealed class GroupsTests
 
         CollectionAssert.AreEqual(new[] { "propertyTypeId", "transactionTypeId", "bedrooms" }, realEstate.RequiredFieldsFor(26).Select(f => f.Key).ToArray(), "Apartamentos");
         CollectionAssert.AreEqual(new[] { "propertyTypeId", "transactionTypeId", "bedrooms" }, realEstate.RequiredFieldsFor(27).Select(f => f.Key).ToArray(), "Casas");
-        CollectionAssert.AreEqual(new[] { "propertyTypeId", "transactionTypeId" }, realEstate.RequiredFieldsFor(30).Select(f => f.Key).ToArray(), "Terrenos: sem quartos");
+        CollectionAssert.AreEqual(new[] { "propertyTypeId", "transactionTypeId", "areaM2" }, realEstate.RequiredFieldsFor(30).Select(f => f.Key).ToArray(), "Terrenos: sem quartos, com área");
         CollectionAssert.AreEqual(new[] { "propertyTypeId", "transactionTypeId" }, realEstate.RequiredFieldsFor(31).Select(f => f.Key).ToArray(), "Comércio: sem quartos");
     }
 

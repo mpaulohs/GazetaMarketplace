@@ -1,0 +1,24 @@
+@model ComponentsViewModel
+@{
+    ViewData["Title"] = "Componentes";
+}
+
+<h1 class="fs-3">Componentes do anúncio</h1>
+<p class="text-body-secondary">Página de conferência com dados de exemplo. Só existe em Development e só para o Administrador.</p>
+
+<section aria-labelledby="componentes-cards" class="mb-4">
+    <h2 class="fs-5" id="componentes-cards">Cards: padrão, Serviços, Vagas de emprego e sem foto</h2>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" data-componentes-cards>
+        @for (int i = 0; i < Model.Cards.Count; i++)
+        {
+            <div class="col">
+                @await Component.InvokeAsync("AdCard", new { ad = Model.Cards[i], eagerImage = i < 4 })
+            </div>
+        }
+    </div>
+</section>
+
+<section aria-labelledby="componentes-corpo" class="mb-4">
+    <h2 class="fs-5" id="componentes-corpo">Corpo do anúncio</h2>
+    <div class="card"><div class="card-body"><partial name="_AdBody" model="Model.Body" /></div></div>
+</section>

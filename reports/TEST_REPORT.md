@@ -574,3 +574,48 @@ Duas mutações (M3 e M4) não compilavam na primeira forma (código inalcançá
 4. **Contraste do "Cancelar":** em `btn-outline-secondary` direto sobre o fundo da página dava 4,29; a confirmação ficou dentro de um `.card`.
 5. **Flake isolado:** `US008S03` falhou uma vez (613 ms) numa rodada, passou isolado e nas duas rodadas completas seguintes (60/60); acompanhar.
 6. **`dotnet format` aplicado só aos arquivos da tarefa** (`--include`), sem tocar nos 14 arquivos antigos do achado do BOM.
+
+## Tarefa 3.8 — card, valor e corpo do anúncio (componentes de apresentação)
+
+> **Em resumo:** 1.210 testes unitários (47 novos), 43 da ferramenta de catálogo, 27 da `CitiesImport.Tests`, 102 de integração e 66 de navegador (6 novos, com um segundo site em Development) passam. As seis mutações planejadas e cinco extras foram derrubadas (uma delas só depois de um teste novo). Veredito: **aprovado**.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.210 | 1.210 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 102 | 102 | 0 |
+| E2E (Playwright: site em Production + site em Development) | 66 | 66 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| M1 Centavos sempre aparecem ("R$ 62.000,00") | 10 (`Valor_CentavosSoQuandoNaoSaoZero` × 4, nome acessível, Vagas, texto codificado, centavos, sem cidade/preço) |
+| M2 Vagas passam a ter foto | 3 (`SoVagasFicamSemFoto`, `Vagas_SemArea…`, `Vagas_MostraBlocoNeutro…`) |
+| M3 Serviços mostram o preço quando existe | 2 (`Servicos_NuncaMostramPreco…`, `Servicos_MesmoComPrecoNaEntrada…`) |
+| M4 Nome acessível sem o valor | 7 |
+| M5 `loading` sempre `lazy` | `PrimeiraLinha_CarregaAImagemJa` |
+| M6 Vagas sem o rótulo "Salário" | 3 (`ValorPorGrupo…`, `Vagas_MostraBlocoNeutro…`, página de componentes) |
+| (extra) M7 Página de componentes aberta fora de Development | `PaginaDeComponentes_EmProduction_E404…` |
+| (extra) M8 Área obrigatória na categoria errada | 2 (`Imoveis_ObrigatoriosPorCategoria`, `Terrenos_Exigem…`) |
+| (extra) M9 Miniatura que amplia fotos pequenas | `Miniatura_Endereco_E_Tamanho` |
+| (extra) M10 `RequiredFieldsFor` ignorando a regra por categoria | 2 (mesmos de M8) |
+| (extra) M11 Asterisco do formulário ignorando a categoria | sobreviveu na primeira rodada; o teste novo `Area_TemAsteriscoDeObrigatorioSoEmTerrenos` o derruba |
+
+M7 não compilava na primeira forma (parâmetro sem uso é erro com `TreatWarningsAsErrors`) e foi refeita. Todas foram desfeitas; a compilação final ficou limpa (0 avisos, 0 erros).
+
+**O que cada camada prova**
+
+- Valor (S29): 6200000 → "R$ 62.000", 249990 → "R$ 2.499,90", 50 → "R$ 0,50", 18000 → "R$ 180", teto "R$ 99.999.999,99". Sem preço ou tipo não há linha de valor (nunca "R$ 0").
+- Card padrão: `<img>` com `width=480`, `height=360`, `alt` vazio e `loading` `lazy` (`eager` na primeira linha); um só link por card, com o nome "título, valor, cidade/UF". Serviços: Tipo no lugar do preço, mesmo que a entrada traga preço. Vagas: sem `<img>` mesmo com capa na entrada, bloco "Vaga de emprego" com a área e "Salário R$ 2.800". Sem capa: "Foto indisponível".
+- Segurança: título e cidade com HTML saem codificados no texto e no atributo; nenhum `style` nem `on…=` em linha (CSP).
+- Página de componentes: o Administrador vê 4 cards e o corpo (um `h1`, o título do corpo em `h3`); em Production é 404 para todos, até o Administrador logado e quem não entrou; em Development o Redator vai para "acesso negado" e quem não entrou, para a entrada; a rota não aparece no menu nem em `Routes.cs`.
+- Navegador: os quatro cards têm a mesma altura de mídia (capa 4:3, bloco da vaga e bloco "Foto indisponível" idênticos); com a foto bloqueada pela rede os 3 cards com capa viram "Foto indisponível" sem mudar de tamanho; o foco desenha o contorno no card inteiro (`::after` do link) e o hover sublinha o título; axe sem violações e sem rolagem horizontal em 320, 768, 1024 e 1280 px, com 2 colunas em 320 px e 4 em 1280 px; o mesmo teste em Production recebe 404 também logado.
+- Terrenos: a lista de pendências traz "Informe a área"; Apartamentos, Casas e Comércio não; o formulário mostra o asterisco só em Terrenos.
+
+**Achados desta rodada**
+
+1. **Página de componentes e E2E:** como a rota não existe em Production, os E2E usam um segundo processo da mesma saída publicada em Development (porta 5444, `GAZETA_DEV_BASE_URL`); o procedimento está em `docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md`.
+2. **Wireframe × design-system:** o nome acessível de Serviços é "Tipo:" no wireframe e "Serviço:" no `design-system.md`; foi seguido o wireframe (BACKLOG).
+3. **SPEC v1.3:** a obrigatoriedade da área em Terrenos entrou no Apêndice B e no histórico de revisões.
+4. **Verificação visual:** capturas em 1280 e 360 px da página de componentes conferidas à mão (cards alinhados, bloco neutro do mesmo tamanho da capa, corpo legível).
+5. **`dotnet format` aplicado só aos arquivos da tarefa** (`--include`).

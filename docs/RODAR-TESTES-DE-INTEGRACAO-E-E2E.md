@@ -94,6 +94,8 @@ export GAZETA_E2E_VIACEP_PORT=5991             # igual à porta de ViaCep__BaseU
 dotnet run --project tests/GazetaMarketplace.Web.Tests.Playwright
 ```
 
+**Segundo site, em Development (só para os componentes):** a página `/painel/componentes` não existe em Production (404). `ComponentsE2ETests` usa um segundo processo da **mesma saída publicada**, ligado ao mesmo banco, com `ASPNETCORE_ENVIRONMENT=Development`, outra porta (`ASPNETCORE_URLS=https://localhost:5444`, `Site__BaseUrl` igual) e `Authentication__SessionMinutes=30`; aponte `GAZETA_DEV_BASE_URL=https://localhost:5444`. Sem a variável o teste é ignorado. Para religar os dois sites depois de publicar, mate todos os processos `GazetaMarketplace.Web.dll` (por PID) e suba os dois `run-site.sh`.
+
 Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecoveryE2ETests` exige também `GAZETA_E2E_SENDGRID_PORT`; `CepE2ETests` e `DraftE2ETests`, `GAZETA_E2E_VIACEP_PORT`). `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**; `SettingsE2ETests` também (e muda o telefone do site no banco de teste). `DraftE2ETests` cria rascunhos com título único no banco de teste e não os apaga (não há exclusão de rascunho na v1).
 
 **Rodando a suíte mais de uma vez em menos de uma hora no mesmo banco:** o site limita a recuperação de senha a 10 pedidos por hora por IP e `US007` passa a falhar por tempo esgotado. Antes de rodar de novo, limpe a tabela:

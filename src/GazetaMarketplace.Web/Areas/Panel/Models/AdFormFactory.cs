@@ -184,7 +184,7 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
         foreach (FieldDefinition field in definitions)
         {
             string[] raw = posted.TryGetValue(field.Key, out string[] given) ? [.. given.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim())] : [];
-            result.Add(field.Type switch
+            AdFieldViewModel built = field.Type switch
             {
                 FieldType.Text => Text(field, raw),
                 FieldType.Integer => Number(field, raw, "numeric"),
@@ -196,7 +196,9 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
                 FieldType.ManufactureYear => SelectField(field, raw, FieldLists.ManufactureYears(currentYear)),
                 FieldType.CatalogItem => await CatalogFieldAsync(field, raw, catalogKind, Chain(field, ref brandId, ref modelId, ref year, raw), cancellationToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(group), field.Type, null)
-            });
+            };
+            built.Required = field.IsRequiredFor(categoryId);
+            result.Add(built);
         }
 
         return result;

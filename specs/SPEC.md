@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.2 |
+| Version | v1.3 |
 | Coverage | full |
 | Mode | greenfield |
 | Status | **Approved** |
@@ -22,6 +22,7 @@
 | v1.1 | 2026-09-30 | Changed | greenfield | Alinhamento dos dados de exemplo dos cenários com `specs/categories.md`; decisão do US-013-S11 (3 níveis) | US-001, US-002, US-003, US-008, US-009, US-013 | `specs/categories.md` | Product Owner, 2026-09-30 |
 | v1.1 | 2026-09-30 | Changed | greenfield | Errata: removida a menção "lista do painel" da regra do Salário, por não ter cenário correspondente na US-012 | US-003 (regra do Salário) | — | Product Owner, 2026-09-30 |
 | v1.2 | 2026-09-30 | Added | greenfield | O Administrador pode redefinir a senha de alguém da equipe com uma senha provisória, como alternativa quando o e-mail de recuperação não chega (AR-11 de `/arch`) | US-014-S10 | `architecture/adr/ADR-009-email-sendgrid.md` | Product Owner, 2026-09-30 |
+| v1.3 | 2026-10-04 | Changed | greenfield | Em "Terrenos, sítios e fazendas" a Área (m²) passa a ser obrigatória para enviar o anúncio à revisão; nas demais categorias de Imóveis continua opcional (Apêndice B) | US-009 (pendências), US-008-S09 | Decisão do Product Owner, tarefa 3.8 | Product Owner, 2026-10-04 |
 
 ## Executive Summary
 
@@ -1632,7 +1633,7 @@ Não serão feitos na v1 (decisões do Product Owner):
 | Caminhões, Ônibus | 34, 35 | Ano do modelo ✅ · Quilometragem ✅ · Câmbio · Combustível · Direção · Tipo · Opcionais · Informações adicionais do veículo |
 | Barcos e aeronaves | 37 | Ano do modelo ✅ · Horas de uso ✅ · Tipo ✅ · Combustível · Comprimento, Largura e Altura (m) · Informações adicionais |
 | Peças | 38–42 | Condição ✅ · Tipo de peça · Cor |
-| Imóveis | 26, 27, 30, 31 | Tipo ✅ · Vender ou alugar ✅ · Quartos ✅ (26, 27) · Banheiros (26, 27) · Área m² · Vagas (26, 27, 31) · Condomínio · IPTU · Características · Características do condomínio (26, 27) |
+| Imóveis | 26, 27, 30, 31 | Tipo ✅ · Vender ou alugar ✅ · Quartos ✅ (26, 27) · Banheiros (26, 27) · Área m² (✅ só em 30) · Vagas (26, 27, 31) · Condomínio · IPTU · Características · Características do condomínio (26, 27) |
 | Aluguel de quartos | 28 | Características |
 | Temporada | 29 | Tipo ✅ · Quartos ✅ · Acomoda quantas pessoas ✅ · Banheiros · Vagas · Forma de pagamento · Características |
 | Celulares | 43 | Marca ✅ · Modelo ✅ · Condição ✅ · Armazenamento · Cor · Saúde da bateria |

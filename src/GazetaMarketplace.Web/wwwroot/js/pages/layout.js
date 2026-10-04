@@ -1,5 +1,7 @@
 // Módulo carregado por todas as páginas (site público e painel).
 
+import { watchAdCardImages } from "../modules/ad-card.js";
+
 const regiaoDeAvisos = document.getElementById("avisos-globais");
 
 /** @param {string} texto */
@@ -18,3 +20,6 @@ window.addEventListener("unhandledrejection", (evento) => {
 
 // Página de estado (vazio, sem resultado, erro): o título recebe o foco
 document.querySelector("[data-foco-inicial]")?.focus();
+
+// Foto de card que não carrega vira o bloco "Foto indisponível"
+watchAdCardImages();

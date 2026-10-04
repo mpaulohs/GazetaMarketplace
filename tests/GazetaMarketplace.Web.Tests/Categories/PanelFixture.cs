@@ -48,10 +48,11 @@ internal sealed class PanelFixture : System.IDisposable
     public HttpClient Admin { get; }
 
     /// <param name="realAds">Usa a contagem real de anúncios (<c>AdsCategoryUsage</c>) em vez da contagem definida pelo teste.</param>
-    public static async Task<PanelFixture> StartAsync(bool realAds = false)
+    /// <param name="environment">Ambiente do host de teste ("Testing", "Development" ou "Production", este com a configuração completa que a produção exige).</param>
+    public static async Task<PanelFixture> StartAsync(bool realAds = false, string environment = "Testing")
     {
         FakeCategoryUsage usage = new();
-        WebFactory factory = new(withDatabase: true, services: services =>
+        WebFactory factory = new(environment, environment == "Production" ? WebFactory.ProductionConfiguration() : null, withDatabase: true, services: services =>
         {
             if (!realAds)
             {

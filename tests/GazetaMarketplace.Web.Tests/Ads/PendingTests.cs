@@ -24,6 +24,7 @@ public sealed class PendingTests
         ["RealEstate|propertyTypeId"] = "Informe o tipo do imóvel",
         ["RealEstate|transactionTypeId"] = "Informe se o imóvel é para vender ou alugar",
         ["RealEstate|bedrooms"] = "Informe o número de quartos",
+        ["RealEstate|areaM2"] = "Informe a área",
         ["Cars|brandId"] = "Informe a marca",
         ["Cars|modelId"] = "Informe o modelo",
         ["Cars|modelYear"] = "Informe o ano",
@@ -111,15 +112,23 @@ public sealed class PendingTests
     }
 
     [TestMethod]
-    public void Terrenos_ExigemTipoEVenderOuAlugar_ApartamentosExigemTambemQuartos()
+    public void Terrenos_ExigemTipoVenderOuAlugarEArea_ApartamentosExigemTambemQuartosMasNaoArea()
     {
         FieldGroup group = FieldGroupRegistry.Get(FieldGroupKeys.RealEstate);
 
         string[] land = Messages(Complete(Land), group, 1);
         string[] apartment = Messages(Complete(Apartments), group, 1);
 
-        CollectionAssert.AreEqual(new[] { "Informe o tipo do imóvel", "Informe se o imóvel é para vender ou alugar" }, land, "Quartos só existe em apartamentos e casas");
+        CollectionAssert.AreEqual(new[] { "Informe o tipo do imóvel", "Informe se o imóvel é para vender ou alugar", "Informe a área" }, land, "Quartos só existe em apartamentos e casas; a área é obrigatória só em Terrenos");
         CollectionAssert.AreEqual(new[] { "Informe o tipo do imóvel", "Informe se o imóvel é para vender ou alugar", "Informe o número de quartos" }, apartment);
+        foreach (int category in new[] { Apartments, 27, 31 })
+        {
+            CollectionAssert.DoesNotContain(Messages(Complete(category), group, 1), "Informe a área", $"categoria {category}: a área segue opcional");
+        }
+
+        Assert.IsEmpty(AdSubmissionRules.Pending(
+            Complete(Land, new AdAttributes().Set("propertyTypeId", 1).Set("transactionTypeId", 1).Set("areaM2", 450.75m)), group, 1),
+            "terreno completo com área não tem pendência");
         Assert.IsEmpty(AdSubmissionRules.Pending(
             Complete(Apartments, new AdAttributes().Set("propertyTypeId", 1).Set("transactionTypeId", 1).Set("bedrooms", 0)), group, 1),
             "zero quartos (kitnet) conta como preenchido");
@@ -197,7 +206,7 @@ public sealed class PendingTests
         Dictionary<string, string> actual = [];
         foreach (FieldGroup group in FieldGroupRegistry.All)
         {
-            foreach (FieldDefinition field in group.Fields.Where(f => f.Required))
+            foreach (FieldDefinition field in group.Fields.Where(f => f.Required || f.RequiredForCategories is not null))
             {
                 Assert.IsFalse(string.IsNullOrWhiteSpace(field.RequiredMessage), $"{group.Key}|{field.Key} é obrigatório e não tem frase");
                 actual[$"{group.Key}|{field.Key}"] = field.RequiredMessage;

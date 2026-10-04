@@ -32,6 +32,21 @@ public sealed class FormRenderingTests
     private static string[] Ids(string html) => [.. Regex.Matches(html, @"\sid=""([^""]+)""").Select(m => m.Groups[1].Value)];
 
     [TestMethod]
+    public async Task Area_TemAsteriscoDeObrigatorioSoEmTerrenos()
+    {
+        using DraftSite site = await DraftSite.StartAsync(requestsPerMinute: 5000);
+        Regex marked = new(@"for=""campo-areaM2"">\s*Área \(m²\)\s*<span aria-hidden=""true"">\*</span>");
+
+        Assert.IsTrue(marked.IsMatch(System.Net.WebUtility.HtmlDecode(await site.Writer.GetStringAsync("/painel/anuncios/campos?categoryId=30"))), "Terrenos: área obrigatória");
+        foreach (int category in new[] { 26, 27, 31 })
+        {
+            string html = System.Net.WebUtility.HtmlDecode(await site.Writer.GetStringAsync($"/painel/anuncios/campos?categoryId={category}"));
+            StringAssert.Contains(html, "campo-areaM2", $"categoria {category} tem o campo");
+            Assert.IsFalse(marked.IsMatch(html), $"categoria {category}: área opcional, sem asterisco");
+        }
+    }
+
+    [TestMethod]
     public async Task TodasAsCategoriasPostaveis_RenderizamOsCamposDoGrupo_ComRotuloENomeEIdsUnicos()
     {
         using DraftSite site = await DraftSite.StartAsync(requestsPerMinute: 5000);

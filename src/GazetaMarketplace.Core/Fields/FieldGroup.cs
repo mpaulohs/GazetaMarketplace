@@ -53,7 +53,7 @@ public sealed class FieldGroup
     public IReadOnlyList<FieldDefinition> FieldsFor(int categoryId) => [.. Fields.Where(f => f.AppliesTo(categoryId))];
 
     /// <summary>Os campos obrigatórios para enviar à revisão nesta categoria.</summary>
-    public IReadOnlyList<FieldDefinition> RequiredFieldsFor(int categoryId) => [.. FieldsFor(categoryId).Where(f => f.Required)];
+    public IReadOnlyList<FieldDefinition> RequiredFieldsFor(int categoryId) => [.. FieldsFor(categoryId).Where(f => f.IsRequiredFor(categoryId))];
 
     /// <summary>Os campos que a busca oferece como filtro nesta categoria (A7 c).</summary>
     public IReadOnlyList<FieldDefinition> FilterableFieldsFor(int categoryId) => [.. FieldsFor(categoryId).Where(f => f.Filter != FieldFilter.None)];

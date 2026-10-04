@@ -1,0 +1,10 @@
+@model AdMediaPlaceholderViewModel
+
+@* Bloco neutro do tamanho da foto: "Vaga de emprego" (A4) ou "Foto indisponível". Decorativo: o link do card já traz o nome acessível. *@
+<div class="media-reservada ad-card__bloco px-2" aria-hidden="true" data-ad-placeholder>
+    <span class="fw-bold">@Model.Title</span>
+    @if (Model.Detail is not null)
+    {
+        <span class="small">@Model.Detail</span>
+    }
+</div>

@@ -1,0 +1,24 @@
+@model AdCardViewModel
+
+@* Card do anúncio (design-system §5.2): um só link cobre o card (stretched-link no título); o nome acessível é "título, valor, cidade/UF". A imagem é decorativa (alt vazio). *@
+<article class="card ad-card h-100" data-ad-card>
+    @if (Model.CoverUrl is not null)
+    {
+        <img class="card-img-top ad-card__imagem" src="@Model.CoverUrl" width="@Model.CoverWidth" height="@Model.CoverHeight" alt="" loading="@(Model.EagerImage ? "eager" : "lazy")" decoding="async" data-ad-card-image />
+    }
+    else
+    {
+        <partial name="_AdMediaPlaceholder" model="Model.Placeholder" />
+    }
+    <div class="card-body">
+        <h3 class="card-title fs-6 fw-normal mb-1 ad-card__titulo"><a class="stretched-link ad-card__link" href="@Model.Ad.Href" aria-label="@Model.AccessibleName">@Model.Ad.Title</a></h3>
+        @if (Model.Value is not null)
+        {
+            <partial name="_AdValue" model="new AdValueViewModel(Model.Value)" />
+        }
+        @if (Model.Location is not null)
+        {
+            <p class="small text-body-secondary mb-0">@Model.Location</p>
+        }
+    </div>
+</article>

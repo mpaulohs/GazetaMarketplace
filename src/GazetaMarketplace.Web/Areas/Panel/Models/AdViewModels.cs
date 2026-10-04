@@ -61,7 +61,7 @@ public sealed class AdFieldViewModel
     public AdFieldKind Kind { get; init; }
 
     /// <summary>Obrigatório para <i>enviar à revisão</i> (o rascunho aceita em branco).</summary>
-    public bool Required { get; init; }
+    public bool Required { get; set; }
 
     public string HelpText { get; init; }
 

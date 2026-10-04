@@ -1389,31 +1389,35 @@
 
 **NFRs covered**: `NFR-03`, `NFR-05`, `NFR-01`
 
-**References**: —
+**References**: `architecture/design-system.md` §5.2 a §5.4
 
 **Objective**: Criar os componentes compartilhados de card (3 variantes), valor (Preço, Salário ou Tipo) e bloco "Vaga de emprego", usados no site e na pré-visualização do painel.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Web/ViewComponents/AdCardViewComponent.cs`
-- `src/GazetaMarketplace.Web/Views/Shared/_AdValue.cshtml`
-- `src/GazetaMarketplace.Web/Views/Shared/_AdMediaPlaceholder.cshtml`
-- `src/GazetaMarketplace.Web/Views/Shared/_AdBody.cshtml`
-- `src/GazetaMarketplace.Web/wwwroot/css/components/card.css`
+**Decisões aprovadas (2026-10-04)**: D1 página `/painel/componentes` só em Development e só para o Administrador (404 em Production, antes do login; sem menu nem rota pública) · D2 foto que falha vira o mesmo bloco neutro por módulo ES (`error` na captura, `createElement`/`textContent`, sem `innerHTML`); sem JavaScript fica o `alt` vazio e o título ao lado · D3 o nome acessível leva só cidade/UF (o selo "Cidade/UF manual" é só da pré-visualização da 4.1, nunca do card) · D4 `_AdBody` é só o corpo textual (a galeria é da US-003). **Mudança de dados junto**: a Área (m²) passa a ser obrigatória em Terrenos (categoria 30) e continua opcional em Apartamentos, Casas e Comércio (SPEC v1.3).
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Core/Ads/AdCardModel.cs` (`AdCardModel`, `AdCardCover`) · `AdPresentation.cs` (`AdValue`, `AdValueKind`, `FormatMoney`, `ValueOf`, `AccessibleName`, `Location`, `CoverUrl`, `ThumbSize`, `HasPhotos`)
+- `src/GazetaMarketplace.Web/ViewComponents/AdCardViewComponent.cs` · `Models/AdPresentationModels.cs` · `Views/Shared/Components/AdCard/Default.cshtml` · `Views/Shared/_AdValue.cshtml` · `_AdMediaPlaceholder.cshtml` · `_AdBody.cshtml`
+- `wwwroot/css/components/card.css` (ligado nos dois layouts) · `wwwroot/js/modules/ad-card.js` (carregado por `layout.js`) · `wwwroot/images/componentes/capa-exemplo.svg`
+- `Areas/Panel/Controllers/ComponentsController.cs` · `DevelopmentOnlyAttribute.cs` · `Models/ComponentsViewModel.cs` · `Views/Components/Index.cshtml`
+- Terrenos: `Core/Fields/FieldDefinition.cs` (`RequiredForCategories`, `IsRequiredFor`) · `FieldGroup.cs` · `Groups/RealEstateGroup.cs` (`areaM2`, "Informe a área") · `Areas/Panel/Models/AdFormFactory.cs` (asterisco por categoria) · `specs/SPEC.md` (v1.3)
 
 **Acceptance Criteria**:
-- [ ] Card padrão com capa de 480 px, `width`/`height`, `loading="lazy"` fora da primeira linha e proporção 4:3 reservada
-- [ ] Serviços mostram o Tipo no lugar do preço; Vagas mostram bloco neutro "Vaga de emprego" com a área da vaga e "Salário R$ …" (A4 e A6, `design-system.md` §5.2 e §5.3)
-- [ ] Nome acessível do link do card: "título, valor, cidade/UF" (com "Salário" ou "Tipo:" nas variantes)
+- [x] Card padrão com capa de 480 px, `width`/`height`, `loading="lazy"` fora da primeira linha (`eager` na primeira) e proporção 4:3 reservada
+- [x] Serviços mostram o Tipo no lugar do preço; Vagas mostram bloco neutro "Vaga de emprego" com a área da vaga e "Salário R$ …" (A4 e A6, `design-system.md` §5.2 e §5.3)
+- [x] Nome acessível do link do card: "título, valor, cidade/UF" (com "Salário" ou "Tipo:" nas variantes); a parte que falta some sem vírgula sobrando
+- [x] Valor em reais sem centavos quando são zero ("R$ 62.000", "R$ 2.499,90", S29); nunca "R$ 0"
+- [x] Terrenos exigem a área no envio; Apartamentos, Casas e Comércio não
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Componentes/CardTests.Padrao_TemCapaComDimensoes`
-- `tests/GazetaMarketplace.Web.Tests/Componentes/CardTests.Servicos_MostraTipoNoLugarDoPreco`
-- `tests/GazetaMarketplace.Web.Tests/Componentes/CardTests.Vagas_MostraBlocoNeutro_ESalario`
-- `tests/GazetaMarketplace.Web.Tests/Componentes/CardTests.NomeAcessivel_SegueARegra`
+**Tests added** (nomes reais):
+- `Web.Tests/Components/AdPresentationTests` — centavos (8 casos), valor por grupo, Serviços sem preço, sem preço/sem tipo, só Vagas sem foto, localização, nome acessível (com e sem partes), miniatura (endereço, tamanho, nunca amplia, teto do lado maior)
+- `Web.Tests/Components/CardTests` — padrão (capa, dimensões, lazy/eager, um só link), Serviços, Vagas (sem `<img>`, bloco, salário), sem capa, sem cidade/sem preço, centavos, texto codificado, sem `style` nem `on…=` em linha, corpo (nível do título, codificação), CSS e layouts, módulo da foto que falha, página de componentes (Administrador vê, Production 404 para todos, Redator e anônimo não entram, sem menu nem rota)
+- `Web.Tests/Ads/PendingTests` e `Fields/GroupsTests` — Terrenos exigem a área, as outras categorias não; `Ads/FormRenderingTests.Area_TemAsteriscoDeObrigatorioSoEmTerrenos`
+- `Web.Tests.Playwright/Components/ComponentsE2ETests` — os 4 cards lado a lado (mesma altura de mídia, 4:3, nomes acessíveis), foto que falha, foco no card inteiro e hover, axe e rolagem em 320/768/1024/1280 px (2 e 4 colunas), corpo; `ComponentsProductionE2ETests` — 404 em Production
 
 **Dependencies**: 0.7, 3.1, 2.2
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Ver os três cards lado a lado.
+**Verification**: Done when every test under "Tests added" passes (unitários 1210, integração 102, E2E 66) e as 11 mutações são mortas; verificação manual: ver os três cards lado a lado em `/painel/componentes` (Development).
 
 **Estimate**: M
 

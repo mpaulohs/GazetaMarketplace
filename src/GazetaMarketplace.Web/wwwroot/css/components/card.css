@@ -1,0 +1,46 @@
+/* Card do anúncio e corpo do anúncio (design-system §5.2 a §5.4). Só tokens --app-* e variáveis do Bootstrap; sem atributo style (CSP). */
+
+.ad-card__imagem {
+  /* A proporção é reservada pelo CSS e pelos atributos width/height: a página não pula quando a foto chega (NFR-03) */
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--app-media-ratio);
+  object-fit: cover;
+  background: var(--app-media-placeholder-bg);
+}
+
+/* Bloco neutro (Vaga de emprego, foto indisponível): topo arredondado como a foto */
+.ad-card__bloco {
+  border-top-left-radius: var(--bs-card-inner-border-radius);
+  border-top-right-radius: var(--bs-card-inner-border-radius);
+}
+
+.ad-card__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Hover no card inteiro: o título ganha sublinhado */
+.ad-card:hover .ad-card__link {
+  text-decoration: underline;
+}
+
+/* Foco: o contorno é o do card inteiro (o ::after do stretched-link cobre o card) */
+.ad-card__link:focus-visible {
+  outline: none;
+}
+
+.ad-card__link:focus-visible::after {
+  outline: var(--app-focus-outline);
+  outline-offset: var(--app-focus-offset);
+  border-radius: var(--bs-card-border-radius);
+}
+
+/* "R$ 2.499,90" não quebra no meio */
+.ad-valor__texto {
+  white-space: nowrap;
+}
+
+.ad-corpo__descricao {
+  white-space: pre-line;
+}

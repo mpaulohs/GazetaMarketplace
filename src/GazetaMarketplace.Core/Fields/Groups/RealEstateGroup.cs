@@ -62,7 +62,8 @@ internal static class RealEstateGroup
                 DecimalPlaces = 2,
                 Min = 0.01m,
                 Max = FieldLimits.MaxAreaM2,
-                Filter = FieldFilter.Range
+                Filter = FieldFilter.Range,
+                RequiredForCategories = new HashSet<int> { Land }, RequiredMessage = "Informe a área" // ninguém compra terreno sem saber o tamanho; nas outras categorias segue opcional
             },
             new FieldDefinition
             {

@@ -41,7 +41,7 @@
 - [x] Task 3.5: Enviar, reordenar e remover fotos do anúncio
 - [x] Task 3.6: Limpeza diária dos originais de foto
 - [x] Task 3.7: Enviar anúncio para revisão
-- [ ] Task 3.8: Componentes de apresentação do anúncio: card, valor e bloco sem foto
+- [x] Task 3.8: Componentes de apresentação do anúncio: card, valor e bloco sem foto
 
 ## Checkpoint 3 — Anúncios completos
 

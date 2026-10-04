@@ -1,0 +1,40 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model AdBodyViewModel
+@{
+    // O título é o <h1> da página do anúncio; dentro de outra página (pré-visualização) desce de nível
+    TagBuilder heading = new("h" + Math.Clamp(Model.HeadingLevel, 1, 6));
+    heading.AddCssClass("fs-3 mb-2 text-break");
+    heading.InnerHtml.Append(Model.Title);
+}
+@* Corpo textual do anúncio. O texto do usuário sai sempre codificado (nunca @Html.Raw); quebras de linha viram linhas pelo CSS. A galeria é da página de detalhe. *@
+<div class="ad-corpo" data-ad-body>
+    @heading
+    @if (Model.Value is not null)
+    {
+        <partial name="_AdValue" model="new AdValueViewModel(Model.Value, true)" />
+    }
+    @if (Model.Location is not null)
+    {
+        <p class="text-body-secondary mb-3" data-ad-location>@Model.Location</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <section aria-labelledby="ad-corpo-descricao">
+            <h2 class="fs-5" id="ad-corpo-descricao">@Model.DescriptionLabel</h2>
+            <p class="ad-corpo__descricao text-break">@Model.Description</p>
+        </section>
+    }
+    @if (Model.Specs.Count > 0)
+    {
+        <section aria-labelledby="ad-corpo-caracteristicas">
+            <h2 class="fs-5" id="ad-corpo-caracteristicas">Características</h2>
+            <dl class="row mb-0">
+                @foreach (AdSpec spec in Model.Specs)
+                {
+                    <dt class="col-sm-4 fw-semibold">@spec.Label</dt>
+                    <dd class="col-sm-8">@spec.Value</dd>
+                }
+            </dl>
+        </section>
+    }
+</div>
