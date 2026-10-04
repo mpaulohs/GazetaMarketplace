@@ -78,3 +78,18 @@ Decisões aprovadas pelo Product Owner ao construir o envio, a capa e a remoçã
 - **Rascunho:** as fotos já gravadas continuam ao salvar o rascunho. "Descartar rascunho com fotos" fica para a 3.6.
 - **Tela:** a galeria e o envio ficam numa seção própria **fora** do formulário do anúncio (um formulário não fica dentro de outro); os botões de salvar ficam depois dela e ligam-se ao formulário pelo atributo `form`. Sem JavaScript cada ação é um formulário comum (uma foto por vez, `AdPhotoPagesController`); com JavaScript o envio vai pela API, **um arquivo de cada vez e na ordem escolhida** (assim a ordem da galeria é a da seleção; as 2 conversões simultâneas do servidor continuam valendo para envios de pessoas diferentes). O limite do grupo vale pela categoria **gravada** do anúncio; a regra da categoria escolhida no formulário aparece no trecho que muda com ela.
 
+## Revision note (2026-10-04): implementação da tarefa 3.6
+
+Decisões aprovadas pelo Product Owner ao construir a limpeza; o que não está aqui continua como acima.
+
+- **Data de corte pelo arquivo:** o original é apagado quando a data de gravação do **arquivo** (`LastWriteTimeUtc`) passa de 30 dias, não pela linha de `AdPhotos`. Motivo: depois da remoção de uma foto (3.5) o original fica sem linha no banco, e só o disco o conhece. Um atraso da rotina não perde nada: tudo o que passou do prazo sai na rodada seguinte.
+- **Duas varreduras no mesmo serviço** (`OriginalsCleanupService`, 1 minuto depois da partida e a cada 24 horas):
+  1. **Originais** com mais de 30 dias: apaga o arquivo e anula `AdPhotos.OriginalKey` em lotes de 500, uma instrução `UPDATE … WHERE OriginalKey IN (…)` por lote (`ExecuteUpdateAsync`). Se o processo cair entre apagar e anular, a chave fica apontando para um arquivo ausente, o que o reprocessamento já trata como "original indisponível".
+  2. **Órfãos**: versões WebP em `<adId>/` sem linha em `AdPhotos` e arquivos `*.tmp` de gravações interrompidas, só quando têm **mais de 24 horas** (um envio grava os arquivos segundos antes de registrar a foto; a carência impede apagar um envio em andamento). A consulta ao banco é em lotes de 500 chaves.
+- **O que nunca é apagado:** versão WebP **com registro** (por mais velha que seja), a pasta `_magick/` e qualquer arquivo ou pasta fora do formato de nome que o próprio site gera. O armazenamento só **lista** o que tem esse formato (`IPhotoStorageMaintenance`), então o resto nem chega à limpeza. Atalhos (links simbólicos) não são seguidos.
+- **Pastas vazias** (mês de originais e anúncio) saem depois de 24 horas sem alteração, para uma pasta recém-esvaziada não sumir debaixo de um envio que está chegando. `_originals/` em si fica.
+- **Constantes, não configuração:** 30 dias (`PhotoLimits.OriginalRetention`), 24 horas (`PhotoLimits.OrphanGrace`) e lote de 500 (`PhotoLimits.CleanupBatchSize`).
+- **Sem pasta configurada** (desenvolvimento) a rodada é pulada com um aviso. Cada arquivo apagado vira um registro de log e a rodada termina com o total; um arquivo que não pôde ser apagado (preso, sem permissão) é registrado e fica para o dia seguinte, sem interromper os outros.
+- **Rascunho:** não há "descartar rascunho" na v1 (SPEC, US-008). Um rascunho arquivado mantém as versões; só os originais expiram.
+- **Reprocessar** (`IPhotoReprocessing`, sem tela nem rota na v1): regera as duas versões a partir do original, **nos mesmos nomes**, e atualiza largura, altura e tamanho. Sem `OriginalKey`, ou com o arquivo ausente, falha com "Original indisponível". Antes de qualquer uso real, a URL precisa de um parâmetro de versão (`?v=`): o cache `immutable` de 1 ano faria quem já tem a foto não ver a mudança (BACKLOG).
+

@@ -50,10 +50,15 @@ public static class ServiceCollectionExtensions
 
         // Fotos (ADR-005): a biblioteca de imagem e o disco ficam atrás de interfaces do Core
         services.AddSingleton<IImageProcessor, Photos.MagickImageProcessor>();
-        services.AddSingleton<IPhotoStorage, Photos.FileSystemPhotoStorage>();
+        services.AddSingleton<Photos.FileSystemPhotoStorage>();
+        services.AddSingleton<IPhotoStorage>(provider => provider.GetRequiredService<Photos.FileSystemPhotoStorage>());
+        services.AddSingleton<IPhotoStorageMaintenance>(provider => provider.GetRequiredService<Photos.FileSystemPhotoStorage>());
         services.AddScoped<IPhotoIngestion, Photos.PhotoIngestion>();
         services.AddScoped<IPhotoDelivery, Photos.PhotoDelivery>();
         services.AddScoped<IAdPhotoService, Photos.AdPhotoService>();
+        services.AddScoped<IPhotoReprocessing, Photos.PhotoReprocessing>();
+        services.AddSingleton<Photos.OriginalsCleanupService>();
+        services.AddHostedService(provider => provider.GetRequiredService<Photos.OriginalsCleanupService>());
 
         // CEP (ADR-007): uma tentativa de até 5 s por chamada; a nova tentativa é da tela. O endereço base só muda nos testes de ponta a ponta
         services.AddHttpClient<ICepLookup, ViaCepLookup>((provider, http) =>

@@ -20,6 +20,18 @@ public static class PhotoLimits
 
     public const int WebPQuality = 80;
 
+    /// <summary>Quanto tempo o original enviado fica guardado (decisão do Product Owner, ADR-005). Passou disso, a limpeza diária o apaga.</summary>
+    public static readonly System.TimeSpan OriginalRetention = System.TimeSpan.FromDays(30);
+
+    /// <summary>
+    /// Idade mínima para um arquivo sem registro ser considerado órfão. Um envio grava os arquivos segundos antes de registrar a foto em <c>AdPhotos</c>;
+    /// a carência de 24 horas garante que a limpeza nunca apague um envio em andamento.
+    /// </summary>
+    public static readonly System.TimeSpan OrphanGrace = System.TimeSpan.FromHours(24);
+
+    /// <summary>Quantas chaves a limpeza leva por consulta e por instrução <c>UPDATE</c> (o SQL Server aceita 2100 parâmetros por comando).</summary>
+    public const int CleanupBatchSize = 500;
+
     /// <summary>RC-2: acima disso a imagem é recusada antes de decodificar (uma bomba de descompressão cabe em poucos KB de arquivo).</summary>
     public const long MaxPixels = 50_000_000;
 

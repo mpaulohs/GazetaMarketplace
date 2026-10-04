@@ -17,6 +17,12 @@ public interface IPhotoStorage
     /// <summary>Guarda o arquivo enviado em <c>_originals/&lt;yyyy-MM&gt;/&lt;guid&gt;.&lt;ext&gt;</c> e devolve essa chave. Nenhuma rota serve essa pasta.</summary>
     Task<string> SaveOriginalAsync(byte[] content, PhotoFormat format, DateTime utcNow, CancellationToken cancellationToken);
 
+    /// <summary>Regrava as duas versões de uma foto que já existe (reprocessamento), trocando os arquivos atuais sem deixar uma foto pela metade.</summary>
+    Task ReplaceVersionsAsync(string storageKey, byte[] large, byte[] thumb, CancellationToken cancellationToken);
+
+    /// <summary>Lê o original guardado, ou devolve <c>null</c> se o arquivo não existe (a limpeza de 30 dias o apagou).</summary>
+    Task<byte[]> ReadOriginalAsync(string originalKey, CancellationToken cancellationToken);
+
     /// <summary>Abre a versão para leitura, ou devolve <c>null</c> se não existe.</summary>
     Task<Stream> OpenAsync(string storageKey, PhotoSize size, CancellationToken cancellationToken);
 

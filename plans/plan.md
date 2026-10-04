@@ -1307,33 +1307,33 @@
 
 **Scenarios covered**: — (nenhum; tarefa de fundação ou de sustentação)
 
-**References**: ADR-005, ADR-004
+**References**: ADR-005 (nota de revisão de 2026-10-04), ADR-004
 
-**Objective**: Serviço em segundo plano que apaga os originais com mais de 30 dias.
+**Objective**: Serviço em segundo plano que apaga os originais com mais de 30 dias e os arquivos órfãos.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Infrastructure/Photos/OriginalsCleanupService.cs`
-- `src/GazetaMarketplace.Infrastructure/Photos/PhotoStorageOptions.cs`
+**Decisões aprovadas (2026-10-04)**: D5' sem "descartar rascunho" (o SPEC não tem exclusão de rascunho na v1) · D6 idade pela data de gravação do arquivo (`LastWriteTimeUtc`) · D7 carência de 24 horas para órfãos · D8 `IPhotoReprocessing` sem tela nem rota na v1 · D9 30 dias e 24 horas como constantes em `PhotoLimits`.
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Infrastructure/Photos/OriginalsCleanupService.cs` (`BackgroundService`, `RunOnceAsync`, `PhotoCleanupResult`) · `PhotoReprocessing.cs`
+- `src/GazetaMarketplace.Core/Photos/IPhotoStorageMaintenance.cs` (`StoredFile`, `StoredFileKind`), `IPhotoReprocessing.cs`, `PhotoLimits.cs` (`OriginalRetention`, `OrphanGrace`, `CleanupBatchSize`), `IPhotoStorage.cs` (`ReplaceVersionsAsync`, `ReadOriginalAsync`), `PhotoMessages.cs`
+- `src/GazetaMarketplace.Infrastructure/Photos/FileSystemPhotoStorage.cs` (listar, apagar, pastas vazias) · `PhotoIngestion.cs` (limite de 2 conversões compartilhado) · `ServiceCollectionExtensions.cs`
 
 **Acceptance Criteria**:
-- [ ] Roda ao iniciar o site e a cada 24 horas enquanto o processo estiver vivo; apaga tudo o que passou de 30 dias (um atraso não perde nada)
-- [ ] Anula `AdPhotos.OriginalKey` do arquivo apagado e registra no log cada arquivo apagado e o total
-- [ ] Um reprocessamento sem original falha com "original indisponível"; as versões WebP nunca são apagadas
-- [ ] A anulação de `OriginalKey` é feita por lote, com uma instrução (`ExecuteUpdateAsync` do EF Core); Dapper só entra se o volume medido justificar (ADR-004, ADR-005)
-- [ ] A anulação de `OriginalKey` é feita por lote, com uma instrução (`ExecuteUpdateAsync` do EF Core); Dapper só entra se o volume medido justificar (ADR-004, ADR-005)
+- [x] Roda 1 minuto depois da partida e a cada 24 horas enquanto o processo estiver vivo; apaga tudo o que passou de 30 dias (um atraso não perde nada)
+- [x] Anula `AdPhotos.OriginalKey` do arquivo apagado e registra no log cada arquivo apagado e o total
+- [x] Um reprocessamento sem original falha com "Original indisponível"; as versões WebP com registro nunca são apagadas
+- [x] A anulação de `OriginalKey` é feita por lote de 500, com uma instrução (`ExecuteUpdateAsync` do EF Core); Dapper não foi necessário (ADR-004, ADR-005)
+- [x] Arquivos órfãos em `<adId>/` (sem linha em `AdPhotos`) e `*.tmp` com mais de 24 horas são apagados; nada com registro, nada de `_magick/`, nada fora do formato do site
+- [x] Sem `PhotoStorage:BasePath` (desenvolvimento) a rodada é pulada com aviso; falha de E/S em um arquivo não interrompe os outros
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.ApagaSoOriginaisComMaisDeTrintaDias`
-- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.RodaNaPartida_E_DepoisACada24h`
-- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.AnulaOriginalKey_E_Registra`
-- `tests/GazetaMarketplace.Web.Tests/Photos/ReprocessarTests.SemOriginal_FalhaComOriginalIndisponivel`
-- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.VersoesWebp_NuncaSaoApagadas`
-- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.AnulaOriginalKey_EmUmaInstrucaoPorLote`
-- `tests/GazetaMarketplace.Web.Tests/Photos/CleanupTests.AnulaOriginalKey_EmUmaInstrucaoPorLote`
+**Tests added** (nomes reais):
+- `Web.Tests/Photos/CleanupTests` — 29 vs 30 dias, original de foto removida, `OriginalKey` anulada só do apagado, versões com registro nunca apagadas, órfão (24 h), `.tmp`, arquivos fora do formato e `_magick/`, falha de E/S, log, sem pasta, lotes de 500 (3 instruções para 1200 chaves), pastas vazias, partida e 24 h (relógio manual)
+- `Web.Tests/Photos/ReprocessarTests` — sem original (chave nula e arquivo ausente), foto inexistente, regera versões e medidas, depois da limpeza de 30 dias
+- `IntegrationTests/PhotoCleanupTests` — 1200 chaves em lotes no SQL Server real e a varredura completa
 
 **Dependencies**: 3.4
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Criar arquivos de teste com datas antigas e ver a limpeza no log.
+**Verification**: Done when every test under "Tests added" passes (unitários 1136, integração 101, E2E 55) e as 9 mutações são mortas; verificação manual no site publicado: arquivos com data antiga apagados e registrados no log.
 
 **Estimate**: S
 

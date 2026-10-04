@@ -39,7 +39,7 @@
 - [x] Task 3.3: Criar e editar rascunho do anúncio
 - [x] Task 3.4: Processamento e armazenamento de fotos
 - [x] Task 3.5: Enviar, reordenar e remover fotos do anúncio
-- [ ] Task 3.6: Limpeza diária dos originais de foto
+- [x] Task 3.6: Limpeza diária dos originais de foto
 - [ ] Task 3.7: Enviar anúncio para revisão
 - [ ] Task 3.8: Componentes de apresentação do anúncio: card, valor e bloco sem foto
 

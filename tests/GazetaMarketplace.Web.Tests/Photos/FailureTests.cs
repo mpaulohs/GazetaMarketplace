@@ -29,6 +29,10 @@ public sealed class FailureTests
         public Task<Stream> OpenAsync(string storageKey, PhotoSize size, CancellationToken cancellationToken) => inner.OpenAsync(storageKey, size, cancellationToken);
 
         public Task DeleteAsync(string storageKey, string originalKey, CancellationToken cancellationToken) => inner.DeleteAsync(storageKey, originalKey, cancellationToken);
+
+        public Task ReplaceVersionsAsync(string storageKey, byte[] large, byte[] thumb, CancellationToken cancellationToken) => inner.ReplaceVersionsAsync(storageKey, large, thumb, cancellationToken);
+
+        public Task<byte[]> ReadOriginalAsync(string originalKey, CancellationToken cancellationToken) => inner.ReadOriginalAsync(originalKey, cancellationToken);
     }
 
     /// <summary>Processador de mentira que aceita tudo, para testar só os limites da ingestão.</summary>

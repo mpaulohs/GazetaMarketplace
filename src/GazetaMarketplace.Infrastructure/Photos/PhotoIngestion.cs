@@ -29,16 +29,7 @@ public sealed class PhotoIngestion(IImageProcessor processor, IPhotoStorage stor
         PhotoFormat format = PhotoSignature.Detect(data.AsSpan(0, Math.Min(data.Length, PhotoSignature.HeaderLength)))
             ?? throw Invalid(PhotoMessages.UnsupportedFormat);
 
-        ProcessedImage processed;
-        await Slots.WaitAsync(cancellationToken);
-        try
-        {
-            processed = await Task.Run(() => processor.Process(data, format), cancellationToken);
-        }
-        finally
-        {
-            Slots.Release();
-        }
+        ProcessedImage processed = await ProcessAsync(processor, data, format, cancellationToken);
 
         string storageKey = $"{adId}/{Guid.NewGuid():N}";
         string originalKey = null;
@@ -62,6 +53,20 @@ public sealed class PhotoIngestion(IImageProcessor processor, IPhotoStorage stor
         }
 
         return new StoredPhoto(storageKey, originalKey, processed.Width, processed.Height, processed.Large.Length);
+    }
+
+    /// <summary>Processa dentro do limite de decodificações ao mesmo tempo; o reprocessamento usa o mesmo limite.</summary>
+    internal static async Task<ProcessedImage> ProcessAsync(IImageProcessor processor, byte[] data, PhotoFormat format, CancellationToken cancellationToken)
+    {
+        await Slots.WaitAsync(cancellationToken);
+        try
+        {
+            return await Task.Run(() => processor.Process(data, format), cancellationToken);
+        }
+        finally
+        {
+            Slots.Release();
+        }
     }
 
     // Lê no máximo o limite + 1 byte: um arquivo gigante nunca é carregado inteiro na memória

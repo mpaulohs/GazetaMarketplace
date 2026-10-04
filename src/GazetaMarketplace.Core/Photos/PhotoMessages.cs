@@ -24,4 +24,8 @@ public static class PhotoMessages
     public const string CategoryHasNoPhotos = "Este tipo de anúncio não tem fotos";
 
     public const string NotFound = "A foto não foi encontrada neste anúncio";
+
+    /// <summary>Reprocessar sem original (já apagado pela limpeza de 30 dias, ou arquivo ausente).</summary>
+    public const string OriginalUnavailable = "Original indisponível: o arquivo foi apagado depois de 30 dias e a foto não pode ser reprocessada";
 }
+

@@ -481,3 +481,51 @@ Todas foram desfeitas depois (arquivos restaurados; compilação e suíte unitá
 4. **O limite de envios por minuto precisou de uma chave de configuração** (`RateLimiting:PhotoUploadsPerMinute`) para o E2E: só o S04 sobe 21 fotos de uma conta em um minuto.
 5. **O 413 acima de 11 MB não existia no ambiente de teste:** o `BodyLimitMiddleware` pulava as rotas com limite próprio e o servidor de teste não aplica o `[RequestSizeLimit]`. O middleware agora confere o `Content-Length` contra o limite da própria rota (M10).
 6. **`dotnet format` tirou o BOM de arquivos antigos sem relação com a tarefa** (migrations e `MSTestSettings.cs`); essas mudanças foram desfeitas.
+
+## Tarefa 3.6 — limpeza diária dos originais e dos arquivos órfãos (ADR-005)
+
+> **Em resumo:** 1.136 testes unitários (19 novos), 43 da ferramenta de catálogo, 27 da `CitiesImport.Tests`, 101 de integração (2 novos, SQL Server real) e 55 de navegador (sem teste novo: a tarefa não tem tela; a suíte inteira rodou de novo como regressão, já com o serviço registrado no site publicado) passam. As nove mutações (6 planejadas e 3 extras) foram todas derrubadas. A verificação manual no site publicado apagou o original antigo e os dois órfãos e registrou tudo no log. Veredito: **aprovado**.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.136 | 1.136 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 101 | 101 | 0 |
+| E2E (Playwright, site publicado em Production) | 55 | 55 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| M1 Prazo de 30 dias menor por 1 tick (o limite exato deixa de ficar) | `ApagaSoOriginaisComMaisDeTrintaDias` |
+| M2 Versão WebP apagada mesmo com registro | 2 (`VersoesWebp_NuncaSaoApagadas…`, `DepoisDaLimpezaDe30Dias…`) |
+| M3 `OriginalKey` não anulada | 4 (`AnulaOriginalKey…`, `Log_…`, `Anulacao_VaiEmLotes…`, `DepoisDaLimpezaDe30Dias…`) |
+| M4 Órfão sem a carência de 24 horas | `VersaoSemRegistro_SoEApagadaDepoisDe24Horas` |
+| M5 Lote de 500 virando 1.000.000 | `Anulacao_VaiEmLotesDe500_UmaInstrucaoPorLote` |
+| M6 Falha de E/S interrompendo a rodada | `FalhaDeEscritaEmUmArquivo_NaoInterrompeOsOutros…` |
+| (extra) M7 Reprocessar sem conferir o original | 2 (`SemOriginal_FalhaComOriginalIndisponivel…`, `DepoisDaLimpezaDe30Dias…`) |
+| (extra) M8 Pasta recém-esvaziada removida sem carência | `PastaDeMesVazia_SoSaiNoDiaSeguinte…` |
+| (extra) M9 Primeira rodada em 2 minutos | `RodaUmMinutoDepoisDaPartida_EDepoisACada24Horas` |
+
+Todas foram desfeitas depois (arquivos restaurados; compilação limpa e a suíte rodada de novo sem alteração).
+
+**O que cada camada prova**
+
+- Idade dos originais: 29 dias fica, **exatamente 30 dias fica** ("mais de 30"), 30 dias e 1 minuto sai, 90 dias sai (um atraso não perde nada). O original de uma foto removida, sem linha no banco, sai pela idade do arquivo.
+- `OriginalKey`: só a do arquivo realmente apagado é anulada; a de um original de 5 dias e as linhas sem original não mudam; se o arquivo não pôde ser apagado, a chave fica.
+- Versões WebP: com registro, nunca são apagadas (nem com dois anos). Sem registro, só depois de **mais de 24 horas** (23 h e exatamente 24 h ficam). Arquivos `*.tmp` seguem a mesma carência.
+- O que nunca é tocado: `_magick/` (com dois arquivos de 800 dias), arquivo solto na raiz, texto numa pasta de anúncio, pasta que não é um id de anúncio, GUID em maiúsculas, tamanho `_800`, pasta que não é um mês, original sem GUID e extensão `.exe`.
+- Falha de E/S em um arquivo (dublê que lança `IOException`): os outros são apagados, o resultado conta 1 falha, o motivo vai ao log como aviso e a chave daquele arquivo não é anulada.
+- Lotes: 1.200 originais antigos geram **exatamente 3 instruções `UPDATE`** (500 + 500 + 200), cobrindo as 1.200 linhas. No SQL Server real, o `IN (…)` com 1.200 chaves em lotes funciona e deixa só a chave do original de 2 dias.
+- Agendamento (relógio manual, `Task.Delay` e `PeriodicTimer` seguindo o mesmo tempo): nada roda em 59 s; roda em 1 minuto; a segunda rodada vem 24 horas depois da primeira (nada em 23 h 59 min 59 s).
+- Pastas: a pasta de mês que acabou de ficar vazia espera a carência e sai no dia seguinte; uma pasta vazia antiga sai na hora; `_originals/` fica.
+- Sem `PhotoStorage:BasePath` (vazio, em branco ou pasta inexistente) a rodada é pulada com aviso e sem erro.
+- Reprocessar: chave nula e arquivo ausente falham com "Original indisponível"; foto inexistente dá 404; com original, as duas versões voltam a ser a mesma do envio (byte a byte), largura, altura e tamanho são atualizados e nenhum temporário sobra. Depois de uma rodada que apagou o original de 31 dias, as versões continuam e reprocessar falha.
+- Integração: varredura completa com arquivos de datas antigas contra o banco real (2 originais e 2 órfãos apagados; versões com registro, envio em andamento de 20 minutos e `_magick/` ficam).
+- **Verificação manual** (site publicado em Production, SQL Server do E2E): um original de 45 dias e dois arquivos de versão de 3 dias em uma pasta de anúncio sem registro foram criados; o site foi reiniciado e, 1 minuto depois, o log trouxe `Original apagado`, dois `Arquivo órfão apagado` e o total (1 original, 2 órfãos). As pastas vazias ficaram para a rodada seguinte, como previsto.
+
+**Achados desta rodada**
+
+1. **A tarefa de segundo plano agora arma o temporizador depois do `StartAsync`.** No .NET 10 o `BackgroundService` não chega ao primeiro `await` de forma síncrona; o teste de agendamento esperava um temporizador que ainda não existia e avançou o relógio cedo demais. O teste agora espera o temporizador estar armado.
+2. **A limpeza só enxerga o que o site gera.** O armazenamento lista apenas arquivos com nome no formato do site, então `_magick/` e qualquer arquivo alheio nem chegam à rotina de apagar; o teste cobre dez formatos diferentes de "arquivo estranho".
+3. **Pasta recém-esvaziada:** apagar o último arquivo muda a data da pasta para agora, então a regra de 24 horas a deixa para o dia seguinte (testado com dois dias do relógio manual).
+4. **`dotnet format` foi aplicado só aos arquivos da tarefa** (`--include`), sem tocar nos 14 arquivos antigos do achado do BOM.
