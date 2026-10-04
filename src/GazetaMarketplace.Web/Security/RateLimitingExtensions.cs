@@ -30,6 +30,14 @@ public static class RateLimitingExtensions
 
     public const int PhotosPerMinute = 300;
 
+    /// <summary>Política do envio de fotos: <c>[EnableRateLimiting("fotos-envio")]</c>. 30 por minuto <b>por usuário</b>, contando cada arquivo (uma foto por pedido, RC-6): cada envio gasta CPU e disco.</summary>
+    public const string PhotoUploadPolicy = "fotos-envio";
+
+    public const int PhotoUploadsPerMinute = 30;
+
+    /// <summary>Chave de configuração do limite de envios por usuário. Como a do limite global, existe para a suíte E2E (que sobe dezenas de fotos de uma conta só em poucos minutos); em produção vale 30.</summary>
+    public const string PhotoUploadsPerMinuteKey = "RateLimiting:PhotoUploadsPerMinute";
+
     private static readonly string[] OwnLimitPrefixes = ["/fotos/"];
 
     private static readonly string[] StaticPrefixes = ["/lib/", "/css/", "/js/", "/images/", "/favicon.ico"];
@@ -61,6 +69,11 @@ public static class RateLimitingExtensions
                     context.User.FindFirstValue(ClaimTypes.NameIdentifier) is { } user ? "u:" + user : "ip:" + ClientIp(context),
                     _ => Window(CepPerMinute, TimeSpan.FromMinutes(1))));
 
+            options.AddPolicy(PhotoUploadPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    context.User.FindFirstValue(ClaimTypes.NameIdentifier) is { } user ? "u:" + user : "ip:" + ClientIp(context),
+                    _ => Window(Configured(context, PhotoUploadsPerMinuteKey, PhotoUploadsPerMinute), TimeSpan.FromMinutes(1))));
+
             options.AddPolicy(PhotoPolicy, context =>
                 RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(PhotosPerMinute, TimeSpan.FromMinutes(1))));
 
@@ -71,11 +84,13 @@ public static class RateLimitingExtensions
     }
 
     // Lido quando a janela de um IP é criada (não na partida): a configuração do host de teste só existe depois que o Program.cs rodou.
-    // Ausente, zero, negativa ou ilegível vale 100. O limite de login e de recuperação de senha (5 por 15 min) não é configurável.
-    private static int GlobalPerMinute(HttpContext context) =>
-        int.TryParse(context.RequestServices.GetRequiredService<IConfiguration>()[GlobalPerMinuteKey], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int configured) && configured > 0
+    // Ausente, zero, negativa ou ilegível vale o padrão. O limite de login e de recuperação de senha (5 por 15 min) não é configurável.
+    private static int GlobalPerMinute(HttpContext context) => Configured(context, GlobalPerMinuteKey, DefaultGlobalPerMinute);
+
+    private static int Configured(HttpContext context, string key, int fallback) =>
+        int.TryParse(context.RequestServices.GetRequiredService<IConfiguration>()[key], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int configured) && configured > 0
             ? configured
-            : DefaultGlobalPerMinute;
+            : fallback;
 
     private static FixedWindowRateLimiterOptions Window(int limit, TimeSpan duration) => new()
     {

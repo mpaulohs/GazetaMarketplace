@@ -13,17 +13,14 @@ namespace GazetaMarketplace.Infrastructure.Photos;
 /// O formato vem da assinatura do arquivo e é imposto na leitura: um SVG com extensão <c>.jpg</c> nunca chega a um decodificador de SVG (a política também
 /// os desliga). As dimensões são lidas antes de decodificar (RC-2). GIF e WebP animados viram o primeiro quadro.
 /// </remarks>
-public sealed class MagickImageProcessor : IImageProcessor
+public sealed class MagickImageProcessor(IOptions<PhotoStorageOptions> options) : IImageProcessor
 {
-    public MagickImageProcessor(IOptions<PhotoStorageOptions> options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        MagickRuntime.EnsureInitialized(options.Value.BasePath);
-    }
-
     public ProcessedImage Process(byte[] content, PhotoFormat format)
     {
         ArgumentNullException.ThrowIfNull(content);
+
+        // Na primeira foto, não ao montar o objeto: toda página do anúncio cria o serviço de fotos e não deve ligar a biblioteca nativa à toa
+        MagickRuntime.EnsureInitialized(options.Value.BasePath);
         MagickReadSettings settings = new() { Format = ToMagick(format), FrameIndex = 0, FrameCount = 1 };
         string unreadable = format == PhotoFormat.Heic ? PhotoMessages.HeicUnreadable : PhotoMessages.Unreadable;
 
@@ -54,12 +51,12 @@ public sealed class MagickImageProcessor : IImageProcessor
             image.Format = MagickFormat.WebP;
             image.Quality = PhotoLimits.WebPQuality;
 
-            ShrinkToWidth(image, PhotoLimits.LargeWidth);
+            Shrink(image, PhotoLimits.LargeWidth);
             int width = (int)image.Width;
             int height = (int)image.Height;
             byte[] large = image.ToByteArray();
 
-            ShrinkToWidth(image, PhotoLimits.ThumbWidth);
+            Shrink(image, PhotoLimits.ThumbWidth);
             byte[] thumb = image.ToByteArray();
             return new ProcessedImage(large, thumb, width, height);
         }
@@ -80,16 +77,19 @@ public sealed class MagickImageProcessor : IImageProcessor
         || warning.Contains("end of file", StringComparison.OrdinalIgnoreCase)
         || warning.Contains("truncated", StringComparison.OrdinalIgnoreCase);
 
-    // Só diminui: foto menor que o limite mantém o tamanho
-    private static void ShrinkToWidth(MagickImage image, int maxWidth)
+    // Só diminui, mantendo a proporção: a largura cabe em maxWidth e o lado maior (a altura de uma foto em retrato) cabe em MaxLongSide.
+    // Foto menor que os dois limites mantém o tamanho
+    private static void Shrink(MagickImage image, int maxWidth)
     {
-        if (image.Width <= (uint)maxWidth)
+        double scale = Math.Min(1d, Math.Min((double)maxWidth / image.Width, (double)PhotoLimits.MaxLongSide / Math.Max(image.Width, image.Height)));
+        if (scale >= 1d)
         {
             return;
         }
 
-        uint height = (uint)Math.Max(1, (long)Math.Round((double)image.Height * maxWidth / image.Width));
-        image.Resize((uint)maxWidth, height);
+        uint width = (uint)Math.Max(1, (long)Math.Round(image.Width * scale));
+        uint height = (uint)Math.Max(1, (long)Math.Round(image.Height * scale));
+        image.Resize(width, height);
     }
 
     // Com perfil de cor embutido (ou CMYK) a imagem é convertida para sRGB antes de o perfil ser descartado; senão as cores mudariam

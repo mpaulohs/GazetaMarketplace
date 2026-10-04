@@ -73,15 +73,14 @@ else
     </fieldset>
 }
 
-<section class="mb-3" aria-labelledby="titulo-fotos">
-    @if (Model.HasPhotos)
-    {
-        <h2 class="fs-5" id="titulo-fotos">Fotos (@Model.PhotoCount de @group.MaxPhotos)</h2>
-        <p class="form-text mb-0">Este anúncio aceita até @group.MaxPhotos fotos (JPG, PNG, WebP, GIF ou HEIC, até 10 MB cada). O envio de fotos será liberado em uma próxima versão do painel.</p>
-    }
-    else
-    {
-        <h2 class="fs-5" id="titulo-fotos">Fotos</h2>
-        <p class="form-text mb-0">Vagas de emprego não têm fotos.</p>
-    }
-</section>
+@* A regra de fotos da categoria escolhida (muda com a troca de categoria); a galeria e o envio ficam na seção de fotos, fora deste formulário *@
+@if (Model.HasPhotos)
+{
+    <p class="form-text" data-photo-rule>
+        Este anúncio aceita até @group.MaxPhotos fotos (JPG, PNG, WebP, GIF ou HEIC, até 10 MB cada).@(Model.IsNew ? " Salve o rascunho primeiro para poder enviá-las." : null)
+    </p>
+}
+else
+{
+    <p class="form-text" data-photo-rule>Vagas de emprego não têm fotos.</p>
+}

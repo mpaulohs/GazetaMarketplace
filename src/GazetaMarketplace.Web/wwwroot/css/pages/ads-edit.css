@@ -8,3 +8,41 @@
 .ads-edit__texto {
   white-space: pre-wrap;
 }
+
+/* Galeria de fotos do anúncio (US-008-S02 a S06). A grade vem do Bootstrap; aqui só a miniatura, a marca de capa e o quadro de envio. */
+.fotos__figura {
+  position: relative;
+}
+
+.fotos__imagem {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--bs-border-radius);
+  background-color: var(--bs-secondary-bg);
+}
+
+.fotos__capa {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+}
+
+.fotos__aguarde {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 7rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+}
+
+.fotos__dialogo {
+  max-width: 28rem;
+  width: calc(100% - 2rem);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  padding: 1.25rem;
+}

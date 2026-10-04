@@ -53,6 +53,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPhotoStorage, Photos.FileSystemPhotoStorage>();
         services.AddScoped<IPhotoIngestion, Photos.PhotoIngestion>();
         services.AddScoped<IPhotoDelivery, Photos.PhotoDelivery>();
+        services.AddScoped<IAdPhotoService, Photos.AdPhotoService>();
 
         // CEP (ADR-007): uma tentativa de até 5 s por chamada; a nova tentativa é da tela. O endereço base só muda nos testes de ponta a ponta
         services.AddHttpClient<ICepLookup, ViaCepLookup>((provider, http) =>

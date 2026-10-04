@@ -51,6 +51,52 @@ public sealed class VersoesTests
     }
 
     [TestMethod]
+    public void PanoramaVertical500x20000_ViraOLadoMaiorDe2560_MantendoAProporcao()
+    {
+        using PhotoFixtures.MagickImageProcessorHolder holder = PhotoFixtures.NewProcessor();
+
+        ProcessedImage result = holder.Processor.Process(PhotoFixtures.Solid(MagickFormat.Png, 500, 20000), PhotoFormat.Png);
+
+        using MagickImage large = new(result.Large);
+        using MagickImage thumb = new(result.Thumb);
+        Assert.AreEqual(64u, large.Width, "500 × 20000 → 64 × 2560 (a proporção 1:40 se mantém)");
+        Assert.AreEqual(2560u, large.Height);
+        Assert.AreEqual(64, result.Width);
+        Assert.AreEqual(2560, result.Height);
+        Assert.AreEqual(64u, thumb.Width, "a miniatura já está dentro dos dois limites: não muda");
+        Assert.AreEqual(2560u, thumb.Height);
+    }
+
+    [TestMethod]
+    public void RetratoAlto1200x3000_EncolheAte2560DeAltura_EAMiniaturaSegueALargura()
+    {
+        using PhotoFixtures.MagickImageProcessorHolder holder = PhotoFixtures.NewProcessor();
+
+        ProcessedImage result = holder.Processor.Process(PhotoFixtures.Solid(MagickFormat.Jpeg, 1200, 3000), PhotoFormat.Jpeg);
+
+        using MagickImage large = new(result.Large);
+        using MagickImage thumb = new(result.Thumb);
+        Assert.AreEqual(1024u, large.Width);
+        Assert.AreEqual(2560u, large.Height, "a altura manda: 1200 × 3000 → 1024 × 2560");
+        Assert.AreEqual(480u, thumb.Width);
+        Assert.AreEqual(1200u, thumb.Height);
+    }
+
+    [TestMethod]
+    [DataRow(1200, 2400)]
+    [DataRow(1000, 2560)]
+    public void RetratoComum_AteOLimite_NaoEMexido(int width, int height)
+    {
+        using PhotoFixtures.MagickImageProcessorHolder holder = PhotoFixtures.NewProcessor();
+
+        ProcessedImage result = holder.Processor.Process(PhotoFixtures.Solid(MagickFormat.Jpeg, (uint)width, (uint)height), PhotoFormat.Jpeg);
+
+        using MagickImage large = new(result.Large);
+        Assert.AreEqual((uint)width, large.Width, "fotos em retrato até 2560 de altura (e 1600 de largura) ficam como estão");
+        Assert.AreEqual((uint)height, large.Height);
+    }
+
+    [TestMethod]
     public void FotoMedia_SoAMiniaturaEncolhe()
     {
         using PhotoFixtures.MagickImageProcessorHolder holder = PhotoFixtures.NewProcessor();

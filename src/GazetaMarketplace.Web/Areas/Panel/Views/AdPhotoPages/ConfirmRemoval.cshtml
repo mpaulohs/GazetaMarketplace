@@ -1,0 +1,15 @@
+@model AdPhotoItem
+@{
+    ViewData["Title"] = "Remover foto";
+}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <h1 class="fs-3">Remover esta foto?</h1>
+        <p>A foto sai do anúncio e não pode ser recuperada.</p>
+        <p><img class="img-fluid rounded" src="@Model.ThumbUrl" alt="A foto que será removida" /></p>
+        <form method="post" asp-area="Panel" asp-controller="AdPhotoPages" asp-action="Remove" asp-route-id="@Model.AdId" asp-route-photoId="@Model.Id" class="d-flex flex-wrap gap-2">
+            <button class="btn btn-danger alvo-toque" type="submit">Remover foto</button>
+            <a class="btn btn-outline-secondary alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="Edit" asp-route-id="@Model.AdId">Cancelar</a>
+        </form>
+    </div>
+</div>

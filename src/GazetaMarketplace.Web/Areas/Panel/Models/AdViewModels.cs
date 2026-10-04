@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GazetaMarketplace.Core.Fields;
 using GazetaMarketplace.Core.Location;
+using GazetaMarketplace.Core.Photos;
 
 namespace GazetaMarketplace.Web.Areas.Panel.Models;
 
@@ -150,7 +151,16 @@ public sealed class AdFormViewModel
 
     public IReadOnlyList<AdCategoryGroup> Categories { get; init; } = [];
 
-    public int PhotoCount { get; init; }
+    /// <summary>As fotos gravadas do anúncio, na ordem da galeria (a primeira é a capa). Vazia no anúncio novo.</summary>
+    public IReadOnlyList<AdPhotoItem> Photos { get; init; } = [];
+
+    /// <summary>Quantas fotos a categoria <b>gravada</b> do anúncio aceita (20, 6 em Serviços, 0 em Vagas). É o limite que o servidor aplica ao enviar.</summary>
+    public int PhotoLimit { get; init; } = FieldGroup.DefaultMaxPhotos;
+
+    public int PhotoCount => Photos.Count;
+
+    /// <summary>Se a tela oferece enviar, trocar a capa e remover: só num anúncio já gravado, editável e de categoria com fotos.</summary>
+    public bool CanManagePhotos => !IsNew && !ReadOnly && PhotoLimit > 0;
 
     public string SubmitLabel => IsNew || Status == Core.Ads.AdStatus.Draft ? "Salvar rascunho" : "Salvar";
 
@@ -166,5 +176,6 @@ public sealed class AdFormViewModel
 
     public string PriceLabel => Group?.PriceLabel ?? "Preço";
 
+    /// <summary>Se a categoria <b>escolhida no formulário</b> (ainda que não salva) aceita fotos; muda na hora com a troca de categoria.</summary>
     public bool HasPhotos => Group is null || Group.MaxPhotos > 0;
 }

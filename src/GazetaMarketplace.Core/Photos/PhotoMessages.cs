@@ -16,4 +16,12 @@ public static class PhotoMessages
     public const string HeicUnreadable = "Não foi possível converter esta foto HEIC. Envie-a em JPG ou PNG";
 
     public const string TooManyPixels = "A foto tem dimensões grandes demais";
+
+    /// <summary>US-008-S04: o texto é o da SPEC, com o limite do grupo da categoria (20, 6 em Serviços).</summary>
+    public static string TooManyPhotos(int max) => $"Cada anúncio pode ter no máximo {max} fotos";
+
+    /// <summary>Vagas de emprego (limite 0): a frase "no máximo 0 fotos" confundiria.</summary>
+    public const string CategoryHasNoPhotos = "Este tipo de anúncio não tem fotos";
+
+    public const string NotFound = "A foto não foi encontrada neste anúncio";
 }

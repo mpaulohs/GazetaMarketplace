@@ -28,7 +28,7 @@ internal sealed class DraftSite : IDisposable
 
     public HttpClient Admin => Harness.Admin;
 
-    public static async Task<DraftSite> StartAsync(int? requestsPerMinute = null, string photoFolder = null)
+    public static async Task<DraftSite> StartAsync(int? requestsPerMinute = null, string photoFolder = null, Action<Microsoft.Extensions.DependencyInjection.IServiceCollection> services = null)
     {
         Dictionary<string, string> configuration = [];
         if (requestsPerMinute is { } limit)
@@ -41,7 +41,7 @@ internal sealed class DraftSite : IDisposable
             configuration["PhotoStorage:BasePath"] = photoFolder;
         }
 
-        CepHarness harness = await CepHarness.StartAsync(configuration: configuration);
+        CepHarness harness = await CepHarness.StartAsync(extraServices: services, configuration: configuration);
         await harness.WithDbAsync(async db =>
         {
             SmallCatalog.Seed(db);
@@ -198,16 +198,17 @@ public sealed class DraftTests
         StringAssert.Contains(jobs, "maxlength=\"90\"");
         StringAssert.Contains(jobs, "0/90");
         StringAssert.Contains(jobs, "0/6000");
-        StringAssert.Contains(jobs, "Vagas de emprego não têm fotos");
         StringAssert.Contains(jobs, "Informações adicionais");
         StringAssert.Contains(jobs, ">Salário");
         StringAssert.Contains(jobs, "name=\"Fields[jobAreaIds]\"");
-        Assert.IsFalse(jobs.Contains("Fotos (", StringComparison.Ordinal), "sem contagem de fotos em vagas");
         Assert.IsFalse(services.Contains("name=\"Price\"", StringComparison.Ordinal), "serviços não têm preço");
         StringAssert.Contains(services, "Informações adicionais");
         StringAssert.Contains(services, "0/6000");
-        StringAssert.Contains(services, "Fotos (0 de 6)");
-        StringAssert.Contains(cars, "Fotos (0 de 20)");
+        // O trecho traz só a regra de fotos da categoria escolhida; a galeria e o envio ficam numa seção própria da página do anúncio gravado (PhotosPageTests)
+        StringAssert.Contains(jobs, "Vagas de emprego não têm fotos");
+        StringAssert.Contains(services, "aceita até 6 fotos");
+        StringAssert.Contains(cars, "aceita até 20 fotos");
+        Assert.IsFalse(cars.Contains("Fotos (", StringComparison.Ordinal), "o trecho dos campos não traz a galeria");
     }
 
     [TestMethod]

@@ -12,6 +12,12 @@ public static class PhotoLimits
     /// <summary>Largura máxima da miniatura (cards e lista).</summary>
     public const int ThumbWidth = 480;
 
+    /// <summary>
+    /// O lado maior de qualquer versão. Sem ele só a largura limitava, e uma foto em retrato de 500 × 20000 px (um panorama vertical) seguiria inteira;
+    /// com 2560 uma foto comum em retrato (proporção 1:2 ou menos) não é cortada e o panorama vira 64 × 2560.
+    /// </summary>
+    public const int MaxLongSide = 2560;
+
     public const int WebPQuality = 80;
 
     /// <summary>RC-2: acima disso a imagem é recusada antes de decodificar (uma bomba de descompressão cabe em poucos KB de arquivo).</summary>

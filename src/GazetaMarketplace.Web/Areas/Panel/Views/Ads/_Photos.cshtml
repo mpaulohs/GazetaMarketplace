@@ -1,0 +1,100 @@
+@model AdFormViewModel
+@* A galeria do anúncio (US-008-S02 a S06). Fica fora do formulário do anúncio: cada ação de foto é um formulário próprio, que funciona sem JavaScript (uma foto por vez). *@
+@{
+    int adId = Model.Id ?? 0;
+    string message = TempData[AdPhotoPagesController.MessageKey] as string;
+    string error = TempData[AdPhotoPagesController.ErrorKey] as string;
+    bool manage = Model.CanManagePhotos;
+}
+@* Anúncio novo e categoria sem fotos (Vagas) não têm galeria: a regra aparece no formulário (_AdGroupRegion) *@
+@if (!Model.IsNew && Model.PhotoLimit > 0)
+{
+<section class="fotos mt-4" aria-labelledby="titulo-fotos" data-photos
+         data-upload-url="@(manage ? Url.Content("~/api/v1/ads/" + adId + "/photos") : null)" data-max="@Model.PhotoLimit" data-max-bytes="@PhotoLimits.MaxBytes">
+        <h2 class="fs-5" id="titulo-fotos" data-photo-heading>Fotos (@Model.PhotoCount de @Model.PhotoLimit)</h2>
+        <div class="visually-hidden" role="status" data-photo-status></div>
+        <div class="alert alert-success py-2" role="status" data-photo-message hidden="@(message is null ? "hidden" : null)">@message</div>
+        <div class="alert alert-danger py-2" role="alert" tabindex="-1" data-photo-error hidden="@(error is null ? "hidden" : null)">@error</div>
+
+        @if (Model.Photos.Count == 0)
+        {
+            <p class="form-text" data-photo-empty>Este anúncio ainda não tem fotos.</p>
+        }
+
+        <ol class="list-unstyled row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 mb-2" data-photo-list aria-label="Fotos do anúncio">
+            @for (int i = 0; i < Model.Photos.Count; i++)
+            {
+                AdPhotoItem photo = Model.Photos[i];
+                <li class="col fotos__item" data-photo-id="@photo.Id">
+                    <figure class="fotos__figura mb-0">
+                        <img class="fotos__imagem" src="@photo.ThumbUrl" alt="Foto @(i + 1)" loading="lazy" />
+                        <span class="badge text-bg-primary fotos__capa" data-show-on-cover hidden="@(photo.IsCover ? null : "hidden")">Capa</span>
+                    </figure>
+                    @if (manage)
+                    {
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <form method="post" asp-area="Panel" asp-controller="AdPhotoPages" asp-action="SetCover" asp-route-id="@adId" asp-route-photoId="@photo.Id" data-hide-on-cover hidden="@(photo.IsCover ? "hidden" : null)">
+                                <button class="btn btn-sm btn-outline-secondary alvo-toque" type="submit" data-action="set-cover" aria-label="Tornar capa da foto @(i + 1)">Tornar capa</button>
+                            </form>
+                            <form method="get" asp-area="Panel" asp-controller="AdPhotoPages" asp-action="ConfirmRemoval" asp-route-id="@adId" asp-route-photoId="@photo.Id">
+                                <button class="btn btn-sm btn-outline-danger alvo-toque" type="submit" data-action="remove-photo" aria-label="Remover foto @(i + 1)">Remover</button>
+                            </form>
+                        </div>
+                    }
+                </li>
+            }
+        </ol>
+
+        @if (manage)
+        {
+            <form method="post" enctype="multipart/form-data" asp-area="Panel" asp-controller="AdPhotoPages" asp-action="Upload" asp-route-id="@adId" data-photo-upload>
+                <label class="form-label" for="arquivo-foto">Escolher fotos</label>
+                <input class="form-control" type="file" id="arquivo-foto" name="file" aria-describedby="ajuda-fotos"
+                       accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif" />
+                <p class="form-text mb-2" id="ajuda-fotos">
+                    Até @Model.PhotoLimit fotos (JPG, PNG, WebP, GIF ou HEIC, até 10 MB cada). A primeira é a capa. Fotos HEIC são convertidas para WebP ao enviar.
+                    <span class="somente-sem-js">Sem JavaScript, uma foto é enviada por vez e a página recarrega: salve o rascunho antes, para não perder o que digitou.</span>
+                </p>
+                <button class="btn btn-outline-primary alvo-toque" type="submit" data-photo-submit>Enviar fotos</button>
+            </form>
+
+            <template data-photo-template>
+                <li class="col fotos__item" data-photo-id="">
+                    <figure class="fotos__figura mb-0">
+                        <img class="fotos__imagem" src="" alt="" />
+                        <span class="badge text-bg-primary fotos__capa" data-show-on-cover>Capa</span>
+                    </figure>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <button class="btn btn-sm btn-outline-secondary alvo-toque" type="button" data-action="set-cover" data-hide-on-cover>Tornar capa</button>
+                        <button class="btn btn-sm btn-outline-danger alvo-toque" type="button" data-action="remove-photo">Remover</button>
+                    </div>
+                </li>
+            </template>
+
+            <template data-photo-pending-template>
+                <li class="col fotos__item" data-photo-pending>
+                    <div class="fotos__aguarde">
+                        <p class="mb-1 text-break fw-semibold" data-pending-name></p>
+                        <p class="mb-0 small" data-pending-state></p>
+                        <p class="mb-0 small text-danger" role="alert" data-pending-error hidden></p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <button class="btn btn-sm btn-outline-primary alvo-toque" type="button" data-action="retry" hidden>Tentar de novo</button>
+                        <button class="btn btn-sm btn-outline-secondary alvo-toque" type="button" data-action="discard" hidden>Descartar</button>
+                    </div>
+                </li>
+            </template>
+
+            <dialog class="fotos__dialogo" aria-labelledby="titulo-remover-foto" data-photo-dialog>
+                <form method="dialog">
+                    <h3 class="fs-5" id="titulo-remover-foto">Remover esta foto?</h3>
+                    <p>A foto sai do anúncio e não pode ser recuperada.</p>
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
+                        <button class="btn btn-outline-secondary alvo-toque" value="cancel">Cancelar</button>
+                        <button class="btn btn-danger alvo-toque" value="confirm">Remover foto</button>
+                    </div>
+                </form>
+            </dialog>
+        }
+</section>
+}

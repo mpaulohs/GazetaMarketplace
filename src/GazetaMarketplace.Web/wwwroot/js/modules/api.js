@@ -11,19 +11,22 @@ export class ApiError extends Error {
   }
 }
 
+// Páginas com formulário POST trazem o token num campo oculto; as demais, numa meta
 const tokenAntiforgery = () =>
-  document.querySelector("meta[name='request-verification-token']")?.content;
+  document.querySelector("meta[name='request-verification-token']")?.content ??
+  document.querySelector("input[name='__RequestVerificationToken']")?.value;
 
 /**
  * Chama um endpoint JSON do próprio site. Escritas levam o token antiforgery no cabeçalho.
  * @param {string} url
- * @param {{ method?: string, body?: object, signal?: AbortSignal }} [opcoes]
+ * @param {{ method?: string, body?: object | FormData, signal?: AbortSignal }} [opcoes] um FormData segue como está (envio de arquivo); qualquer outro objeto vai como JSON
  * @returns {Promise<any>} o JSON da resposta, ou null quando não há corpo (204)
  * @throws {ApiError}
  */
 export async function apiFetch(url, { method = "GET", body, signal } = {}) {
   const cabecalhos = { Accept: "application/json" };
-  if (body !== undefined) cabecalhos["Content-Type"] = "application/json";
+  const ehFormulario = body instanceof FormData;
+  if (body !== undefined && !ehFormulario) cabecalhos["Content-Type"] = "application/json";
 
   if (method !== "GET") {
     const token = tokenAntiforgery();
@@ -36,7 +39,7 @@ export async function apiFetch(url, { method = "GET", body, signal } = {}) {
     resposta = await fetch(url, {
       method,
       headers: cabecalhos,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined || ehFormulario ? body : JSON.stringify(body),
       credentials: "same-origin",
       signal,
     });

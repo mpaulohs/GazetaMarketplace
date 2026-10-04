@@ -8,7 +8,8 @@ namespace GazetaMarketplace.Web.Middleware;
 
 /// <summary>
 /// Limite global de 1 MB para o corpo de requisição (RC-21). Rotas com <c>[RequestSizeLimit]</c>
-/// (o envio de foto, 11 MB) têm limite próprio e ficam fora deste. Roda depois do roteamento.
+/// (o envio de foto, 11 MB) têm limite próprio: ele vale no lugar deste, também aqui (um corpo declarado maior que o limite da rota recebe 413 antes de ser lido).
+/// Roda depois do roteamento.
 /// </summary>
 public sealed class BodyLimitMiddleware(RequestDelegate next)
 {
@@ -16,8 +17,14 @@ public sealed class BodyLimitMiddleware(RequestDelegate next)
 
     public Task InvokeAsync(HttpContext context)
     {
-        if (context.GetEndpoint()?.Metadata.GetMetadata<IRequestSizeLimitMetadata>() is not null)
+        if (context.GetEndpoint()?.Metadata.GetMetadata<IRequestSizeLimitMetadata>() is { } own)
         {
+            if (own.MaxRequestBodySize is { } routeLimit && context.Request.ContentLength > routeLimit)
+            {
+                context.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+                return Task.CompletedTask;
+            }
+
             return next(context);
         }
 

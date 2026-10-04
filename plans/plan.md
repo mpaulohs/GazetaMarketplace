@@ -28,7 +28,7 @@
 | Modelo do anúncio (3.1) | new | `Ad`, `AdService`, `Normalizer` | — | `Ads` com JSON, colunas calculadas e índices | — | Duas representações (C# e SQL): teste diferencial obrigatório (ADR-002) |
 | CEP (3.2) | new | `ViaCepLookup`, `CepController`, `cep.js` | `getCep` | `CepCache`, `Cities` | Campo de CEP | Dependência externa; contrato 503 × 404 |
 | US-008, US-009 (3.3, 3.5, 3.7) | new | `AdsController` (Painel), `DraftService`, `SubmitForReviewService`, fotos | `uploadAdPhoto`, `setAdPhotoCover`, `deleteAdPhoto` | `Ads`, `AdPhotos` | Formulário do anúncio | Segurança: autoria, antiforgery, texto puro |
-| Fotos (3.4, 3.6) | new | `IPhotoStorage`, `IImageProcessor`, `PhotosController`, `OriginalsCleanupService` | `getPhotoFile` | Pasta persistente fora da raiz | — | HEIC/Magick.NET (AR-05); originais com GPS em `_originals/`; limpeza depende do IIS (ADR-005) |
+| Fotos (3.4, 3.5, 3.6) | new | `IPhotoStorage`, `IImageProcessor`, `IAdPhotoService`, `PhotosController`, `AdPhotosController`, `OriginalsCleanupService` | `getPhotoFile`, `uploadAdPhoto`, `setAdPhotoCover`, `deleteAdPhoto` | Pasta persistente fora da raiz | — | HEIC/Magick.NET (AR-05); originais com GPS em `_originals/`; limpeza depende do IIS (ADR-005) |
 | Componentes do anúncio (3.8) | new | `AdCardViewComponent`, `_AdValue`, `_AdBody` | — | — | Card, detalhe, pré-visualização | A4 e A6 (design-system §5) |
 | US-010, US-011, US-012 (4.1–4.4) | new | `ReviewQueueController`, `ReviewService`, `TakedownService`, `PanelAdListService`, `IPanelAdListReadRepository` (Dapper) | Páginas do painel | `Ads` (situação), `AuditEntries` | Fila, pré-visualização, lista | Decisão simultânea (`rowversion`); registro de ações |
 | US-001 a US-005 (5.1–5.5) | new | `HomeController`, `CategoryController`, `AdController`, `SearchController`, `FavoritesController`, `ISearchReadRepository` (Dapper) | `listAdsByIds` | Consultas em `Ads` e `Categories` | Início, categoria, detalhe, busca, favoritos | Desempenho (NFR-04); A6 na busca; só publicados |
@@ -1260,51 +1260,44 @@
 
 **NFRs covered**: `NFR-12`
 
-**References**: ADR-005
+**References**: ADR-005 (nota de revisão de 2026-10-04), architecture/api/openapi.yaml#uploadAdPhoto, #setAdPhotoCover, #deleteAdPhoto
 
 **Objective**: Endpoints e tela de fotos: envio, limites por categoria, capa por botão, remoção e mensagens por arquivo.
 
-**Files to modify**:
-- src/GazetaMarketplace.Web/Controllers/Api/AnuncioFotosController.cs (uploadAdPhoto, setAdPhotoCover, deleteAdPhoto)
-- `src/GazetaMarketplace.Web/wwwroot/js/modules/photos.js`
-- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/_Photos.cshtml`
-- `src/GazetaMarketplace.Core/Photos/PhotoService.cs`
+**Decisões aprovadas (2026-10-04)**: D1 serializar por anúncio com `UPDLOCK` dentro de transação (sem migration) · D2 30 envios por minuto por usuário, contando cada arquivo · D3 remover apaga as duas versões WebP e deixa o original para a limpeza de 30 dias (3.6) · D4 lado maior limitado a 2560 px (`PhotoLimits.MaxLongSide`; 500 × 20000 vira 64 × 2560) · D5 fotos já gravadas continuam ao salvar o rascunho; "descartar rascunho com fotos" fica na 3.6.
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Core/Photos/` — `IAdPhotoService` (e `AdPhotoItem`), `PhotoUrls`, `PhotoMessages` (limite e "sem fotos"), `PhotoLimits.MaxLongSide`
+- `src/GazetaMarketplace.Infrastructure/Photos/AdPhotoService.cs` (envio, capa, remoção, listagem) · `MagickImageProcessor` (teto de 2560 px; liga o ImageMagick só na primeira foto)
+- `src/GazetaMarketplace.Web/Controllers/Api/AdPhotosController.cs` (`uploadAdPhoto`, `setAdPhotoCover`, `deleteAdPhoto`) · `Areas/Panel/Controllers/AdPhotoPagesController.cs` (o mesmo, em formulários comuns, sem JavaScript)
+- `src/GazetaMarketplace.Web/Security/RateLimitingExtensions.cs` (`PhotoUploadPolicy`, 30/min por usuário) · `Middleware/BodyLimitMiddleware.cs` (o limite da rota vale também para o 413)
+- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/_Photos.cshtml`, `Edit.cshtml`, `Read.cshtml`, `_AdGroupRegion.cshtml`, `AdPhotoPages/ConfirmRemoval.cshtml` · `Models/AdFormFactory.cs`, `AdViewModels.cs`
+- `src/GazetaMarketplace.Web/wwwroot/js/modules/photos.js`, `modules/api.js` (aceita `FormData`), `pages/ad-edit.js`, `css/pages/ads-edit.css`
 
 **Acceptance Criteria**:
-- [ ] `@US-008-S02` (@happy): Adicionar fotos ao anúncio — o *Then* do SPEC é atendido
-- [ ] `@US-008-S03` (@happy): Trocar a capa e remover uma foto — o *Then* do SPEC é atendido
-- [ ] `@US-008-S04` (@negative): Passar do limite de 20 fotos — o *Then* do SPEC é atendido
-- [ ] `@US-008-S05` (@negative): Enviar um arquivo que não é foto aceita — o *Then* do SPEC é atendido
-- [ ] `@US-008-S06` (@negative): Falha ao enviar uma foto — o *Then* do SPEC é atendido
-- [ ] Limite do servidor em 11 MB e da aplicação em 10 MB: arquivo de 10 a 11 MB recebe "A foto excede o limite de 10 MB"
-- [ ] Limite por grupo: 20 (padrão), 6 (Serviços), 0 (Vagas, sem envio); a foto além do limite recebe 409 "Cada anúncio pode ter no máximo N fotos"
-- [ ] Formato recusado devolve "Formato não aceito. Use JPG, PNG, WebP, GIF ou HEIC"; foto HEIC mostra o aviso de conversão
-- [ ] "Tornar capa" move a foto para a primeira posição; "Remover" pede confirmação; funciona sem arrastar
-- [ ] Falha de conexão marca só aquela foto com "Falha ao enviar" e "Tentar de novo"; as outras fotos e os textos seguem
-- [ ] Só o autor (ou Administrador) mexe nas fotos de um anúncio editável; antiforgery em todas as escritas
-- [ ] **RC-6:** no máximo 2 conversões de foto ao mesmo tempo no servidor e no máximo 30 envios por minuto por usuário logado; o excesso devolve 429 `RATE_LIMITED`
+- [x] `@US-008-S02` (@happy): Adicionar fotos ao anúncio — o *Then* do SPEC é atendido
+- [x] `@US-008-S03` (@happy): Trocar a capa e remover uma foto — o *Then* do SPEC é atendido
+- [x] `@US-008-S04` (@negative): Passar do limite de 20 fotos — o *Then* do SPEC é atendido
+- [x] `@US-008-S05` (@negative): Enviar um arquivo que não é foto aceita — o *Then* do SPEC é atendido
+- [x] `@US-008-S06` (@negative): Falha ao enviar uma foto — o *Then* do SPEC é atendido
+- [x] Limite do servidor em 11 MB e da aplicação em 10 MB: arquivo de 10 a 11 MB recebe "A foto excede o limite de 10 MB"; acima de 11 MB, 413
+- [x] Limite por grupo: 20 (padrão), 6 (Serviços), 0 (Vagas, sem envio); a foto além do limite recebe 409 "Cada anúncio pode ter no máximo N fotos"
+- [x] Formato recusado devolve "Formato não aceito. Use JPG, PNG, WebP, GIF ou HEIC"; foto HEIC mostra o aviso de conversão
+- [x] "Tornar capa" move a foto para a primeira posição; "Remover" pede confirmação; funciona sem arrastar
+- [x] Falha de conexão marca só aquela foto com "Falha ao enviar" e "Tentar de novo"; as outras fotos e os textos seguem
+- [x] Só o autor (ou Administrador) mexe nas fotos de um anúncio editável; antiforgery em todas as escritas
+- [x] **RC-6:** no máximo 2 conversões de foto ao mesmo tempo no servidor (3.4) e no máximo 30 envios por minuto por usuário logado; o excesso devolve 429 `RATE_LIMITED`
+- [x] **D4:** o lado maior de qualquer versão tem no máximo 2560 px, sem ampliar
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S02_AdicionarFotosAoAnuncio` — `@US-008-S02`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S02_AdicionarFotosAoAnuncio` — `@US-008-S02` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S03_TrocarACapaERemoverUmaFoto` — `@US-008-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S03_TrocarACapaERemoverUmaFoto` — `@US-008-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S04_PassarDoLimiteDe20Fotos` — `@US-008-S04`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S04_PassarDoLimiteDe20Fotos` — `@US-008-S04` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S05_EnviarUmArquivoQueNaoEFotoAceita` — `@US-008-S05`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S05_EnviarUmArquivoQueNaoEFotoAceita` — `@US-008-S05` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.US008S06_FalhaAoEnviarUmaFoto` — `@US-008-S06`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Photos/PhotosEndpointsE2ETests.US008S06_FalhaAoEnviarUmaFoto` — `@US-008-S06` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Photos/LimitesTests.ArquivoDe10a11Mb_RecebeMensagemDaAplicacao`
-- `tests/GazetaMarketplace.Web.Tests/Photos/LimitesTests.Servicos_AceitaSeis_Vagas_AceitaZero`
-- `tests/GazetaMarketplace.Web.Tests/Photos/AutorizacaoTests.FotoDeAnuncioAlheio_Devolve403`
-- `tests/GazetaMarketplace.Web.Tests/Photos/LimitesTests.TerceiraConversaoSimultanea_EsperaNaFila`
-- `tests/GazetaMarketplace.Web.Tests/Photos/LimitesTests.ExcessoDeEnviosPorMinuto_Devolve429`
-- `tests/GazetaMarketplace.Web.Tests/Fotos/FotosHandoffTests.FotosJs_EnviaMultipart_EndpointDevolveFotoEOrdem (produtor: `photos.js`; consumidor: `uploadAdPhoto`)`
+**Tests added** (nomes reais):
+- `Web.Tests/Photos/PhotosEndpointsTests` — S02 a S06 pela API, limite de 20/6/0, 10 a 11 MB e 413, arquivo vazio, autorização (outro Redator, em revisão, publicado, Administrador, inexistente), foto de outro anúncio, antiforgery e login, 429 no 31º, falha do registro sem arquivo sobrando, envios simultâneos
+- `Web.Tests/Photos/PhotosPageTests` — a seção de fotos na página, o fluxo sem JavaScript (enviar, recusa, capa, confirmação de remoção), somente leitura, botões fora do formulário · `VersoesTests` (teto de 2560 px)
+- `IntegrationTests/PhotoConcurrencyTests` — 8 envios simultâneos (posições únicas), limite de 20 sob corrida, prova do `UPDLOCK`, capa e remoção contra o SQL Server
+- `Web.Tests.Playwright/Photos/PhotosE2ETests` — `US008S02` a `US008S06`, sem JavaScript, acessibilidade (axe) e 320 px
 
 **Dependencies**: 3.4, 3.3
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Enviar fotos pelo navegador, incluindo um PDF e uma foto de 15 MB.
+**Verification**: Done when every test under "Tests added" passes (unitários 1117, integração 99, E2E 55) e as 11 mutações são mortas.
 
 **Estimate**: L
 

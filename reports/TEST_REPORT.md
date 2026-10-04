@@ -432,3 +432,52 @@ Todas foram desfeitas depois.
 4. **Defesa em profundidade escondia a mutação do formato da chave.** O confinamento do caminho (`Confine`) também recusa `../`, então o teste só derruba a mutação com chaves que passam por ele (maiúsculas, `0/`, sufixo `.webp`); incluídas.
 5. **Memória:** 512 MB para o ImageMagick e 200 MB por foto de 50 milhões de pixels pedem um teto de decodificações ao mesmo tempo; o limite é 2 por processo (não estava no plano; sem ele, 3 envios grandes ao mesmo tempo estouram o limite e viram erro).
 6. **A API do Magick.NET 14 mudou** (`ColorProfile.SRGB` obsoleto, tamanhos `uint`, `IExifProfile`); o código usa `ColorProfiles.SRGB`.
+
+## Tarefa 3.5 — enviar, trocar a capa e remover fotos do anúncio (US-008-S02 a S06)
+
+> **Em resumo:** 1.117 testes unitários (33 novos), 43 da ferramenta de catálogo, 27 da `CitiesImport.Tests`, 99 de integração (4 novos, SQL Server real) e 55 de navegador (7 novos) passam. As seis mutações planejadas e mais cinco extras foram todas derrubadas pelos testes. Veredito: **aprovado**. Pontos de atenção: o envio com JavaScript é de uma foto por vez (a ordem da galeria depende disso) e a prova do `UPDLOCK` só existe no SQL Server real.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.117 | 1.117 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 99 | 99 | 0 |
+| E2E (Playwright, site publicado em Production) | 55 | 55 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| M1 Limite de fotos com uma a mais (`>=` virando `>`) | 4 (`US008S04…`, `LimiteDe20…`, `Servicos_AceitamNoMaximo6Fotos`, `VagasDeEmprego_NaoTemFotos…`) |
+| M2 Anúncio carregado sem conferir autoria nem situação | 2 (`Autorizacao_…`, `SemJavaScript_AnuncioEmRevisao…`) |
+| M3 Remover sem apagar os WebP | `US008S03_TrocarACapaERemoverUmaFoto` |
+| M4 Remover sem renumerar as posições | 2 (`US008S03…`, `RemoverACapa_…`) |
+| M5 "Tornar capa" sem reordenar | 2 (`US008S03…`, `SemJavaScript_TornarCapa…`) |
+| M6 Envio sem antiforgery (`[IgnoreAntiforgeryToken]`) | `SemToken_Devolve400_ESemLogin_Devolve401` |
+| (extra) M7 Sem `UPDLOCK` na transação | 3 de integração (posições únicas, limite sob corrida, prova do bloqueio) |
+| (extra) M8 Envio sem o limite de 30 por minuto | `Envio_31oNaMesmaJanela…` |
+| (extra) M9 Teto de 2560 px do lado maior removido | 2 (`PanoramaVertical500x20000…`, `RetratoAlto1200x3000…`) |
+| (extra) M10 413 por limite da rota ignorado no middleware | `US008S05_PdfEFotoDe15MB…` |
+| (extra) M11 Limite não reconferido dentro da transação | `SeisEnviosAoMesmoTempo_EmAnuncioCom18Fotos…` |
+
+Todas foram desfeitas depois (arquivos restaurados; compilação e suíte unitária rodadas de novo sem alteração).
+
+**O que cada camada prova**
+
+- API (`PhotosEndpointsTests`): 3 envios gravam 3 linhas na ordem enviada (posições 0, 1, 2), cada uma com as duas versões e o original em disco, e a resposta 201 segue o contrato `Photo` (`id`, `sortOrder`, `url480`, `url1600`, `width`, `height`). Tornar capa na 3ª foto vira [3ª, 1ª, 2ª]; remover a 2ª deixa 2 fotos com posições 0 e 1, apaga os dois WebP, **mantém o original** e a URL da foto removida devolve 404. Com 20 fotos, a 21ª recebe 409 com "Cada anúncio pode ter no máximo 20 fotos" e nada é processado nem gravado; a 20ª entra (19 + 1); Serviços recusa a 7ª; Vagas recusa qualquer envio.
+- Recusas por arquivo: PDF devolve 400 com "Formato não aceito. Use JPG, PNG, WebP, GIF ou HEIC"; arquivo de 10 MB + 1 KB devolve 400 com "A foto excede o limite de 10 MB"; arquivo de 15 MB devolve 413 antes de ler o corpo; arquivo vazio e campo `file` ausente devolvem 400. Nenhum deixa linha nem arquivo.
+- Acesso: sem login 401; sem token 400 (envio, capa e remoção); outro Redator, anúncio Em revisão e anúncio Publicado 403 `FORBIDDEN`; Administrador envia no rascunho de outro; anúncio inexistente 404; foto de outro anúncio ou inexistente 404 na capa e na remoção.
+- Limites: 30 envios no mesmo minuto passam (recusados pelo serviço, mas contados) e o 31º devolve 429 `RATE_LIMITED` com `Retry-After`, sem afetar outro usuário.
+- Falha de gravação: quando o registro falha depois de a foto estar em disco (o anúncio some no meio), a resposta é 500 e **nem as versões nem o original ficam no disco**, e não há linha em `AdPhotos`.
+- Páginas (`PhotosPageTests`): anúncio novo mostra a regra "Salve o rascunho primeiro" e nenhuma galeria; rascunho gravado mostra "Fotos (0 de 20)" / "(0 de 6)" e o formulário de envio; Vagas não tem galeria; os botões de salvar ficam fora do formulário do anúncio e ligados a ele pelo atributo `form`; sem JavaScript, enviar uma foto de cada vez mostra "Foto adicionada." (uma vez só) e as miniaturas em ordem, o PDF volta com a recusa como alerta, tornar capa reordena, remover pede uma página de confirmação (GET não remove) e só o POST remove; outro Redator recebe 403 e não vê as fotos; anúncio Em revisão mostra as fotos sem formulário nem botões.
+- Imagem (`VersoesTests`, D4): 500 × 20000 vira **64 × 2560** (miniatura igual); 1200 × 3000 vira 1024 × 2560 e a miniatura 480 × 1200; 1200 × 2400 e 1000 × 2560 não mudam.
+- Integração (SQL Server real, `PhotoConcurrencyTests`): 8 envios ao mesmo tempo no mesmo anúncio, em 3 rodadas, gravam sempre as posições 0 a 7 sem repetir; com 18 fotos, 6 envios ao mesmo tempo resultam em exatamente 2 criadas e 4 com 409, total 20 e **só 6 arquivos** no disco; uma segunda sessão segurando `UPDLOCK` na linha do anúncio **bloqueia o envio por mais de 4 s** e o envio termina quando ela libera; capa e remoção contra o banco real mantêm as posições 0 a n-1 (a restrição `CK_AdPhotos_SortOrder` do banco vale).
+- E2E (`PhotosE2ETests`): S02 (3 fotos, miniaturas carregam, "Capa" só na primeira, salvar o rascunho, recarregar, mesma ordem); S03 (tornar capa na 3ª, cancelar e depois confirmar a remoção na caixa de diálogo, recarregar: 2 fotos na ordem certa); S04 (20 fotos enviadas, a 21ª mostra a mensagem, 20 depois de recarregar); S05 (PDF e foto de 15 MB com as duas mensagens, nada adicionado, "Descartar", recarregar); S06 (a conexão cai só no envio da 2ª foto: "Falha ao enviar" e "Tentar de novo" naquela foto, a 1ª foto, o título e a descrição continuam, e o reenvio funciona); sem JavaScript (enviar, tornar capa, confirmar a remoção em página própria); acessibilidade (axe sem violações com 3 fotos, com a confirmação aberta e com uma recusa na lista) e sem rolagem horizontal em 320 px. Nenhuma jornada feliz teve resposta ≥ 400.
+
+**Achados desta rodada**
+
+1. **O limite de 2 conversões ligava o ImageMagick cedo demais.** Como toda página do anúncio agora monta o serviço de fotos, o construtor do `MagickImageProcessor` ligava a biblioteca na primeira página aberta, com a política de produção, antes de os testes poderem ligar a variante com `XC`. A suíte inteira caiu em 40 testes de foto (que passavam isolados). A inicialização foi para a primeira foto processada.
+2. **A seção de fotos não pode ficar dentro do formulário do anúncio** (formulários não se aninham). A galeria saiu do trecho trocado pelo JavaScript; o trecho continua trazendo a regra de fotos da categoria escolhida ("Este anúncio aceita até N fotos" / "Vagas de emprego não têm fotos"), que dois E2E antigos já cobriam (`DraftE2ETests` mudou para o novo texto).
+3. **Cor de botão no axe:** `btn-outline-primary` medido logo depois do clique, com o mouse em cima, pegou a transição de cor do Bootstrap. O teste move o mouse e espera o fundo transparente antes de medir.
+4. **O limite de envios por minuto precisou de uma chave de configuração** (`RateLimiting:PhotoUploadsPerMinute`) para o E2E: só o S04 sobe 21 fotos de uma conta em um minuto.
+5. **O 413 acima de 11 MB não existia no ambiente de teste:** o `BodyLimitMiddleware` pulava as rotas com limite próprio e o servidor de teste não aplica o `[RequestSizeLimit]`. O middleware agora confere o `Content-Length` contra o limite da própria rota (M10).
+6. **`dotnet format` tirou o BOM de arquivos antigos sem relação com a tarefa** (migrations e `MSTestSettings.cs`); essas mudanças foram desfeitas.

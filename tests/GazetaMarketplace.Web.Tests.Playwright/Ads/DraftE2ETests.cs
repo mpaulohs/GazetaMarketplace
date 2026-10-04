@@ -208,7 +208,7 @@ public class DraftE2ETests : SitePage
 
         await ChooseCategoryAsync("Serviços").ConfigureAwait(false);
         await Expect(Page.GetByLabel("Preço")).ToHaveCountAsync(0).ConfigureAwait(false);
-        await Expect(Page.GetByText(new Regex(@"Fotos \(0 de 6\)"))).ToBeVisibleAsync().ConfigureAwait(false);
+        await Expect(Page.GetByText("Este anúncio aceita até 6 fotos")).ToBeVisibleAsync().ConfigureAwait(false);
 
         // O que é comum continuou preenchido o tempo todo, e a página nunca foi recarregada
         await Expect(Page.GetByLabel("Título")).ToHaveValueAsync("Meu anúncio").ConfigureAwait(false);

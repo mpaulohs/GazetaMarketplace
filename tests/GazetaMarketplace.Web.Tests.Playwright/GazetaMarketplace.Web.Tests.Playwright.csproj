@@ -11,4 +11,8 @@
     <PackageReference Include="MSTest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Photos\Fixtures\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

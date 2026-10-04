@@ -59,6 +59,7 @@ export Bootstrap__AdminEmail=e2e.admin@exemplo.com.br  Bootstrap__AdminPassword=
 export Authentication__SessionMinutes=1        # só para o teste de sessão expirada
 export Site__BaseUrl=https://localhost:5443    # obrigatório em Production: endereço que vai nos links dos e-mails
 export RateLimiting__GlobalPerMinute=1000      # só no site do E2E: a suíte faz centenas de pedidos de um IP só (o padrão de produção é 100 por minuto)
+export RateLimiting__PhotoUploadsPerMinute=1000 # só no site do E2E: a suíte sobe dezenas de fotos de uma conta só (o padrão de produção é 30 por minuto por usuário)
 export SendGrid__BaseUrl=http://localhost:5990 # só nos E2E: o SendGrid "de mentira" que o teste de recuperação de senha abre
 export ViaCep__BaseUrl=http://localhost:5991/ws/ # só nos E2E: o ViaCEP "de mentira" que o teste de CEP abre (em produção vale https://viacep.com.br/ws/)
 cd /caminho/publish && dotnet GazetaMarketplace.Web.dll

@@ -31,12 +31,12 @@ internal sealed class PhotoSite : IDisposable
 
     public string Folder { get; }
 
-    public static async Task<PhotoSite> StartAsync(int? requestsPerMinute = null)
+    public static async Task<PhotoSite> StartAsync(int? requestsPerMinute = null, Action<IServiceCollection> services = null)
     {
         PhotoFixtures.Init(); // o ImageMagick liga uma vez com a política de produção antes de qualquer outro uso
         string folder = Path.Combine(Path.GetTempPath(), "gazeta-entrega-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
-        return new PhotoSite(await DraftSite.StartAsync(requestsPerMinute, folder), folder);
+        return new PhotoSite(await DraftSite.StartAsync(requestsPerMinute, folder, services), folder);
     }
 
     /// <summary>Cria um anúncio na situação pedida e uma foto de verdade nele (processada e gravada pelo site).</summary>

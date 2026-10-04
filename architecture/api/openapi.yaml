@@ -119,10 +119,12 @@ paths:
       summary: Enviar uma foto para um anúncio
       description: |
         Uma foto por requisição. Aceita JPG, PNG, WebP, GIF e HEIC, conferidos pelo conteúdo do arquivo; até 10 MB.
-        O servidor grava o original por 30 dias e gera duas versões WebP (1.600 px e 480 px) sem metadados.
+        O servidor grava o original por 30 dias e gera duas versões WebP (1.600 px e 480 px de largura, e no máximo 2.560 px no lado maior) sem metadados.
         O limite do servidor para o corpo é de 11 MB, para que um arquivo de 10 a 11 MB receba a mensagem
         `VALIDATION_ERROR` da aplicação; acima disso, o próprio servidor recusa com 413.
         Limite de fotos pelo grupo de campos da categoria: 20 (padrão), 6 (Serviços), 0 (Vagas de emprego).
+        No máximo 30 envios por minuto por usuário (cada arquivo conta); o excesso recebe 429 `RATE_LIMITED` com `Retry-After`.
+        Só o autor (em Rascunho ou Rejeitado) ou o Administrador envia; cada envio trava a linha do anúncio, então envios ao mesmo tempo nunca passam do limite.
       operationId: uploadAdPhoto
       security:
         - cookieAuth: []
@@ -158,6 +160,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '413':
+          description: Corpo acima de 11 MB, recusado pelo servidor antes de ler o arquivo
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '500':
           $ref: '#/components/responses/InternalError'
 

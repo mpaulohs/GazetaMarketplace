@@ -10,6 +10,7 @@ using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Fields;
 using GazetaMarketplace.Core.Formatting;
 using GazetaMarketplace.Core.Location;
+using GazetaMarketplace.Core.Photos;
 using GazetaMarketplace.Core.VehicleCatalog;
 
 namespace GazetaMarketplace.Web.Areas.Panel.Models;
@@ -18,7 +19,7 @@ namespace GazetaMarketplace.Web.Areas.Panel.Models;
 /// Monta o formulário do anúncio a partir do anúncio gravado ou do que foi digitado. As listas (categorias, catálogo de veículos, cidades) vêm do
 /// servidor, então a página funciona sem JavaScript; o JavaScript só as troca na hora, sem recarregar.
 /// </summary>
-public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, ICityDirectory cities, TimeProvider time)
+public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, ICityDirectory cities, IAdPhotoService photos, TimeProvider time)
 {
     private static readonly CultureInfo PtBr = new("pt-BR");
 
@@ -72,6 +73,11 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
             ? [.. (await cities.ByUfAsync(uf, cancellationToken)).Select(city => city.Name)]
             : [];
 
+        // O limite de fotos é o da categoria já gravada (é o que o servidor aplica ao enviar), não o da que está escolhida no formulário e ainda não foi salva
+        FieldGroup photoGroup = ad?.CategoryId is { } savedCategory
+            ? FieldGroupRegistry.Resolve(snapshot, savedCategory) ?? FieldGroupRegistry.Default
+            : FieldGroupRegistry.Default;
+
         return new AdFormViewModel
         {
             Id = ad?.Id,
@@ -95,7 +101,8 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
             Group = group,
             Fields = categoryId is { } fieldsCategory ? await BuildFieldsAsync(group, fieldsCategory, values, cancellationToken) : [],
             Categories = BuildCategories(snapshot, categoryId),
-            PhotoCount = 0, // o envio e a lista de fotos chegam na tarefa 3.4; até lá o bloco só informa o limite do grupo
+            Photos = ad is null ? [] : await photos.ListAsync(ad.Id, cancellationToken),
+            PhotoLimit = photoGroup.MaxPhotos,
             Message = message,
             Warning = warning
         };

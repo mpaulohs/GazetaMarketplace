@@ -2,6 +2,7 @@
 import { consultarCep, listarCidades, somenteDigitos } from "../modules/cep.js";
 import { ativarCadeiaDoCatalogo } from "../modules/catalog-chain.js";
 import { atualizarContador, ativarContadores } from "../modules/counter.js";
+import { ativarFotos } from "../modules/photos.js";
 import { ativarMascaraDePreco } from "../modules/price.js";
 
 const formulario = document.querySelector("[data-ad-form]");
@@ -10,6 +11,7 @@ if (formulario) {
   ativarMascaraDePreco();
   ativarContadores();
   ativarCadeiaDoCatalogo();
+  ativarFotos();
   trocaDeCategoria(formulario);
   localizacao(formulario);
   envio(formulario);
@@ -206,7 +208,8 @@ function trocarCidade(atual, cidades, textoVazio) {
 
 /** Trava o botão enquanto envia, para um clique duplo não criar dois rascunhos. */
 function envio(form) {
-  const botao = form.querySelector("[data-submit-button]");
+  // O botão fica fora do <form> (as fotos têm formulários próprios entre os dois) e o liga pelo atributo form
+  const botao = document.querySelector("[data-submit-button]");
   if (!botao) return;
   const rotulo = botao.textContent;
   form.addEventListener("submit", (evento) => {
