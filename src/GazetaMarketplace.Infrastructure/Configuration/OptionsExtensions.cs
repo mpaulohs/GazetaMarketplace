@@ -25,6 +25,7 @@ public static class OptionsExtensions
         Validate(services.AddOptions<KeyStorageOptions>().Bind(configuration.GetSection(KeyStorageOptions.SectionName)), production);
         Validate(services.AddOptions<SendGridOptions>().Bind(configuration.GetSection(SendGridOptions.SectionName)), production);
         Validate(services.AddOptions<SiteOptions>().Bind(configuration.GetSection(SiteOptions.SectionName)), production);
+        services.AddOptions<ViaCepOptions>().Bind(configuration.GetSection(ViaCepOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
         services.AddOptions<BootstrapOptions>().Bind(configuration.GetSection(BootstrapOptions.SectionName));
 
         // Não é segredo e tem padrão: o intervalo é validado em qualquer ambiente

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Carga dos municípios do IBGE (tarefa 3.2, D1). Fica fora da solução do site (GazetaMarketplace.slnx), como o VehicleCatalogExport:
+       é rodada por quem carrega, na própria máquina; os projetos de teste a referenciam por caminho.
+       Referencia o Core para usar o Normalizer e as UFs: assim NameSearch nasce do mesmo código do site (nada de segunda implementação em SQL). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>CitiesImport</RootNamespace>
+    <AssemblyName>CitiesImport</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GazetaMarketplace.Core\GazetaMarketplace.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CitiesImport.Tests" />
+    <InternalsVisibleTo Include="GazetaMarketplace.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

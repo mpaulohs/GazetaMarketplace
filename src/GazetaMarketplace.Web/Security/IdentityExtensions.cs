@@ -95,10 +95,27 @@ public static class IdentityExtensions
         // Quem chega com um cookie que já não vale teve a sessão expirada (S08); quem nunca entrou (S07) não vê o aviso
         cookie.Events.OnRedirectToLogin = context =>
         {
+            // Endpoints JSON não redirecionam para uma página: respondem 401 no contrato de erros (ARCHITECTURE §8)
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                return ApiProblem.WriteAsync(context.HttpContext, StatusCodes.Status401Unauthorized, "UNAUTHORIZED", "Entre para continuar.");
+            }
+
             string destination = context.Request.Cookies.ContainsKey(CookieName)
                 ? QueryHelpers.AddQueryString(context.RedirectUri, SessionExpiredParameter, "1")
                 : context.RedirectUri;
             context.Response.Redirect(destination);
+            return System.Threading.Tasks.Task.CompletedTask;
+        };
+
+        cookie.Events.OnRedirectToAccessDenied = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                return ApiProblem.WriteAsync(context.HttpContext, StatusCodes.Status403Forbidden, "FORBIDDEN", "Você não tem permissão para esta operação.");
+            }
+
+            context.Response.Redirect(context.RedirectUri);
             return System.Threading.Tasks.Task.CompletedTask;
         };
     }

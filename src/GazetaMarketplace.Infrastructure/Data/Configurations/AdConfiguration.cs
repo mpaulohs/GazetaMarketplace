@@ -82,9 +82,13 @@ internal sealed class AdConfiguration : IEntityTypeConfiguration<Ad>
     {
         IMutableEntityType ad = modelBuilder.Model.FindEntityType(typeof(Ad))!;
 
-        foreach (IMutableCheckConstraint check in ad.GetCheckConstraints().ToList())
+        // Os CHECKs de Ads e do cache de CEP usam LEN, ISJSON e LIKE com classes de caracteres do T-SQL
+        foreach (IMutableEntityType type in new[] { ad, modelBuilder.Model.FindEntityType(typeof(GazetaMarketplace.Core.Location.CepCacheEntry))! })
         {
-            ad.RemoveCheckConstraint(check.ModelName);
+            foreach (IMutableCheckConstraint check in type.GetCheckConstraints().ToList())
+            {
+                type.RemoveCheckConstraint(check.ModelName);
+            }
         }
 
         foreach ((string column, _, _) in ComputedColumns)

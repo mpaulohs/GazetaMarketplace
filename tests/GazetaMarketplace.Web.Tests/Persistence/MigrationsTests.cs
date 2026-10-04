@@ -186,6 +186,30 @@ public sealed class MigrationsTests
     }
 
     [TestMethod]
+    public void MigrationDoCepEMunicipios_CriaSoCepCacheECities_SemLinhasENadaDeRuaOuBairro()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddCepCacheAndCities", StringComparison.Ordinal))).Replace("\r", string.Empty, StringComparison.Ordinal);
+
+        Assert.AreEqual(2, System.Text.RegularExpressions.Regex.Matches(section, @"CREATE TABLE \[").Count);
+        StringAssert.Contains(section, "CREATE TABLE [CepCache]");
+        StringAssert.Contains(section, "CONSTRAINT [PK_CepCache] PRIMARY KEY ([Cep])");
+        StringAssert.Contains(section, "[Cep] char(8) NOT NULL");
+        StringAssert.Contains(section, "[Cep] NOT LIKE '%[^0-9]%' AND LEN([Cep]) = 8");
+        StringAssert.Contains(section, "CREATE TABLE [Cities]");
+        StringAssert.Contains(section, "CONSTRAINT [PK_Cities] PRIMARY KEY ([IbgeCode])");
+        StringAssert.Contains(section, "CREATE UNIQUE INDEX [UQ_Cities_Uf_NameSearch] ON [Cities] ([Uf], [NameSearch])");
+        Assert.DoesNotContain("IDENTITY", section, "o código do IBGE nunca é gerado");
+        Assert.DoesNotContain("RowVersion", section, "tabelas de referência: sem concorrência otimista");
+        foreach (string street in new[] { "Logradouro", "Bairro", "Street", "Neighborhood" })
+        {
+            Assert.DoesNotContain(street, section, System.StringComparison.OrdinalIgnoreCase, "NFR-19: o CEP só guarda cidade, UF e código do IBGE");
+        }
+
+        Assert.DoesNotContain("INSERT INTO [Cities]", section, "a carga dos municípios é por script à parte (tools/CitiesImport)");
+        Assert.DoesNotContain("INSERT INTO [CepCache]", section);
+    }
+
+    [TestMethod]
     public void MigrationDasConfiguracoes_CriaSoASiteSettings_ComChaveUnica_ESemLinhasIniciais()
     {
         string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddSiteSettings", StringComparison.Ordinal)));

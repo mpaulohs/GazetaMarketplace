@@ -30,7 +30,7 @@ public sealed class ScriptTests
 
         CollectionAssert.AreEqual(afterFirst, await QueryAsync(connectionString, "SELECT MigrationId FROM __EFMigrationsHistory ORDER BY MigrationId"));
         CollectionAssert.AreEqual(schemaAfterFirst, (await DescribeSchemaAsync(connectionString)).ToArray());
-        Assert.AreEqual(10, afterFirst.Count, "as dez migrations do projeto");
+        Assert.AreEqual(11, afterFirst.Count, "as onze migrations do projeto");
         Assert.AreEqual(2, (await QueryAsync(connectionString, "SELECT Name FROM AspNetRoles")).Count, "os dois papéis não são duplicados");
     }
 
@@ -43,7 +43,7 @@ public sealed class ScriptTests
 
         await SqlServerFixture.ApplyScriptAsync(connectionString, quotedIdentifierOff: true);
 
-        Assert.AreEqual(10, (await QueryAsync(connectionString, "SELECT MigrationId FROM __EFMigrationsHistory")).Count);
+        Assert.AreEqual(11, (await QueryAsync(connectionString, "SELECT MigrationId FROM __EFMigrationsHistory")).Count);
     }
 
     [TestMethod]

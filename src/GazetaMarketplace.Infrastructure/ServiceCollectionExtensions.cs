@@ -1,6 +1,8 @@
 using System;
 using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Categories;
+using GazetaMarketplace.Core.Configuration;
+using GazetaMarketplace.Core.Location;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Core.Team;
@@ -10,6 +12,7 @@ using GazetaMarketplace.Infrastructure.Categories;
 using GazetaMarketplace.Infrastructure.Data;
 using GazetaMarketplace.Infrastructure.Email;
 using GazetaMarketplace.Infrastructure.Identity;
+using GazetaMarketplace.Infrastructure.Location;
 using GazetaMarketplace.Infrastructure.Recovery;
 using GazetaMarketplace.Infrastructure.Settings;
 using GazetaMarketplace.Infrastructure.VehicleCatalog;
@@ -17,6 +20,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace GazetaMarketplace.Infrastructure;
 
@@ -41,6 +45,16 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICategoryTree>(provider => provider.GetRequiredService<CategoryTree>());
         services.AddScoped<ICategoryUsage, AdsCategoryUsage>();
         services.AddScoped<IAdService, AdService>();
+
+        // CEP (ADR-007): uma tentativa de até 5 s por chamada; a nova tentativa é da tela. O endereço base só muda nos testes de ponta a ponta
+        services.AddHttpClient<ICepLookup, ViaCepLookup>((provider, http) =>
+        {
+            ViaCepOptions options = provider.GetRequiredService<IOptions<ViaCepOptions>>().Value;
+            http.BaseAddress = new Uri(options.BaseUrl.EndsWith('/') ? options.BaseUrl : options.BaseUrl + "/");
+            http.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+        });
+        services.AddScoped<ICityDirectory, CityDirectory>();
+        services.AddScoped<ICepService, CepService>();
         services.AddScoped<ICategoryManagement, CategoryManagement>();
         services.AddSingleton<SiteSettingsStore>();
         services.AddSingleton<ISiteSettings>(provider => provider.GetRequiredService<SiteSettingsStore>());

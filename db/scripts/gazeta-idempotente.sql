@@ -1565,3 +1565,54 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003235933_AddCepCacheAndCities'
+)
+BEGIN
+    CREATE TABLE [CepCache] (
+        [Cep] char(8) NOT NULL,
+        [City] nvarchar(80) NOT NULL,
+        [Uf] char(2) NOT NULL,
+        [IbgeCode] int NULL,
+        [FetchedAt] datetime2 NOT NULL,
+        CONSTRAINT [PK_CepCache] PRIMARY KEY ([Cep]),
+        CONSTRAINT [CK_CepCache_Cep] CHECK ([Cep] NOT LIKE '%[^0-9]%' AND LEN([Cep]) = 8)
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003235933_AddCepCacheAndCities'
+)
+BEGIN
+    CREATE TABLE [Cities] (
+        [IbgeCode] int NOT NULL,
+        [Name] nvarchar(80) NOT NULL,
+        [Uf] char(2) NOT NULL,
+        [NameSearch] nvarchar(120) NOT NULL,
+        CONSTRAINT [PK_Cities] PRIMARY KEY ([IbgeCode])
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003235933_AddCepCacheAndCities'
+)
+BEGIN
+    CREATE UNIQUE INDEX [UQ_Cities_Uf_NameSearch] ON [Cities] ([Uf], [NameSearch]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261003235933_AddCepCacheAndCities'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261003235933_AddCepCacheAndCities', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

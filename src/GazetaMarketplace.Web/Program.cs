@@ -97,9 +97,10 @@ location.RequestCultureProviders.Clear();
 app.UseRequestLocalization(location);
 app.UseRouting();
 app.UseMiddleware<BodyLimitMiddleware>();
-app.UseRateLimiter();
 
 app.UseAuthentication();
+// Depois da autenticação: a política "cep" conta por usuário e precisa saber quem é. Os limites por IP (global e login) não dependem disso
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapStaticAssets();

@@ -60,6 +60,7 @@ export Authentication__SessionMinutes=1        # só para o teste de sessão exp
 export Site__BaseUrl=https://localhost:5443    # obrigatório em Production: endereço que vai nos links dos e-mails
 export RateLimiting__GlobalPerMinute=1000      # só no site do E2E: a suíte faz centenas de pedidos de um IP só (o padrão de produção é 100 por minuto)
 export SendGrid__BaseUrl=http://localhost:5990 # só nos E2E: o SendGrid "de mentira" que o teste de recuperação de senha abre
+export ViaCep__BaseUrl=http://localhost:5991/ws/ # só nos E2E: o ViaCEP "de mentira" que o teste de CEP abre (em produção vale https://viacep.com.br/ws/)
 cd /caminho/publish && dotnet GazetaMarketplace.Web.dll
 ```
 
@@ -77,10 +78,11 @@ export GAZETA_BASE_URL=https://localhost:5443
 export GAZETA_E2E_EMAIL=e2e.admin@exemplo.com.br GAZETA_E2E_PASSWORD='<senha-do-admin>'
 export GAZETA_E2E_SESSION_MINUTES=1            # igual a Authentication__SessionMinutes do site
 export GAZETA_E2E_SENDGRID_PORT=5990           # igual à porta de SendGrid__BaseUrl; o teste de recuperação de senha escuta nela e lê o link do e-mail
+export GAZETA_E2E_VIACEP_PORT=5991             # igual à porta de ViaCep__BaseUrl; o teste de CEP escuta nela, responde por CEP e conta as consultas
 dotnet run --project tests/GazetaMarketplace.Web.Tests.Playwright
 ```
 
-Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecoveryE2ETests` exige também `GAZETA_E2E_SENDGRID_PORT`). `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**; `SettingsE2ETests` também (e muda o telefone do site no banco de teste).
+Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecoveryE2ETests` exige também `GAZETA_E2E_SENDGRID_PORT` e `CepE2ETests`, `GAZETA_E2E_VIACEP_PORT`). `AccountE2ETests` e `UsersE2ETests` exigem uma conta de **Administrador**; `SettingsE2ETests` também (e muda o telefone do site no banco de teste).
 
 **Rodando a suíte mais de uma vez em menos de uma hora no mesmo banco:** o site limita a recuperação de senha a 10 pedidos por hora por IP e `US007` passa a falhar por tempo esgotado. Antes de rodar de novo, limpe a tabela:
 

@@ -30,6 +30,11 @@ public sealed class TestApiController(ILogger<TestApiController> logger) : Contr
     [HttpPost("escrita")]
     public IActionResult Write() => Ok();
 
+    /// <summary>Só o Administrador: prova que um 403 em /api responde JSON em vez de redirecionar para a página "sem permissão".</summary>
+    [HttpGet("admin")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Policy = "Administrator")]
+    public IActionResult AdministratorOnly() => Ok();
+
     [HttpGet("auth")]
     [EnableRateLimiting("auth")]
     public IActionResult Authentication() => Ok();

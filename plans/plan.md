@@ -1122,37 +1122,39 @@
 
 **NFRs covered**: `NFR-24`
 
-**References**: ADR-007, architecture/api/openapi.yaml#getCep
+**References**: ADR-007, architecture/api/openapi.yaml#getCep, #listCities
 
 **Objective**: Endpoint de CEP para a equipe, cliente do ViaCEP com tempo limite, cache em tabela e lista de municípios do IBGE.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Core/Localizacao/ICepLookup.cs`
-- `src/GazetaMarketplace.Infrastructure/Localizacao/ViaCepLookup.cs`
-- src/GazetaMarketplace.Infrastructure/Localizacao/CepCache.cs, Cities (seed IBGE)
-- `src/GazetaMarketplace.Web/Controllers/Api/CepController.cs`
-- `src/GazetaMarketplace.Web/wwwroot/js/modules/cep.js`
+**Files modified** (nomes em inglês, pelo glossário):
+- `src/GazetaMarketplace.Core/Location/` — `ICepLookup`, `ICepService`, `ICityDirectory`, `CepRules`, `BrazilianStates`, `CityNames`, `City`, `CepCacheEntry`; `Core/Configuration/ViaCepOptions.cs`
+- `src/GazetaMarketplace.Infrastructure/Location/` — `ViaCepLookup`, `CepService`, `CityDirectory`; `CepCacheConfiguration`, `CityConfiguration`; migration `AddCepCacheAndCities`
+- `src/GazetaMarketplace.Web/Controllers/Api/CepController.cs`, `CitiesController.cs`; `wwwroot/js/modules/cep.js`
+- `tools/CitiesImport` (carregador idempotente) + `tests/CitiesImport.Tests`; `db/seed/sample/cities-sample.{json,sql}`
+- `IdentityExtensions` (401/403 em JSON sob `/api`), `RateLimitingExtensions` (política `cep`), `Program.cs` (limitador depois da autenticação), `openapi.yaml` (`listCities`)
 
 **Acceptance Criteria**:
-- [ ] `GET /api/v1/cep/{cep}` só para a equipe logada; CEP com menos de 8 dígitos não consulta nada (`VALIDATION_ERROR`)
-- [ ] Cada chamada faz 1 tentativa de até 5 s; sem resposta, 5xx ou sem rede devolve 503 `CEP_SERVICE_UNAVAILABLE`; o ViaCEP respondendo erro devolve 404 `NOT_FOUND` (não é falha)
-- [ ] CEP encontrado vale 30 dias em `CepCache` (sobrevive à reciclagem do IIS); CEP inexistente não entra no cache
-- [ ] O nome da cidade é conferido com a lista do IBGE; `cep.js` repete a chamada uma vez em 503 ("tentativa 2 de 2")
+- [x] `GET /api/v1/cep/{cep}` só para a equipe logada; CEP com menos de 8 dígitos não consulta nada (`VALIDATION_ERROR`)
+- [x] Cada chamada faz 1 tentativa de até 5 s; sem resposta, 5xx ou sem rede devolve 503 `CEP_SERVICE_UNAVAILABLE`; o ViaCEP respondendo erro devolve 404 `NOT_FOUND` (não é falha)
+- [x] CEP encontrado vale 30 dias em `CepCache` (sobrevive à reciclagem do IIS); CEP inexistente não entra no cache; entrada vencida com o ViaCEP fora do ar devolve 503 (ADR-007)
+- [x] O nome da cidade é conferido com a lista do IBGE; `cep.js` repete a chamada uma vez em 503 ("tentativa 2 de 2")
+- [x] `GET /api/v1/cities?uf=` (só equipe, cache privado de 10 minutos) alimenta o preenchimento manual; UF sem carga devolve lista vazia
+- [x] Rua e bairro nunca são lidos, guardados nem devolvidos (NFR-19, S25)
+- [x] 30 consultas de CEP por minuto por usuário; endpoints JSON respondem 401/403 em ProblemDetails, sem redirecionar
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Cep/CepEndpointTests.CepIncompleto_NaoConsultaOViaCep`
-- `tests/GazetaMarketplace.Web.Tests/Cep/CepEndpointTests.ViaCepCom5xx_Devolve503`
-- `tests/GazetaMarketplace.Web.Tests/Cep/CepEndpointTests.ViaCepLento_Devolve503Em5Segundos`
-- `tests/GazetaMarketplace.Web.Tests/Cep/CepEndpointTests.CepInexistente_Devolve404_NaoAbreManual`
-- `tests/GazetaMarketplace.Web.Tests/Cep/CacheTests.CepEncontrado_ValeTrintaDias`
-- `tests/GazetaMarketplace.Web.Tests/Cep/CacheTests.CepInexistente_NaoEntraNoCache`
-- `tests/GazetaMarketplace.Web.Tests/Cep/CepEndpointTests.SemLogin_Devolve401`
-- `tests/GazetaMarketplace.Web.Tests/Cep/PadronizacaoTests.Cidade_ConferidaComLista`
-- `tests/GazetaMarketplace.Web.Tests/Cep/CepHandoffTests.CepJs_Repete1VezEm503_ServidorResponde503 (produtor: endpoint; consumidor: `cep.js` — os dois juntos)`
+**Tests added**: `Web.Tests/Cep/` (`CepEndpointTests`, `ViaCepLookupTests`, `CacheAndStandardizationTests`, `CityNamesAndStatesTests`, `CitiesAndLimitsTests`), `MigrationsTests.MigrationDoCepEMunicipios…`; `CitiesImport.Tests` (27); `IntegrationTests/CepAndCitiesTests` (7); `Playwright/Location/CepE2ETests` (3, o `cep.js` real contra o endpoint real e um ViaCEP de mentira).
+
+**Decisões aprovadas pelo Product Owner (2026-10-03):**
+- **D1** Carga dos municípios: tabela e migration agora; carregador idempotente em `tools/CitiesImport`; amostra de 40 municípios; a carga real é feita depois com o JSON oficial do IBGE. Sem a lista, vale a regra da SPEC (campo de texto + padronização).
+- **D2** `GET /api/v1/cities?uf=SP`, só equipe, cacheável 10 min (`listCities` no `openapi.yaml`); as 27 UFs em `BrazilianStates`.
+- **D3** Só cidade, UF e código do IBGE.
+- **D4** Política `cep`: 30 por minuto por usuário (a primeira por usuário do site; por isso o limitador passou a rodar depois da autenticação).
+- **D5** ADR-007: entrada vencida não é usada; ViaCEP fora do ar → 503 e preenchimento manual.
+- **D6** Artigos "de, da, do, das, dos, e" e o "d'" minúsculos fora da primeira palavra.
 
 **Dependencies**: 0.3, 0.6, 1.1
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Consultar um CEP real com o cache vazio e de novo em seguida.
+**Verification**: Done when every test under "Tests added" passes, plus manual check: Consultar um CEP real com o cache vazio e de novo em seguida. **O teste manual com o ViaCEP real fica para o Product Owner ou o `/verify`** (o ambiente de desenvolvimento não alcança `viacep.com.br`).
 
 **Estimate**: L
 

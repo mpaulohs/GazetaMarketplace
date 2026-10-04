@@ -1,4 +1,5 @@
 using System;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Exceptions;
@@ -18,6 +19,11 @@ public static class RateLimitingExtensions
 {
     /// <summary>Política para as ações de login e de recuperação de senha: <c>[EnableRateLimiting("auth")]</c>.</summary>
     public const string AuthPolicy = "auth";
+
+    /// <summary>Política da consulta de CEP: <c>[EnableRateLimiting("cep")]</c>. 30 por minuto <b>por usuário</b> (a primeira política por usuário do site), para a equipe não esgotar a cota do ViaCEP.</summary>
+    public const string CepPolicy = "cep";
+
+    public const int CepPerMinute = 30;
 
     private static readonly string[] StaticPrefixes = ["/lib/", "/css/", "/js/", "/images/", "/favicon.ico"];
 
@@ -41,6 +47,12 @@ public static class RateLimitingExtensions
 
             options.AddPolicy(AuthPolicy, context =>
                 RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(5, TimeSpan.FromMinutes(15))));
+
+            // Por usuário logado; sem identidade (não deveria chegar aqui, a ação exige login) cai no IP
+            options.AddPolicy(CepPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    context.User.FindFirstValue(ClaimTypes.NameIdentifier) is { } user ? "u:" + user : "ip:" + ClientIp(context),
+                    _ => Window(CepPerMinute, TimeSpan.FromMinutes(1))));
 
             options.OnRejected = RespondTooManyRequestsAsync;
         });

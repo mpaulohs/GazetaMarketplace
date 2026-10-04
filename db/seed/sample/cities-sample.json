@@ -1,0 +1,682 @@
+[
+  {
+    "id": 3550308,
+    "nome": "São Paulo",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3509502,
+    "nome": "Campinas",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3548500,
+    "nome": "Santos",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3543402,
+    "nome": "Ribeirão Preto",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3549904,
+    "nome": "São José dos Campos",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3552205,
+    "nome": "Sorocaba",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3518800,
+    "nome": "Guarulhos",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3534401,
+    "nome": "Osasco",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3549805,
+    "nome": "São José do Rio Preto",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3525904,
+    "nome": "Jundiaí",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3545803,
+    "nome": "Santa Bárbara d'Oeste",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 35,
+          "sigla": "SP",
+          "nome": "São Paulo"
+        }
+      }
+    }
+  },
+  {
+    "id": 3304557,
+    "nome": "Rio de Janeiro",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 33,
+          "sigla": "RJ",
+          "nome": "Rio de Janeiro"
+        }
+      }
+    }
+  },
+  {
+    "id": 3303302,
+    "nome": "Niterói",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 33,
+          "sigla": "RJ",
+          "nome": "Rio de Janeiro"
+        }
+      }
+    }
+  },
+  {
+    "id": 3303906,
+    "nome": "Petrópolis",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 33,
+          "sigla": "RJ",
+          "nome": "Rio de Janeiro"
+        }
+      }
+    }
+  },
+  {
+    "id": 3301009,
+    "nome": "Campos dos Goytacazes",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 33,
+          "sigla": "RJ",
+          "nome": "Rio de Janeiro"
+        }
+      }
+    }
+  },
+  {
+    "id": 3106200,
+    "nome": "Belo Horizonte",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 31,
+          "sigla": "MG",
+          "nome": "Minas Gerais"
+        }
+      }
+    }
+  },
+  {
+    "id": 3170206,
+    "nome": "Uberlândia",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 31,
+          "sigla": "MG",
+          "nome": "Minas Gerais"
+        }
+      }
+    }
+  },
+  {
+    "id": 3136702,
+    "nome": "Juiz de Fora",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 31,
+          "sigla": "MG",
+          "nome": "Minas Gerais"
+        }
+      }
+    }
+  },
+  {
+    "id": 3118601,
+    "nome": "Contagem",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 31,
+          "sigla": "MG",
+          "nome": "Minas Gerais"
+        }
+      }
+    }
+  },
+  {
+    "id": 4106902,
+    "nome": "Curitiba",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 41,
+          "sigla": "PR",
+          "nome": "Paraná"
+        }
+      }
+    }
+  },
+  {
+    "id": 4113700,
+    "nome": "Londrina",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 41,
+          "sigla": "PR",
+          "nome": "Paraná"
+        }
+      }
+    }
+  },
+  {
+    "id": 4115200,
+    "nome": "Maringá",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 41,
+          "sigla": "PR",
+          "nome": "Paraná"
+        }
+      }
+    }
+  },
+  {
+    "id": 4314902,
+    "nome": "Porto Alegre",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 43,
+          "sigla": "RS",
+          "nome": "Rio Grande do Sul"
+        }
+      }
+    }
+  },
+  {
+    "id": 4305108,
+    "nome": "Caxias do Sul",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 43,
+          "sigla": "RS",
+          "nome": "Rio Grande do Sul"
+        }
+      }
+    }
+  },
+  {
+    "id": 4314407,
+    "nome": "Pelotas",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 43,
+          "sigla": "RS",
+          "nome": "Rio Grande do Sul"
+        }
+      }
+    }
+  },
+  {
+    "id": 4205407,
+    "nome": "Florianópolis",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina"
+        }
+      }
+    }
+  },
+  {
+    "id": 4209102,
+    "nome": "Joinville",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina"
+        }
+      }
+    }
+  },
+  {
+    "id": 4202404,
+    "nome": "Blumenau",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 42,
+          "sigla": "SC",
+          "nome": "Santa Catarina"
+        }
+      }
+    }
+  },
+  {
+    "id": 2927408,
+    "nome": "Salvador",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 29,
+          "sigla": "BA",
+          "nome": "Bahia"
+        }
+      }
+    }
+  },
+  {
+    "id": 2611606,
+    "nome": "Recife",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 26,
+          "sigla": "PE",
+          "nome": "Pernambuco"
+        }
+      }
+    }
+  },
+  {
+    "id": 2304400,
+    "nome": "Fortaleza",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 23,
+          "sigla": "CE",
+          "nome": "Ceará"
+        }
+      }
+    }
+  },
+  {
+    "id": 5300108,
+    "nome": "Brasília",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 53,
+          "sigla": "DF",
+          "nome": "Distrito Federal"
+        }
+      }
+    }
+  },
+  {
+    "id": 5208707,
+    "nome": "Goiânia",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 52,
+          "sigla": "GO",
+          "nome": "Goiás"
+        }
+      }
+    }
+  },
+  {
+    "id": 1302603,
+    "nome": "Manaus",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 13,
+          "sigla": "AM",
+          "nome": "Amazonas"
+        }
+      }
+    }
+  },
+  {
+    "id": 1501402,
+    "nome": "Belém",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 15,
+          "sigla": "PA",
+          "nome": "Pará"
+        }
+      }
+    }
+  },
+  {
+    "id": 5002704,
+    "nome": "Campo Grande",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 50,
+          "sigla": "MS",
+          "nome": "Mato Grosso do Sul"
+        }
+      }
+    }
+  },
+  {
+    "id": 5103403,
+    "nome": "Cuiabá",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 51,
+          "sigla": "MT",
+          "nome": "Mato Grosso"
+        }
+      }
+    }
+  },
+  {
+    "id": 3205309,
+    "nome": "Vitória",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 32,
+          "sigla": "ES",
+          "nome": "Espírito Santo"
+        }
+      }
+    }
+  },
+  {
+    "id": 2408102,
+    "nome": "Natal",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 24,
+          "sigla": "RN",
+          "nome": "Rio Grande do Norte"
+        }
+      }
+    }
+  },
+  {
+    "id": 2704302,
+    "nome": "Maceió",
+    "microrregiao": {
+      "id": 0,
+      "nome": "(amostra)",
+      "mesorregiao": {
+        "id": 0,
+        "nome": "(amostra)",
+        "UF": {
+          "id": 27,
+          "sigla": "AL",
+          "nome": "Alagoas"
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A ferramenta fica fora da solução do site (tools/); o teste a referencia por caminho -->
+    <ProjectReference Include="..\..\tools\CitiesImport\CitiesImport.csproj" />
+  </ItemGroup>
+
+</Project>

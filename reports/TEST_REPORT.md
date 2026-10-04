@@ -314,3 +314,39 @@ Todas foram desfeitas depois. A mutação do `AdsCategoryUsage` não compilava n
 3. **Caminho do JSON diferencia maiúsculas.** `"Km"` e `"KM"` não preenchem `$.km`.
 4. **Chaves estrangeiras em SQLite.** O SQLite dos testes unitários também as aplica; os anúncios de teste com quem publicou ou rejeitou precisam de contas de verdade.
 5. **Os erros do SQL Server variam:** truncamento é 2628 no SQL Server 2022 (não 8152), e o `CHECK` falha com 547 só quando a coluna calculada não falha antes.
+
+## Tarefa 3.2 — consulta de CEP, cache e lista de municípios
+
+> **Em resumo:** 824 testes unitários (110 novos), 43 da ferramenta de catálogo, 27 da nova `CitiesImport.Tests`, 88 de integração (7 novos, SQL Server real) e 39 de navegador (3 novos) passam. As seis mutações planejadas derrubam testes. **Nenhuma consulta ao ViaCEP real nem ao IBGE foi feita:** o ambiente bloqueia os dois hosts; tudo usa manipuladores de teste e um ViaCEP de mentira (BACKLOG).
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 824 | 824 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 88 | 88 | 0 |
+| E2E (Playwright, site publicado em Production, ViaCEP de mentira) | 39 | 39 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| Cache valendo 30 dias e mais um | `CepEncontrado_ValeTrintaDias` (a fronteira de 30 dias exatos) |
+| `{"erro": true}` tratado como falha do serviço | 3 (`ErroDoViaCep_EhCepInexistente…` ×3) |
+| CEP incompleto consultando mesmo assim | 9 (endpoint ×6, serviço ×3) |
+| CEP inexistente tratado como encontrado (entra no cache) | 2 (`CepInexistente_NaoEntraNoCache`, `CepInexistente_Devolve404…`) |
+| Tempo limite padrão de 25 s em vez de 5 s | 2 (`ClienteReal_ConsultaARotaFixa…`, `Padroes_SaoOEnderecoEOTempoDoAdr007`) |
+| Cidade ignorando a lista do IBGE | `Cidade_ConferidaComAListaDoIbge_UsaONomeOficial…` |
+
+Todas foram desfeitas depois.
+
+**O que cada camada prova**
+
+- Unitários: `GET /api/v1/cep/{cep}` com 401 em JSON sem login (nada é consultado), 400 para 6 formas de CEP malformado sem consultar, 503 para 5xx e para falha de rede, 404 para `erro: true` sem entrar no cache, e **resposta com só `cep`, `city`, `uf` e `source`** mesmo quando o ViaCEP manda rua e bairro (D3); cliente real com a rota fixa `https://viacep.com.br/ws/{cep}/json/` e o tempo limite de 5 s; `ViaCepLookup` isolado (lento, cancelado pelo cliente, formatos ilegíveis, 6 códigos HTTP de erro, aviso com CEP e traceId); cache (29 dias e 23 horas vale, 30 vence, entrada vencida atualizada no lugar, vencida com o ViaCEP fora devolve 503 sem servir o dado velho, corrida de dois pedidos); padronização (nome oficial pelo código IBGE, regra da SPEC fora da lista, artigos minúsculos); `GET /api/v1/cities` (ordem sem acento, só a UF pedida, UF sem carga devolve `[]`, 400, cache privado de 10 min); 30 consultas por minuto por usuário (a 31ª recebe 429 `RATE_LIMITED` com `Retry-After` e outro usuário continua); 403 em JSON em `/api` e as páginas continuam redirecionando; texto da migration.
+- `CitiesImport.Tests`: leitura dos dois formatos de UF do IBGE, validação que recusa a carga inteira (código curto, UF inexistente, código que não é da UF, nome vazio ou longo, código ou nome repetido), script determinístico em lotes de 500 com aspas escapadas, `.sql` da amostra igual ao que a ferramenta gera do `.json`, recusa de produção antes de ler o arquivo.
+- Integração: CHECK do CEP e índice único de município em SQL Server; duas consultas do mesmo CEP ao mesmo tempo (6 rodadas) deixam uma linha só e ambas recebem resposta; o script da amostra aplica 40 municípios e aplicar de novo não muda nada; nova carga corrige nome, acrescenta e **não apaga**; o carregador em lote grava o mesmo que o script; `NameSearch` gravado = `Normalizer` do site para os 40; código de cada município pertence à UF dele.
+- E2E: `cep.js` real contra o endpoint real e um ViaCEP de mentira: encontrado (rua e bairro não chegam ao navegador), segundo pedido do cache (uma consulta externa só), incompleto sem chamar o servidor, 404 sem repetir, 503 repetindo uma vez com "tentativa 2 de 2" e depois `indisponivel` (exatamente duas chamadas), falha na primeira e sucesso na segunda, 401 em JSON sem login, 400 para UF inválida.
+
+**Achados desta rodada**
+
+1. **O limitador rodava antes da autenticação.** A política `cep` (por usuário) via todo mundo como anônimo e agrupava por IP: o teste "outro usuário não é afetado" pegou. O `UseRateLimiter` passou para depois do `UseAuthentication` (BACKLOG).
+2. **O cookie redirecionava chamadas `/api` para a página de entrada.** O contrato pede 401 e 403 em JSON; em `/api` agora são ProblemDetails e as páginas seguem redirecionando (testado nos dois sentidos).
+3. **Código IBGE × UF.** A validação de que os dois primeiros dígitos do código são os da UF confere todos os 40 códigos da amostra (escritos de memória) contra a UF informada; nomes e dígitos finais seguem a conferir na carga real.

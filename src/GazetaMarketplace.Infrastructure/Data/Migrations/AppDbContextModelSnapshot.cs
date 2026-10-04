@@ -2082,6 +2082,62 @@ namespace GazetaMarketplace.Infrastructure.Data.Migrations
                     b.ToTable("PasswordRecoveryAttempts", (string)null);
                 });
 
+            modelBuilder.Entity("GazetaMarketplace.Core.Location.CepCacheEntry", b =>
+                {
+                    b.Property<string>("Cep")
+                        .HasColumnType("char(8)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime>("FetchedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("IbgeCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Uf")
+                        .IsRequired()
+                        .HasColumnType("char(2)");
+
+                    b.HasKey("Cep");
+
+                    b.ToTable("CepCache", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CepCache_Cep", "[Cep] NOT LIKE '%[^0-9]%' AND LEN([Cep]) = 8");
+                        });
+                });
+
+            modelBuilder.Entity("GazetaMarketplace.Core.Location.City", b =>
+                {
+                    b.Property<int>("IbgeCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("NameSearch")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("Uf")
+                        .IsRequired()
+                        .HasColumnType("char(2)");
+
+                    b.HasKey("IbgeCode");
+
+                    b.HasIndex("Uf", "NameSearch")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_Cities_Uf_NameSearch");
+
+                    b.ToTable("Cities", (string)null);
+                });
+
             modelBuilder.Entity("GazetaMarketplace.Core.Settings.SiteSetting", b =>
                 {
                     b.Property<int>("Id")

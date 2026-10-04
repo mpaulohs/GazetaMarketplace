@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\src\GazetaMarketplace.Infrastructure\GazetaMarketplace.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\GazetaMarketplace.Web\GazetaMarketplace.Web.csproj" />
     <ProjectReference Include="..\..\tools\VehicleCatalogExport\VehicleCatalogExport.csproj" />
+    <ProjectReference Include="..\..\tools\CitiesImport\CitiesImport.csproj" />
   </ItemGroup>
 
 </Project>

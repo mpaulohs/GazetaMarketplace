@@ -37,7 +37,8 @@ paths:
       description: |
         Só para a equipe logada. Responde do cache do banco (30 dias) ou consulta o ViaCEP com uma tentativa de até 5 s.
         Em `503`, a tela repete uma vez ("tentativa 2 de 2") e, na segunda falha, abre o preenchimento manual (US-008-S14).
-        CEP inexistente responde `404` e não abre o preenchimento manual (S24).
+        CEP inexistente responde `404` e não abre o preenchimento manual (S24). Cada usuário pode fazer 30 consultas por minuto (`429`).
+        A resposta nunca traz rua nem bairro (NFR-19, S25).
       operationId: getCep
       security:
         - cookieAuth: []
@@ -61,12 +62,54 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/CepServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/cities:
+    get:
+      tags: [Localização]
+      summary: Municípios de uma UF
+      description: |
+        Só para a equipe logada. Alimenta a lista de cidades do preenchimento manual (US-008-S14). O navegador guarda a resposta por 10 minutos
+        (cache privado). Lista vazia = a UF ainda não tem carga do IBGE; a tela mostra um campo de texto e vale a padronização do nome da SPEC.
+      operationId: listCities
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: uf
+          in: query
+          required: true
+          description: Sigla de uma das 27 UFs
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+            example: SP
+      responses:
+        '200':
+          description: Cidades da UF em ordem alfabética, sem considerar acento
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CityItem'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -548,6 +591,18 @@ components:
           type: string
           enum: [cache, viacep]
           example: cache
+
+    CityItem:
+      type: object
+      required: [ibgeCode, name]
+      properties:
+        ibgeCode:
+          type: integer
+          description: Código do município no IBGE (7 dígitos)
+          example: 3509502
+        name:
+          type: string
+          example: Campinas
 
     Photo:
       type: object

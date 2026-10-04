@@ -5,6 +5,7 @@
     <Project Path="src/GazetaMarketplace.Web/GazetaMarketplace.Web.csproj" Id="a24c3387-1587-429d-ac65-9252f0ec8816" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/CitiesImport.Tests/CitiesImport.Tests.csproj" />
     <Project Path="tests/GazetaMarketplace.IntegrationTests/GazetaMarketplace.IntegrationTests.csproj" />
     <Project Path="tests/GazetaMarketplace.Web.Tests.Playwright/GazetaMarketplace.Web.Tests.Playwright.csproj" />
     <Project Path="tests/GazetaMarketplace.Web.Tests/GazetaMarketplace.Web.Tests.csproj" />

@@ -7,6 +7,7 @@ using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Entities;
 using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Interfaces;
+using GazetaMarketplace.Core.Location;
 using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Core.VehicleCatalog;
 using GazetaMarketplace.Infrastructure.Data.Configurations;
@@ -61,6 +62,10 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
     public DbSet<VehicleModelYear> VehicleModelYears => Set<VehicleModelYear>();
 
     public DbSet<VehicleVersion> VehicleVersions => Set<VehicleVersion>();
+
+    public DbSet<CepCacheEntry> CepCache => Set<CepCacheEntry>();
+
+    public DbSet<City> Cities => Set<City>();
 
     public DbSet<Ad> Ads => Set<Ad>();
 
