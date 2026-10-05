@@ -1,0 +1,66 @@
+/* Fila de revisão e pré-visualização (4.1). Só tokens e variáveis do Bootstrap; sem atributo style (CSP). */
+
+/* Em telas estreitas cada linha da fila vira um cartão empilhado: título, autor, categoria e data de envio (wireframe US-010, 320 px) */
+@media (max-width: 767.98px) {
+  .review-queue__tabela thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .review-queue__tabela,
+  .review-queue__tabela tbody,
+  .review-queue__tabela tr,
+  .review-queue__tabela th,
+  .review-queue__tabela td {
+    display: block;
+    width: 100%;
+  }
+
+  .review-queue__tabela tr {
+    margin-bottom: 1rem;
+    padding: .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+  }
+
+  .review-queue__tabela th,
+  .review-queue__tabela td {
+    padding: .25rem 0;
+    border: 0;
+  }
+
+  .review-queue__tabela td::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+  }
+}
+
+/* A foto em destaque reserva o espaço pelas medidas gravadas; as miniaturas são links de toque confortável */
+.ad-fotos__imagem {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--bs-border-radius);
+  background: var(--app-media-placeholder-bg);
+}
+
+.ad-fotos__miniatura {
+  display: block;
+  line-height: 0;
+  border-radius: var(--bs-border-radius-sm);
+}
+
+.ad-fotos__miniatura img {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--bs-border-radius-sm);
+}
+
+.ad-vaga,
+.ad-fotos__vazio {
+  border-radius: var(--bs-border-radius);
+}

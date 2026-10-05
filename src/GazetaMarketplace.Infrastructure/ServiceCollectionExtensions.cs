@@ -57,6 +57,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPhotoDelivery, Photos.PhotoDelivery>();
         services.AddScoped<IAdPhotoService, Photos.AdPhotoService>();
         services.AddScoped<IAdSubmission, Ads.AdSubmission>();
+        services.AddScoped<IReviewQueue, Ads.ReviewQueue>();
+        services.AddScoped<IAdSpecsReader, Ads.AdSpecsReader>();
         services.AddScoped<IPhotoReprocessing, Photos.PhotoReprocessing>();
         services.AddSingleton<Photos.OriginalsCleanupService>();
         services.AddHostedService(provider => provider.GetRequiredService<Photos.OriginalsCleanupService>());

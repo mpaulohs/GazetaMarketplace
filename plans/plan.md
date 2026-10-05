@@ -1437,38 +1437,42 @@
 
 **User stories**: US-010
 
-**Scenarios covered**: `@US-010-S01`, `@US-010-S02`, `@US-010-S06`, `@US-010-S09`
+**Scenarios covered**: `@US-010-S01`, `@US-010-S02` (parcial: só "Editar"; os outros botões chegam na 4.2 e na 4.3), `@US-010-S06`, `@US-010-S09`
 
 **NFRs covered**: `NFR-13`
 
-**References**: —
+**References**: ADR-004
 
 **Objective**: Fila de anúncios Em revisão (do mais antigo ao mais novo) e pré-visualização com a mesma aparência do site.
 
-**Files to modify**:
-- Trocar a página **provisória** `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/ReviewQueue.cshtml` (criada na 1.1) pela fila de revisão real; o Administrador cai nela depois de entrar (`PanelRoutes.ReviewQueue`)
-- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/ReviewQueueController.cs`
-- `src/GazetaMarketplace.Web/Areas/Panel/Views/ReviewQueue/*.cshtml`
-- `src/GazetaMarketplace.Core/Ads/ReviewQueueService.cs`
+**Decisões aprovadas (2026-10-05)**: D1 a pré-visualização mostra só "Editar" (botão sem ação é pior que botão ausente; a S02 passa a conferir os três botões na 4.2) · D2 corpo completo agora (características reais, capa grande, miniaturas simples sem JavaScript, bloco "Vaga de emprego", contato "Fale com a Gazeta"); a 5.2 troca só as fotos pela galeria · D3 consulta em EF `AsNoTracking` (filtro e ordem fixos; o Dapper fica para a 4.4 e a busca) · D4 fila sem paginação · D5 aba "Todos os anúncios" aponta para a lista provisória até a 4.4 · D6 data de envio em dd/mm/aaaa no fuso de São Paulo, hora em `title` e `<time datetime>`.
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Core/Ads/IReviewQueue.cs` (`IReviewQueue`, `ReviewQueueItem`, `IAdSpecsReader`) · `AdSpec.cs` · `AdSpecs.cs` (regra pura das características)
+- `src/GazetaMarketplace.Infrastructure/Ads/ReviewQueue.cs` (EF: `Status == InReview`, `ORDER BY` data de envio e id) · `AdSpecsReader.cs` (nomes do catálogo de veículos) · `ServiceCollectionExtensions.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/ReviewQueueController.cs` (`/painel/anuncios/fila` e `/painel/anuncios/{id}/pre-visualizacao`, só Administrador) · `Models/ReviewViewModels.cs`
+- `Views/ReviewQueue/Index.cshtml`, `Preview.cshtml`, `_Tabs.cshtml`, `LoadError.cshtml` · `Views/Shared/_AdPhotos.cshtml` · `wwwroot/css/pages/review-queue.css`
+- `Views/Shared/_AdBody.cshtml` e `Models/AdPresentationModels.cs` (`AdSpec` foi para o Core) · `AdsController.cs` (sai a ação provisória) · removida `Views/Ads/ReviewQueue.cshtml`
+- O item "Anúncios" do menu já ficava ativo em `/painel/anuncios/fila` (o menu compara o início do caminho), então `PanelMenu` não mudou.
 
 **Acceptance Criteria**:
-- [ ] `@US-010-S01` (@happy): Ver a fila de revisão — o *Then* do SPEC é atendido
-- [ ] `@US-010-S02` (@happy): Pré-visualizar um anúncio antes de decidir — o *Then* do SPEC é atendido
-- [ ] `@US-010-S06` (@edge): Fila de revisão vazia — o *Then* do SPEC é atendido
-- [ ] `@US-010-S09` (@negative): Redator não pode revisar anúncios — o *Then* do SPEC é atendido
-- [ ] A fila lista só Em revisão, do mais antigo ao mais novo, com total; vazia mostra mensagem
-- [ ] A pré-visualização usa o mesmo corpo do anúncio do site, mostra o selo de conferência de cidade/UF manual e as ações "Publicar", "Rejeitar", "Editar" e "Arquivar"
-- [ ] Redator não acessa a fila
+- [x] `@US-010-S01` (@happy): Ver a fila de revisão — o *Then* do SPEC é atendido
+- [x] `@US-010-S02` (@happy): Pré-visualizar um anúncio antes de decidir — atendido **em parte**: faixa, corpo igual ao público e "Editar"; "Publicar" e "Rejeitar" chegam na 4.2
+- [x] `@US-010-S06` (@edge): Fila de revisão vazia — o *Then* do SPEC é atendido
+- [x] `@US-010-S09` (@negative): Redator não pode revisar anúncios — o *Then* do SPEC é atendido
+- [x] A fila lista só Em revisão, do mais antigo ao mais novo (desempate pelo id; o reenvio vale pela data do último envio), com total; vazia mostra mensagem; falha de leitura mostra erro com "Tentar novamente" (503, sem detalhe técnico)
+- [x] A pré-visualização mostra a faixa "Pré-visualização — ainda não publicado", o selo de Cidade/UF manual (informativo), o corpo com características reais, fotos, contato e "Editar"; anúncio fora de revisão só informa a situação, sem botões
+- [x] Redator não acessa a fila nem a pré-visualização ("acesso negado"); sem login vai para a entrada
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewQueueTests.US010S01_VerAFilaDeRevisao` — `@US-010-S01`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewQueueTests.US010S02_PreVisualizarUmAnuncioAntesDeDecidir` — `@US-010-S02`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewQueueTests.US010S06_FilaDeRevisaoVazia` — `@US-010-S06`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewQueueTests.US010S09_RedatorNaoPodeRevisarAnuncios` — `@US-010-S09`
+**Tests added** (nomes reais):
+- `Web.Tests/Review/ReviewQueueTests` — 15 testes: `US010S01`, `US010S06`, `US010S09`, `US010S02`, desempate e reenvio, sem login, texto codificado e menu ativo, falha ao carregar, selo manual, sem telefone do site, Vagas, Serviços, fora de revisão, anúncio inexistente
+- `Web.Tests/Review/AdSpecsTests` — 9 testes: nomes do catálogo, milhar e unidades, dinheiro, decimais, múltipla escolha, campo vazio ou de outra categoria, ano 1950, tipo errado no JSON
+- `IntegrationTests/ReviewQueueSqlTests` — a consulta no SQL Server real (filtro, ordem, desempate, junção com autor e categoria) e a página
+- `Web.Tests.Playwright/Ads/ReviewQueueE2ETests` — 3 testes: Administrador (fila → pré-visualização com foto carregada → Editar → voltar), axe e rolagem em 1280/1024/768/320 px com o empilhamento em 320, Redator com "acesso negado"
 
 **Dependencies**: 3.7, 3.8, 1.1
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Abrir a fila e a pré-visualização com os dois papéis.
+**Verification**: Done when every test under "Tests added" passes (unitários 1234, integração 103, E2E 74) e as mutações são mortas; verificação manual: capturas da fila e da pré-visualização em 1280 e 360 px.
 
 **Estimate**: M
 

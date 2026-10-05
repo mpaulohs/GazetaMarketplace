@@ -663,3 +663,50 @@ Cada mutação derrubou só o teste esperado; os arquivos foram restaurados e o 
 2. `FakeViaCep` virou classe compartilhada nos E2E novos; as cópias antigas seguem (BACKLOG).
 3. Repetir o mesmo conjunto de E2E dezenas de vezes seguidas esgota o limite de entradas do painel (5 por 15 minutos por IP) e a entrada passa a estourar o tempo; não ocorre numa rodada normal.
 4. A triagem dos 112 itens abertos do BACKLOG está em `plans/BACKLOG-TRIAGEM-FASE-3.md` (antes do lançamento, Fases 4/5, decisão do Product Owner).
+
+## Tarefa 4.1 — fila de revisão e pré-visualização (US-010)
+
+> **Em resumo:** 1.234 testes unitários (24 novos), 43 e 27 das ferramentas, 103 de integração (1 novo, SQL Server real) e 74 de navegador (3 novos) passam. Das 10 mutações, 9 foram derrubadas e 1 é um mutante equivalente (o desempate por id da fila). A S02 fica **coberta em parte** de propósito: a pré-visualização mostra só "Editar"; "Publicar" e "Rejeitar" chegam na 4.2 e "Arquivar" na 4.3. Veredito: **aprovado**.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.234 | 1.234 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 103 | 103 | 0 |
+| E2E (Playwright: Production + Development) | 74 | 74 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| M1 Fila sem filtrar por situação | `US010S01`, `US010S06` |
+| M2 Ordem invertida (mais novo primeiro) | `US010S01`, desempate e reenvio |
+| M3 Ordenar pela criação em vez da data de envio | desempate e reenvio, `US010S01` |
+| M4 Fila aberta ao Redator (sem a política de Administrador) | `US010S09` |
+| M5 Selo de Cidade/UF manual sempre visível | `US010S02`, `PreVisualizar_CidadeEUfManuais…` |
+| M6 Pré-visualização de anúncio fora de revisão com a faixa e as ações | `PreVisualizar_AnuncioForaDeRevisao…` |
+| (extra) M7 Sem o desempate por id | **sobreviveu** (equivalente, ver abaixo) |
+| (extra) M8 Características sem separador de milhar | 3 (`Carros_Usa…`, `HorasDeUso…`, `US010S02`) |
+| (extra) M9 Características não omitem campo vazio | 6 |
+| (extra) M10 Marca mostrada como id em vez do nome do catálogo | `US010S02` |
+
+Os arquivos foram restaurados depois de cada mutação; a compilação final ficou limpa (0 avisos, 0 erros).
+
+**O que cada camada prova**
+
+- **S01:** três anúncios Em revisão gravados fora de ordem saem do mais antigo ao mais novo; cada linha mostra título (link para a pré-visualização), autor, categoria e data (dd/mm/aaaa, hora no `title`); Rascunho, Publicado, Rejeitado e Arquivado ficam de fora; o total aparece no texto e na aba "Fila de revisão (3)". Um anúncio rejeitado e reenviado vale pela data do último envio.
+- **S06:** fila vazia mostra "Nenhum anúncio aguardando revisão", sem tabela, com a aba "(0)".
+- **S09:** o Redator recebe "acesso negado" ("Você não tem permissão para acessar esta página", sem botões de decisão) na fila e na pré-visualização; sem login vai para a entrada. No navegador, uma conta de Redator criada pela tela de usuários (com troca da senha provisória) recebe o mesmo.
+- **S02 (em parte):** faixa "Pré-visualização — ainda não publicado" logo abaixo do `h1`, título do anúncio em `h2`, valor, local, descrição com quebras de linha, características reais (Marca "Honda", Modelo "Civic", Versão "LX", "45.000 km"), destaque e 3 miniaturas (links para a versão grande), contato "Fale com a Gazeta" com "(11) 91234-5678", `tel:` e WhatsApp, e o botão "Editar". Nenhum "Publicar", "Rejeitar" ou "Arquivar" existe.
+- Vagas mostra o bloco "Vaga de emprego" com as áreas (sem `<img>`, "Salário R$ 2.800", área fora das características); Serviços mostra o Tipo no lugar do preço; sem telefone do site, aviso com link para "Configurações"; o selo "Cidade/UF informadas manualmente (CEP não conferido)" só aparece quando a localização foi manual; anúncio fora de revisão só informa "Este anúncio não está em revisão. Situação: …"; anúncio inexistente é 404; título e descrição com HTML saem codificados.
+- **Falha ao ler a fila:** 503, "Não foi possível carregar os anúncios", "Tentar novamente" e código de referência, sem a mensagem da exceção.
+- **SQL Server real:** a consulta EF (junção com o autor, filtro e ordem) devolve a ordem esperada e a página abre.
+- **Navegador:** o anúncio enviado pela tela aparece na fila, a pré-visualização carrega a foto de verdade (entregue ao Administrador mesmo sem estar publicado), "Editar" leva ao formulário e o link "Fila de revisão" volta; axe sem violações e sem rolagem horizontal em 1280, 1024, 768 e 320 px, com as linhas empilhadas em 320 px e em tabela em 1280 px.
+
+**Achados desta rodada**
+
+1. **Mutante equivalente (M7):** `ORDER BY data, id` e `ORDER BY data` dão o mesmo resultado no SQLite e no SQL Server de teste, porque o desempate natural já é pelo id. O desempate fica no código como garantia de ordem estável (BACKLOG).
+2. **Fila grande:** o banco do E2E acumulou centenas de anúncios Em revisão; a página renderiza todos (sem paginação, decisão aprovada) e o axe passa.
+3. **Unidades das características:** só km e horas levam a unidade no valor; área e medidas já a trazem no rótulo.
+4. **Menu:** o item "Anúncios" já ficava ativo na fila, então `PanelMenu` não precisou mudar.
+5. **`AdSpec` foi para o Core** (a 5.2 usa a mesma regra); a classe antiga da camada web foi removida.
+6. O E2E do Redator deixa uma conta nova por rodada no banco de teste (BACKLOG).

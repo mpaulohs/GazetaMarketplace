@@ -18,7 +18,7 @@ namespace GazetaMarketplace.Web.Areas.Panel.Controllers;
 /// <summary>
 /// Criar e editar o rascunho do anúncio (US-008). A página funciona sem JavaScript: salvar é um POST com redirecionamento, e trocar a categoria sem
 /// JavaScript é o botão "Atualizar campos", que refaz o formulário sem salvar. Quem pode ver ou editar cada anúncio é decidido no servidor
-/// (<see cref="IAdService"/>), não por esta tela. "Meus anúncios" e a "Fila de revisão" continuam provisórios até as tarefas 4.4 e 4.1.
+/// (<see cref="IAdService"/>), não por esta tela. "Meus anúncios" continua provisório até a tarefa 4.4; a fila de revisão é do `ReviewQueueController`.
 /// </summary>
 [Route("painel/anuncios")]
 public sealed class AdsController(IAdService ads, IAdDraftService drafts, IAdSubmission submissions, AdFormFactory forms, ICurrentUser currentUser) : PanelControllerBase
@@ -30,10 +30,6 @@ public sealed class AdsController(IAdService ads, IAdDraftService drafts, IAdSub
 
     [HttpGet("")]
     public IActionResult Index() => View();
-
-    [HttpGet("fila")]
-    [Authorize(Policy = AccessPolicies.Administrator)]
-    public IActionResult ReviewQueue() => View();
 
     [HttpGet("novo")]
     public async Task<IActionResult> New(CancellationToken cancellationToken) =>

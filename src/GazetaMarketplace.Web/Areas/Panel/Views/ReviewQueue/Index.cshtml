@@ -1,0 +1,46 @@
+@using GazetaMarketplace.Core.Formatting
+@model ReviewQueueViewModel
+@{
+    ViewData["Title"] = "Fila de revisão";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/review-queue.css" asp-append-version="true" />
+}
+
+<h1 class="fs-3">Anúncios</h1>
+<partial name="_Tabs" model="Model.Count" />
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info" role="status" data-review-empty>Nenhum anúncio aguardando revisão</div>
+}
+else
+{
+    <p role="status" data-review-total>@(Model.Count == 1 ? "1 anúncio aguardando revisão" : Model.Count + " anúncios aguardando revisão"), do mais antigo ao mais recente</p>
+    <div class="review-queue">
+        <table class="table table-hover align-middle bg-body review-queue__tabela">
+            <caption class="visually-hidden">Anúncios aguardando revisão, do mais antigo ao mais recente</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Título</th>
+                    <th scope="col">Autor</th>
+                    <th scope="col">Categoria</th>
+                    <th scope="col">Enviado em</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ReviewQueueItem item in Model.Items)
+                {
+                    <tr data-ad-id="@item.Id">
+                        <th scope="row" class="fw-normal" data-label="Título">
+                            <a class="alvo-toque d-inline-flex align-items-center" asp-area="Panel" asp-controller="ReviewQueue" asp-action="Preview" asp-route-id="@item.Id">@item.Title</a>
+                        </th>
+                        <td data-label="Autor">@item.AuthorName</td>
+                        <td data-label="Categoria">@item.CategoryName</td>
+                        <td data-label="Enviado em"><time datetime="@item.SentAt.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture)" title="@CurrencyAndDateFormatter.FormatDateTime(item.SentAt)">@CurrencyAndDateFormatter.FormatDate(item.SentAt)</time></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

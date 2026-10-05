@@ -34,9 +34,6 @@ public sealed class AdCardViewModel
     public bool EagerImage { get; init; }
 }
 
-/// <summary>Uma linha "rótulo: valor" das características do anúncio, já em texto.</summary>
-public sealed record AdSpec(string Label, string Value);
-
 /// <summary>O corpo textual do anúncio (título, valor, local, descrição e características). A galeria fica de fora: é da página de detalhe.</summary>
 public sealed class AdBodyViewModel
 {
