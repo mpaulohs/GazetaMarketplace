@@ -858,3 +858,46 @@ O Q1 foi refeito uma vez porque a primeira forma da mutação não compilava (o 
 4. **E2E instável de montagem:** uma vez em ~8 rodadas completas o auxiliar que monta o anúncio perdeu a descrição digitada logo depois de trocar a categoria; ele agora espera a rede ficar parada (BACKLOG).
 5. **Teste removido (D8):** `SubmitForReviewTests.CliqueDuploEmParalelo…` (instável); a corrida de verdade continua provada em `SubmitForReviewConcurrencyTests`.
 6. **Dois pontos de volume registrados:** a busca não usa índice (o termo pode estar no meio do título) e a lista do Administrador ordena por `COALESCE(UpdatedAt, CreatedAt)`; revisar com volume real (BACKLOG).
+
+## Checkpoint 4 — Revisão completa (fechamento da Fase 4)
+
+> **Em resumo:** os três itens do checkpoint foram provados com contas e sessões de verdade, no SQL Server real e no site publicado: o ciclo de vida inteiro do anúncio funciona com os dois papéis, a decisão simultânea entre dois Administradores deixa uma só decisão e uma só auditoria (quem perde lê "por outro administrador"; o código é 302 com mensagem, não 409, por decisão de 2026-10-05), e cada ação fica em `AuditEntries` com o ator e as situações. Nenhum código de produto mudou. O `/review` da Fase 4 deu **APPROVE com condições**: 0 críticos, 6 avisos e 20 sugestões, todos registrados no BACKLOG e classificados em `plans/BACKLOG-TRIAGEM-FASE-4.md`. Veredito: **aprovado**, com 6 avisos 🟡 para o Product Owner corrigir ou aceitar antes do `/scan`.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.289 | 1.289 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 120 | 120 | 0 |
+| E2E (Playwright: Production + Development) | 90 | 90 | 0 |
+
+| Item do checkpoint | Prova |
+|---|---|
+| Fila, publicar, rejeitar, despublicar e arquivar com os dois papéis | `Checkpoint4E2ETests.CicloDeVida_…` no site publicado: o Administrador cria uma conta de Redator pela tela de usuários; o Redator cria e envia o anúncio e o vê "Em revisão" em "Meus anúncios" (sem a coluna "Autor"); o Administrador o rejeita com motivo; o Redator vê "Rejeitado" com o motivo na lista e na edição, corrige e reenvia (`@US-009-S04` de ponta a ponta, pendente desde a 3.7); o Administrador publica; o Redator vê "Publicado", só leitura e sem ações de retirada; o Administrador despublica, o Redator reenvia, o Administrador publica de novo e arquiva; o arquivado some da lista padrão do Redator, aparece ao filtrar por "Arquivado" e abre só para leitura; a foto chega ao visitante (200) só enquanto o anúncio está Publicado e dá 404 em Em revisão, despublicado e arquivado; o Redator na fila recebe "acesso negado" |
+| Decisão simultânea | `Checkpoint4LifecycleTests.DoisAdministradores_PublicamOMesmoAnuncio…` e `…_RejeitamOMesmoAnuncio…`, SQL Server real: 2 contas de Administrador em sessões separadas × 4 pedidos de cada, em 3 rodadas, para publicar e para rejeitar. Resultado: todos respondem 302, o anúncio termina na situação da decisão, **uma só** auditoria, o ator dela é quem venceu (`PublishedById`/`RejectedById`) e quem perdeu lê "Este anúncio já foi publicado/rejeitado por outro administrador". No navegador, `Checkpoint4E2ETests.DoisAdministradores_…`: uma conta de Administrador criada pela tela, duas sessões abrem a confirmação, a primeira publica, a segunda confirma depois e lê a mensagem na pré-visualização; a foto continua pública |
+| Ações em `AuditEntries` | `Checkpoint4LifecycleTests.CicloDeVidaCompleto_…`, SQL Server real, os dois papéis e dois Administradores: 8 linhas, na ordem, cada uma com ator e situações (`ad.submit` Redator Rascunho → Em revisão; `ad.reject` Administrador A com "Rejeitado — motivo: …"; `ad.submit` Rejeitado → Em revisão; `ad.publish` A; `ad.unpublish` Administrador B Publicado → Rascunho; `ad.submit`; `ad.publish` B; `ad.archive` A Publicado → Arquivado), todas com sucesso; reenviar um rejeitado limpa o motivo no anúncio (o histórico fica na auditoria); pedidos negados (Redator em publicar, rejeitar, despublicar e arquivar; pedidos sem token) não gravam nada |
+| Matriz de permissões (NFR-13) | `PermissionMatrixTests`: GET de lista, fila, pré-visualização, confirmar publicar, motivo da rejeição, confirmar despublicar e confirmar arquivar × {sem login → entrada, Redator → "acesso negado" (a lista abre), Administrador → 200}, sem alterar nada; POST de publicar, rejeitar, despublicar e arquivar: sem login → entrada, Redator com token → "acesso negado", Administrador sem token → 400, Administrador com token grava uma auditoria |
+
+| Mutação | Teste que caiu |
+|---|---|
+| C1 `ad.unpublish` sem o ator na auditoria | `CicloDeVidaCompleto_…` |
+| C2 O reenvio não limpa o motivo no anúncio | `CicloDeVidaCompleto_…` |
+| C3 A foto de um anúncio despublicado continua entregue ao visitante | `Checkpoint4E2ETests.CicloDeVida_…` ("despublicado: a foto sai do ar", 200 em vez de 404) |
+| (extra) C4 O GET de arquivar aberto ao Redator | `PermissionMatrixTests.Get_TodosOsEnderecosDaFase4_PorPapel` |
+| (extra) C5 A auditoria de `ad.reject` sem o ator | `CicloDeVidaCompleto_…`, `DoisAdministradores_Rejeitam…` |
+
+Os arquivos foram restaurados depois de cada mutação (`git diff` limpo); a compilação final ficou limpa (0 avisos, 0 erros) e o site do E2E foi publicado de novo no estado final.
+
+**Revisão de código (`/review` do kit, `reports/CODE_REVIEW.md`)**
+
+- **Veredito:** APPROVE com condições. Notas dos 5 eixos: Corretude 4, Legibilidade 4, Arquitetura 4, Segurança 4, Desempenho 4 (nenhum chega a 5 porque todos têm achado em aberto). Cobertura dos cenários: todos os de US-010 (S01 a S09), US-011 (S01 a S07) e US-012 (S01 a S08) têm caminho ligado ao app e teste que afirma o efeito observável; as partes de S03/S04 (US-010) e S01/S02 (US-011) que dependem da home, da busca e do endereço antigo, e a S04 da US-011 (favoritos), são da Fase 5.
+- **🟡 (6):** `pagina=` muito grande estoura o `OFFSET` e dá 503; ramos de repetição por conflito de `RowVersion` sem teste determinístico; contrato "409" no plano, na ADR-004 e na ARCHITECTURE (ajustado nesta rodada, ver abaixo); cobertura numérica nunca medida; rótulo de texto usado como chave na pré-visualização; `catch` vazio em `AdSpecsReader`.
+- **🟢 (20):** extrações de controller, CSS e auxiliar E2E; `!` e comentários; `Kind` da data do Dapper; cache de 1 ano da foto retirada; NVDA nas tabelas empilhadas; nomes de CSS/JS; volume. Cada um tem item no BACKLOG.
+- **Ajustes de documento feitos aqui (decisão D1):** a ADR-004, a ARCHITECTURE e o checklist do Checkpoint 4 agora dizem "302 com a mensagem; 409 só para edição concorrente e API". O BACKLOG teve a linha colada separada e o item do teste instável removido marcado como resolvido.
+- **Nada do código de produto foi corrigido nesta rodada**, como combinado ("só relatar"); os 6 avisos aguardam sua decisão.
+
+**Achados desta rodada**
+
+1. **Cobertura numérica:** não há pacote de cobertura instalado; medir pede `Microsoft.Testing.Extensions.CodeCoverage` (dependência nova, pelo processo de decisão de tecnologia). Fica como 🟡 4.
+2. **Docker:** o `dockerd` e o contêiner do E2E pararam de novo no meio da rodada e foram religados (já na documentação).
+3. **Auxiliar E2E copiado:** o Checkpoint 4 acrescentou uma versão com a página como parâmetro (5 cópias no total); a extração está no BACKLOG.

@@ -167,7 +167,7 @@ Os diagramas estão em `architecture/diagrams/`:
 | `TitleSearch`, `DescriptionSearch` | `nvarchar(200)`, `nvarchar(max)` | Título e descrição sem acento e em minúsculas, para a busca; preenchidos só pela aplicação (ADR-006) |
 | `AuthorId` | FK → AspNetUsers | Dono do anúncio (S10) |
 | `SentAt`, `PublishedAt`, `PublishedById`, `RejectedAt`, `RejectedById`, `RejectionReason`, `ArchivedAt` | | Rastro de decisão (S10); motivo visível ao autor (S9) |
-| auditoria (`CreatedAt/By`, `UpdatedAt/By`) + `RowVersion` | | Concorrência: dois administradores decidindo o mesmo anúncio → `409` (US-010) |
+| auditoria (`CreatedAt/By`, `UpdatedAt/By`) + `RowVersion` | | Concorrência: dois administradores decidindo o mesmo anúncio → o segundo recebe a mensagem "por outro administrador" (302 de volta à pré-visualização) e nada é gravado duas vezes (US-010); edição concorrente → `409` |
 
 **AdPhotos** — `Id`, `AdId`, `SortOrder` (0 = capa), `StorageKey` (nome do arquivo, gerado — nunca o nome enviado), `Width`, `Height`, `SizeBytes`, `OriginalKey` (caminho do original em `_originals/`; **nulo depois da limpeza de 30 dias**), `CreatedAt`.
 
@@ -254,7 +254,7 @@ As páginas Razor mostram as mensagens do SPEC na própria tela; os endpoints JS
 | `UNAUTHORIZED` | 401 | `UnauthorizedException` | Sessão ausente ou vencida em endpoint do painel | US-006 |
 | `FORBIDDEN` | 403 | `ForbiddenException` | Papel ou autoria insuficiente | US-008-S10, NFR-13 |
 | `NOT_FOUND` | 404 | `NotFoundException` | Recurso inexistente; CEP não encontrado; anúncio não publicado pedido pelo público | US-003-S06, US-008 |
-| `CONFLICT` | 409 | `ConflictException` | Edição concorrente (`rowversion`); nome de categoria repetido; limite de fotos atingido | US-010, US-013-S06, US-008-S04 |
+| `CONFLICT` | 409 | `ConflictException` | Edição concorrente (`rowversion`) do formulário e do envio; nome de categoria repetido; limite de fotos atingido (a decisão simultânea da revisão e da retirada nas páginas HTML responde 302 com a mensagem) | US-010, US-013-S06, US-008-S04 |
 | `RATE_LIMITED` | 429 | (limitador) | Excesso de tentativas | NFR-06 |
 | `CEP_SERVICE_UNAVAILABLE` | 503 | `ServiceUnavailableException` | ViaCEP sem resposta depois da nova tentativa | US-008-S14 |
 | `INTERNAL_ERROR` | 500 | qualquer outra | Erro não tratado; pilha só no log | todas |
