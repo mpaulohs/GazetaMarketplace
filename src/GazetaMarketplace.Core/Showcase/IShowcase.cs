@@ -21,9 +21,6 @@ public static class ShowcaseFilters
     /// um número enorme estouraria a conta do deslocamento na consulta (mesma regra da lista do painel).
     /// </summary>
     public const int MaxPage = 100_000;
-
-    /// <summary>Maior tamanho de slug que vale a pena procurar na árvore; o texto maior nunca é de uma categoria.</summary>
-    public const int SlugMaxLength = SlugGenerator.MaxLength;
 }
 
 /// <summary>Um anúncio publicado como a consulta o entrega: tudo o que o card precisa, com os atributos ainda em JSON (o serviço traduz).</summary>

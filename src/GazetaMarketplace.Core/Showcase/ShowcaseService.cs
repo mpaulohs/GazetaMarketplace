@@ -27,7 +27,8 @@ public sealed class ShowcaseService(IShowcaseReadRepository repository, ICategor
     public async Task<ShowcaseCategoryPage> CategoryAsync(string slug, int page, CancellationToken cancellationToken)
     {
         CategoryTreeSnapshot snapshot = await tree.GetAsync(cancellationToken);
-        CategoryNode category = slug is { Length: > 0 and <= ShowcaseFilters.SlugMaxLength } ? snapshot.FindBySlug(slug) : null;
+        // Qualquer texto vira uma busca no dicionário de slugs da árvore: o que não existe dá nulo (o tamanho do endereço já é limitado pelo servidor)
+        CategoryNode category = snapshot.FindBySlug(slug);
         if (category is null)
         {
             return new ShowcaseCategoryPage(null, [], [], snapshot.Roots, [], 0, 1, ShowcaseFilters.PageSize);
