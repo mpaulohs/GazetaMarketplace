@@ -1139,3 +1139,82 @@ Só os unitários já passam das duas metas, então o gate não depende do Docke
 4. **Telefone fixo:** a US-015 aceita fixo de 10 dígitos, mas o `wa.me` só abre conversa de WhatsApp (registrado no BACKLOG para decisão).
 5. **Docker:** o `dockerd` caiu de novo no meio da rodada (todos os testes de integração falharam em 0 ms) e foi religado; sem efeito nos resultados finais.
 6. **O E2E de contato não depende de um número fixo:** lê o telefone escrito na tela e confere os links contra ele (o `SettingsE2ETests` troca o número do banco de teste).
+
+## Tarefa 5.4 — busca e filtros (US-002, 2026-10-05)
+
+> **Em resumo:** `/busca` lista os anúncios publicados que atendem a todos os filtros do endereço: texto (cada palavra, sem acento e sem diferença de maiúscula, no título ou na descrição), categoria com as subcategorias, UF e cidade, preço em reais e as características do bem que a categoria escolhida oferece. Ordena (mais recentes, menor e maior preço), pagina de 24 em 24 e reabre idêntica em outra aba. Os 12 cenários da US-002 estão provados (S01 a S12); no SQL Server real a busca leva **6 ms (p95) com 200 anúncios e 52 ms com 6.000**, bem abaixo dos 500 ms da NFR-04. Junto, saiu o ajuste da 5.3: com telefone fixo só o botão "Ligar" aparece.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.564 | 1.564 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 151 | 151 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 131 | 131 | 0 |
+
+**Testes novos:** 148 unitários (`SearchRulesTests` 60 casos, `SearchTests` 28, `DecimalInputTests` 47, `PublicCitiesTests` 7, mais 6 do telefone fixo), 20 de integração (`SearchQueryTests`), 18 E2E (`SearchE2ETests`).
+
+| Cenário | Prova |
+|---|---|
+| S01 buscar por texto | `SearchTests.US002S01_…` (pede as palavras normalizadas; "1 anúncio encontrado"; a caixa do topo mostra o texto) e `SearchQueryTests.US002S01_…` no SQL Server: só publicados (rascunho, em revisão, rejeitado e arquivado com "civic" ficam de fora), texto sem acento e sem maiúscula no título **e** na descrição (o Corolla só tem "parece um civic" na descrição), todas as palavras em qualquer ordem; E2E pela caixa do topo |
+| S02 categoria, local e preço | `US002S02_…` e SQL Server: Carros em Campinas/SP até R$ 50.000 devolve só o Fit; faixa com extremos inclusive; categoria principal inclui filhas e netas; E2E combinando texto, UF e preço máximo |
+| S03 características de veículo | `US002S03_…`: marca, ano de/até e km máximo só aparecem (e só valem) em categoria de veículos; SQL Server: marca, modelo, ano e km; E2E: a categoria liga os filtros, marca carrega os modelos, trocar a marca esvazia o modelo, categoria nova tira o que não serve do endereço |
+| S04 terrenos por área | `US002S04_…`, SQL Server (extremos inclusive; anúncio sem área nunca passa numa faixa de área) e E2E |
+| S05 ordenar | `US002S05_…` (a ordem fica selecionada e em todo link de página; o "Ordenar" leva os filtros) e SQL Server (data, menor e maior preço, desempate estável pelo id nas três ordens); E2E escolhendo a ordem (envia sozinho) |
+| S06 paginar | `US002S06_…` (30 resultados: 24 + 6, "Próxima", página 2 destacada; página além do fim mostra a última) e SQL Server (total igual em todas as páginas, nenhum anúncio repetido ou perdido, capa com uma só linha por anúncio) |
+| S07 sem resultados | `US002S07_…` ("Nenhum anúncio encontrado para esses filtros" e "Limpar filtros" para `/busca`; site sem anúncios diz outra coisa) e E2E (Limpar filtros volta a todos) |
+| S08 faixa invertida | `US002S08_…` (erro junto do campo com `aria-invalid`, valores digitados mantidos, lista sem a faixa) e E2E: **com JavaScript** o envio é bloqueado, o endereço não muda e a lista continua igual; **sem JavaScript** o servidor mostra o mesmo erro |
+| S09 compartilhar | `US002S09_…` (o mesmo endereço pede a mesma consulta, campos e opções iguais, links de página com todos os filtros) e E2E (outra aba mostra os mesmos filtros, os mesmos resultados na mesma ordem); teste de produtor e consumidor: os nomes dos campos do formulário são exatamente os parâmetros que o servidor lê |
+| S10 trocar a UF | `US002S10_…` (a cidade só vale com a UF e da UF; fica desabilitada sem UF) e E2E: trocar SP por RJ volta a cidade para "Todas as cidades" e a lista passa a ter só cidades do RJ |
+| S11 falha | `US002S11_…` (503, "Não foi possível buscar agora. Tente novamente.", "Tentar novamente" para o mesmo endereço, código de referência, filtros preservados, nada técnico na tela) e SQL Server: a tabela trancada estoura os 10 s e dá 503 sem pilha, e a busca volta quando o bloqueio sai |
+| S12 320 px | `US002S12_…` (painel aberto no servidor; botões de abrir e fechar só com JavaScript; ordem busca, filtros, total e cards) e E2E em 320 px: painel recolhido ao carregar, abre e fecha, o foco volta ao botão, nada passa de 320 px, sem rolagem horizontal; com erro no filtro o painel não recolhe |
+| Sem JavaScript e acessibilidade | E2E sem JavaScript (formulário e "Ordenar" funcionam; a cidade libera depois de "Aplicar filtros"); axe sem violações em 5 páginas (com filtros de veículo, de terreno, com erro e sem resultado), em 1280 e 320 px |
+
+**Quais categorias oferecem cada filtro específico (lista exata, conferida por teste contra a árvore real de 100+ categorias):**
+
+| Filtros oferecidos | Categorias |
+|---|---|
+| Marca, modelo, ano e quilometragem máxima | **Carros, vans e utilitários** · **Motos** |
+| Ano e quilometragem máxima | **Caminhões** · **Ônibus** |
+| Área mínima e máxima | **Apartamentos** · **Casas** · **Terrenos, sítios e fazendas** · **Comércio e indústria** |
+| Nenhum | todas as outras: as 9 categorias principais (misturam grupos), Autopeças e as 5 peças, Barcos e aeronaves, Vagas, Serviços e Produtos em geral |
+
+**Ponto para decisão:** o filtro de **área** também aparece em Apartamentos, Casas e Comércio e indústria, não só em Terrenos. A busca segue o grupo de campos (ADR-006): o grupo Imóveis marca "Área (m²)" como filtrável para as quatro. Restringir a Terrenos pede uma regra por categoria no grupo; está no BACKLOG.
+
+**Desempenho (SQL Server 2022 real, contêiner):** p95 de **6,0 ms** com 200 anúncios cadastrados (NFR-04: abaixo de 500 ms) e **52,4 ms** com 6.000 cadastrados (2.000 publicados), em quatro formas de busca (texto, duas palavras com ordem por preço, categoria + UF + cidade + preço, texto + três categorias + página 2). O plano de categoria + UF não usa varredura de tabela. Nenhum índice novo foi necessário.
+
+**Mutações (16; 16 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| S1 mostra anúncio não publicado | morta (8, integração) |
+| S2 categoria sem as descendentes | morta |
+| S3 texto sem normalização | morta |
+| S4 palavras não restringem (o "e" vira "ou") | morta (6) |
+| S5 termo concatenado no SQL | morta (9): o `SqlBuilder` recusa o fragmento com aspas |
+| S6 ordem por data invertida | morta |
+| S7 Serviços dentro da faixa de preço | morta |
+| S8 Serviços no início do "Menor preço" | morta |
+| S9 página de 25 | morta (2) |
+| S10 faixa invertida aceita | morta (2) |
+| S11 cidade mantida ao trocar a UF | morta |
+| S12 filtro específico fora do grupo | morta |
+| S13 filtros fora do endereço | morta (3) |
+| J1 `lerNumero` do JavaScript aceita 3 casas decimais | morta (paridade com o `DecimalInput`) |
+| J2 painel não recolhe em tela estreita | morta (S12 no navegador) |
+| J3 trocar a UF não limpa a cidade | morta (S10 no navegador) |
+| (5.3) WhatsApp aparece para telefone fixo | morta (3) |
+
+As três mutações de JavaScript rodaram no site publicado (apagando as cópias `.gz` e `.br` do script; ver o runbook). A primeira tentativa **não** mutou nada (o navegador recebia a cópia comprimida original): os três "sobreviventes" daquela rodada eram artefato da rodada, não do teste, e foram refeitos.
+
+**Achados da rodada**
+
+1. **Paridade de implementação dupla (JavaScript × C#):** a conferência de faixa do navegador (`lerNumero`) repete a gramática do `DecimalInput` do servidor. As duas rodam sobre a mesma tabela de 41 entradas (`DecimalInputTests` e o E2E de paridade) e dão o mesmo valor em cada linha; o C# passou a usar `[0-9]` (o `\d` do .NET aceita dígitos de outros alfabetos, o do JavaScript não).
+2. **O texto casa em qualquer pedaço da palavra** ("acao" também acha "documentação"). É a decisão da ADR-006; registrado no BACKLOG.
+3. **Lista de cidades para o visitante:** a rota `/api/v1/cities` é só da equipe (com login e cache privado, testes antigos); a busca ganhou `/api/v1/public/cities`, pública e com cache compartilhável. 7 testes.
+4. **`SqlBuilder` recusa números soltos no SQL:** `CASE WHEN … THEN 1 ELSE 0 END` e `> 0` viraram parâmetros (`@First`, `@Last`, `@NoMatch`), no mesmo espírito de "valor nunca no texto do SQL".
+5. **"Buscando…" no navegador:** com a resposta atrasada por rota o Playwright perde o contexto da página no meio da espera, então o estado do botão é conferido disparando o envio e cancelando-o logo depois do tratamento da página, e o envio de verdade é conferido à parte (endereço enxuto, sem parâmetro vazio, botão de volta).
+6. **O Bootstrap ignora um clique no meio da animação de abrir/fechar o painel:** o E2E espera a animação terminar (`collapse show`) antes de clicar em "Fechar".
+7. **Na primeira rodada um E2E falhou ao publicar os anúncios de apoio** (etapa "Anúncio enviado para revisão" da tela, antes de tocar na busca) e não repetiu nas rodadas seguintes; o roteiro de publicação já era usado por outros E2E.
+8. **O campo "Preço" da tela do anúncio guarda os dígitos como centavos** (`5000` vira R$ 50,00): os anúncios de apoio usam `300000`, `500000` e `800000` (R$ 3.000, 5.000 e 8.000). Não é defeito: é a máscara do campo.
+9. **Docker:** nenhuma queda nesta rodada.

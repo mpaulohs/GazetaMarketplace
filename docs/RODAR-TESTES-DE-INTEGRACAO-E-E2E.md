@@ -113,6 +113,10 @@ docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '
 
 O limite global de 100 pedidos por minuto por IP também conta tudo que a suíte faz, e a suíte já passa disso: o site do E2E sobe com `RateLimiting__GlobalPerMinute=1000` (ver a lista de variáveis acima). O limite de login e de recuperação de senha (5 por 15 minutos) não é configurável.
 
+### Mutar um arquivo de `wwwroot` no site publicado
+
+O site do E2E serve, para cada script e folha de estilo, uma cópia comprimida ao lado do original (`search.js.gz` e `search.js.br`). Para testar uma mutação direto na pasta publicada, apague essas duas cópias do arquivo mutado antes de rodar o E2E (senão o navegador recebe o original comprimido) e restaure as três ao terminar. Confirme com `curl -k -H 'Accept-Encoding: identity' https://localhost:5443/js/pages/search.js` que o conteúdo servido é o mutado.
+
 ## Cobertura de código (unitários e integração)
 
 Os dois projetos de teste trazem a extensão `Microsoft.Testing.Extensions.CodeCoverage`; o escopo (o que entra na conta e o que fica de fora) está em `coverage.settings.xml`, na raiz. Rode cada projeto uma vez com cobertura (a de integração precisa do Docker) e junte os dois relatórios:

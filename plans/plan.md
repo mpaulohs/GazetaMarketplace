@@ -1772,81 +1772,52 @@
 **Objective**: Busca por texto normalizado com filtros por categoria, UF, cidade, preço e características do grupo, ordenação e paginação de 24, lida por um *read repository* em Dapper.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Core/Search/ISearchReadRepository.cs`
-- src/GazetaMarketplace.Infrastructure/Search/BuscaReadRepository.cs (Dapper, SQL montado pelo `SqlBuilder`)
-- `src/GazetaMarketplace.Core/Search/ISearchReadRepository.cs`
-- src/GazetaMarketplace.Infrastructure/Search/BuscaReadRepository.cs (Dapper, SQL montado pelo `SqlBuilder`)
+- `src/GazetaMarketplace.Core/Search/` — `SearchModels.cs` (`ISearchReadRepository`, `ISearch`, `SearchCriteria`, `SearchForm`…), `SearchService.cs`, `SearchFilters.cs`, `DecimalInput.cs`
+- `src/GazetaMarketplace.Infrastructure/Search/SearchReadRepository.cs` (Dapper, SQL montado pelo `SqlBuilder`; colunas do card em `Ads/AdCardSql.cs`, comuns com a vitrine)
 - `src/GazetaMarketplace.Web/Controllers/SearchController.cs`
-- `src/GazetaMarketplace.Web/Views/Search/Index.cshtml`
-- `src/GazetaMarketplace.Core/Search/SearchService.cs`
-- `src/GazetaMarketplace.Web/wwwroot/js/pages/search.js`
+- `src/GazetaMarketplace.Web/Views/Search/Index.cshtml` · `Views/Shared/_SearchCarry.cshtml` (a busca do cabeçalho leva os filtros)
+- `src/GazetaMarketplace.Web/Controllers/Api/PublicCitiesController.cs` (cidades da UF para o visitante)
+- `src/GazetaMarketplace.Web/wwwroot/js/pages/search.js` · `css/pages/search.css`
 
 **Acceptance Criteria**:
-- [ ] `@US-002-S01` (@happy): Buscar por texto — o *Then* do SPEC é atendido
-- [ ] `@US-002-S02` (@happy): Combinar categoria, localização e preço — o *Then* do SPEC é atendido
-- [ ] `@US-002-S03` (@happy): Filtrar por características de veículo — o *Then* do SPEC é atendido
-- [ ] `@US-002-S04` (@happy): Filtrar terrenos, sítios e fazendas por área — o *Then* do SPEC é atendido
-- [ ] `@US-002-S05` (@happy): Ordenar os resultados — o *Then* do SPEC é atendido
-- [ ] `@US-002-S06` (@happy): Paginar os resultados — o *Then* do SPEC é atendido
-- [ ] `@US-002-S07` (@edge): Busca sem resultados — o *Then* do SPEC é atendido
-- [ ] `@US-002-S08` (@negative): Faixa de preço invertida — o *Then* do SPEC é atendido
-- [ ] `@US-002-S09` (@edge): Compartilhar uma busca pelo endereço da página — o *Then* do SPEC é atendido
-- [ ] `@US-002-S10` (@edge): Trocar a UF limpa a cidade escolhida — o *Then* do SPEC é atendido
-- [ ] `@US-002-S11` (@negative): Falha ao buscar — o *Then* do SPEC é atendido
-- [ ] `@US-002-S12` (@edge): Busca em tela de celular estreita — o *Then* do SPEC é atendido
-- [ ] Texto compara título e descrição normalizados; categoria principal inclui todas as descendentes; os filtros se combinam; só anúncios publicados
-- [ ] Filtros específicos vêm do grupo da categoria escolhida (A7 c); trocar a UF limpa a cidade e a cidade só existe depois da UF
-- [ ] Serviços ficam fora da faixa de preço e no fim de "Menor preço" e "Maior preço" (A6); faixa invertida mostra o erro junto do campo
-- [ ] 24 por página com ordem estável; os filtros ficam no endereço e reabrem iguais; falha mostra mensagem com código de referência; consulta com parâmetros, nunca concatenação
-- [ ] A leitura é um *read repository* em Dapper; o fragmento do somente-publicados é o único de `SqlFragments` e cada consulta pública tem teste com anúncio em cada situação
-- [ ] Filtros e ordenação dinâmicos: valores sempre como parâmetros; coluna e direção de ordenação só de uma lista permitida
-- [ ] No `/build` as telas usam o repositório falso; a consulta é provada com SQL Server real no `/test`
-- [ ] A leitura é um *read repository* em Dapper; o fragmento do somente-publicados é o único de `SqlFragments` e cada consulta pública tem teste com anúncio em cada situação
-- [ ] Filtros e ordenação dinâmicos: valores sempre como parâmetros; coluna e direção de ordenação só de uma lista permitida
-- [ ] No `/build` as telas usam o repositório falso; a consulta é provada com SQL Server real no `/test`
-- [ ] **RC-15:** termo de busca com no máximo 100 caracteres (mensagem junto do campo) e consulta Dapper com `commandTimeout` de 10 s; estouro devolve 503 com código de referência, sem pilha
+- [x] `@US-002-S01` (@happy): Buscar por texto — o *Then* do SPEC é atendido
+- [x] `@US-002-S02` (@happy): Combinar categoria, localização e preço — o *Then* do SPEC é atendido
+- [x] `@US-002-S03` (@happy): Filtrar por características de veículo — o *Then* do SPEC é atendido
+- [x] `@US-002-S04` (@happy): Filtrar terrenos, sítios e fazendas por área — o *Then* do SPEC é atendido
+- [x] `@US-002-S05` (@happy): Ordenar os resultados — o *Then* do SPEC é atendido
+- [x] `@US-002-S06` (@happy): Paginar os resultados — o *Then* do SPEC é atendido
+- [x] `@US-002-S07` (@edge): Busca sem resultados — o *Then* do SPEC é atendido
+- [x] `@US-002-S08` (@negative): Faixa de preço invertida — o *Then* do SPEC é atendido
+- [x] `@US-002-S09` (@edge): Compartilhar uma busca pelo endereço da página — o *Then* do SPEC é atendido
+- [x] `@US-002-S10` (@edge): Trocar a UF limpa a cidade escolhida — o *Then* do SPEC é atendido
+- [x] `@US-002-S11` (@negative): Falha ao buscar — o *Then* do SPEC é atendido
+- [x] `@US-002-S12` (@edge): Busca em tela de celular estreita — o *Then* do SPEC é atendido
+- [x] Texto compara título e descrição normalizados; categoria principal inclui todas as descendentes; os filtros se combinam; só anúncios publicados
+- [x] Filtros específicos vêm do grupo da categoria escolhida (A7 c); trocar a UF limpa a cidade e a cidade só existe depois da UF
+- [x] Serviços ficam fora da faixa de preço e no fim de "Menor preço" e "Maior preço" (A6); faixa invertida mostra o erro junto do campo
+- [x] 24 por página com ordem estável; os filtros ficam no endereço e reabrem iguais; falha mostra mensagem com código de referência; consulta com parâmetros, nunca concatenação
+- [x] A leitura é um *read repository* em Dapper; o fragmento do somente-publicados é o único de `SqlFragments` e cada consulta pública tem teste com anúncio em cada situação
+- [x] Filtros e ordenação dinâmicos: valores sempre como parâmetros; coluna e direção de ordenação só de uma lista permitida
+- [x] No `/build` as telas usam o repositório falso; a consulta é provada com SQL Server real no `/test`
+- [x] A leitura é um *read repository* em Dapper; o fragmento do somente-publicados é o único de `SqlFragments` e cada consulta pública tem teste com anúncio em cada situação
+- [x] Filtros e ordenação dinâmicos: valores sempre como parâmetros; coluna e direção de ordenação só de uma lista permitida
+- [x] No `/build` as telas usam o repositório falso; a consulta é provada com SQL Server real no `/test`
+- [x] **RC-15:** termo de busca com no máximo 100 caracteres (mensagem junto do campo) e consulta Dapper com `commandTimeout` de 10 s; estouro devolve 503 com código de referência, sem pilha
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S01_BuscarPorTexto` — `@US-002-S01`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S02_CombinarCategoriaLocalizacaoEPreco` — `@US-002-S02`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S03_FiltrarPorCaracteristicasDeVeiculo` — `@US-002-S03`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S04_FiltrarTerrenosSitiosEFazendasPorArea` — `@US-002-S04`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S05_OrdenarOsResultados` — `@US-002-S05`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S06_PaginarOsResultados` — `@US-002-S06`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S07_BuscaSemResultados` — `@US-002-S07`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S08_FaixaDePrecoInvertida` — `@US-002-S08`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S09_CompartilharUmaBuscaPeloEnderecoDaPagina` — `@US-002-S09`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S10_TrocarAUFLimpaACidadeEscolhida` — `@US-002-S10`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/SearchE2ETests.US002S10_TrocarAUFLimpaACidadeEscolhida` — `@US-002-S10` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S11_FalhaAoBuscar` — `@US-002-S11`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchTests.US002S12_BuscaEmTelaDeCelularEstreita` — `@US-002-S12`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/SearchE2ETests.US002S12_BuscaEmTelaDeCelularEstreita` — `@US-002-S12` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S01_BuscarPorTexto` — `@US-002-S01` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S02_CombinarCategoriaLocalizacaoEPreco` — `@US-002-S02` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S03_FiltrarPorCaracteristicasDeVeiculo` — `@US-002-S03` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S04_FiltrarTerrenosSitiosEFazendasPorArea` — `@US-002-S04` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S05_OrdenarOsResultados` — `@US-002-S05` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S06_PaginarOsResultados` — `@US-002-S06` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/SearchQueryTests.US002S07_BuscaSemResultados` — `@US-002-S07` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Search/ServicosTests.FaixaDePreco_ExcluiServicos_OrdenacaoMandaParaOFim`
-- `tests/GazetaMarketplace.Web.Tests/Search/NormalizacaoTests.BuscaIgnoraAcentosEMaiusculas_NoTituloENaDescricao`
-- `tests/GazetaMarketplace.Web.Tests/Search/SecurityTests.Termo_E_Parametro_NaoConcatenado`
-- `tests/GazetaMarketplace.Web.Tests/Search/DesempenhoTests.Com200Anuncios_RespondeAbaixoDe500ms (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.SoAnunciosPublicados_EmCadaSituacao (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.SoAnunciosPublicados_EmCadaSituacao (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Search/SearchTests.TermoComMaisDe100Caracteres_MostraErroJuntoDoCampo`
-- `tests/GazetaMarketplace.Web.Tests/Search/BuscaQueryTests.ConsultaQueEstouraOTempo_Devolve503SemPilha (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Search/EnderecoHandoffTests.FiltrosNoEndereco_ReabremIguaisNoServidor (produtor: `search.js`; consumidor: `BuscaService`)`
+**Tests added** (classes em inglês; métodos de cenário em português com o prefixo `USxxxSnn`):
+- `tests/GazetaMarketplace.Web.Tests/Search/SearchRulesTests` — o que a busca entende do endereço: palavras normalizadas (até 5), 100 caracteres, categoria com descendentes, UF e cidade da UF, ordem, página, preço em reais, marca e modelo do catálogo, ano, quilometragem, área, a **lista exata de categorias com cada filtro**
+- `tests/GazetaMarketplace.Web.Tests/Search/SearchTests` — `US002S01` a `US002S12` na tela (repositório falso): campos preenchidos, mensagens junto do campo, links de página e do "Ordenar" com os filtros, 503 com os filtros preservados, endereço compartilhável, nomes dos campos = parâmetros lidos (produtor `search.js`/formulário, consumidor `SearchQueryModel`)
+- `tests/GazetaMarketplace.Web.Tests/Search/DecimalInputTests` e `PublicCitiesTests`
+- `tests/GazetaMarketplace.IntegrationTests/SearchQueryTests` — SQL Server real: só publicados (um em cada situação), texto sem acento nos dois campos, todas as palavras, categoria com descendentes, UF/cidade/preço, marca/ano/km, área, Serviços (A6), ordem estável, paginação, `%` `_` `[` e injeção como texto, 503 por tempo limite, plano de execução, desempenho (200 e 6.000 anúncios)
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Showcase/SearchE2ETests` — `US002S01/S02/S05`, `S07`, `S08` (com e sem JavaScript), `S09`, `S10`, `S03/S04`, `S12` (320 px), sem JavaScript, "Buscando…", paridade `lerNumero` × `DecimalInput`, axe
 
 **Dependencies**: 3.8, 3.1, 2.3, 0.7
 
 **Verification**: Done when every test under "Tests to add" passes, plus manual check: Combinar filtros no navegador e abrir o mesmo endereço em outra aba.
 
 **Estimate**: L
+
+**Decisões aprovadas (2026-10-05)**: D1 endereço em português, categoria por slug (ADR-006 atualizado) · D2 cada palavra (até 5) no título ou na descrição, `CHARINDEX` · D3 filtros pelo grupo de campos da categoria · D4 faixa invertida: com JavaScript bloqueia o envio, sem JavaScript o servidor mostra o erro e lista sem a faixa · D5 preço em reais, de 0 a R$ 99.999.999,99 · D6 marca e modelo em listas (modelo depende da marca) · D7 sem esqueleto, "Buscando…" · D8 painel aberto no servidor e recolhido pelo JavaScript em 320 px · D9 `noindex, follow`.
 
 ### Task 5.5: Favoritos no navegador
 
