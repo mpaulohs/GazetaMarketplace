@@ -234,10 +234,11 @@ public class AdDetailE2ETests : SitePage
         Assert.IsTrue(stripScrolls, "as 20 miniaturas rolam dentro da própria faixa");
 
         LocatorBoundingBoxResult stage = (await visitor.Locator("[data-gallery-stage]").BoundingBoxAsync().ConfigureAwait(false))!;
-        double y = stage.Y + stage.Height / 2;
-        await visitor.Mouse.MoveAsync((float)(stage.X + stage.Width - 20), (float)y).ConfigureAwait(false);
+        // O gesto começa na parte de cima da foto, longe das setas (que ficam no meio, nas bordas)
+        double y = stage.Y + stage.Height * 0.2;
+        await visitor.Mouse.MoveAsync((float)(stage.X + stage.Width * 0.75), (float)y).ConfigureAwait(false);
         await visitor.Mouse.DownAsync().ConfigureAwait(false);
-        await visitor.Mouse.MoveAsync((float)(stage.X + 40), (float)y, new() { Steps = 6 }).ConfigureAwait(false);
+        await visitor.Mouse.MoveAsync((float)(stage.X + stage.Width * 0.2), (float)y, new() { Steps = 6 }).ConfigureAwait(false);
         await visitor.Mouse.UpAsync().ConfigureAwait(false);
         await Expect(Counter(visitor)).ToHaveTextAsync("2 de 20").ConfigureAwait(false);
         await Expect(visitor.GetByRole(AriaRole.Dialog)).Not.ToBeVisibleAsync().ConfigureAwait(false);
