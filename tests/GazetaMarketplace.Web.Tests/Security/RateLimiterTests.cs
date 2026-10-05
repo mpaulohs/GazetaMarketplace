@@ -97,6 +97,26 @@ public sealed class RateLimiterTests
     }
 
     [TestMethod]
+    [DataRow("4", 4)]
+    [DataRow("0", 300)]
+    [DataRow("-1", 300)]
+    [DataRow("muitas", 300)]
+    public async Task LimiteDeFotos_PodeSerConfigurado_ValoresInvalidosVoltamPara300(string configured, int effective)
+    {
+        using WebFactory factory = new(configuration: new Dictionary<string, string> { ["RateLimiting:PhotosPerMinute"] = configured }, withDatabase: true);
+        using HttpClient client = factory.CreateClient();
+
+        // a foto não existe: 404 conta como pedido atendido; o que importa é quando o limite passa a devolver 429
+        for (int i = 1; i <= effective; i++)
+        {
+            Assert.AreEqual(HttpStatusCode.NotFound, (await Send(client, "/fotos/1/1-480.webp", "198.51.100.9")).StatusCode, "pedido " + i);
+        }
+
+        Assert.AreEqual(HttpStatusCode.TooManyRequests, (await Send(client, "/fotos/1/1-480.webp", "198.51.100.9")).StatusCode);
+        Assert.AreEqual(HttpStatusCode.OK, (await Send(client, "/api/v1/teste/log", "198.51.100.9")).StatusCode, "o limite global não foi gasto");
+    }
+
+    [TestMethod]
     public async Task LimiteDeLoginERecuperacao_NaoMudaComOLimiteGlobalConfigurado()
     {
         using WebFactory factory = new(configuration: new Dictionary<string, string> { ["RateLimiting:GlobalPerMinute"] = "1000" });

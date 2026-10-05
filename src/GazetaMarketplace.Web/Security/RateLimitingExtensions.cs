@@ -30,6 +30,9 @@ public static class RateLimitingExtensions
 
     public const int PhotosPerMinute = 300;
 
+    /// <summary>Chave de configuração do limite de entrega de fotos por IP. Existe para a suíte E2E (a página de um anúncio com 20 fotos já pede mais de 20 imagens, e a suíte abre dezenas de páginas de um IP só); em produção vale 300.</summary>
+    public const string PhotosPerMinuteKey = "RateLimiting:PhotosPerMinute";
+
     /// <summary>Política do envio de fotos: <c>[EnableRateLimiting("fotos-envio")]</c>. 30 por minuto <b>por usuário</b>, contando cada arquivo (uma foto por pedido, RC-6): cada envio gasta CPU e disco.</summary>
     public const string PhotoUploadPolicy = "fotos-envio";
 
@@ -75,7 +78,7 @@ public static class RateLimitingExtensions
                     _ => Window(Configured(context, PhotoUploadsPerMinuteKey, PhotoUploadsPerMinute), TimeSpan.FromMinutes(1))));
 
             options.AddPolicy(PhotoPolicy, context =>
-                RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(PhotosPerMinute, TimeSpan.FromMinutes(1))));
+                RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(Configured(context, PhotosPerMinuteKey, PhotosPerMinute), TimeSpan.FromMinutes(1))));
 
             options.OnRejected = RespondTooManyRequestsAsync;
         });

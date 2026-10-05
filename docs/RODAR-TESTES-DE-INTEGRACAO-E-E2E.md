@@ -60,6 +60,7 @@ export Authentication__SessionMinutes=1        # só para o teste de sessão exp
 export Site__BaseUrl=https://localhost:5443    # obrigatório em Production: endereço que vai nos links dos e-mails
 export RateLimiting__GlobalPerMinute=1000      # só no site do E2E: a suíte faz centenas de pedidos de um IP só (o padrão de produção é 100 por minuto)
 export RateLimiting__PhotoUploadsPerMinute=1000 # só no site do E2E: a suíte sobe dezenas de fotos de uma conta só (o padrão de produção é 30 por minuto por usuário)
+export RateLimiting__PhotosPerMinute=5000       # só no site do E2E: a página de um anúncio com 20 fotos já pede mais de 20 imagens e a suíte abre dezenas de páginas de um IP só (o padrão de produção é 300 por minuto por IP)
 export SendGrid__BaseUrl=http://localhost:5990 # só nos E2E: o SendGrid "de mentira" que o teste de recuperação de senha abre
 export ViaCep__BaseUrl=http://localhost:5991/ws/ # só nos E2E: o ViaCEP "de mentira" que o teste de CEP abre (em produção vale https://viacep.com.br/ws/)
 cd /caminho/publish && dotnet GazetaMarketplace.Web.dll
@@ -133,6 +134,7 @@ Depois de criar uma migration, rode `db/scripts/gerar-script.sh`. Ele chama `dot
 
 - **Script de banco:** aplicar `db/scripts/gazeta-idempotente.sql` com `sqlcmd -I` (redundância defensiva; o script já liga o `QUOTED_IDENTIFIER`).
 - **Limite de pedidos do E2E:** `RateLimiting__GlobalPerMinute=1000` só no site de teste. Sem isso, a suíte completa recebe 429 em páginas de login e os testes caem por tempo esgotado. Em produção a chave não existe e vale 100.
+- **Limite de entrega de fotos do E2E:** `RateLimiting__PhotosPerMinute=5000` só no site de teste. Sem isso, a galeria do detalhe do anúncio esgota os 300 pedidos por minuto e `PhotosE2ETests` recebe 429. Em produção a chave não existe e vale 300.
 - **Endereço do site:** definir `Site__BaseUrl` (https). Sem ele o site não sobe em Production, por segurança: o link do e-mail de redefinição de senha não pode nascer do cabeçalho Host.
 - **Arquivos estáticos:** em Production, os arquivos estáticos só saem da saída publicada. Rodar os testes de CSS contra a pasta publicada, nunca contra o código-fonte.
 
