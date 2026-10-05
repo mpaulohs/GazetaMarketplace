@@ -207,7 +207,7 @@ public class ShowcaseE2ETests : SitePage
                     await visitor.GetByRole(AriaRole.Navigation, new() { Name = "Subcategorias" }).GetByRole(AriaRole.Link, new() { Name = Subcategory }).ClickAsync().ConfigureAwait(false);
                 }
 
-                await Expect(visitor.GetByRole(AriaRole.Heading, new() { Name = heading })).ToBeVisibleAsync().ConfigureAwait(false);
+                await Expect(visitor.GetByRole(AriaRole.Heading, new() { Name = heading, Exact = true })).ToBeVisibleAsync().ConfigureAwait(false);
                 await visitor.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
                 AxeResult result = await visitor.RunAxe(options).ConfigureAwait(false);
                 Assert.AreEqual(0, result.Violations.Length, $"{heading} em {width}px: " + string.Join("; ", result.Violations.Select(Describe)));

@@ -63,7 +63,7 @@ public class CepE2ETests : SitePage
                 (int status, string body) = cep switch
                 {
                     // Rua e bairro vêm na resposta externa e não podem chegar ao navegador
-                    "13015100" => (200, """{"cep":"13015-100","logradouro":"Rua Barão de Jaguara","bairro":"Centro","localidade":"Campinas","uf":"SP","ibge":"3509502"}"""),
+                    "13015300" => (200, """{"cep":"13015-300","logradouro":"Rua Barão de Jaguara","bairro":"Centro","localidade":"Campinas","uf":"SP","ibge":"3509502"}"""),
                     "99999999" => (200, """{"erro":true}"""),
                     "50000000" => (500, "falhou"),
                     "60000000" => hit == 1 ? (500, "falhou") : (200, """{"localidade":"Valinhos","uf":"SP","ibge":"3556206"}"""),
@@ -112,14 +112,15 @@ public class CepE2ETests : SitePage
         await SignInAsync(Page).ConfigureAwait(false);
 
         // 200: a primeira vem do ViaCEP, a segunda do cache do banco (uma consulta externa só). Pontuação do CEP digitado é ignorada
-        JsonElement found = await RunAsync(Page, "m.consultarCep('13015-100', $ATTEMPTS)").ConfigureAwait(false);
-        JsonElement cached = await RunAsync(Page, "m.consultarCep('13015100', $ATTEMPTS)").ConfigureAwait(false);
+        // O CEP 13015-300 é só deste teste: os outros E2E cadastram anúncios com 13015-100 e deixam essa entrada no cache de CEP do banco; com ele, este teste não depende da ordem de execução
+        JsonElement found = await RunAsync(Page, "m.consultarCep('13015-300', $ATTEMPTS)").ConfigureAwait(false);
+        JsonElement cached = await RunAsync(Page, "m.consultarCep('13015300', $ATTEMPTS)").ConfigureAwait(false);
         Assert.AreEqual("encontrado", Status(found));
         Assert.AreEqual("Campinas", found.GetProperty("r").GetProperty("cidade").GetString());
         Assert.AreEqual("SP", found.GetProperty("r").GetProperty("uf").GetString());
         Assert.AreEqual("viacep", found.GetProperty("r").GetProperty("origem").GetString());
         Assert.AreEqual("cache", cached.GetProperty("r").GetProperty("origem").GetString());
-        Assert.AreEqual(1, viaCep.Hits("13015100"), "o segundo pedido não chegou ao ViaCEP");
+        Assert.AreEqual(1, viaCep.Hits("13015300"), "o segundo pedido não chegou ao ViaCEP");
         StringAssert.DoesNotMatch(found.GetRawText(), new Regex("Jaguara|Centro|logradouro|bairro"), "rua e bairro não chegam ao navegador");
 
         // S23: menos de 8 dígitos não chama o servidor
