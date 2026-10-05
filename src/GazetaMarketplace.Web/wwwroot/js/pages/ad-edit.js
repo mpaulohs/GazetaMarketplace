@@ -77,22 +77,33 @@ function trocaDeCategoria(form) {
   selecao.addEventListener("change", async () => {
     controlador?.abort();
     controlador = new AbortController();
-    const valores = coletar(regiao);
     const endereco = `${form.dataset.fieldsUrl}?categoryId=${encodeURIComponent(selecao.value)}`;
+    // Campo em que a pessoa digitou depois de escolher a categoria, enquanto o servidor respondia
+    let digitando = null;
+    const aoDigitar = (evento) => {
+      digitando = evento.target.name || null;
+    };
+    regiao.addEventListener("input", aoDigitar);
 
     try {
       const resposta = await fetch(endereco, { credentials: "same-origin", headers: { Accept: "text/html" }, signal: controlador.signal });
       if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
       // O HTML é a parcial do Razor, nunca texto montado no navegador. O DOMParser só lê (não executa script) e os nós passam para a página (RC-17: sem innerHTML)
       const documento = new DOMParser().parseFromString(await resposta.text(), "text/html");
+      // Os valores são lidos só agora, com a resposta já na mão: o que a pessoa digitou enquanto o servidor respondia não se perde
+      const valores = coletar(regiao);
       regiao.replaceChildren(...documento.body.childNodes);
       restaurar(regiao, valores);
       if (aviso) aviso.textContent = `Campos atualizados para a categoria ${selecao.selectedOptions[0]?.textContent ?? ""}.`;
-      selecao.focus();
+      // Quem digitou num campo que continua existindo segue nele; nos demais casos o foco volta à categoria (S09)
+      const continuaDigitando = digitando ? [...regiao.querySelectorAll("input[name], select[name], textarea[name]")].find((controle) => controle.name === digitando) : null;
+      (continuaDigitando ?? selecao).focus();
     } catch (erro) {
       if (erro?.name === "AbortError") return;
       if (aviso) aviso.textContent = "Não foi possível atualizar os campos. Use o botão Atualizar campos.";
       document.getElementById("atualizar-campos")?.classList.remove("somente-sem-js");
+    } finally {
+      regiao.removeEventListener("input", aoDigitar);
     }
   });
 }

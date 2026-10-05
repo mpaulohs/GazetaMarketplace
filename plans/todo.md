@@ -43,7 +43,10 @@
 - [x] Task 3.7: Enviar anúncio para revisão
 - [x] Task 3.8: Componentes de apresentação do anúncio: card, valor e bloco sem foto
 
-## Checkpoint 3 — Anúncios completos
+## Checkpoint 3 — Anúncios completos (fechado em 2026-10-05)
+- [x] Rascunho com fotos e envio para revisão funcionam para Carros, Serviços e Vagas
+- [x] Fotos: HEIC convertido, GPS removido, `_originals/` sem rota
+- [x] Teste diferencial das colunas calculadas escrito e passando
 
 ## Fase 4 — Revisão e ciclo de vida
 - [ ] Task 4.1: Fila de revisão e pré-visualização

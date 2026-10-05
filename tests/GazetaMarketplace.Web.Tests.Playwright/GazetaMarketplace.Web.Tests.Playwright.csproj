@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <None Include="Photos\Fixtures\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\GazetaMarketplace.Web.Tests\Photos\Fixtures\sample.heic" Link="Photos\Fixtures\sample.heic" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

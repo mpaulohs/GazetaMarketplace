@@ -1424,10 +1424,10 @@
 ---
 ## Checkpoint 3 — Anúncios completos
 
-**Verify before proceeding**:
-- [ ] Rascunho com fotos e envio para revisão funcionam para Carros, Serviços e Vagas
-- [ ] Fotos: HEIC convertido, GPS removido, `_originals/` sem rota
-- [ ] Teste diferencial das colunas calculadas escrito (roda no `/test`)
+**Verify before proceeding** (verificado em 2026-10-05; evidências em `reports/TEST_REPORT.md` §Checkpoint 3):
+- [x] Rascunho com fotos e envio para revisão funcionam para Carros, Serviços e Vagas (`Checkpoint3E2ETests`, no site publicado)
+- [x] Fotos: HEIC convertido, GPS removido, `_originals/` sem rota (`Checkpoint3E2ETests.Fotos_JpegComGpsEHeic…`, nos bytes entregues pelo site publicado)
+- [x] Teste diferencial das colunas calculadas escrito e passando (`ComputedColumnsDifferentialTests`, SQL Server real, 4 testes)
 
 ---
 

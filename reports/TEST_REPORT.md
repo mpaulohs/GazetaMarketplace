@@ -619,3 +619,47 @@ M7 não compilava na primeira forma (parâmetro sem uso é erro com `TreatWarnin
 3. **SPEC v1.3:** a obrigatoriedade da área em Terrenos entrou no Apêndice B e no histórico de revisões.
 4. **Verificação visual:** capturas em 1280 e 360 px da página de componentes conferidas à mão (cards alinhados, bloco neutro do mesmo tamanho da capa, corpo legível).
 5. **`dotnet format` aplicado só aos arquivos da tarefa** (`--include`).
+
+## Checkpoint 3 — Anúncios completos (fechamento da Fase 3)
+
+> **Em resumo:** os três itens do checkpoint foram provados no site publicado e no SQL Server real. A jornada rascunho → fotos → envio para revisão passa para **Carros, Serviços e Vagas**; o HEIC chega como WebP, o GPS não aparece em nenhuma versão entregue e os originais não têm rota; o teste diferencial das colunas calculadas passa. A verificação achou **uma falha real** no formulário (preço digitado durante a troca de categoria se perdia), corrigida. Suítes: 1.210 unitários, 43 e 27 das ferramentas, 102 de integração e 71 de navegador, todas verdes. Veredito: **aprovado**.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.210 | 1.210 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 102 | 102 | 0 |
+| E2E (Playwright: Production + Development) | 71 | 71 | 0 |
+
+| Item do checkpoint | Prova |
+|---|---|
+| Rascunho com fotos e envio para revisão: Carros | `Carros_RascunhoComFoto_SemFotoNaoEnvia_ComFotoVaiParaRevisao`: preenche marca, modelo, ano, versão e km; sem foto o envio mostra só "Adicione ao menos 1 foto" e a situação continua Rascunho; com foto vai a Em revisão (conferido ao reabrir) |
+| Serviços | `Servicos_SemPreco_ComDuasFotos_VaiParaRevisao`: sem campo de preço, duas fotos, envio |
+| Vagas | `Vagas_SemFotos_ComSalario_VaiParaRevisaoSemExigirFoto`: a seção de fotos não existe, "Salário" com máscara, envio sem foto |
+| HEIC convertido, GPS removido | `Fotos_JpegComGpsEHeic_ChegamComoWebpSemGps…`: um JPEG com GPS montado à mão (latitude presente nos bytes enviados) e o `sample.heic` sobem pela tela; as duas versões (480 e 1600) de cada foto chegam como `image/webp` (`RIFF…WEBP`), sem bloco `EXIF` nem `XMP ` e sem a latitude nos bytes |
+| `_originals/` sem rota | 8 caminhos (`/fotos/{ad}/_originals/…`, `/_originals/…`, `-original.webp`, `.jpg`, `..%2F`) respondem 404; quem não entrou também recebe 404 nas fotos de um rascunho |
+| Teste diferencial das colunas calculadas | `ComputedColumnsDifferentialTests` isolado, 4 testes, SQL Server real: Carros (33), Motos (36), Caminhões e Ônibus (34, 35) e Imóveis (26, 27, 30, 31), todas as classes de entrada; o teste de completude garante que nenhum grupo com filtro fica de fora |
+
+| Mutação | Teste que caiu |
+|---|---|
+| MA Vagas passam a exigir foto | `Vagas_SemFotos_ComSalario_…` |
+| MB Serviços passam a exigir preço | `Servicos_SemPreco_ComDuasFotos_…` |
+| MC Envio sem conferir a foto exigida | `Carros_RascunhoComFoto_SemFotoNaoEnvia_…` |
+| (extra) MD O foco volta sempre à categoria depois da troca | `TrocaDeCategoria_PrecoDigitadoEnquantoOServidorResponde_…` |
+| (extra) Desfazer a correção do `ad-edit.js` | o mesmo teste |
+
+Cada mutação derrubou só o teste esperado; os arquivos foram restaurados e o site, publicado de novo no estado final.
+
+**Falha real encontrada e corrigida (lacuna do checkpoint)**
+
+- **O preço digitado enquanto o servidor devolve os campos da nova categoria se perdia.** O `ad-edit.js` lia os valores do formulário no instante da troca e os repunha depois da resposta; o que a pessoa digitasse nesse intervalo (alguns milissegundos normalmente; vários segundos no primeiro pedido depois de o site subir) era sobrescrito. O Carros do checkpoint falhava sempre logo após reiniciar o site.
+- **Correção mínima:** os valores passam a ser lidos **com a resposta já na mão**, e o foco continua no campo em que a pessoa digitou (nos demais casos volta à categoria, como a S09 pede). Teste novo: `TrocaDeCategoria_PrecoDigitadoEnquantoOServidorResponde_NaoSePerde_ESeguePodendoDigitar` (atraso de 1,5 s na resposta; sem a correção ele cai).
+- A primeira versão da correção mantinha o foco no campo ativo mesmo sem digitação e quebrou `US008S09`; foi ajustada para só preservar o foco de quem digitou depois da troca.
+
+**Outros achados**
+
+1. Os testes de navegador agem só depois de o script da página rodar (`multiple` do campo de fotos) e de a rede assentar; sem isso, logo depois de o site subir, `SetInputFiles` caía na página sem script.
+2. `FakeViaCep` virou classe compartilhada nos E2E novos; as cópias antigas seguem (BACKLOG).
+3. Repetir o mesmo conjunto de E2E dezenas de vezes seguidas esgota o limite de entradas do painel (5 por 15 minutos por IP) e a entrada passa a estourar o tempo; não ocorre numa rodada normal.
+4. A triagem dos 112 itens abertos do BACKLOG está em `plans/BACKLOG-TRIAGEM-FASE-3.md` (antes do lançamento, Fases 4/5, decisão do Product Owner).
