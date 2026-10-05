@@ -137,6 +137,17 @@ public sealed class WhatsAppLinkTests
     }
 
     [TestMethod]
+    [DataRow("11912345678", true)]
+    [DataRow("21987654321", true)]
+    [DataRow("1134567890", false)]
+    [DataRow("", false)]
+    [DataRow(null, false)]
+    public void WhatsApp_SoParaCelular_OnzeDigitos(string digits, bool expected)
+    {
+        Assert.AreEqual(expected, WhatsAppLink.IsAvailableFor(digits));
+    }
+
+    [TestMethod]
     [DataRow(null)]
     [DataRow("")]
     [DataRow("  ")]

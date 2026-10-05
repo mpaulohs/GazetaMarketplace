@@ -13,6 +13,12 @@ public static class WhatsAppLink
     /// <summary>Tamanho máximo do título dentro da mensagem.</summary>
     public const int TitleMaxLength = 120;
 
+    /// <summary>
+    /// O WhatsApp só abre conversa com número de celular: DDD e 9 dígitos (11 no total, o nono dígito é sempre 9 depois da validação de <c>PhoneNumber</c>). Telefone fixo
+    /// (10 dígitos) não tem WhatsApp: o botão não é mostrado, só o "Ligar".
+    /// </summary>
+    public static bool IsAvailableFor(string phoneDigits) => phoneDigits is { Length: 11 };
+
     /// <summary>O texto da conversa, antes de codificar: <c>Olá! Tenho interesse no anúncio “{título}”: {endereço}</c>.</summary>
     public static string Message(string title, string pageUrl)
     {

@@ -86,7 +86,7 @@ public sealed class ContactTests
     }
 
     [TestMethod]
-    public async Task US004S03_TelefoneFixoDeDezDigitos_EscritoComTraco()
+    public async Task US004S03_TelefoneFixoDeDezDigitos_EscritoComTraco_SoLigar_SemBotaoDoWhatsApp()
     {
         using DraftSite site = await DraftSite.StartAsync();
         await SetPhoneAsync(site, "1134567890");
@@ -96,6 +96,20 @@ public sealed class ContactTests
 
         StringAssert.Contains(Text(raw), "(11) 3456-7890");
         Assert.AreEqual("tel:+551134567890", CallHref(raw));
+        Assert.IsFalse(Regex.IsMatch(raw, @"wa\.me|Chamar no WhatsApp|data-contact-whatsapp"), "o WhatsApp só abre conversa de celular: com telefone fixo só aparece o Ligar");
+    }
+
+    [TestMethod]
+    public async Task US004S03_TelefoneCelularDeOnzeDigitos_TemOsDoisBotoes()
+    {
+        using DraftSite site = await DraftSite.StartAsync();
+        await SetPhoneAsync(site, "11912345678");
+        int id = await AddAsync(site, "Honda Civic 2018", 33);
+
+        (_, string raw) = await GetRawAsync(site, Url(id, "Honda Civic 2018"));
+
+        Assert.IsTrue(CallLinkTag.IsMatch(raw));
+        Assert.IsTrue(WhatsAppLinkTag.IsMatch(raw));
     }
 
     [TestMethod]

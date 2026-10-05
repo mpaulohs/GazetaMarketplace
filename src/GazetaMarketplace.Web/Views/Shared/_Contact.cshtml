@@ -6,7 +6,10 @@
         <p class="fs-5 fw-bold mb-3" data-phone>@Model.Display</p>
         <div class="d-grid gap-2">
             <a class="btn btn-primary alvo-toque" href="@Model.TelHref" data-contact-call><i class="fa fa-phone me-2" aria-hidden="true"></i>Ligar<span class="visually-hidden"> para @Model.Display</span></a>
-            <a class="btn btn-success alvo-toque" href="@Model.WhatsAppHref" target="_blank" rel="noopener noreferrer" data-contact-whatsapp><i class="fa fa-whatsapp me-2" aria-hidden="true"></i>Chamar no WhatsApp<span class="visually-hidden">, abre em nova aba</span></a>
+            @if (Model.WhatsAppHref is not null)
+            {
+                <a class="btn btn-success alvo-toque" href="@Model.WhatsAppHref" target="_blank" rel="noopener noreferrer" data-contact-whatsapp><i class="fa fa-whatsapp me-2" aria-hidden="true"></i>Chamar no WhatsApp<span class="visually-hidden">, abre em nova aba</span></a>
+            }
         </div>
     </div>
 </aside>
