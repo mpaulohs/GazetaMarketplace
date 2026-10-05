@@ -61,16 +61,7 @@ public class AdDetailE2ETests : SitePage
         return _singlePath;
     }
 
-    // O endereço do anúncio publicado: o card dele é o primeiro da página inicial (os mais recentes vêm primeiro)
-    private async Task<string> FindPathAsync(string title)
-    {
-        IBrowserContext context = await Browser.NewContextAsync(new BrowserNewContextOptions { IgnoreHTTPSErrors = true }).ConfigureAwait(false);
-        IPage visitor = await context.NewPageAsync().ConfigureAwait(false);
-        await visitor.GotoAsync(Url("/")).ConfigureAwait(false);
-        string href = (await visitor.GetByRole(AriaRole.Link, new() { NameRegex = new Regex("^" + Regex.Escape(title)) }).First.GetAttributeAsync("href").ConfigureAwait(false))!;
-        await context.CloseAsync().ConfigureAwait(false);
-        return href;
-    }
+    private Task<string> FindPathAsync(string title) => PublishingFlow.PublicPathAsync(Browser, title);
 
     private async Task<IPage> VisitorAsync(string path, int? width = null, bool javaScript = true)
     {

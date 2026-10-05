@@ -17,6 +17,17 @@ internal static class PublishingFlow
 
     private static string Fixture(string name) => Path.Combine(AppContext.BaseDirectory, "Photos", "Fixtures", name);
 
+    /// <summary>O endereço (<c>/anuncio/{id}/{slug}</c>) do anúncio publicado de <paramref name="title"/>: o card dele na página inicial, vista por um visitante (os mais recentes vêm primeiro).</summary>
+    public static async Task<string> PublicPathAsync(IBrowser browser, string title)
+    {
+        IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions { IgnoreHTTPSErrors = true }).ConfigureAwait(false);
+        IPage visitor = await context.NewPageAsync().ConfigureAwait(false);
+        await visitor.GotoAsync(Url("/")).ConfigureAwait(false);
+        string href = (await visitor.GetByRole(AriaRole.Link, new() { NameRegex = new Regex("^" + Regex.Escape(title)) }).First.GetAttributeAsync("href").ConfigureAwait(false))!;
+        await context.CloseAsync().ConfigureAwait(false);
+        return href;
+    }
+
     public static string Unique(string prefix) => $"{prefix} {Guid.NewGuid().ToString("N")[..8]}";
 
     public static async Task SignInAdminAsync(IPage page)

@@ -28,9 +28,9 @@ internal sealed class DraftSite : IDisposable
 
     public HttpClient Admin => Harness.Admin;
 
-    public static async Task<DraftSite> StartAsync(int? requestsPerMinute = null, string photoFolder = null, Action<Microsoft.Extensions.DependencyInjection.IServiceCollection> services = null)
+    public static async Task<DraftSite> StartAsync(int? requestsPerMinute = null, string photoFolder = null, Action<Microsoft.Extensions.DependencyInjection.IServiceCollection> services = null, Dictionary<string, string> extraConfiguration = null)
     {
-        Dictionary<string, string> configuration = [];
+        Dictionary<string, string> configuration = extraConfiguration is null ? [] : new(extraConfiguration);
         if (requestsPerMinute is { } limit)
         {
             configuration["RateLimiting:GlobalPerMinute"] = limit.ToString(System.Globalization.CultureInfo.InvariantCulture);

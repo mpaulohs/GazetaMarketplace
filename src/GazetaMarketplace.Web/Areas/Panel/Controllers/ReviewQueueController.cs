@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Categories;
+using GazetaMarketplace.Core.Configuration;
 using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Fields;
 using GazetaMarketplace.Core.Photos;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GazetaMarketplace.Web.Areas.Panel.Controllers;
 
@@ -33,6 +35,7 @@ public sealed class ReviewQueueController(
     IAdService ads,
     AdDetailFactory factory,
     ISiteSettings settings,
+    IOptions<SiteOptions> site,
     ILogger<ReviewQueueController> logger) : PanelControllerBase
 {
     /// <summary>Chave do aviso de sucesso ("Anúncio publicado") que a fila mostra depois da decisão.</summary>
@@ -92,8 +95,9 @@ public sealed class ReviewQueueController(
             pending = check.Pending ?? [];
         }
 
-        string phoneDigits = await settings.GetPhoneAsync(cancellationToken);
-        bool hasPhone = !string.IsNullOrWhiteSpace(phoneDigits);
+        // O mesmo bloco de contato da página pública, com o endereço público do anúncio na mensagem do WhatsApp
+        ContactViewModel contact = ContactViewModel.Create(
+            await settings.GetPhoneAsync(cancellationToken), ad.Title, PublicUrl.Absolute(Request, site.Value, AdRoutes.Detail(ad.Id, ad.Title)));
 
         return View(new ReviewPreviewViewModel
         {
@@ -109,8 +113,7 @@ public sealed class ReviewQueueController(
             Photos = detail.Photos,
             IsJob = detail.IsJob,
             JobAreas = detail.JobAreas,
-            Phone = hasPhone ? PhoneNumber.Format(phoneDigits) : null,
-            PhoneDigits = hasPhone ? phoneDigits : null,
+            Contact = contact,
             Body = detail.Body
         });
     }

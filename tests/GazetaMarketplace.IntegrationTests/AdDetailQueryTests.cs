@@ -7,10 +7,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Ads;
+using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Data;
 using GazetaMarketplace.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GazetaMarketplace.IntegrationTests;
@@ -143,5 +145,36 @@ public sealed class AdDetailQueryTests
         Assert.AreEqual(HttpStatusCode.MovedPermanently, wrong.StatusCode);
         Assert.AreEqual($"/anuncio/{id}/maquina-de-costura-singer", wrong.Headers.Location!.OriginalString);
         Assert.AreEqual(HttpStatusCode.MovedPermanently, noSlug.StatusCode);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task Contato_TelefoneVemDoBanco_NaPaginaPublica_ESemTelefoneOBlocoNaoAparece()
+    {
+        string connection = await SqlServerFixture.CreateMigratedDatabaseAsync();
+        using IntegrationWebFactory factory = new(connection);
+        AppUser writer = await factory.CreateUserAsync("detalhe.contato@exemplo.com.br", "Ana Souza", "Senha@Forte1", RoleNames.Writer);
+        int id = await AddAsync(connection, writer.Id, "Sítio \"Boa Vista\" & Cia", AdStatus.Published, [0]);
+        string path = AdRoutes.Detail(id, "Sítio \"Boa Vista\" & Cia");
+        using HttpClient visitor = factory.CreateBrowser();
+
+        string without = await visitor.GetStringAsync(path);
+
+        await using (AppDbContext context = SqlServerFixture.NewContext(connection))
+        {
+            context.SiteSettings.Add(new SiteSetting { Key = SiteSettingKeys.Phone, Value = "11912345678" });
+            await context.SaveChangesAsync();
+        }
+
+        factory.Services.GetRequiredService<ISiteSettings>().Invalidate();
+        string with = await visitor.GetStringAsync(path);
+
+        Assert.IsFalse(Regex.IsMatch(without, @"tel:|wa\.me|Fale com a Gazeta"), "sem telefone configurado o bloco não aparece");
+        StringAssert.Contains(with, "(11) 91234-5678");
+        StringAssert.Contains(WebUtility.HtmlDecode(with), "href=\"tel:+5511912345678\"");
+        Match whatsApp = Regex.Match(with, @"href=""(https://wa\.me/5511912345678\?text=[^""]+)""");
+        Assert.IsTrue(whatsApp.Success);
+        var query = System.Web.HttpUtility.ParseQueryString(new Uri(whatsApp.Groups[1].Value).Query);
+        Assert.AreEqual($"Olá! Tenho interesse no anúncio “Sítio \"Boa Vista\" & Cia”: https://localhost{path}", query["text"]);
     }
 }

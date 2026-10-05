@@ -29,10 +29,10 @@ public sealed class AdDetailTests
 {
     private static readonly DateTime Noon = new(2026, 9, 12, 15, 0, 0, DateTimeKind.Utc);
 
-    private static string Text(string html) => System.Net.WebUtility.HtmlDecode(Regex.Replace(Regex.Replace(html, @"<(script|style)[\s\S]*?</\1>", " "), @"<[^>]+>", " ")).Trim() is { } t ? Regex.Replace(t, @"\s+", " ") : string.Empty;
+    internal static string Text(string html) => System.Net.WebUtility.HtmlDecode(Regex.Replace(Regex.Replace(html, @"<(script|style)[\s\S]*?</\1>", " "), @"<[^>]+>", " ")).Trim() is { } t ? Regex.Replace(t, @"\s+", " ") : string.Empty;
 
     /// <summary>Grava um anúncio na situação pedida (com a data de publicação que o teste quiser) e <paramref name="photos"/> fotos de 1600 × 1200.</summary>
-    private static async Task<int> AddAsync(DraftSite site, string title, int categoryId, int photos = 1, Action<Ad> configure = null, DateTime? at = null, byte status = AdStatus.Published)
+    internal static async Task<int> AddAsync(DraftSite site, string title, int categoryId, int photos = 1, Action<Ad> configure = null, DateTime? at = null, byte status = AdStatus.Published)
     {
         await EnsureBrunoAsync(site);
         int author = await site.UserIdAsync(Ana);
@@ -79,14 +79,14 @@ public sealed class AdDetailTests
     private static Task<List<AdPhoto>> PhotosOfAsync(DraftSite site, int adId) =>
         site.Harness.WithDbAsync(db => db.AdPhotos.AsNoTracking().Where(p => p.AdId == adId).OrderBy(p => p.SortOrder).ToListAsync());
 
-    private static async Task<(HttpResponseMessage Response, string Raw)> GetRawAsync(DraftSite site, string path)
+    internal static async Task<(HttpResponseMessage Response, string Raw)> GetRawAsync(DraftSite site, string path)
     {
         using HttpClient visitor = site.Harness.Anonymous();
         HttpResponseMessage response = await visitor.GetAsync(path);
         return (response, await response.Content.ReadAsStringAsync());
     }
 
-    private static string Url(int id, string title) => AdRoutes.Detail(id, title);
+    internal static string Url(int id, string title) => AdRoutes.Detail(id, title);
 
     private static void WithCar(Ad ad)
     {
@@ -123,7 +123,7 @@ public sealed class AdDetailTests
         StringAssert.Contains(visible, "Características do veículo");
         StringAssert.Matches(html, new Regex(@"<nav aria-label=""Caminho de navegação""[\s\S]*Início[\s\S]*Automóveis, Peças e Acessórios[\s\S]*Carros, vans e utilitários[\s\S]*Honda Civic 2018"));
         Assert.IsTrue(Regex.IsMatch(html, @"data-contact-slot"), "o lugar do contato e do Favoritar fica reservado (5.3 e 5.5)");
-        Assert.IsFalse(Regex.IsMatch(html, @"href=""tel:|wa\.me|Favoritar"), "contato e Favoritar chegam nas tarefas 5.3 e 5.5");
+        Assert.IsFalse(Regex.IsMatch(html, @"href=""tel:|wa\.me|Favoritar"), "sem telefone configurado não há contato; o Favoritar chega na tarefa 5.5");
     }
 
     [TestMethod]

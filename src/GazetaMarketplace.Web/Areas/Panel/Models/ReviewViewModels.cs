@@ -46,11 +46,8 @@ public sealed class ReviewPreviewViewModel
 
     public IReadOnlyList<string> JobAreas { get; init; } = [];
 
-    /// <summary>Telefone do site já formatado ("(11) 91234-5678"); nulo quando ainda não foi configurado.</summary>
-    public string Phone { get; init; }
-
-    /// <summary>Só os dígitos, para os links "tel:" e do WhatsApp.</summary>
-    public string PhoneDigits { get; init; }
+    /// <summary>O bloco "Fale com a Gazeta" (o mesmo da página pública); nulo quando o telefone do site ainda não foi configurado.</summary>
+    public ContactViewModel Contact { get; init; }
 
     /// <summary>O aviso da última tentativa de decisão (conflito com outro Administrador, telefone do site ausente); nulo se não houve.</summary>
     public ReviewAlert Alert { get; init; }

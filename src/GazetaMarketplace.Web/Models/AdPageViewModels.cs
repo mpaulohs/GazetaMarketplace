@@ -12,6 +12,9 @@ public sealed class AdPageViewModel
     public required string CanonicalUrl { get; init; }
 
     public required string MetaDescription { get; init; }
+
+    /// <summary>O bloco de contato; nulo quando o telefone do site não está configurado (o bloco não aparece).</summary>
+    public ContactViewModel Contact { get; init; }
 }
 
 /// <summary>A página "Este anúncio não está disponível" (US-003-S06): as categorias principais e, só quando o anúncio foi arquivado, a categoria dele.</summary>

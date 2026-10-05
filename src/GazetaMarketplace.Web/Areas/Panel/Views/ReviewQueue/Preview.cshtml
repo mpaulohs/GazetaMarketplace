@@ -80,24 +80,20 @@ else
         }
         <partial name="_AdBody" model="Model.Body" />
     </div>
-    <aside class="col-12 col-lg-4" aria-labelledby="contato-titulo">
-        <div class="card">
-            <div class="card-body">
-                <h2 class="fs-5" id="contato-titulo">Fale com a Gazeta</h2>
-                @if (Model.Phone is not null)
-                {
-                    <p class="fs-5 fw-bold mb-3" data-phone>@Model.Phone</p>
-                    <div class="d-grid gap-2">
-                        <a class="btn btn-primary alvo-toque" href="tel:+55@(Model.PhoneDigits)">Ligar</a>
-                        <a class="btn btn-success alvo-toque" href="https://wa.me/55@(Model.PhoneDigits)" target="_blank" rel="noopener noreferrer">Chamar no WhatsApp<span class="visually-hidden"> (abre em outra aba)</span></a>
-                    </div>
-                }
-                else
-                {
+    <div class="col-12 col-lg-4">
+        @if (Model.Contact is not null)
+        {
+            <partial name="_Contact" model="Model.Contact" />
+        }
+        else
+        {
+            <aside class="card" aria-labelledby="contato-titulo">
+                <div class="card-body">
+                    <h2 class="fs-5" id="contato-titulo">Fale com a Gazeta</h2>
                     <p class="mb-2" data-phone-missing>O telefone/WhatsApp do site ainda não foi configurado.</p>
                     <a class="btn btn-outline-primary alvo-toque" href="@PanelRoutes.Settings">Configurações</a>
-                }
-            </div>
-        </div>
-    </aside>
+                </div>
+            </aside>
+        }
+    </div>
 </div>

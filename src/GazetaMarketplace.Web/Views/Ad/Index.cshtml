@@ -50,6 +50,11 @@
             <partial name="_AdBody" model="detail.Body" />
         </div>
     </div>
-    @* O lugar do contato (telefone e WhatsApp, tarefa 5.3) e do botão "Favoritar" (tarefa 5.5): reservado para a coluna não mudar de lugar quando eles chegarem *@
-    <div class="col-12 col-lg-4" data-contact-slot></div>
+    @* Contato do intermediário (US-004); o botão "Favoritar" (tarefa 5.5) entra nesta coluna. No celular a coluna vem depois da descrição *@
+    <div class="col-12 col-lg-4" data-contact-slot>
+        @if (Model.Contact is not null)
+        {
+            <partial name="_Contact" model="Model.Contact" />
+        }
+    </div>
 </div>

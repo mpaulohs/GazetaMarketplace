@@ -216,7 +216,8 @@ public sealed class ReviewQueueTests
         StringAssert.Contains(visible, "Fale com a Gazeta");
         StringAssert.Contains(visible, "(11) 91234-5678");
         StringAssert.Contains(html, "href=\"tel:+5511912345678\"");
-        StringAssert.Contains(html, "href=\"https://wa.me/5511912345678\"");
+        StringAssert.Contains(html, "href=\"https://wa.me/5511912345678?text=");
+        StringAssert.Contains(html, "anúncio", "a mensagem do WhatsApp cita o anúncio");
         Assert.IsFalse(html.Contains("data-location-manual", StringComparison.Ordinal), "CEP conferido: sem selo");
     }
 

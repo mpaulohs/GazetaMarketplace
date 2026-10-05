@@ -1,0 +1,12 @@
+@model ContactViewModel
+@* O contato do intermediário (US-004): o número escrito e dois links comuns; sem JavaScript e sem registro de cliques *@
+<aside class="card" aria-labelledby="contato-titulo" data-contact>
+    <div class="card-body">
+        <h2 class="fs-5" id="contato-titulo">Fale com a Gazeta</h2>
+        <p class="fs-5 fw-bold mb-3" data-phone>@Model.Display</p>
+        <div class="d-grid gap-2">
+            <a class="btn btn-primary alvo-toque" href="@Model.TelHref" data-contact-call><i class="fa fa-phone me-2" aria-hidden="true"></i>Ligar<span class="visually-hidden"> para @Model.Display</span></a>
+            <a class="btn btn-success alvo-toque" href="@Model.WhatsAppHref" target="_blank" rel="noopener noreferrer" data-contact-whatsapp><i class="fa fa-whatsapp me-2" aria-hidden="true"></i>Chamar no WhatsApp<span class="visually-hidden">, abre em nova aba</span></a>
+        </div>
+    </div>
+</aside>
