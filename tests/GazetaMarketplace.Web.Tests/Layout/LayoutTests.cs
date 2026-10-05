@@ -72,7 +72,9 @@ public sealed class LayoutTests
         {
             string html = await (await client.GetAsync(path)).Content.ReadAsStringAsync();
 
-            Assert.AreEqual(0, Regex.Matches(html, @"\b(src|href|action|data)\s*=\s*""(https?:)?//", RegexOptions.IgnoreCase).Count, path + ": URL absoluta no HTML");
+            // O endereço canônico (NFR-21) é absoluto por definição e não carrega nada: fica de fora da conta
+            string withoutCanonical = Regex.Replace(html, @"<link rel=""canonical""[^>]*>", string.Empty);
+            Assert.AreEqual(0, Regex.Matches(withoutCanonical, @"\b(src|href|action|data)\s*=\s*""(https?:)?//", RegexOptions.IgnoreCase).Count, path + ": URL absoluta no HTML");
             Assert.AreEqual(0, Regex.Matches(html, @"@import|url\(\s*['""]?(https?:)?//", RegexOptions.IgnoreCase).Count, path);
 
             // Todo CSS e JS referenciado é servido pelo próprio site e não puxa nada de fora

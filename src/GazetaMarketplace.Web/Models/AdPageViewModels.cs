@@ -15,6 +15,9 @@ public sealed class AdPageViewModel
 
     public required string MetaDescription { get; init; }
 
+    /// <summary>Endereço completo da capa (miniatura de 480 px) para <c>og:image</c>; nulo sem foto (Vagas e anúncio sem foto não têm imagem de prévia).</summary>
+    public string OgImageUrl { get; init; }
+
     /// <summary>O bloco de contato; nulo quando o telefone do site não está configurado (o bloco não aparece).</summary>
     public ContactViewModel Contact { get; init; }
 }

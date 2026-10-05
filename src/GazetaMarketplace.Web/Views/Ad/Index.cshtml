@@ -5,9 +5,16 @@
     AdDetail detail = Model.Detail;
     ViewData["Title"] = detail.Body.Title;
 }
-@section Head {
-    <meta name="description" content="@Model.MetaDescription" />
-    <link rel="canonical" href="@Model.CanonicalUrl" />
+@{
+    // Indexável: descrição e endereço canônico da página, e o mínimo do Open Graph (título, descrição e a capa) para a prévia no WhatsApp
+    ViewData[SeoModel.ViewDataKey] = new SeoModel
+    {
+        Description = Model.MetaDescription,
+        CanonicalUrl = Model.CanonicalUrl,
+        OgTitle = detail.Body.Title,
+        OgDescription = Model.MetaDescription,
+        OgImage = Model.OgImageUrl
+    };
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />

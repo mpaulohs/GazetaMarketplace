@@ -1,7 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using GazetaMarketplace.Core.Configuration;
 using GazetaMarketplace.Core.Exceptions;
+using GazetaMarketplace.Core.Seo;
 using GazetaMarketplace.Core.Showcase;
 using GazetaMarketplace.Web.Models;
 using GazetaMarketplace.Web.Navigation;
@@ -9,10 +11,11 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GazetaMarketplace.Web.Controllers
 {
-    public class HomeController(IShowcase showcase, ILogger<HomeController> logger) : Controller
+    public class HomeController(IShowcase showcase, IOptions<SiteOptions> site, ILogger<HomeController> logger) : Controller
     {
         /// <summary>A página inicial (US-001): categorias principais e os 12 anúncios publicados mais recentes. Qualquer falha vira a página de erro com "Tentar novamente".</summary>
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -35,6 +38,7 @@ namespace GazetaMarketplace.Web.Controllers
                 });
             }
 
+            ViewData[SeoModel.ViewDataKey] = SeoModel.Indexable(SeoTexts.HomeDescription, PublicUrl.Absolute(Request, site.Value, PublicRoutes.Home));
             return View(home);
         }
 

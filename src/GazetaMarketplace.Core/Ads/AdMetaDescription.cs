@@ -18,6 +18,12 @@ public static class AdMetaDescription
             text = Collapse(string.IsNullOrWhiteSpace(location) ? title : $"{title} — {location}");
         }
 
+        return Truncate(text);
+    }
+
+    /// <summary>Corta o texto (já em uma linha só) em <see cref="MaxLength"/> caracteres: passou disso, termina em reticências sem partir uma palavra nem um par de substituição Unicode.</summary>
+    public static string Truncate(string text)
+    {
         if (text.Length <= MaxLength)
         {
             return text;

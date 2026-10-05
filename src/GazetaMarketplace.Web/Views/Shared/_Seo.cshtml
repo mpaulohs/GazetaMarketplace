@@ -1,0 +1,30 @@
+@using GazetaMarketplace.Web.Models
+@{
+    // Quem não pede (ViewData["Seo"]) sai com noindex, follow
+    SeoModel seo = ViewData[SeoModel.ViewDataKey] as SeoModel;
+    string robots = seo is null ? SeoModel.NoIndexFollow : seo.Robots;
+}
+@if (robots is not null)
+{
+    <meta name="robots" content="@robots" />
+}
+@if (seo?.Description is { Length: > 0 } description)
+{
+    <meta name="description" content="@description" />
+}
+@if (seo?.CanonicalUrl is { Length: > 0 } canonical)
+{
+    <link rel="canonical" href="@canonical" />
+}
+@if (seo?.OgTitle is { Length: > 0 } ogTitle)
+{
+    <meta property="og:title" content="@ogTitle" />
+}
+@if (seo?.OgDescription is { Length: > 0 } ogDescription)
+{
+    <meta property="og:description" content="@ogDescription" />
+}
+@if (seo?.OgImage is { Length: > 0 } ogImage)
+{
+    <meta property="og:image" content="@ogImage" />
+}

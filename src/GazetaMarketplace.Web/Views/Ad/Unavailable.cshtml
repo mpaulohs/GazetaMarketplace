@@ -4,8 +4,8 @@
 @{
     ViewData["Title"] = "Anúncio não disponível";
 }
-@section Head {
-    <meta name="robots" content="noindex" />
+@{
+    ViewData[SeoModel.ViewDataKey] = SeoModel.NoIndex(follow: false);
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />

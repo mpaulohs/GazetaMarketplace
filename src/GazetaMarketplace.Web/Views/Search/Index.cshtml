@@ -36,9 +36,7 @@
     CultureInfo br = CultureInfo.GetCultureInfo("pt-BR");
     var orderCarry = form.Query.Where(p => p.Key != "ordem").ToList();
 }
-@section Head {
-    <meta name="robots" content="noindex, follow" />
-}
+@* Sem SeoModel: a página sai com noindex, follow (busca com filtros gera endereços quase iguais) *@
 @section Styles {
     <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/pages/search.css" asp-append-version="true" />

@@ -48,7 +48,8 @@ public sealed class AdController(IShowcase showcase, AdDetailFactory factory, IS
                 Detail = detail,
                 CanonicalUrl = pageUrl,
                 Contact = ContactViewModel.Create(await settings.GetPhoneAsync(cancellationToken), ad.Title, pageUrl),
-                MetaDescription = AdMetaDescription.For(ad.Title, ad.Description, detail.Body.Location)
+                MetaDescription = AdMetaDescription.For(ad.Title, ad.Description, detail.Body.Location),
+                OgImageUrl = !detail.IsJob && detail.Photos.Count > 0 ? PublicUrl.Absolute(Request, site.Value, detail.Photos[0].ThumbUrl) : null
             });
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

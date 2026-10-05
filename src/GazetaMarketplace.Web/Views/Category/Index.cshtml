@@ -1,10 +1,11 @@
 @using GazetaMarketplace.Core.Categories
+@using GazetaMarketplace.Core.Seo
 @using GazetaMarketplace.Core.Showcase
 @using GazetaMarketplace.Web.Models
 @using GazetaMarketplace.Web.Navigation
 @model ShowcaseCategoryPage
 @{
-    ViewData["Title"] = Model.Category.Name;
+    ViewData["Title"] = SeoTexts.CategoryTitle(Model.Category.Name, Model.Path.Count > 1 ? Model.Path[^2].Name : null, Model.Page);
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />

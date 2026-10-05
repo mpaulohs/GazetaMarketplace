@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Search;
+using GazetaMarketplace.Core.Seo;
 using GazetaMarketplace.Core.Showcase;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Data;
@@ -112,6 +113,11 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
                 services.RemoveAll<IShowcaseReadRepository>();
                 services.AddSingleton<StubShowcaseRepository>();
                 services.AddSingleton<IShowcaseReadRepository>(sp => sp.GetRequiredService<StubShowcaseRepository>());
+
+                // E para o mapa do site (NFR-21)
+                services.RemoveAll<ISitemapReadRepository>();
+                services.AddSingleton<StubSitemapReadRepository>();
+                services.AddSingleton<ISitemapReadRepository>(sp => sp.GetRequiredService<StubSitemapReadRepository>());
 
                 // E para a busca (US-002)
                 services.RemoveAll<ISearchReadRepository>();
