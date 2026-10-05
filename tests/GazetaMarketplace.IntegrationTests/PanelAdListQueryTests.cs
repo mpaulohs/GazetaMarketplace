@@ -243,12 +243,14 @@ public sealed class PanelAdListQueryTests
 
         await Repository(connection).ListAsync(Query(author: ana), CancellationToken.None);
 
+        // Os planos em cache são do servidor inteiro: sem o filtro por banco, a execução mais recente podia ser a de outro teste (tabela pequena, outro plano) e o teste falhava de vez em quando
         string plan = await ScalarAsync(connection, @"
             SELECT TOP (1) CAST(p.query_plan AS NVARCHAR(MAX))
             FROM sys.dm_exec_query_stats s
             CROSS APPLY sys.dm_exec_sql_text(s.sql_handle) t
             CROSS APPLY sys.dm_exec_query_plan(s.plan_handle) p
             WHERE t.text LIKE '%INNER JOIN AspNetUsers%' AND t.text LIKE '%a.AuthorId = @AuthorId%'
+              AND EXISTS (SELECT 1 FROM sys.dm_exec_plan_attributes(s.plan_handle) pa WHERE pa.attribute = 'dbid' AND pa.value = DB_ID())
             ORDER BY s.last_execution_time DESC");
 
         StringAssert.Contains(plan, "IX_Ads_AuthorId_Status_UpdatedAt", "o filtro de autoria usa o índice de autor");

@@ -298,7 +298,7 @@ public sealed class ShowcaseQueryTests
             FROM sys.dm_exec_query_stats s
             CROSS APPLY sys.dm_exec_sql_text(s.sql_handle) t
             CROSS APPLY sys.dm_exec_query_plan(s.plan_handle) p
-            WHERE t.text LIKE '{mustContain}' AND t.text LIKE '%a.PublishedAt DESC%' AND t.text NOT LIKE '%dm_exec_query_stats%' AND t.text NOT LIKE '{mustNotContain}'
+            WHERE t.text LIKE '{mustContain}' AND t.text LIKE '%a.PublishedAt DESC%' AND t.text NOT LIKE '%dm_exec_query_stats%' AND EXISTS (SELECT 1 FROM sys.dm_exec_plan_attributes(s.plan_handle) pa WHERE pa.attribute = 'dbid' AND pa.value = DB_ID()) AND t.text NOT LIKE '{mustNotContain}'
             ORDER BY s.last_execution_time DESC";
         await using SqlConnection sqlConnection = new(connection);
         await sqlConnection.OpenAsync();
