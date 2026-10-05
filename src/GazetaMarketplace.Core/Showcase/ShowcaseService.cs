@@ -15,8 +15,22 @@ namespace GazetaMarketplace.Core.Showcase;
 /// <see cref="AdCardModel"/> (variante do grupo de campos, tipo do serviço, área da vaga e capa) e decide o que é "categoria que não existe" (<c>Category</c> nulo)
 /// e o que é "categoria sem anúncios" (<c>Total</c> zero).
 /// </remarks>
-public sealed class ShowcaseService(IShowcaseReadRepository repository, ICategoryTree tree) : IShowcase
+public sealed class ShowcaseService(IShowcaseReadRepository repository, IPublishedAdReader ads, ICategoryTree tree) : IShowcase
 {
+    public async Task<ShowcaseAdPage> AdAsync(int id, CancellationToken cancellationToken)
+    {
+        CategoryTreeSnapshot snapshot = await tree.GetAsync(cancellationToken);
+        Ad ad = await ads.FindPublishedAsync(id, cancellationToken);
+        if (ad is not null)
+        {
+            return new ShowcaseAdPage(ad, null, snapshot.Roots);
+        }
+
+        // Indisponível: arquivado leva o link da categoria (US-003-S06); rascunho, em revisão, rejeitado e inexistente não dizem nada a mais
+        int? archivedCategory = await ads.FindArchivedCategoryIdAsync(id, cancellationToken);
+        return new ShowcaseAdPage(null, archivedCategory is { } category ? snapshot.Find(category) : null, snapshot.Roots);
+    }
+
     public async Task<ShowcaseHome> HomeAsync(CancellationToken cancellationToken)
     {
         CategoryTreeSnapshot snapshot = await tree.GetAsync(cancellationToken);

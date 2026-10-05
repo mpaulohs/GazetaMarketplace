@@ -1,0 +1,55 @@
+@using GazetaMarketplace.Core.Categories
+@using GazetaMarketplace.Web.Navigation
+@model AdPageViewModel
+@{
+    AdDetail detail = Model.Detail;
+    ViewData["Title"] = detail.Body.Title;
+}
+@section Head {
+    <meta name="description" content="@Model.MetaDescription" />
+    <link rel="canonical" href="@Model.CanonicalUrl" />
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pages/ad-detail.css" asp-append-version="true" />
+}
+@section Scripts {
+    @if (!detail.IsJob && detail.Photos.Count > 0)
+    {
+        <script type="module" src="~/js/pages/ad-detail.js" asp-append-version="true"></script>
+    }
+}
+
+<nav aria-label="Caminho de navegação" class="categoria-caminho" data-breadcrumb>
+    <ol class="breadcrumb mb-3">
+        <li class="breadcrumb-item"><a href="@PublicRoutes.Home">Início</a></li>
+        @foreach (CategoryNode step in detail.Path)
+        {
+            <li class="breadcrumb-item"><a href="@PublicRoutes.Category(step.Slug)">@step.Name</a></li>
+        }
+        <li class="breadcrumb-item active text-break" aria-current="page">@detail.Body.Title</li>
+    </ol>
+</nav>
+
+<div class="row g-4" data-ad-detail>
+    <div class="col-12 col-lg-8">
+        @if (detail.IsJob)
+        {
+            <partial name="_AdJobBlock" model="detail.JobAreas" />
+        }
+        else if (detail.Photos.Count > 0)
+        {
+            <partial name="_AdGallery" model="new AdGalleryViewModel(detail.Photos, detail.Body.Title)" />
+        }
+        else
+        {
+            <div class="media-reservada ad-fotos__vazio" data-photos-empty><span class="fw-bold">Este anúncio não tem fotos</span></div>
+        }
+
+        <div class="mt-3">
+            <partial name="_AdBody" model="detail.Body" />
+        </div>
+    </div>
+    @* O lugar do contato (telefone e WhatsApp, tarefa 5.3) e do botão "Favoritar" (tarefa 5.5): reservado para a coluna não mudar de lugar quando eles chegarem *@
+    <div class="col-12 col-lg-4" data-contact-slot></div>
+</div>

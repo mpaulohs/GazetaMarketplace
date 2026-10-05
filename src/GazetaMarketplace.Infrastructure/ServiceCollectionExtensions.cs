@@ -64,6 +64,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPanelAdListReadRepository, Ads.PanelAdListReadRepository>();
         services.AddScoped<IPanelAdList, PanelAdListService>();
         services.AddScoped<IShowcaseReadRepository, Ads.ShowcaseReadRepository>();
+        services.AddScoped<IPublishedAdReader, Ads.PublishedAdReader>();
         services.AddScoped<IShowcase, ShowcaseService>();
         services.AddScoped<IAdSpecsReader, Ads.AdSpecsReader>();
         services.AddScoped<IPhotoReprocessing, Photos.PhotoReprocessing>();

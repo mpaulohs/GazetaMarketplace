@@ -1,0 +1,26 @@
+@using GazetaMarketplace.Core.Categories
+@using GazetaMarketplace.Web.Navigation
+@model AdUnavailableViewModel
+@{
+    ViewData["Title"] = "Anúncio não disponível";
+}
+@section Head {
+    <meta name="robots" content="noindex" />
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />
+}
+
+@* Anúncio que não está publicado ou não existe (US-003-S06): a mesma mensagem em todos os casos, sem título, fotos nem descrição. Só o arquivado acrescenta o link da categoria dele. *@
+<section class="py-3" aria-labelledby="indisponivel">
+    <h1 class="fs-3" id="indisponivel" tabindex="-1" data-foco-inicial>Este anúncio não está mais disponível</h1>
+    <p>
+        Voltar para a <a href="@PublicRoutes.Home">página inicial</a>
+        @if (Model.ArchivedCategory is { } category)
+        {
+            <span>ou ver mais anúncios de <a href="@PublicRoutes.Category(category.Slug)" data-archived-category>@category.Name</a></span>
+        }
+    </p>
+    <h2 class="fs-6 text-body-secondary mb-2">Categorias</h2>
+    <partial name="_CategoryGrid" model="Model.Roots" />
+</section>

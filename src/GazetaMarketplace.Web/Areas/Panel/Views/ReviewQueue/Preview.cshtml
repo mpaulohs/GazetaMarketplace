@@ -67,18 +67,7 @@ else
     <div class="col-12 col-lg-8">
         @if (Model.IsJob)
         {
-            <section class="media-reservada ad-vaga mb-3 px-3" aria-labelledby="vaga-titulo" data-job-block>
-                <h2 class="fs-5 fw-bold" id="vaga-titulo">Vaga de emprego</h2>
-                @if (Model.JobAreas.Count > 0)
-                {
-                    <ul class="list-unstyled mb-0">
-                        @foreach (string area in Model.JobAreas)
-                        {
-                            <li>@area</li>
-                        }
-                    </ul>
-                }
-            </section>
+            <partial name="_AdJobBlock" model="Model.JobAreas" />
         }
         else
         {

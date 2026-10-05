@@ -60,8 +60,29 @@ public sealed record ShowcaseCategoryPage(
     public int TotalPages => Total == 0 ? 1 : (Total + PageSize - 1) / PageSize;
 }
 
+/// <summary>Leitura de um anúncio para a página pública. Só devolve o que o público pode ver: anúncio <b>Publicado</b>.</summary>
+public interface IPublishedAdReader
+{
+    /// <summary>O anúncio publicado; nulo se não existe ou está em qualquer outra situação (rascunho, em revisão, rejeitado, arquivado).</summary>
+    Task<Ad> FindPublishedAsync(int id, CancellationToken cancellationToken);
+
+    /// <summary>A categoria de um anúncio <b>arquivado</b> (para o link "ver mais anúncios de…" da página de indisponível, US-003-S06); nulo em qualquer outro caso.</summary>
+    Task<int?> FindArchivedCategoryIdAsync(int id, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// O que a página do anúncio recebe: o anúncio publicado, ou nulo quando ele não está disponível. <see cref="ArchivedCategory"/> só vem preenchida quando o anúncio foi
+/// arquivado e a categoria dele ainda existe (S06 pede o link para ela); nos demais casos a resposta é a mesma, sem pista de que o anúncio existe.
+/// </summary>
+public sealed record ShowcaseAdPage(Ad Ad, CategoryNode ArchivedCategory, IReadOnlyList<CategoryNode> Roots)
+{
+    public bool Available => Ad is not null;
+}
+
 public interface IShowcase
 {
+    Task<ShowcaseAdPage> AdAsync(int id, CancellationToken cancellationToken);
+
     Task<ShowcaseHome> HomeAsync(CancellationToken cancellationToken);
 
     Task<ShowcaseCategoryPage> CategoryAsync(string slug, int page, CancellationToken cancellationToken);

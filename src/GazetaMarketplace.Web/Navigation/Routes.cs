@@ -8,6 +8,9 @@ public static class PublicRoutes
     /// <summary>Endereço da página de uma categoria: <c>/categoria/{slug}</c> (o slug é único na árvore, então um segmento basta).</summary>
     public static string Category(string slug) => "/categoria/" + slug;
 
+    /// <summary>Endereço da página do anúncio: <c>/anuncio/{id}/{slug}</c>.</summary>
+    public static string Ad(int id, string title) => GazetaMarketplace.Core.Ads.AdRoutes.Detail(id, title);
+
     public const string Search = "/busca";
 
     public const string Favorites = "/favoritos";

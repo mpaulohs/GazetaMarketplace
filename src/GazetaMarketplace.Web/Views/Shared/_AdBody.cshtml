@@ -14,9 +14,21 @@
     {
         <partial name="_AdValue" model="new AdValueViewModel(Model.Value, true)" />
     }
+    @if (Model.CategoryName is not null)
+    {
+        <p class="text-body-secondary mb-1" data-ad-category>@Model.CategoryName</p>
+    }
     @if (Model.Location is not null)
     {
-        <p class="text-body-secondary mb-3" data-ad-location>@Model.Location</p>
+        <p class="text-body-secondary mb-1" data-ad-location>@Model.Location</p>
+    }
+    @if (Model.PublishedOn is not null)
+    {
+        <p class="small text-body-secondary mb-3" data-ad-published>Publicado em <time>@Model.PublishedOn</time></p>
+    }
+    else
+    {
+        <div class="mb-2"></div>
     }
     @if (!string.IsNullOrWhiteSpace(Model.Description))
     {
@@ -28,7 +40,7 @@
     @if (Model.Specs.Count > 0)
     {
         <section aria-labelledby="ad-corpo-caracteristicas">
-            <h2 class="fs-5" id="ad-corpo-caracteristicas">Características</h2>
+            <h2 class="fs-5" id="ad-corpo-caracteristicas">@Model.SpecsTitle</h2>
             <dl class="row mb-0">
                 @foreach (AdSpec spec in Model.Specs)
                 {

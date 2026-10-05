@@ -49,6 +49,15 @@ public sealed class AdBodyViewModel
 
     public IReadOnlyList<AdSpec> Specs { get; init; } = [];
 
+    /// <summary>"Características do veículo", "Características do terreno" ou "Características" (<see cref="AdSpecTitles"/>).</summary>
+    public string SpecsTitle { get; init; } = AdSpecTitles.General;
+
+    /// <summary>Nome da categoria, no corpo da página pública ("Carros, vans e utilitários"); nulo quando outra parte da tela já mostra o caminho.</summary>
+    public string CategoryName { get; init; }
+
+    /// <summary>"12/09/2026", no fuso de São Paulo; nulo enquanto o anúncio não foi publicado.</summary>
+    public string PublishedOn { get; init; }
+
     /// <summary>Nível do título (1 na página do anúncio; mais baixo quando o corpo aparece dentro de outra página, como a pré-visualização).</summary>
     public int HeadingLevel { get; init; } = 1;
 }

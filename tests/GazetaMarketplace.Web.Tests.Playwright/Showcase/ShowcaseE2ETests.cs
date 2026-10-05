@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -28,54 +27,12 @@ public class ShowcaseE2ETests : SitePage
 
     private static string Url(string path) => RequiresVariablesAttribute.Value("GAZETA_BASE_URL").TrimEnd('/') + path;
 
-    private static string Unique(string prefix) => $"{prefix} {Guid.NewGuid().ToString("N")[..8]}";
-
-    private static string Fixture(string name) => Path.Combine(AppContext.BaseDirectory, "Photos", "Fixtures", name);
-
     private static string Describe(AxeResultItem violation) =>
         violation.Id + ": " + violation.Help + " [" + string.Join(" | ", violation.Nodes.Take(3).Select(n => n.Html + " => " + string.Join("; ", n.Any.Select(a => a.Message)))) + "]";
 
-    private async Task SignInAdminAsync()
-    {
-        await Page.GotoAsync(Url("/painel/entrar")).ConfigureAwait(false);
-        await Page.GetByLabel("E-mail").FillAsync(RequiresVariablesAttribute.Value("GAZETA_E2E_EMAIL")).ConfigureAwait(false);
-        await Page.GetByLabel("Senha").FillAsync(RequiresVariablesAttribute.Value("GAZETA_E2E_PASSWORD")).ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Entrar" }).ClickAsync().ConfigureAwait(false);
-        await Page.WaitForURLAsync(new Regex(@"/painel/(?!entrar)")).ConfigureAwait(false);
-    }
+    private Task SignInAdminAsync() => PublishingFlow.SignInAdminAsync(Page);
 
-    /// <summary>Cadastra um livro com uma foto, envia para revisão e publica, tudo pelas telas; devolve o título.</summary>
-    private async Task<string> PublishBookAsync()
-    {
-        string title = Unique("Livro da vitrine");
-        await Page.GotoAsync(Url("/painel/anuncios/novo")).ConfigureAwait(false);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
-        await Page.GetByLabel("Título").FillAsync(title).ConfigureAwait(false);
-        await Page.GetByLabel("Categoria").SelectOptionAsync(new SelectOptionValue { Label = Subcategory }).ConfigureAwait(false);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false); // a troca de categoria busca os campos do grupo; o que se digita antes de a resposta chegar se perderia
-        await Page.GetByLabel("Descrição").FillAsync("Edição 2020, sem anotações").ConfigureAwait(false);
-        await Page.GetByLabel("Condição").SelectOptionAsync(new SelectOptionValue { Index = 1 }).ConfigureAwait(false);
-        await Page.GetByLabel("Preço").FillAsync("5000").ConfigureAwait(false);
-        await Page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
-        await Expect(Page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
-        await Expect(Page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
-        await Page.WaitForFunctionAsync("() => document.getElementById('arquivo-foto')?.multiple === true").ConfigureAwait(false);
-        await Page.GetByLabel("Escolher fotos").SetInputFilesAsync(Fixture("foto-1.jpg")).ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Enviar fotos" }).ClickAsync().ConfigureAwait(false);
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Fotos (1 de" })).ToBeVisibleAsync().ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);
-        await Expect(Page.GetByText("Anúncio enviado para revisão")).ToBeVisibleAsync().ConfigureAwait(false);
-
-        await Page.GotoAsync(Url("/painel/anuncios/fila")).ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Row).Filter(new() { HasText = title }).GetByRole(AriaRole.Link, new() { Name = title }).ClickAsync().ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Link, new() { Name = "Publicar" }).ClickAsync().ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Publicar" }).ClickAsync().ConfigureAwait(false);
-        await Expect(Page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Anúncio publicado" })).ToBeVisibleAsync().ConfigureAwait(false);
-        return title;
-    }
+    private Task<string> PublishBookAsync() => PublishingFlow.PublishAsync(Page, "Livro da vitrine", photos: 1, Subcategory);
 
     private async Task<IPage> VisitorAsync(int? width = null, bool javaScript = true)
     {

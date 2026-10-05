@@ -11,7 +11,8 @@ internal static class RealEstateGroup
 {
     private const int Apartments = 26;
     private const int Houses = 27;
-    private const int Land = 30;
+    /// <summary>"Terrenos, sítios e fazendas": a única categoria de imóveis com ficha de terreno (US-003-S04).</summary>
+    internal const int Land = 30;
     private const int Commercial = 31;
 
     public static FieldGroup Create() => new()

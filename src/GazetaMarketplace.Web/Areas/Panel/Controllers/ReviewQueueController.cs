@@ -31,9 +31,7 @@ public sealed class ReviewQueueController(
     IReviewQueue queue,
     IAdReview review,
     IAdService ads,
-    IAdPhotoService photos,
-    IAdSpecsReader specs,
-    ICategoryTree tree,
+    AdDetailFactory factory,
     ISiteSettings settings,
     ILogger<ReviewQueueController> logger) : PanelControllerBase
 {
@@ -82,13 +80,8 @@ public sealed class ReviewQueueController(
             return NotFound();
         }
 
-        CategoryTreeSnapshot snapshot = await tree.GetAsync(cancellationToken);
-        int? categoryId = ad.CategoryId is { } c && snapshot.Find(c) is not null ? c : null;
-        FieldGroup group = categoryId is { } known ? FieldGroupRegistry.Resolve(snapshot, known) : FieldGroupRegistry.Default;
-        bool isJob = group.Key == FieldGroupKeys.Jobs;
-
-        IReadOnlyList<AdSpec> characteristics = categoryId is { } specsCategory ? await specs.ReadAsync(ad, specsCategory, group, cancellationToken) : [];
-        IReadOnlyList<AdPhotoItem> gallery = isJob ? [] : await photos.ListAsync(id, cancellationToken);
+        // A mesma montagem da página pública (AdDetailFactory): o que o Administrador aprova é o que o visitante vai ver
+        AdDetail detail = await factory.CreateAsync(ad, headingLevel: 2, includePublicMeta: false, cancellationToken);
         ReviewAlert alert = TempData[AlertMessageKey] is string alertMessage
             ? new ReviewAlert(TempData[AlertKindKey] is "phone" ? ReviewAlertKind.PhoneMissing : ReviewAlertKind.Conflict, alertMessage)
             : null;
@@ -110,24 +103,15 @@ public sealed class ReviewQueueController(
             Takedown = TakedownActions.For(new AdActor(null, true), ad), // o controller é só do Administrador,
             Alert = alert,
             Pending = pending,
-            CategoryPath = categoryId is { } path ? string.Join(" › ", snapshot.PathTo(path).Select(n => n.Name)) : null,
+            CategoryPath = detail.CategoryPath,
             LocationManual = ad.LocationManual,
             Cep = ad.Cep,
-            Photos = gallery,
-            IsJob = isJob,
-            JobAreas = isJob ? [.. characteristics.Where(s => s.Key == FieldKeys.JobAreas).SelectMany(s => s.Items ?? [])] : [],
+            Photos = detail.Photos,
+            IsJob = detail.IsJob,
+            JobAreas = detail.JobAreas,
             Phone = hasPhone ? PhoneNumber.Format(phoneDigits) : null,
             PhoneDigits = hasPhone ? phoneDigits : null,
-            Body = new AdBodyViewModel
-            {
-                Title = ad.Title,
-                Value = AdPresentation.ValueOf(group, ad.PriceCents, group.HasPrice ? null : characteristics.FirstOrDefault(s => s.Key == FieldKeys.ServiceType)?.Value),
-                Location = AdPresentation.Location(ad.City, ad.Uf),
-                DescriptionLabel = group.DescriptionLabel,
-                Description = ad.Description,
-                Specs = isJob ? [.. characteristics.Where(s => s.Key != FieldKeys.JobAreas)] : characteristics,
-                HeadingLevel = 2
-            }
+            Body = detail.Body
         });
     }
 

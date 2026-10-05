@@ -70,6 +70,7 @@ builder.Services.AddTeamIdentity();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddCore();
 builder.Services.AddScoped<GazetaMarketplace.Web.Areas.Panel.Models.AdFormFactory>();
+builder.Services.AddScoped<GazetaMarketplace.Web.Models.AdDetailFactory>();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddEmailSender(builder.Environment.IsProduction());
 

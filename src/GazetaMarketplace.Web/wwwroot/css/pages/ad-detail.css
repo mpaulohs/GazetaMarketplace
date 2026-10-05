@@ -1,0 +1,179 @@
+/* Página do anúncio (US-003): a galeria. Só Bootstrap + tokens --app-*; BEM só no que o Bootstrap não cobre; sem atributo style (CSP). */
+
+.ad-galeria__palco {
+  position: relative;
+}
+
+/* O palco reserva a proporção da foto: trocar de foto (retrato, paisagem) não faz a página pular (NFR-03) */
+.ad-galeria__destaque {
+  aspect-ratio: var(--app-media-ratio);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--bs-border-radius);
+  background: var(--app-media-placeholder-bg);
+  touch-action: pan-y;
+}
+
+.ad-galeria__ampliar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+}
+
+.ad-galeria__ampliar:focus-visible,
+.ad-galeria__miniatura:focus-visible {
+  outline: 3px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+.ad-galeria__imagem {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.ad-galeria__indisponivel {
+  width: 100%;
+  height: 100%;
+}
+
+.ad-galeria__seta {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  color: var(--bs-body-color);
+  background: rgba(var(--bs-body-bg-rgb), .9);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 50%;
+}
+
+.ad-galeria__seta:hover {
+  background: var(--bs-body-bg);
+}
+
+.ad-galeria__seta:focus-visible {
+  outline: 3px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+.ad-galeria__seta--anterior {
+  left: .5rem;
+}
+
+.ad-galeria__seta--proxima {
+  right: .5rem;
+}
+
+.ad-galeria__contador {
+  position: absolute;
+  right: .5rem;
+  bottom: .5rem;
+  margin: 0;
+  padding: .125rem .5rem;
+  font-size: .875rem;
+  color: var(--bs-body-color);
+  background: rgba(var(--bs-body-bg-rgb), .9);
+  border-radius: var(--bs-border-radius-pill);
+}
+
+/* As miniaturas rolam dentro da própria faixa: a página nunca ganha rolagem horizontal (S08) */
+.ad-galeria__miniaturas {
+  display: flex;
+  gap: .5rem;
+  margin-top: .5rem;
+  padding: .25rem;
+  overflow-x: auto;
+  min-width: 0;
+  scroll-snap-type: x proximity;
+}
+
+.ad-galeria__miniaturas li {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.ad-galeria__miniatura {
+  display: block;
+  line-height: 0;
+  border: 2px solid transparent;
+  border-radius: var(--bs-border-radius-sm);
+}
+
+.ad-galeria__miniatura[aria-current="true"] {
+  border-color: var(--bs-primary);
+}
+
+.ad-galeria__miniatura img {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--bs-border-radius-sm);
+}
+
+.ad-galeria__miniatura[data-broken] {
+  background: var(--app-media-placeholder-bg);
+}
+
+.ad-galeria__miniatura[data-broken] img {
+  visibility: hidden;
+}
+
+/* A janela ampliada */
+.ad-galeria__dialogo {
+  width: min(96vw, 1100px);
+  max-width: 96vw;
+  max-height: 96vh;
+  padding: 0;
+  color: var(--bs-body-color);
+  background: var(--bs-body-bg);
+  border: 0;
+  border-radius: var(--bs-border-radius);
+}
+
+.ad-galeria__dialogo::backdrop {
+  background: rgb(0 0 0 / .75);
+}
+
+.ad-galeria__dialogo-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .5rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.ad-galeria__dialogo-corpo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  padding: .5rem;
+}
+
+.ad-galeria__dialogo-imagem {
+  display: block;
+  max-width: 100%;
+  max-height: calc(96vh - 6rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.ad-galeria__dialogo-quebrada {
+  margin: 0;
+}

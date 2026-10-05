@@ -1,0 +1,59 @@
+@using GazetaMarketplace.Core.Ads
+@using GazetaMarketplace.Core.Photos
+@model AdGalleryViewModel
+@{
+    IReadOnlyList<AdPhotoItem> photos = Model.Photos;
+    int total = photos.Count;
+    AdPhotoItem first = photos[0];
+}
+
+@* A galeria do anúncio. Sem JavaScript: a foto em destaque e as miniaturas (links para a versão grande) funcionam como páginas comuns. Com JavaScript (ad-detail.js), a miniatura troca
+   a foto, as setas e o teclado percorrem, deslizar troca no celular e clicar na foto abre a janela ampliada (<dialog>). Só a primeira foto grande carrega já; as demais, quando escolhidas. *@
+<section class="ad-galeria" aria-label="Fotos do anúncio" data-gallery data-total="@total" data-title="@Model.Title">
+    <div class="ad-galeria__palco">
+        <figure class="ad-galeria__destaque mb-0" data-gallery-stage>
+            <a class="ad-galeria__ampliar" href="@first.LargeUrl" data-gallery-open>
+                <img class="ad-galeria__imagem" src="@first.LargeUrl" width="@first.Width" height="@first.Height" alt="Foto 1 de @total: @Model.Title" fetchpriority="high" data-gallery-main />
+                <span class="visually-hidden">Ampliar a foto</span>
+            </a>
+            <div class="ad-galeria__indisponivel media-reservada" role="status" hidden data-gallery-broken><span class="fw-bold">Foto indisponível</span></div>
+        </figure>
+        @if (total > 1)
+        {
+            <button type="button" class="ad-galeria__seta ad-galeria__seta--anterior alvo-toque" hidden data-gallery-prev aria-label="Foto anterior"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+            <button type="button" class="ad-galeria__seta ad-galeria__seta--proxima alvo-toque" hidden data-gallery-next aria-label="Próxima foto"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+            <p class="ad-galeria__contador" hidden aria-live="polite" data-gallery-counter>1 de @total</p>
+        }
+    </div>
+    @if (total > 1)
+    {
+        <ol class="ad-galeria__miniaturas list-unstyled mb-0" data-gallery-thumbs>
+            @for (int i = 0; i < total; i++)
+            {
+                (int thumbWidth, int thumbHeight) = AdPresentation.ThumbSize(photos[i].Width, photos[i].Height);
+                <li>
+                    <a class="ad-galeria__miniatura" href="@photos[i].LargeUrl" aria-label="Ver a foto @(i + 1) de @total" aria-current="@(i == 0 ? "true" : null)"
+                       data-gallery-thumb data-index="@i" data-large="@photos[i].LargeUrl" data-width="@photos[i].Width" data-height="@photos[i].Height">
+                        <img src="@photos[i].ThumbUrl" width="@thumbWidth" height="@thumbHeight" alt="" loading="lazy" />
+                    </a>
+                </li>
+            }
+        </ol>
+    }
+</section>
+
+<dialog class="ad-galeria__dialogo" aria-labelledby="galeria-dialogo-titulo" data-gallery-dialog>
+    <div class="ad-galeria__dialogo-topo">
+        <h2 class="fs-6 mb-0" id="galeria-dialogo-titulo" data-gallery-dialog-title>Foto 1 de @total</h2>
+        <button type="button" class="btn btn-outline-secondary btn-sm alvo-toque" data-gallery-close>Fechar</button>
+    </div>
+    <div class="ad-galeria__dialogo-corpo">
+        <img class="ad-galeria__dialogo-imagem" alt="" data-gallery-dialog-image />
+        <p class="ad-galeria__dialogo-quebrada fw-bold" role="status" hidden data-gallery-dialog-broken>Foto indisponível</p>
+        @if (total > 1)
+        {
+            <button type="button" class="ad-galeria__seta ad-galeria__seta--anterior alvo-toque" data-gallery-dialog-prev aria-label="Foto anterior"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+            <button type="button" class="ad-galeria__seta ad-galeria__seta--proxima alvo-toque" data-gallery-dialog-next aria-label="Próxima foto"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+        }
+    </div>
+</dialog>
