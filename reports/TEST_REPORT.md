@@ -977,3 +977,63 @@ Só os unitários já passam das duas metas, então o gate não depende do Docke
 **Achado da rodada:** com a cobertura ligada, o teste de integração `PanelAdListQueryTests.ConsultaDoRedator_UsaOIndiceDeAutorSituacaoEData` falhou uma vez (o plano de execução não citou o índice); sem cobertura, a suíte inteira passou (121 de 121) e o teste também passou em duas rodadas isoladas. Registrado no BACKLOG como possível sensibilidade do plano à carga (tabela pequena, estatísticas); não é regressão do código.
 
 **Ambiente:** o `dockerd` parou de novo e o contêiner do E2E foi religado; a primeira rodada do E2E falhou 90 de 90 por o Playwright procurar o navegador em `/opt/pw-browsers` (versão 1243 está em outra pasta); com `PLAYWRIGHT_BROWSERS_PATH` correto, 90 de 90 passaram.
+
+---
+
+## Tarefa 5.1 — página inicial e páginas de categoria (US-001, 2026-10-05)
+
+> **Em resumo:** o visitante abre `/` e vê a busca, as categorias principais e os 12 anúncios publicados mais recentes; entra em `/categoria/{slug}` e vê subcategorias, caminho de navegação e os anúncios da categoria e de todas as descendentes, 24 por página. Os 8 cenários da US-001 estão provados (S01 a S08), os estados vazio, 404 e 503 funcionam e **o plano de execução dos recentes foi medido: sem índice novo ele varria a tabela inteira e ordenava; com o índice `IX_Ads_Status_PublishedAt_Id` lê só as 12 primeiras entradas**.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.335 | 1.335 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 127 | (rodando) | 0 |
+| E2E (Playwright, site publicado com a migration nova) | 95 | (rodando) | 0 |
+
+**Testes novos:** 22 unitários (`ShowcaseTests`), 6 de integração (`ShowcaseQueryTests`), 5 E2E (`ShowcaseE2ETests`), mais o teste da migration `AddPublishedAtIndex`.
+
+| Cenário | Prova |
+|---|---|
+| S01 página inicial | `ShowcaseTests.US001S01_…` (categorias na ordem da árvore, 12 cards mesmo com 15 publicados, capa, título, preço, cidade/UF, busca no topo; variantes de Serviços e Vagas; só a primeira linha de imagens sem `lazy`) e `PaginasInteiras_Visitante_…` no SQL Server |
+| S02 categoria principal | `US001S02_…`: subcategorias na ordem da árvore e o pedido de anúncios leva a categoria e **todas** as descendentes (inclusive as netas) |
+| S03 subcategoria e caminho | `US001S03_…` (só os anúncios dela; caminho Início > categoria > subcategoria, o passo atual não é link; voltar traz os anúncios de todas as subcategorias; caminho de 3 níveis) e `ShowcaseE2ETests.US001S03_…` no navegador, com e sem JavaScript |
+| S04 categoria sem anúncios | `US001S04_…`: mensagem e links das demais categorias principais, resposta 200 |
+| S05 site sem anúncios | `US001S05_…`: categorias à mostra e "Em breve teremos novos anúncios" |
+| S06 falha | `US001S06_…` (503, mensagem, "Tentar novamente", código de referência, nada técnico na tela, causa no registro; página inicial e categoria) |
+| S07 categoria inexistente | `US001S07_…` (404 com mensagem e caminhos de volta; categoria excluída; slugs estranhos, com HTML ou gigantes, sem consulta e sem eco do texto) e E2E |
+| S08 320 px | `US001S08_…` (grade de 2 colunas, sem largura fixa, busca → categorias → lista) e `ShowcaseE2ETests.US001S08_…` (sem rolagem horizontal; busca, categorias e card dentro dos 320 px) |
+| Acessibilidade | `ShowcaseE2ETests.Acessibilidade_…`: axe sem violações na página inicial, categoria, subcategoria e 404, em 1280 e 320 px |
+
+**Consulta (SQL Server real):** só publicados (rascunho, em revisão, rejeitado, arquivado e despublicado fora); ordem por data de publicação e, no empate, o de maior id; limite de 12; categorias descendentes; total sem duplicar por foto; capa = foto de menor posição (empate pelo menor id) e sem foto vem vazia; página no limite devolve vazio com o total certo; a linha da vitrine não tem autor nem e-mail.
+
+**Decisão D4 (índice), medida:** com 6.000 anúncios (2.000 publicados) o plano dos mais recentes era `Clustered Index Scan` de `PK_Ads` + `Sort` (varredura completa a cada visita à página inicial). A migration `AddPublishedAtIndex` cria `IX_Ads_Status_PublishedAt_Id` (situação, data de publicação e id, os dois últimos em ordem decrescente) e o plano passa a ser `Index Seek` + `Top`, sem varredura e sem ordenar à parte; a categoria usa `IX_Ads_Status_CategoryId_PublishedAt`. Teste: `PlanoDeExecucao_ComMuitosAnuncios_…`.
+
+**Achado e correção (teste de integração instável):** o teste do plano da lista do painel falhava de vez em quando porque a consulta que lê o plano pelo texto do SQL pegava a execução mais recente **de qualquer banco do servidor** (outro teste, tabela pequena, outro plano). Os dois testes de plano agora filtram pelo banco do teste (`DB_ID()`). Era o item do BACKLOG "sensibilidade do plano à carga".
+
+**Mutações (12; 11 mortas na primeira rodada, o mutante equivalente foi tratado)**
+
+| Mutação | Resultado |
+|---|---|
+| V1 categoria mostra anúncios não publicados | morta (2 testes de integração) |
+| V2 ordem invertida | morta (3) |
+| V3 13 recentes em vez de 12 | morta (S01) |
+| V4 categoria sem as descendentes | morta (2) |
+| V5 slug inexistente responde 200 | morta (7); a primeira versão da mutação não compilava (código inalcançável) e foi reformulada |
+| V6 sem a mensagem do site vazio | morta (S05) |
+| V7 página sem limite | morta |
+| V8 a tela de erro mostra a mensagem técnica | morta (S06) |
+| V9 capa é a última foto | morta (2) |
+| V10 caminho sem a categoria principal | morta |
+| V12 estado vazio sem links das categorias | morta (S04) |
+| V13 primeira linha de imagens também `lazy` | morta |
+| V11 slug sem limite de tamanho | **sobreviveu: mutante equivalente.** A guarda de tamanho era redundante (a busca no dicionário de slugs devolve nulo para qualquer texto inexistente e o servidor já limita o endereço); a guarda e `SlugMaxLength` foram removidas (YAGNI) e o teste do slug gigante continua provando o 404 sem consulta |
+
+**Outros achados da rodada**
+
+1. **`HomeController` tinha um construtor sem dependências** e os testes de layout que pedem `/` rodavam sem banco; passaram a usar o site de teste com banco (a página inicial agora lê categorias e anúncios).
+2. **E2E do cache de CEP dependia da ordem de execução** (os outros E2E deixam `13015-100` no cache de CEP; ao acrescentar uma classe a ordem mudou e a primeira consulta vinha do cache). `CepE2ETests` passou a usar o CEP `13015-300`, só dele, e deixou de depender da ordem.
+3. **Os cards já apontam para `/anuncio/{id}/{slug}`**, endereço que a página de detalhe (5.2) vai atender; até lá o clique leva a 404. Decisão de projeto: o endereço é o da ARCHITECTURE (NFR-21), não precisa mudar na 5.2.
+4. **Docker:** o `dockerd` caiu de novo com o reinício do worker e foi religado; a primeira tentativa de integração falhou 127 de 127 por isso (ambiente).
+
