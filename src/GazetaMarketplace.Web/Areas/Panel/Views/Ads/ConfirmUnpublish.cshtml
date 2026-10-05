@@ -1,0 +1,21 @@
+@model TakedownConfirmationViewModel
+@{
+    ViewData["Title"] = "Despublicar anúncio";
+}
+@section Scripts {
+    <script type="module" src="~/js/pages/ad-confirm.js" asp-append-version="true"></script>
+}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card"><div class="card-body p-3 p-md-4">
+        <h1 class="fs-3">Despublicar este anúncio?</h1>
+        <p><strong>@Model.Title</strong></p>
+        <p>Ele sai do site agora e volta a Rascunho. Você poderá corrigi-lo e enviá-lo de novo para revisão.</p>
+        <form method="post" asp-area="Panel" asp-controller="Ads" asp-action="Unpublish" asp-route-id="@Model.Id" class="d-flex flex-wrap gap-2" data-confirm-submit>
+            @* A ação é destrutiva: o foco inicial fica em "Cancelar" (a ação segura), para um Enter sem querer não despublicar *@
+            <a class="btn btn-outline-secondary alvo-toque" href="@Model.CancelUrl" data-foco-inicial>Cancelar</a>
+            <button class="btn btn-primary alvo-toque" type="submit" data-confirm-button data-busy-label="Despublicando…">Despublicar</button>
+        </form>
+        </div></div>
+    </div>
+</div>

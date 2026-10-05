@@ -1523,7 +1523,7 @@
 
 **User stories**: US-011
 
-**Scenarios covered**: `@US-011-S01`, `@US-011-S02`, `@US-011-S03`, `@US-011-S05`, `@US-011-S06`, `@US-011-S07`
+**Scenarios covered**: `@US-011-S01`, `@US-011-S02` (em parte), `@US-011-S03`, `@US-011-S05` (em parte), `@US-011-S06`, `@US-011-S07`; `@US-010-S02` fica completa (a barra da pré-visualização ganha "Arquivar")
 
 **NFRs covered**: `NFR-13`
 
@@ -1531,34 +1531,33 @@
 
 **Objective**: Retirar anúncios do site: despublicar volta a Rascunho e arquivar é definitivo.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Core/Ads/TakedownService.cs`
-- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs`
-- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/_TakedownDialogs.cshtml`
+**Decisões aprovadas (2026-10-05)**: D1 páginas de confirmação, como na 3.7 e na 4.2 (o `alertdialog` do wireframe fica como melhoria futura, sem mudar o servidor) · D2 foco inicial em "Cancelar" (ação destrutiva; evita Enter sem querer) · D3 a 4.3 prova a situação no banco, a tela do anúncio arquivado e a foto que deixa de chegar ao visitante; a lista com filtro "Arquivado" e a lista padrão sem arquivados são da 4.4, e "visitante procura na busca" e "abre o endereço antigo" são da Fase 5 · D4 barra de ações no topo da tela do anúncio, abaixo do título, igual em todas as situações; em 320 px os botões empilham, com "Arquivar" por último · D5 frases novas: "Anúncio despublicado", "Anúncio arquivado", "Este anúncio já foi arquivado", "Este anúncio não está mais publicado. Situação: …" · D6 o Redator só nos testes HTTP.
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Core/Ads/IAdTakedown.cs` (`IAdTakedown`, `TakedownOutcome`, `TakedownResult`) · `TakedownActions.cs` (regra pura de quem vê qual ação) · `AdMessages.cs`
+- `src/GazetaMarketplace.Infrastructure/Ads/AdTakedown.cs` (só Administrador; relê o anúncio, confere a situação, decide pelo `IAdService.TransitionAsync` e refaz uma vez se o `RowVersion` mudou) · `ServiceCollectionExtensions.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs` (`GET`/`POST` `/painel/anuncios/{id}/despublicar` e `/arquivar`, `[Authorize(Administrator)]` por ação) · `Models/AdFormFactory.cs` e `AdViewModels.cs` (`Takedown`, `TakedownConfirmationViewModel`) · `ReviewViewModels.cs`
+- `Views/Ads/ConfirmUnpublish.cshtml`, `ConfirmArchive.cshtml` · `Views/Shared/_TakedownActions.cshtml` (a barra) · `Edit.cshtml`, `Read.cshtml` (barra e aviso) · `ReviewQueue/Preview.cshtml` ("Arquivar" em Em revisão)
 
 **Acceptance Criteria**:
-- [ ] `@US-011-S01` (@happy): Despublicar um anúncio — o *Then* do SPEC é atendido
-- [ ] `@US-011-S02` (@happy): Arquivar um anúncio publicado — o *Then* do SPEC é atendido
-- [ ] `@US-011-S03` (@edge): Cancelar a confirmação — o *Then* do SPEC é atendido
-- [ ] `@US-011-S05` (@edge): Arquivar um anúncio que ainda não foi publicado — o *Then* do SPEC é atendido
-- [ ] `@US-011-S06` (@negative): Anúncio arquivado não tem ações de retirada — o *Then* do SPEC é atendido
-- [ ] `@US-011-S07` (@negative): Redator não vê as ações de retirada — o *Then* do SPEC é atendido
-- [ ] Despublicar volta o anúncio a Rascunho e o tira do site; arquivar o torna definitivo e somente leitura, sem ações de retirada
-- [ ] Arquivar é possível também num anúncio ainda não publicado; o diálogo tem "Cancelar" sem efeito
-- [ ] Redator não vê as ações de retirada; ações registradas em `AuditEntries`
+- [x] `@US-011-S01` (@happy): Despublicar um anúncio — atendido em parte: situação Rascunho, `PublishedAt/By` limpos, foto fora do ar, autor volta a editar e reenviar; "procura na busca" fica para a Fase 5
+- [x] `@US-011-S02` (@happy): Arquivar um anúncio publicado — atendido em parte: aviso "O anúncio sairá do site e não poderá ser reativado", situação Arquivado, foto fora do ar; o filtro "Arquivado" da lista é da 4.4 e "endereço antigo" da Fase 5
+- [x] `@US-011-S03` (@edge): Cancelar a confirmação — o *Then* do SPEC é atendido (abrir a confirmação não grava nada; a situação e a foto no site continuam)
+- [x] `@US-011-S05` (@edge): Arquivar um anúncio que ainda não foi publicado — atendido em parte: Rascunho, Em revisão e Rejeitado vão a Arquivado; "some da lista padrão" é da 4.4
+- [x] `@US-011-S06` (@negative): Anúncio arquivado não tem ações de retirada — o *Then* do SPEC é atendido
+- [x] `@US-011-S07` (@negative): Redator não vê as ações de retirada — o *Then* do SPEC é atendido (e GET/POST pela URL dão "acesso negado")
+- [x] Despublicar vale só para Publicado; arquivar vale para tudo que não está Arquivado; ações em `AuditEntries` (`ad.unpublish`, `ad.archive`)
+- [x] Dois pedidos ao mesmo tempo: uma passagem, uma auditoria, nenhum 500
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S01_DespublicarUmAnuncio` — `@US-011-S01`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S02_ArquivarUmAnuncioPublicado` — `@US-011-S02`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S03_CancelarAConfirmacao` — `@US-011-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Revisão/TakedownE2ETests.US011S03_CancelarAConfirmacao` — `@US-011-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S05_ArquivarUmAnuncioQueAindaNaoFoiPublicado` — `@US-011-S05`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S06_AnuncioArquivadoNaoTemAcoesDeRetirada` — `@US-011-S06`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/TakedownTests.US011S07_RedatorNaoVeAsAcoesDeRetirada` — `@US-011-S07`
+**Tests added** (nomes reais):
+- `Web.Tests/Review/TakedownTests` — 20 casos: `US011S01`, autor corrige e reenvia, `US011S02`, `US011S03`, `US011S05` (3 situações), `US011S06`, `US011S07` (3 situações), barra por situação, despublicar não-Publicado (4 situações), clique duplo, dois administradores, sem login/sem token/inexistente, título com HTML
+- `Web.Tests/Review/ReviewQueueTests` — a S02 passa a conferir também "Arquivar" na pré-visualização
+- `IntegrationTests/TakedownConcurrencyTests` — 4 despublicações, 4 arquivamentos e 2+2 misturados, em 3 rodadas, no SQL Server real
+- `Web.Tests.Playwright/Ads/TakedownE2ETests` — 4 testes: despublicar (foto do visitante antes e depois), cancelar e arquivar (leitura apenas), arquivar em revisão pela pré-visualização, axe e rolagem em 1280 e 320 px
 
 **Dependencies**: 4.2
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Despublicar e arquivar pelo navegador.
+**Verification**: Done when every test under "Tests added" passes (unitários 1273, integração 108, E2E 83) e as mutações são mortas.
 
 **Estimate**: M
 

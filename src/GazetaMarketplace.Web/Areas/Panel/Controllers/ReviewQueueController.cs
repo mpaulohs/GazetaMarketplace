@@ -23,7 +23,7 @@ namespace GazetaMarketplace.Web.Areas.Panel.Controllers;
 /// <summary>
 /// A fila de revisão e a pré-visualização do anúncio (US-010-S01, S02, S06 e S09). Só o Administrador entra; o Redator cai em "acesso negado" e nunca vê botão de decisão.
 /// Publicar e rejeitar (US-010-S03 a S05, S07 e S08) são páginas de confirmação e do motivo, que funcionam com e sem JavaScript; a decisão é do <see cref="IAdReview"/>.
-/// Arquivar chega na tarefa 4.3. Quem pode ver cada anúncio é decidido no servidor pelo <see cref="IAdService"/>.
+/// "Arquivar" (US-011-S05) é uma página do <c>AdsController</c>, ligada a esta tela pela barra de decisão. Quem pode ver cada anúncio é decidido no servidor pelo <see cref="IAdService"/>.
 /// </summary>
 [Authorize(Policy = AccessPolicies.Administrator)]
 [Route("painel/anuncios")]
@@ -107,6 +107,7 @@ public sealed class ReviewQueueController(
             Id = ad.Id,
             StatusLabel = AdStatus.Label(ad.Status),
             InReview = ad.Status == AdStatus.InReview,
+            Takedown = TakedownActions.For(new AdActor(null, true), ad), // o controller é só do Administrador,
             Alert = alert,
             Pending = pending,
             CategoryPath = categoryId is { } path ? string.Join(" › ", snapshot.PathTo(path).Select(n => n.Name)) : null,

@@ -17,6 +17,10 @@
         }
     </div>
 
+    @if (!Model.IsNew)
+    {
+        @await Html.PartialAsync("_TakedownActions", Model.Takedown, new ViewDataDictionary(ViewData) { ["AdId"] = Model.Id })
+    }
     @if (Model.Message is not null)
     {
         <div class="alert alert-success" role="status">@Model.Message</div>

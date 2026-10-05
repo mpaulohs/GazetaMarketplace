@@ -26,6 +26,9 @@ public sealed class ReviewPreviewViewModel
     /// <summary>Verdadeiro quando o anúncio está Em revisão: só então a faixa e as ações valem. Em qualquer outra situação a página só informa.</summary>
     public required bool InReview { get; init; }
 
+    /// <summary>"Arquivar" na barra de decisão do anúncio Em revisão (US-011-S05).</summary>
+    public TakedownActions Takedown { get; init; } = TakedownActions.None;
+
     public required AdBodyViewModel Body { get; init; }
 
     /// <summary>Categoria com os ancestrais ("Imóveis › Casas"); nula se a categoria sumiu da árvore.</summary>

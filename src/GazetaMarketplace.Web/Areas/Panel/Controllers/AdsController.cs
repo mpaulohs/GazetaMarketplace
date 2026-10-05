@@ -19,9 +19,10 @@ namespace GazetaMarketplace.Web.Areas.Panel.Controllers;
 /// Criar e editar o rascunho do anúncio (US-008). A página funciona sem JavaScript: salvar é um POST com redirecionamento, e trocar a categoria sem
 /// JavaScript é o botão "Atualizar campos", que refaz o formulário sem salvar. Quem pode ver ou editar cada anúncio é decidido no servidor
 /// (<see cref="IAdService"/>), não por esta tela. "Meus anúncios" continua provisório até a tarefa 4.4; a fila de revisão é do `ReviewQueueController`.
+/// Despublicar e arquivar (US-011) são páginas de confirmação só do Administrador, decididas pelo <see cref="IAdTakedown"/>.
 /// </summary>
 [Route("painel/anuncios")]
-public sealed class AdsController(IAdService ads, IAdDraftService drafts, IAdSubmission submissions, AdFormFactory forms, ICurrentUser currentUser) : PanelControllerBase
+public sealed class AdsController(IAdService ads, IAdDraftService drafts, IAdSubmission submissions, IAdTakedown takedown, AdFormFactory forms, ICurrentUser currentUser) : PanelControllerBase
 {
     /// <summary>Chave do aviso de sucesso no TempData; a página "Meus anúncios" (provisória) também a lê.</summary>
     public const string MessageKey = "AdsMessage";
@@ -155,6 +156,72 @@ public sealed class AdsController(IAdService ads, IAdDraftService drafts, IAdSub
         {
             Response.StatusCode = StatusCodes.Status409Conflict;
             return View("NoPermission", ex.Message);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [Authorize(Policy = AccessPolicies.Administrator)]
+    [HttpGet("{id:int}/despublicar")]
+    public Task<IActionResult> ConfirmUnpublish(int id, CancellationToken cancellationToken) =>
+        ConfirmTakedownAsync(id, "ConfirmUnpublish", takedown.CheckUnpublishAsync, cancellationToken);
+
+    [Authorize(Policy = AccessPolicies.Administrator)]
+    [HttpPost("{id:int}/despublicar")]
+    public Task<IActionResult> Unpublish(int id, CancellationToken cancellationToken) =>
+        TakedownAsync(id, takedown.UnpublishAsync, AdMessages.Unpublished, nameof(Edit), cancellationToken);
+
+    [Authorize(Policy = AccessPolicies.Administrator)]
+    [HttpGet("{id:int}/arquivar")]
+    public Task<IActionResult> ConfirmArchive(int id, CancellationToken cancellationToken) =>
+        ConfirmTakedownAsync(id, "ConfirmArchive", takedown.CheckArchiveAsync, cancellationToken);
+
+    [Authorize(Policy = AccessPolicies.Administrator)]
+    [HttpPost("{id:int}/arquivar")]
+    public Task<IActionResult> Archive(int id, CancellationToken cancellationToken) =>
+        TakedownAsync(id, takedown.ArchiveAsync, AdMessages.Archived, nameof(Index), cancellationToken);
+
+    // O GET só confere e mostra a pergunta: nada é gravado até o POST (cancelar = não fazer nada, US-011-S03)
+    private async Task<IActionResult> ConfirmTakedownAsync(int id, string view, Func<int, CancellationToken, Task<TakedownResult>> check, CancellationToken cancellationToken)
+    {
+        try
+        {
+            TakedownResult result = await check(id, cancellationToken);
+            if (result.Outcome != TakedownOutcome.Done)
+            {
+                TempData[WarningKey] = result.Message;
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            Ad ad = await ads.GetAsync(id, cancellationToken);
+            string cancelUrl = ad.Status == AdStatus.InReview
+                ? Url.Action("Preview", "ReviewQueue", new { area = "Panel", id })
+                : Url.Action(nameof(Edit), new { id });
+            return View(view, new TakedownConfirmationViewModel(id, ad.Title, cancelUrl));
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    private async Task<IActionResult> TakedownAsync(
+        int id, Func<int, CancellationToken, Task<TakedownResult>> act, string success, string successAction, CancellationToken cancellationToken)
+    {
+        try
+        {
+            TakedownResult result = await act(id, cancellationToken);
+            if (result.Outcome == TakedownOutcome.Done)
+            {
+                TempData[MessageKey] = success;
+                return successAction == nameof(Edit) ? RedirectToAction(nameof(Edit), new { id }) : RedirectToAction(successAction);
+            }
+
+            // Clique duplo ou outra pessoa agiu antes: a frase da situação, na tela do anúncio, sem erro
+            TempData[WarningKey] = result.Message;
+            return RedirectToAction(nameof(Edit), new { id });
         }
         catch (NotFoundException)
         {

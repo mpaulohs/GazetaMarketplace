@@ -9,9 +9,14 @@
         <span>Situação: <strong>@Model.StatusLabel</strong></span>
     </div>
 
+    @await Html.PartialAsync("_TakedownActions", Model.Takedown, new ViewDataDictionary(ViewData) { ["AdId"] = Model.Id })
     @if (Model.Message is not null)
     {
         <div class="alert alert-success" role="status">@Model.Message</div>
+    }
+    @if (Model.Warning is not null)
+    {
+        <div class="alert alert-warning" role="status">@Model.Warning</div>
     }
     <div class="alert alert-info" role="status" data-read-only>@Model.ReadOnlyMessage</div>
 

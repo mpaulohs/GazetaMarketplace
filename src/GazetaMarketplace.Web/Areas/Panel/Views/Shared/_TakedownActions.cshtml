@@ -1,0 +1,15 @@
+@model TakedownActions
+@* A barra de retirada (US-011): só aparece para o Administrador e só com as ações que a situação permite. As ações são páginas de confirmação, que funcionam sem JavaScript. *@
+@if (Model.Any)
+{
+    <div class="d-grid d-sm-flex gap-2 mb-3" data-takedown-actions>
+        @if (Model.CanUnpublish)
+        {
+            <a class="btn btn-outline-dark alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="ConfirmUnpublish" asp-route-id="@ViewData["AdId"]">Despublicar</a>
+        }
+        @if (Model.CanArchive)
+        {
+            <a class="btn btn-outline-danger alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="ConfirmArchive" asp-route-id="@ViewData["AdId"]">Arquivar</a>
+        }
+    </div>
+}

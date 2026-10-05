@@ -29,6 +29,14 @@ public static class AdMessages
         _ => "Este anúncio não está mais em revisão"
     };
 
+    public const string Unpublished = "Anúncio despublicado";
+
+    public const string Archived = "Anúncio arquivado";
+
+    public const string AlreadyArchived = "Este anúncio já foi arquivado";
+
+    public static string NoLongerPublished(byte currentStatus) => $"Este anúncio não está mais publicado. Situação: {AdStatus.Label(currentStatus)}";
+
     public const string RejectionReasonRequired = "Informe o motivo da rejeição";
 
     public static string RejectionReasonTooLong(int max) => $"O motivo pode ter no máximo {max} caracteres";

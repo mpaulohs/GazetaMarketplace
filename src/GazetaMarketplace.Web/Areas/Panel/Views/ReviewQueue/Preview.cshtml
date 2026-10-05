@@ -40,11 +40,14 @@ else if (Model.Alert is { Kind: ReviewAlertKind.PhoneMissing } noPhone)
 @if (Model.InReview)
 {
     <div class="alert alert-info" role="status" data-preview-banner><i class="fa fa-info-circle me-1" aria-hidden="true"></i>Pré-visualização — ainda não publicado</div>
-    @* "Arquivar" chega na tarefa 4.3 *@
     <div class="d-grid d-sm-flex gap-2 mb-3" data-preview-actions>
         <a class="btn btn-primary alvo-toque" asp-area="Panel" asp-controller="ReviewQueue" asp-action="ConfirmPublish" asp-route-id="@Model.Id">Publicar</a>
         <a class="btn btn-outline-danger alvo-toque" asp-area="Panel" asp-controller="ReviewQueue" asp-action="Reject" asp-route-id="@Model.Id">Rejeitar</a>
         <a class="btn btn-outline-primary alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="Edit" asp-route-id="@Model.Id">Editar</a>
+        @if (Model.Takedown.CanArchive)
+        {
+            <a class="btn btn-outline-danger alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="ConfirmArchive" asp-route-id="@Model.Id">Arquivar</a>
+        }
     </div>
 }
 else

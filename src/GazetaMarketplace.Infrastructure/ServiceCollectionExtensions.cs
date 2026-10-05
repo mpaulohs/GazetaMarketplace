@@ -59,6 +59,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAdSubmission, Ads.AdSubmission>();
         services.AddScoped<IReviewQueue, Ads.ReviewQueue>();
         services.AddScoped<IAdReview, Ads.AdReview>();
+        services.AddScoped<IAdTakedown, Ads.AdTakedown>();
         services.AddScoped<IAdSpecsReader, Ads.AdSpecsReader>();
         services.AddScoped<IPhotoReprocessing, Photos.PhotoReprocessing>();
         services.AddSingleton<Photos.OriginalsCleanupService>();

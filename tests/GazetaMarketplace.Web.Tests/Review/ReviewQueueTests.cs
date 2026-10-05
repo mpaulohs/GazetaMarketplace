@@ -191,13 +191,11 @@ public sealed class ReviewQueueTests
         StringAssert.Matches(html, new Regex(@"<h1[^>]*>Pré-visualização do anúncio</h1>\s*<div class=""alert alert-info"" role=""status""[^>]*>[\s\S]*?Pré-visualização — ainda não publicado</div>"));
         StringAssert.Matches(html, new Regex(@"<a [^>]*href=""/painel/anuncios/" + adId + @"/editar""[^>]*>Editar</a>"));
         StringAssert.Matches(html, new Regex(@"<a [^>]*href=""/painel/anuncios/fila""[^>]*>[\s\S]*?Fila de revisão</a>"));
-        // Os três botões da S02; "Arquivar" e "Despublicar" só chegam na 4.3
+        // Os botões da S02: Publicar, Rejeitar e Editar, mais "Arquivar" (US-011-S05); "Despublicar" só vale para anúncio publicado
         StringAssert.Matches(html, new Regex(@"<a class=""btn btn-primary[^""]*"" href=""/painel/anuncios/" + adId + @"/publicar"">Publicar</a>"));
         StringAssert.Matches(html, new Regex(@"<a class=""btn btn-outline-danger[^""]*"" href=""/painel/anuncios/" + adId + @"/rejeitar"">Rejeitar</a>"));
-        foreach (string absent in new[] { "Arquivar", "Despublicar" })
-        {
-            Assert.IsFalse(visible.Contains(absent, StringComparison.Ordinal), absent + " não existe antes da 4.3");
-        }
+        StringAssert.Matches(html, new Regex(@"<a class=""btn btn-outline-danger[^""]*"" href=""/painel/anuncios/" + adId + @"/arquivar"">Arquivar</a>"));
+        Assert.IsFalse(visible.Contains("Despublicar", StringComparison.Ordinal), "Despublicar só existe para anúncio publicado");
 
         // O mesmo corpo da página pública: título, valor, local, descrição e características reais
         StringAssert.Matches(html, new Regex(@"<h2 [^>]*>Honda Civic 2018</h2>"));

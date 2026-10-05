@@ -755,3 +755,52 @@ Os arquivos foram restaurados depois de cada mutação; a compilação final fic
 3. **Cache de CEP:** `CepE2ETests` falha numa segunda rodada no mesmo banco (as entradas `13015100` e `60000000` já estão no cache). Limpar `CepCache` antes da rodada completa; documentado em `docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md` e no BACKLOG.
 4. **Ferramenta de mutação:** a restauração do arquivo deixava a data de modificação mais antiga que a compilação e o MSBuild não recompilava; o script passou a atualizar a data. As mutações M1 e M6 foram refeitas em separado depois da correção.
 5. **Cobertura parcial declarada:** S02 agora completa (Publicar, Rejeitar e Editar; "Arquivar" na 4.3); S04 sem as duas frases da Fase 5.
+
+## Tarefa 4.3 — despublicar e arquivar anúncios (US-011)
+
+> **Em resumo:** 1.273 testes unitários (20 novos), 43 e 27 das ferramentas, 108 de integração (3 novos, SQL Server real) e 83 de navegador (4 novos) passam. As 11 mutações (8 planejadas e 3 extras) foram derrubadas. As partes de S01, S02 e S05 que dependem da busca, do endereço antigo e da lista do painel ficam para a 4.4 e a Fase 5 de propósito. Veredito: **aprovado**, com um teste instável antigo registrado (ver achado 2).
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.273 | 1.273 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 108 | 108 | 0 |
+| E2E (Playwright: Production + Development) | 83 | 83 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| T1 Despublicar leva a Arquivado em vez de Rascunho | 9 (`US011S01`, clique duplo, `Despublicar_AnuncioQueNaoEstaPublicado…`, autor reenvia…) |
+| T2 O GET da confirmação já arquiva | `US011S02`, `US011S03` |
+| T3 Despublicar e arquivar abertos ao Redator (política trocada) | `US011S07` (3 situações) |
+| T4 A barra aparece em anúncio Arquivado | `US011S06` |
+| T5 A barra aparece para o Redator autor | `US011S07` (3 situações) |
+| T6 Retirada sem auditoria | 31 (entre eles `US011S01`, `US011S02`, `US011S05`) |
+| T7 Despublicar vale para anúncio que não está Publicado | 8 (`Despublicar_AnuncioQueNaoEstaPublicado…` e outros) |
+| T8 A foto continua chegando ao visitante depois de arquivar | `US011S02`, `AnuncioNaoPublicado_Devolve404…`, `AnuncioNaoPublicado_OAutorEOAdministradorVeem…` |
+| (extra) E1 Arquivar sem exigir o token antiforgery | `SemLogin_SemToken_EAnuncioInexistente_SaoRecusados` |
+| (extra) E2 "Arquivar" some do anúncio não publicado | `BarraDeAcoes_PorSituacao…`, `US010S02` |
+| (extra) E3 "Cancelar" sem o foco inicial | `US011S03` |
+
+Os arquivos foram restaurados depois de cada mutação (com a data de modificação atualizada, como corrigido na 4.2); a compilação final ficou limpa (0 avisos, 0 erros).
+
+**O que cada camada prova**
+
+- **S01:** a página "Despublicar este anúncio?" explica que o anúncio sai do site e volta a Rascunho; depois do POST a situação é Rascunho, `PublishedAt` e `PublishedById` ficam vazios, a tela de edição mostra "Anúncio despublicado" uma vez só e a foto deixa de chegar ao visitante (200 antes, 404 depois, no HTTP e no navegador). O autor (Redator) volta a editar e consegue enviar o anúncio de novo para a revisão. A auditoria `ad.unpublish` guarda quem, "Publicado" e "Rascunho".
+- **S02 (em parte):** o aviso "O anúncio sairá do site e não poderá ser reativado." aparece; depois da confirmação a situação é Arquivado, `ArchivedAt` fica gravado, a lista mostra "Anúncio arquivado", a foto sai do ar e a auditoria `ad.archive` guarda quem e as duas situações. O filtro "Arquivado" da lista é da 4.4; "visitante abre o endereço antigo" é da Fase 5.
+- **S03:** abrir a confirmação (GET) não grava nada; "Cancelar" é um link de volta, vem antes do botão de confirmar e leva o foco inicial. A situação continua Publicado e a foto continua no site; nenhuma auditoria nova.
+- **S05 (em parte):** Rascunho, Em revisão e Rejeitado vão a Arquivado, cada um com a situação de partida na auditoria; o Em revisão sai da fila. "Some da lista padrão" é da 4.4. No navegador, a pré-visualização de um anúncio em revisão ganhou o botão "Arquivar".
+- **S06:** o anúncio arquivado abre em somente leitura ("Este anúncio não pode ser editado"), com "Situação: Arquivado" e sem a barra de retirada; GET e POST de despublicar e arquivar levam de volta à tela do anúncio com a frase da situação, sem gravar nada.
+- **S07:** o Redator não vê a barra em Rascunho, Rejeitado e Publicado; GET e POST pela URL dão "acesso negado" e nada muda.
+- **Barra por situação:** Rascunho, Rejeitado e Em revisão mostram só "Arquivar"; Publicado mostra "Despublicar" e depois "Arquivar"; a pré-visualização fora de revisão só informa; anúncio novo não tem barra.
+- **Frases novas:** "Este anúncio não está mais publicado. Situação: …" (despublicar fora de Publicado, com 4 situações) e "Este anúncio já foi arquivado".
+- **Clique duplo e dois administradores:** a segunda resposta diz o que já aconteceu e só há uma auditoria; quem chega depois de um despublicar ainda consegue arquivar (Rascunho → Arquivado), e quem chega depois de arquivar vê "Situação: Arquivado".
+- **SQL Server real:** 4 despublicações, 4 arquivamentos e 2+2 misturados ao mesmo tempo, em 3 rodadas: nenhum 500; despublicar termina Rascunho com uma auditoria; arquivar termina Arquivado com uma auditoria de arquivar e no máximo uma de despublicar.
+- **Navegador:** despublicar, cancelar e arquivar, arquivar em revisão pela pré-visualização, foco inicial em "Cancelar", axe sem violações e sem rolagem horizontal em 1280 e 320 px (barra, as duas confirmações e o anúncio arquivado), com "Arquivar" abaixo de "Despublicar" em 320 px.
+
+**Achados desta rodada**
+
+1. **TempData de uma leitura:** o aviso de sucesso e o de "já foi arquivado" são do `TempData` da sessão; dois pedidos seguidos mostram só o último aviso. Os testes leem a página logo depois de cada pedido (BACKLOG).
+2. **Teste instável antigo:** `SubmitForReviewTests.CliqueDuploEmParalelo…` (3.7, unitários) falha às vezes com duas auditorias (1 vez em 6 rodadas isoladas; caiu em 3 das 11 mutações sem relação). O SQLite compartilhado não garante a corrida; a prova real é a integração no SQL Server. Isso também explica por que a M1 da 4.2 listou esse teste entre os que "caíram": a queda real daquela mutação é `US010S08`. Registrado no BACKLOG para decisão.
+3. **Docker:** o `dockerd` e o contêiner do E2E pararam no meio da sessão e foram religados (já descrito na documentação).
+4. **Cobertura parcial declarada:** S01 e S02 sem "busca" e "endereço antigo" (Fase 5); S02 e S05 sem a lista com filtro (4.4); S04 (favoritos) é da Fase 5.

@@ -9,6 +9,7 @@ using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Fields;
 using GazetaMarketplace.Core.Formatting;
+using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Location;
 using GazetaMarketplace.Core.Photos;
 using GazetaMarketplace.Core.VehicleCatalog;
@@ -19,7 +20,7 @@ namespace GazetaMarketplace.Web.Areas.Panel.Models;
 /// Monta o formulário do anúncio a partir do anúncio gravado ou do que foi digitado. As listas (categorias, catálogo de veículos, cidades) vêm do
 /// servidor, então a página funciona sem JavaScript; o JavaScript só as troca na hora, sem recarregar.
 /// </summary>
-public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, ICityDirectory cities, IAdPhotoService photos, TimeProvider time)
+public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, ICityDirectory cities, IAdPhotoService photos, TimeProvider time, ICurrentUser currentUser)
 {
     private static readonly CultureInfo PtBr = new("pt-BR");
 
@@ -106,7 +107,8 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
             PhotoLimit = photoGroup.MaxPhotos,
             Message = message,
             Warning = warning,
-            Pendings = pendings ?? []
+            Pendings = pendings ?? [],
+            Takedown = ad is null ? TakedownActions.None : TakedownActions.For(new AdActor(currentUser.UserId, currentUser.IsAdministrator), ad)
         };
     }
 

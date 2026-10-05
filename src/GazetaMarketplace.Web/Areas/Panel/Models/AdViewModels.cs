@@ -169,6 +169,9 @@ public sealed class AdFormViewModel
     /// <summary>Se a tela oferece enviar, trocar a capa e remover: só num anúncio já gravado, editável e de categoria com fotos.</summary>
     public bool CanManagePhotos => !IsNew && !ReadOnly && PhotoLimit > 0;
 
+    /// <summary>As ações de retirada que esta tela oferece a quem a abriu (só o Administrador, só as que a situação permite).</summary>
+    public TakedownActions Takedown { get; init; } = TakedownActions.None;
+
     public string SubmitLabel => IsNew || Status == Core.Ads.AdStatus.Draft ? "Salvar rascunho" : "Salvar";
 
     /// <summary>Aviso de sucesso da última gravação (<c>role="status"</c>).</summary>
@@ -189,3 +192,6 @@ public sealed class AdFormViewModel
 
 /// <summary>A página de confirmação do envio à revisão.</summary>
 public sealed record SubmitConfirmationViewModel(int Id, string Title);
+
+/// <summary>A página de confirmação de despublicar ou arquivar; <paramref name="CancelUrl"/> é a tela de onde a pessoa veio (pré-visualização ou edição).</summary>
+public sealed record TakedownConfirmationViewModel(int Id, string Title, string CancelUrl);
