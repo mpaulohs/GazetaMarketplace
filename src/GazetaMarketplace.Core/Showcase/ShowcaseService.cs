@@ -35,7 +35,7 @@ public sealed class ShowcaseService(IShowcaseReadRepository repository, IPublish
     {
         CategoryTreeSnapshot snapshot = await tree.GetAsync(cancellationToken);
         IReadOnlyList<ShowcaseRow> rows = await repository.RecentAsync(ShowcaseFilters.RecentCount, cancellationToken);
-        return new ShowcaseHome(snapshot.Roots, [.. rows.Select(row => Card(row, snapshot))]);
+        return new ShowcaseHome(snapshot.Roots, [.. rows.Select(row => ShowcaseCards.Create(row, snapshot))]);
     }
 
     public async Task<ShowcaseCategoryPage> CategoryAsync(string slug, int page, CancellationToken cancellationToken)
@@ -64,29 +64,9 @@ public sealed class ShowcaseService(IShowcaseReadRepository repository, IPublish
             snapshot.PathTo(category.Id),
             snapshot.ChildrenOf(category.Id),
             snapshot.Roots,
-            [.. result.Rows.Select(row => Card(row, snapshot))],
+            [.. result.Rows.Select(row => ShowcaseCards.Create(row, snapshot))],
             result.Total,
             current,
             ShowcaseFilters.PageSize);
     }
-
-    private static AdCardModel Card(ShowcaseRow row, CategoryTreeSnapshot snapshot)
-    {
-        FieldGroup group = (row.CategoryId is { } categoryId ? FieldGroupRegistry.Resolve(snapshot, categoryId) : null) ?? FieldGroupRegistry.Default;
-        AdAttributes.TryParse(row.Attributes, out AdAttributes attributes);
-
-        string serviceType = null;
-        string jobArea = null;
-        if (row.CategoryId is { } category && attributes is not null)
-        {
-            serviceType = group.Key == FieldGroupKeys.Services ? LabelOf(group, FieldKeys.ServiceType, category, attributes.TryGetInt(FieldKeys.ServiceType, out int type) ? type : null) : null;
-            jobArea = group.Key == FieldGroupKeys.Jobs ? LabelOf(group, FieldKeys.JobAreas, category, attributes.GetInts(FieldKeys.JobAreas) is [int first, ..] ? first : null) : null;
-        }
-
-        AdCardCover cover = row.CoverPhotoId is { } photoId && row.CoverWidth is { } width && row.CoverHeight is { } height ? AdCardCover.FromStored(photoId, width, height) : null;
-        return new AdCardModel(row.Id, row.Title, group.Key, row.PriceCents, serviceType, jobArea, cover, row.City, row.Uf, AdRoutes.Detail(row.Id, row.Title));
-    }
-
-    private static string LabelOf(FieldGroup group, string fieldKey, int categoryId, int? optionId) =>
-        optionId is { } id ? group.Field(fieldKey)?.OptionsFor(categoryId)?.Find(id)?.Label : null;
 }

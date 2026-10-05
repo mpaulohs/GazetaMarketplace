@@ -28,7 +28,10 @@
     </ol>
 </nav>
 
-<h1 class="fs-3 mb-3">@Model.Category.Name</h1>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h1 class="fs-3 mb-0">@Model.Category.Name</h1>
+    <a class="btn btn-outline-secondary alvo-toque d-inline-flex align-items-center" href="@PublicRoutes.Search?categoria=@Model.Category.Slug" data-filter-link><i class="fa fa-sliders me-2" aria-hidden="true"></i>Filtrar e ordenar</a>
+</div>
 
 @if (Model.Children.Count > 0)
 {

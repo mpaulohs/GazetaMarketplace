@@ -1,0 +1,23 @@
+/* Busca e filtros (US-002). Só Bootstrap + tokens; BEM só no que o Bootstrap não cobre. */
+
+/* O painel de filtros acompanha a rolagem no computador; no celular ele é recolhível e rola junto com a página */
+@media (min-width: 992px) {
+  .search-filters {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+/* O controle de ordenação quebra para baixo do total em 320 px em vez de estourar a largura */
+.search-toolbar {
+  min-width: 0;
+}
+
+.search-toolbar select {
+  max-width: 100%;
+}
+
+/* "Ordenar" só aparece sem JavaScript: com ele, escolher a ordem já envia */
+.search-toolbar [data-order-apply][hidden] {
+  display: none;
+}

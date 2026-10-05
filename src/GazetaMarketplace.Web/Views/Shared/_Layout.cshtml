@@ -26,10 +26,18 @@
             <a class="cabecalho__favoritos alvo-toque" href="@PublicRoutes.Favorites"><i class="fa fa-heart-o me-2" aria-hidden="true"></i><span class="cabecalho__rotulo">Favoritos&nbsp;</span>(<span data-favoritos-contagem>0</span>)</a>
             <form class="cabecalho__busca" role="search" method="get" action="@PublicRoutes.Search">
                 <label class="visually-hidden" for="busca-q">Buscar anúncios</label>
+                @if (ViewData["SearchCarry"] is IEnumerable<KeyValuePair<string, string>> carry)
+                {
+                    <partial name="_SearchCarry" model="carry" />
+                }
                 <div class="input-group">
-                    <input class="form-control" id="busca-q" name="q" type="search" placeholder="Buscar anúncios…" autocomplete="off" />
+                    <input class="form-control@(ViewData["SearchError"] is null ? "" : " is-invalid")" id="busca-q" name="q" type="search" placeholder="Buscar anúncios…" autocomplete="off" value="@(ViewData["SearchText"] as string)" aria-describedby="@(ViewData["SearchError"] is null ? null : "busca-q-erro")" />
                     <button class="btn btn-primary alvo-toque" type="submit"><i class="fa fa-search me-1" aria-hidden="true"></i>Buscar</button>
                 </div>
+                @if (ViewData["SearchError"] is string searchError)
+                {
+                    <div class="invalid-feedback d-block" id="busca-q-erro" role="alert">@searchError</div>
+                }
             </form>
         </div>
     </header>

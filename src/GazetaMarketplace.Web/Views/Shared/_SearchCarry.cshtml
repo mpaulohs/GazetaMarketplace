@@ -1,0 +1,7 @@
+@using System.Collections.Generic
+@model IEnumerable<KeyValuePair<string, string>>
+@* Os filtros que valem, repetidos como campos ocultos em outro formulário (a busca do cabeçalho e o "Ordenar"), para trocar uma parte sem perder o resto *@
+@foreach (KeyValuePair<string, string> pair in Model)
+{
+    <input type="hidden" name="@pair.Key" value="@pair.Value" />
+}

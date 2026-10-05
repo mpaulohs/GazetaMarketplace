@@ -6,6 +6,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Ads;
+using GazetaMarketplace.Core.Search;
 using GazetaMarketplace.Core.Showcase;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Data;
@@ -111,6 +112,11 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
                 services.RemoveAll<IShowcaseReadRepository>();
                 services.AddSingleton<StubShowcaseRepository>();
                 services.AddSingleton<IShowcaseReadRepository>(sp => sp.GetRequiredService<StubShowcaseRepository>());
+
+                // E para a busca (US-002)
+                services.RemoveAll<ISearchReadRepository>();
+                services.AddSingleton<StubSearchReadRepository>();
+                services.AddSingleton<ISearchReadRepository>(sp => sp.GetRequiredService<StubSearchReadRepository>());
             }
 
             _services?.Invoke(services);

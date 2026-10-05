@@ -18,13 +18,11 @@ namespace GazetaMarketplace.Infrastructure.Ads;
 public sealed class ShowcaseReadRepository(IDbConnection connection) : IShowcaseReadRepository
 {
     /// <summary>Tempo limite da consulta (RC-15): passou disso, a página mostra o erro com "Tentar novamente".</summary>
-    public const int CommandTimeoutSeconds = 10;
+    public const int CommandTimeoutSeconds = AdCardSql.CommandTimeoutSeconds;
 
-    private const string Columns =
-        "a.Id, a.Title, a.CategoryId, a.PriceCents, a.Attributes, a.City, a.Uf, c.Id AS CoverPhotoId, c.Width AS CoverWidth, c.Height AS CoverHeight";
+    private const string Columns = AdCardSql.Columns;
 
-    private const string CoverJoin =
-        "OUTER APPLY (SELECT TOP (@CoverCount) p.Id, p.Width, p.Height FROM AdPhotos p WHERE p.AdId = a.Id ORDER BY p.SortOrder, p.Id) c";
+    private const string CoverJoin = AdCardSql.CoverJoin;
 
     private const string Order = "a.PublishedAt DESC, a.Id DESC";
 
@@ -33,7 +31,7 @@ public sealed class ShowcaseReadRepository(IDbConnection connection) : IShowcase
     public async Task<IReadOnlyList<ShowcaseRow>> RecentAsync(int take, CancellationToken cancellationToken)
     {
         SqlQuery query = Page(new SqlBuilder().Select(Columns).From("Ads a").Join(CoverJoin).OnlyPublished(), 1, take);
-        IEnumerable<Row> rows = await connection.QueryAsync<Row>(Command(query, cancellationToken));
+        IEnumerable<AdCardSql.Row> rows = await connection.QueryAsync<AdCardSql.Row>(Command(query, cancellationToken));
         return [.. rows.Select(ToRow)];
     }
 
@@ -43,7 +41,7 @@ public sealed class ShowcaseReadRepository(IDbConnection connection) : IShowcase
         SqlQuery list = Page(Filtered(new SqlBuilder().Select(Columns).From("Ads a").Join(CoverJoin), categoryIds), page, pageSize);
 
         int total = await connection.ExecuteScalarAsync<int>(Command(count, cancellationToken));
-        IEnumerable<Row> rows = await connection.QueryAsync<Row>(Command(list, cancellationToken));
+        IEnumerable<AdCardSql.Row> rows = await connection.QueryAsync<AdCardSql.Row>(Command(list, cancellationToken));
         return new ShowcaseRows([.. rows.Select(ToRow)], total);
     }
 
@@ -53,31 +51,7 @@ public sealed class ShowcaseReadRepository(IDbConnection connection) : IShowcase
     private static SqlQuery Page(SqlBuilder builder, int page, int size) =>
         builder.Parameter("CoverCount", 1).OrderBy(null, null, NoUserSort, Order).Page(page, size).Build();
 
-    private static ShowcaseRow ToRow(Row r) => new(r.Id, r.Title, r.CategoryId, r.PriceCents, r.Attributes, r.City, r.Uf, r.CoverPhotoId, r.CoverWidth, r.CoverHeight);
+    private static ShowcaseRow ToRow(AdCardSql.Row r) => AdCardSql.ToRow(r);
 
-    private static CommandDefinition Command(SqlQuery query, CancellationToken cancellationToken) =>
-        new(query.Sql, query.Parameters, commandTimeout: CommandTimeoutSeconds, cancellationToken: cancellationToken);
-
-    private sealed class Row
-    {
-        public int Id { get; set; }
-
-        public string Title { get; set; }
-
-        public int? CategoryId { get; set; }
-
-        public long? PriceCents { get; set; }
-
-        public string Attributes { get; set; }
-
-        public string City { get; set; }
-
-        public string Uf { get; set; }
-
-        public int? CoverPhotoId { get; set; }
-
-        public int? CoverWidth { get; set; }
-
-        public int? CoverHeight { get; set; }
-    }
+    private static CommandDefinition Command(SqlQuery query, CancellationToken cancellationToken) => AdCardSql.Command(query, cancellationToken);
 }

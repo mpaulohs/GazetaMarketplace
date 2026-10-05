@@ -1,0 +1,256 @@
+@using System.Globalization
+@using GazetaMarketplace.Core.Categories
+@using GazetaMarketplace.Core.Location
+@using GazetaMarketplace.Core.Search
+@using GazetaMarketplace.Core.VehicleCatalog
+@using GazetaMarketplace.Web.Navigation
+@model SearchPageViewModel
+@functions {
+    private static string First(SearchForm form, params string[] keys)
+    {
+        foreach (string key in keys)
+        {
+            if (form.Errors.TryGetValue(key, out string message))
+            {
+                return message;
+            }
+        }
+
+        return null;
+    }
+}
+@{
+    SearchForm form = Model.Form;
+    SearchResult result = Model.Result;
+    ViewData["Title"] = form.Category is null ? "Buscar anúncios" : "Buscar em " + form.Category.Name;
+    // O cabeçalho mostra o texto da busca e leva junto os demais filtros que valem
+    ViewData["SearchText"] = form.Text;
+    ViewData["SearchError"] = form.Errors.GetValueOrDefault("q");
+    ViewData["SearchCarry"] = form.Query.Where(p => p.Key != "q").ToList();
+
+    string priceError = First(form, "preco", "precoMin", "precoMax");
+    string yearError = First(form, "ano", "anoDe", "anoAte");
+    string kmError = First(form, "kmMax");
+    string areaError = First(form, "area", "areaMin", "areaMax");
+    bool keepOpen = form.HasErrors;
+    CultureInfo br = CultureInfo.GetCultureInfo("pt-BR");
+    var orderCarry = form.Query.Where(p => p.Key != "ordem").ToList();
+}
+@section Head {
+    <meta name="robots" content="noindex, follow" />
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pages/search.css" asp-append-version="true" />
+}
+@section Scripts {
+    <script type="module" src="~/js/pages/search.js" asp-append-version="true"></script>
+}
+
+<nav aria-label="Caminho de navegação" class="categoria-caminho" data-breadcrumb>
+    <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="@PublicRoutes.Home">Início</a></li>
+        @if (form.Category is null)
+        {
+            <li class="breadcrumb-item active" aria-current="page">Busca</li>
+        }
+        else
+        {
+            <li class="breadcrumb-item"><a href="@PublicRoutes.Search">Busca</a></li>
+            for (int i = 0; i < form.Path.Count; i++)
+            {
+                CategoryNode step = form.Path[i];
+                if (i == form.Path.Count - 1)
+                {
+                    <li class="breadcrumb-item active" aria-current="page">@step.Name</li>
+                }
+                else
+                {
+                    <li class="breadcrumb-item"><a href="@PublicRoutes.Category(step.Slug)">@step.Name</a></li>
+                }
+            }
+        }
+    </ol>
+</nav>
+
+<h1 class="fs-3 mb-3">Buscar anúncios</h1>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-3">
+        @* Em telas estreitas o painel recolhe (o search.js decide ao carregar); sem JavaScript ele fica aberto e o botão nem aparece *@
+        <button type="button" class="btn btn-outline-secondary alvo-toque w-100 mb-2 d-lg-none" hidden data-filters-toggle data-bs-toggle="collapse" data-bs-target="#filtros" aria-expanded="true" aria-controls="filtros">Filtros ▾</button>
+        <div class="collapse show d-lg-block" id="filtros" data-filters-panel data-keep-open="@(keepOpen ? "true" : "false")">
+            <form class="card card-body search-filters" method="get" action="@PublicRoutes.Search" novalidate data-search-form data-kind="@form.Kind">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="fs-5 mb-0">Filtros</h2>
+                    <button type="button" class="btn btn-outline-secondary btn-sm alvo-toque d-lg-none" hidden data-filters-close data-bs-toggle="collapse" data-bs-target="#filtros" aria-controls="filtros">Fechar ▴</button>
+                </div>
+                <input type="hidden" name="q" value="@(form.Errors.ContainsKey("q") ? string.Empty : form.Text)" />
+                @if (form.Order != SearchOrder.Recent)
+                {
+                    <input type="hidden" name="ordem" value="@SearchOrders.Slug(form.Order)" />
+                }
+
+                <div class="mb-3">
+                    <label class="form-label" for="filtro-categoria">Categoria</label>
+                    <select class="form-select" id="filtro-categoria" name="categoria" data-filter-category>
+                        <option value="">Todas as categorias</option>
+                        @foreach (SearchCategoryOption option in form.CategoryOptions)
+                        {
+                            <option value="@option.Slug" data-filters="@SearchFilters.Names(option.Filters)" data-kind="@option.Kind" selected="@(option.Slug == form.CategorySlug)">@(new string(' ', (option.Depth - 1) * 3))@option.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="filtro-uf">UF</label>
+                    <select class="form-select" id="filtro-uf" name="uf" data-filter-uf>
+                        <option value="">Todas as UFs</option>
+                        @foreach (State state in BrazilianStates.All)
+                        {
+                            <option value="@state.Uf" selected="@(state.Uf == form.Uf)">@state.Uf</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="filtro-cidade">Cidade</label>
+                    <select class="form-select" id="filtro-cidade" name="cidade" disabled="@(form.Uf is null)" data-filter-city>
+                        <option value="">Todas as cidades</option>
+                        @foreach (CityItem city in form.Cities)
+                        {
+                            <option value="@city.Name" selected="@(city.Name == form.City)">@city.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <fieldset class="mb-3" aria-describedby="erro-preco">
+                    <legend class="form-label fs-6">Preço (R$)</legend>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="visually-hidden" for="filtro-preco-min">Preço mínimo</label>
+                            <input class="form-control @(priceError is null ? "" : "is-invalid")" id="filtro-preco-min" name="precoMin" type="text" inputmode="decimal" autocomplete="off" placeholder="mín" value="@form.PriceMin" aria-describedby="erro-preco" data-range="preco" />
+                        </div>
+                        <div class="col-6">
+                            <label class="visually-hidden" for="filtro-preco-max">Preço máximo</label>
+                            <input class="form-control @(priceError is null ? "" : "is-invalid")" id="filtro-preco-max" name="precoMax" type="text" inputmode="decimal" autocomplete="off" placeholder="máx" value="@form.PriceMax" aria-describedby="erro-preco" data-range="preco" />
+                        </div>
+                    </div>
+                    <div class="invalid-feedback d-block" id="erro-preco" role="alert" data-error-for="preco" hidden="@(priceError is null)">@priceError</div>
+                </fieldset>
+
+                @* Características do bem: cada bloco existe sempre e só aparece (e vale) quando a categoria escolhida o oferece; sem JavaScript vale a categoria do endereço *@
+                <div class="mb-3" data-filter="brand" hidden="@(!form.Filters.HasFlag(SearchFilter.Brand))">
+                    <label class="form-label" for="filtro-marca">Marca</label>
+                    <select class="form-select" id="filtro-marca" name="marca" disabled="@(!form.Filters.HasFlag(SearchFilter.Brand))" data-filter-brand>
+                        <option value="">Todas as marcas</option>
+                        @foreach (CatalogItem brand in form.Brands)
+                        {
+                            <option value="@brand.Id" selected="@(brand.Id.ToString(CultureInfo.InvariantCulture) == form.Brand)">@brand.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3" data-filter="model" hidden="@(!form.Filters.HasFlag(SearchFilter.Model))">
+                    <label class="form-label" for="filtro-modelo">Modelo</label>
+                    <select class="form-select" id="filtro-modelo" name="modelo" disabled="@(!form.Filters.HasFlag(SearchFilter.Model) || form.Brand is null)" data-filter-model>
+                        <option value="">@(form.Brand is null ? "Escolha a marca" : "Todos os modelos")</option>
+                        @foreach (CatalogItem item in form.Models)
+                        {
+                            <option value="@item.Id" selected="@(item.Id.ToString(CultureInfo.InvariantCulture) == form.Model)">@item.Name</option>
+                        }
+                    </select>
+                </div>
+                <fieldset class="mb-3" data-filter="year" hidden="@(!form.Filters.HasFlag(SearchFilter.Year))" aria-describedby="erro-ano">
+                    <legend class="form-label fs-6">Ano</legend>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="visually-hidden" for="filtro-ano-de">Ano inicial</label>
+                            <input class="form-control @(yearError is null ? "" : "is-invalid")" id="filtro-ano-de" name="anoDe" type="text" inputmode="numeric" autocomplete="off" placeholder="de" value="@form.YearFrom" disabled="@(!form.Filters.HasFlag(SearchFilter.Year))" aria-describedby="erro-ano" data-range="ano" />
+                        </div>
+                        <div class="col-6">
+                            <label class="visually-hidden" for="filtro-ano-ate">Ano final</label>
+                            <input class="form-control @(yearError is null ? "" : "is-invalid")" id="filtro-ano-ate" name="anoAte" type="text" inputmode="numeric" autocomplete="off" placeholder="até" value="@form.YearTo" disabled="@(!form.Filters.HasFlag(SearchFilter.Year))" aria-describedby="erro-ano" data-range="ano" />
+                        </div>
+                    </div>
+                    <div class="invalid-feedback d-block" id="erro-ano" role="alert" data-error-for="ano" hidden="@(yearError is null)">@yearError</div>
+                </fieldset>
+                <div class="mb-3" data-filter="km" hidden="@(!form.Filters.HasFlag(SearchFilter.Km))">
+                    <label class="form-label" for="filtro-km-max">Quilometragem máx. (km)</label>
+                    <input class="form-control @(kmError is null ? "" : "is-invalid")" id="filtro-km-max" name="kmMax" type="text" inputmode="numeric" autocomplete="off" value="@form.KmMax" disabled="@(!form.Filters.HasFlag(SearchFilter.Km))" aria-describedby="erro-km" />
+                    <div class="invalid-feedback d-block" id="erro-km" role="alert" hidden="@(kmError is null)">@kmError</div>
+                </div>
+                <fieldset class="mb-3" data-filter="area" hidden="@(!form.Filters.HasFlag(SearchFilter.Area))" aria-describedby="erro-area">
+                    <legend class="form-label fs-6">Área (m²)</legend>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="visually-hidden" for="filtro-area-min">Área mínima</label>
+                            <input class="form-control @(areaError is null ? "" : "is-invalid")" id="filtro-area-min" name="areaMin" type="text" inputmode="decimal" autocomplete="off" placeholder="mín" value="@form.AreaMin" disabled="@(!form.Filters.HasFlag(SearchFilter.Area))" aria-describedby="erro-area" data-range="area" />
+                        </div>
+                        <div class="col-6">
+                            <label class="visually-hidden" for="filtro-area-max">Área máxima</label>
+                            <input class="form-control @(areaError is null ? "" : "is-invalid")" id="filtro-area-max" name="areaMax" type="text" inputmode="decimal" autocomplete="off" placeholder="máx" value="@form.AreaMax" disabled="@(!form.Filters.HasFlag(SearchFilter.Area))" aria-describedby="erro-area" data-range="area" />
+                        </div>
+                    </div>
+                    <div class="invalid-feedback d-block" id="erro-area" role="alert" data-error-for="area" hidden="@(areaError is null)">@areaError</div>
+                </fieldset>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary alvo-toque" type="submit" data-search-submit>Aplicar filtros</button>
+                    <a class="btn btn-outline-secondary alvo-toque d-inline-flex align-items-center justify-content-center" href="@PublicRoutes.Search" data-clear-filters>Limpar filtros</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-9">
+        @if (result is not null)
+        {
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 search-toolbar">
+                <p class="mb-0 fw-bold" role="status" data-search-total>@(result.Total == 1 ? "1 anúncio encontrado" : result.Total.ToString("N0", br) + " anúncios encontrados")</p>
+                <form method="get" action="@PublicRoutes.Search" class="d-flex align-items-center gap-2" data-order-form>
+                    <partial name="_SearchCarry" model="orderCarry" />
+                    <label class="form-label mb-0" for="ordem">Ordenar</label>
+                    <select class="form-select w-auto" id="ordem" name="ordem" data-order-select>
+                        @foreach (SearchOrder order in SearchOrders.All)
+                        {
+                            <option value="@SearchOrders.Slug(order)" selected="@(order == form.Order)">@SearchOrders.Label(order)</option>
+                        }
+                    </select>
+                    <button class="btn btn-outline-secondary btn-sm alvo-toque" type="submit" data-order-apply>Ordenar</button>
+                </form>
+            </div>
+
+            @if (result.Total == 0)
+            {
+                <section class="estado-pagina text-center py-4" aria-labelledby="sem-resultado" data-no-results>
+                    @if (form.IsFiltered || form.HasErrors)
+                    {
+                        <h2 class="fs-4" id="sem-resultado" tabindex="-1" data-foco-inicial>Nenhum anúncio encontrado para esses filtros</h2>
+                        <a class="btn btn-outline-secondary alvo-toque d-inline-flex align-items-center" href="@PublicRoutes.Search">Limpar filtros</a>
+                    }
+                    else
+                    {
+                        <h2 class="fs-4" id="sem-resultado">Ainda não há anúncios publicados</h2>
+                    }
+                </section>
+            }
+            else
+            {
+                <section aria-label="Resultados da busca">
+                    <partial name="_AdGrid" model="result.Ads" />
+                    <div class="mt-4">
+                        <partial name="_Pagination" model="new PaginationViewModel(result.Page, result.TotalPages, PublicRoutes.Search, form.Query)" />
+                    </div>
+                </section>
+            }
+        }
+        else
+        {
+            <div class="alert alert-danger" role="alert" data-search-error>
+                <p class="fw-bold mb-2">Não foi possível buscar agora. Tente novamente.</p>
+                <a class="btn btn-primary alvo-toque d-inline-flex align-items-center" href="@Model.SelfUrl">Tentar novamente</a>
+                <p class="small mb-0 mt-3">Código de referência: <code>@Model.FailureCode</code></p>
+            </div>
+        }
+    </div>
+</div>
