@@ -1868,7 +1868,7 @@
 
 ### Task 5.6: SEO básico das páginas públicas
 
-**User stories**: **Foundation** — NFR-21 (condicional à S7).
+**User stories**: **Foundation** — NFR-21 (S7 confirmada pelo Product Owner em 2026-10-05).
 
 **Scenarios covered**: — (nenhum; tarefa de fundação ou de sustentação)
 
@@ -1879,24 +1879,32 @@
 **Objective**: Título e descrição próprios por página, mapa do site e retirada do anúncio arquivado do índice.
 
 **Files to modify**:
-- src/GazetaMarketplace.Web/Controllers/SeoController.cs (sitemap.xml, robots.txt)
-- `src/GazetaMarketplace.Web/Views/Shared/_Seo.cshtml`
+- `src/GazetaMarketplace.Core/Seo/` — `SeoTexts.cs` (títulos e descrições fixos), `Sitemap.cs` (`SitemapDocument`, `RobotsText`), `ISitemap.cs`, `SitemapService.cs`
+- `src/GazetaMarketplace.Infrastructure/Seo/SitemapReadRepository.cs` (Dapper, só publicados)
+- `src/GazetaMarketplace.Web/Controllers/SeoController.cs` (`/sitemap.xml`, `/robots.txt`)
+- `src/GazetaMarketplace.Web/Views/Shared/_Seo.cshtml` · `Models/SeoModel.cs` · `_Layout.cshtml` · `Home`, `Category` e `Ad` (controllers e views)
 
 **Acceptance Criteria**:
-- [ ] Início, categorias e cada anúncio publicado têm `<title>` e `meta description` próprios e endereço legível
-- [ ] `/sitemap.xml` lista só anúncios publicados; anúncio arquivado ou despublicado responde conforme a página de indisponibilidade e sai do mapa
-- [ ] Se o Product Owner não confirmar a S7, a tarefa é reduzida a `<title>` por página (condicional da NFR-21)
+- [x] Início, categorias e cada anúncio publicado têm `<title>` e `meta description` próprios e endereço legível
+- [x] `/sitemap.xml` lista só anúncios publicados; anúncio arquivado ou despublicado responde conforme a página de indisponibilidade e sai do mapa
+- [x] S7 confirmada: SEO completo desta tarefa (não reduz a `<title>`)
+- [x] Endereço canônico com `Site:BaseUrl`, sem parâmetros de rastreio (a página 2 da categoria em diante aponta para `?pagina=N`)
+- [x] Open Graph mínimo no anúncio: `og:title`, `og:description` e `og:image` (capa em miniatura)
+- [x] Busca, favoritos e as páginas que não pedem indexação saem com `noindex, follow`; anúncio indisponível com `noindex`
+- [x] `/robots.txt` libera o site público, fecha `/painel` e `/api/` e aponta o mapa
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Seo/SitemapTests.SoAnunciosPublicados`
-- `tests/GazetaMarketplace.Web.Tests/Seo/SitemapTests.Arquivado_SaiDoMapa`
-- `tests/GazetaMarketplace.Web.Tests/Seo/TitleTests.CadaPagina_TemTitleEDescriptionProprios`
+**Tests added**:
+- `tests/GazetaMarketplace.Web.Tests/Seo/SitemapTests`, `RobotsTests`, `TitleTests`
+- `tests/GazetaMarketplace.IntegrationTests/SitemapQueryTests` — SQL Server real: só publicados, ordem, limite, categorias, arquivar tira do mapa, 1.500 anúncios
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Showcase/SeoE2ETests` — robots, mapa (publicar e arquivar), `<head>` de início, categoria, anúncio (com a capa do Open Graph), busca e favoritos
 
 **Dependencies**: 5.2, 5.1
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Abrir `/sitemap.xml` e o código-fonte de um anúncio.
+**Verification**: Done when every test under "Tests added" passes, plus manual check: Abrir `/sitemap.xml` e o código-fonte de um anúncio.
 
 **Estimate**: S
+
+**Decisões aprovadas (2026-10-05)**: D1 S7 confirmada · D2 JSON-LD no BACKLOG · D3 busca e favoritos `noindex, follow` · D4 descrição fixa em português, sem editor · D5 Open Graph mínimo (título, descrição, capa) · D6 mapa em um só arquivo, até 50.000 endereços · D7 nomes em inglês (`SeoController`, `SitemapTests`, `TitleTests`, `RobotsTests`, `SeoE2ETests`).
 
 ---
 ## Checkpoint 5 — Site público completo
@@ -2078,4 +2086,4 @@ O `/plan` não preenche lacunas do SPEC (*no invented scope*). Estas ficam regis
 | A5, AR-12, DS-01 a DS-03 | Parecer jurídico do catálogo, domínio e DNS do SendGrid, paleta, fonte e logotipo | **Lançamento** | Product Owner |
 | SEC-01, RR-10, AR-09 | `KnownProxies` do SmarterASP (assumido `X-Forwarded-For` até lá), troca do .NET 10 candidata pela estável e certificado HTTPS (`security/PRE_DEV_REVIEW.md`) | **Lançamento** (não bloqueiam o `/build`) | Product Owner |
 | AR-10 | Limpeza do texto das regras da US-002 e da US-013 e requisitos de CORS, limite de requisições e health checks no SPEC | Próxima versão do SPEC | Product Owner |
-| S7 | Confirmação de SEO | Tarefa 5.6 (se não confirmada, reduz-se a `<title>`) | Product Owner |
+| S7 | Confirmação de SEO | Tarefa 5.6 | Product Owner — **confirmada em 2026-10-05** |

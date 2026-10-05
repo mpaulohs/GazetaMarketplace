@@ -1275,3 +1275,53 @@ Mutações da 5.4 refeitas (ver achado 3): J1 (`lerNumero` com 3 casas) e J2 (pa
 5. **Dois E2E falharam numa rodada completa e passaram nas repetições:** `US002S09` tinha uma corrida do próprio teste (escolher a ordem enquanto a página nova ainda carregava; corrigido esperando o endereço novo) e `US003S03` (a página voltou 4 px abaixo do ponto da rolagem) não repetiu em quatro rodadas. Fica no BACKLOG com a pista a seguir se voltar.
 6. **O Docker caiu uma vez** (o daemon parou, de novo, ao rodar a integração); reiniciado como no runbook.
 7. **"Favoritar" muda o texto do botão da página do anúncio, o coração do card mantém o nome:** o nome acessível do coração é constante ("Favoritar anúncio {título}") e quem diz o estado é o `aria-pressed`; conferir com leitor de tela é item do `/verify` (BACKLOG).
+
+## Tarefa 5.6 — SEO básico das páginas públicas (NFR-21, 2026-10-05)
+
+> **Em resumo:** início, categorias e anúncios publicados têm título e descrição próprios, endereço canônico com o endereço do site e, no anúncio, o Open Graph mínimo (título, descrição e a capa) para a prévia no WhatsApp. Toda outra página (busca, favoritos, anúncio indisponível, categoria que não existe, páginas de erro) sai com `noindex`. `/sitemap.xml` traz só o início, as categorias com anúncio publicado e os anúncios publicados; arquivar tira o anúncio do mapa na hora. `/robots.txt` libera o site, fecha o painel e a API e aponta o mapa. A S7 da SPEC foi confirmada (v1.4). **12 mutações, 12 mortas.**
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.650 | 1.650 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 160 | 160 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 144 | 144 | 0 |
+
+**Testes novos:** 30 unitários (`SitemapTests` 10, `RobotsTests` 4, `TitleTests` 16), 5 de integração (`SitemapQueryTests`), 3 E2E (`SeoE2ETests`).
+
+| Critério | Prova |
+|---|---|
+| Início, categoria e anúncio com título e descrição próprios | `TitleTests`: título e descrição de cada um; **a varredura das 147 categorias** exige descrição com no máximo 160 caracteres e título e descrição todos diferentes; cinco páginas indexáveis lado a lado não repetem título, descrição nem canônico; E2E lê o `<head>` no navegador |
+| Endereço canônico com `Site:BaseUrl` | `TitleTests` (início, categoria, anúncio; nunca o cabeçalho Host); categoria sem parâmetro de rastreio; página 2 aponta para si (`?pagina=2`); página além do fim aponta para a última |
+| Open Graph mínimo no anúncio | `TitleTests`: `og:title`, `og:description` e `og:image` (capa em miniatura de 480 px com o endereço completo do site) e **só esses três**; sem foto e em Vagas não há `og:image`; título com `<b>` e aspas sai codificado; E2E: a imagem do `og:image` abre de verdade (200, `image/webp`) |
+| Anúncio arquivado, despublicado ou inexistente | `TitleTests`: 404 com `noindex`, sem descrição, canônico nem Open Graph; E2E depois de arquivar pelo painel |
+| Busca, favoritos e páginas de erro fora do índice | `TitleTests`: `noindex, follow` e sem canônico (busca com e sem filtros, favoritos, categoria inexistente, 503 da vitrine); padrão do parcial `_Seo` |
+| `/sitemap.xml` só com publicados | `SitemapTests` (início, categorias com anúncio e os ancestrais delas, anúncios na ordem da consulta com `lastmod` do dia; sem categoria sem anúncio; endereço do site, não do Host; sem cache; 503 sem detalhe; XML com escape; no máximo 50.000 endereços); integração no SQL Server: rascunho, em revisão, rejeitado, arquivado e despublicado ficam de fora, mais novo primeiro, limite, categorias distintas, **arquivar tira do mapa na hora** e 1.500 anúncios em menos de 3 s; E2E: publica, confere início, categoria e anúncio no mapa, arquiva e confere que saiu |
+| `/robots.txt` | `RobotsTests` e E2E: `User-agent: *`, `Disallow: /painel`, `/api/`, `/favoritos/lista` e `Sitemap: {Site:BaseUrl}/sitemap.xml`; o site público, a busca e os favoritos **não** são bloqueados (o robô precisa abrir a página para ler o `noindex`) |
+
+**Mutações (12; 12 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| M1 o mapa traz anúncio não publicado | morta (2, integração) |
+| M2 o ancestral da categoria com anúncio fica fora do mapa | morta (2) |
+| M3 o canônico do início sem a barra do endereço do site | morta (a primeira versão da mutação não compilava, refeita) |
+| M4 página sem `SeoModel` sai indexável | morta (3) |
+| M5 descrição de categoria sem o corte em 160 | morta |
+| M6 `robots.txt` sem fechar o painel | morta |
+| M7 endereço do mapa sem escape de XML | morta |
+| M8 título de categoria sem o pai (títulos repetidos) | morta (4) |
+| M9 `og:image` com a foto grande em vez da miniatura | morta |
+| M10 limite de 50 mil ignora o que o início e as categorias ocupam | morta |
+| M11 canônico da página 2 sem a página | morta (2) |
+| M12 mapa guardado em cache | morta |
+
+**Achados da rodada**
+
+1. **A integração pegou um erro que os testes unitários não podiam pegar:** o `SqlBuilder.Page` aceita no máximo 100 por página e o mapa lê até 50.000; o repositório de mentira dos unitários não tem esse limite. Passou a usar `TOP (@Take)` com parâmetro.
+2. **Nomes de categoria repetidos:** "Serviços", "Autopeças" e "Vagas de emprego" existem em pai e filho, então só o nome daria títulos repetidos. A subcategoria passou a levar o pai no título ("Anúncios de Casas · Imóveis"), e o teste que varre as 147 categorias garante títulos e descrições todos diferentes.
+3. **Canônico da página 2:** o plano dizia "sem parâmetros"; fica sem parâmetros de rastreio e de ordem, mas a página 2 em diante aponta para `?pagina=N` (apontar a página 2 para a 1 esconderia os anúncios dela dos buscadores). Interpretação registrada no BACKLOG.
+4. **Um teste existente caiu:** `PaginaNaoCarregaRecursosExternos` proibia qualquer endereço absoluto no HTML; o canônico é absoluto por definição e não carrega nada, então ficou fora da conta.
+5. **Padrão seguro:** a página que não pede para ser indexada sai `noindex, follow`; só início, categoria e anúncio publicado pedem.
+6. **Docker e E2E:** nenhuma queda e nenhum teste instável nesta rodada.

@@ -63,7 +63,7 @@
 - [x] Task 5.3: Contato por telefone e WhatsApp
 - [x] Task 5.4: Busca e filtros
 - [x] Task 5.5: Favoritos no navegador
-- [ ] Task 5.6: SEO básico das páginas públicas
+- [x] Task 5.6: SEO básico das páginas públicas
 
 ## Checkpoint 5 — Site público completo
 
