@@ -129,11 +129,11 @@
                     <div class="row g-2">
                         <div class="col-6">
                             <label class="visually-hidden" for="filtro-preco-min">Preço mínimo</label>
-                            <input class="form-control @(priceError is null ? "" : "is-invalid")" id="filtro-preco-min" name="precoMin" type="text" inputmode="decimal" autocomplete="off" placeholder="mín" value="@form.PriceMin" aria-describedby="erro-preco" data-range="preco" />
+                            <input class="form-control @(priceError is null ? "" : "is-invalid")" aria-invalid="@(priceError is null ? null : "true")" id="filtro-preco-min" name="precoMin" type="text" inputmode="decimal" autocomplete="off" placeholder="mín" value="@form.PriceMin" aria-describedby="erro-preco" data-range="preco" />
                         </div>
                         <div class="col-6">
                             <label class="visually-hidden" for="filtro-preco-max">Preço máximo</label>
-                            <input class="form-control @(priceError is null ? "" : "is-invalid")" id="filtro-preco-max" name="precoMax" type="text" inputmode="decimal" autocomplete="off" placeholder="máx" value="@form.PriceMax" aria-describedby="erro-preco" data-range="preco" />
+                            <input class="form-control @(priceError is null ? "" : "is-invalid")" aria-invalid="@(priceError is null ? null : "true")" id="filtro-preco-max" name="precoMax" type="text" inputmode="decimal" autocomplete="off" placeholder="máx" value="@form.PriceMax" aria-describedby="erro-preco" data-range="preco" />
                         </div>
                     </div>
                     <div class="invalid-feedback d-block" id="erro-preco" role="alert" data-error-for="preco" hidden="@(priceError is null)">@priceError</div>
@@ -165,18 +165,18 @@
                     <div class="row g-2">
                         <div class="col-6">
                             <label class="visually-hidden" for="filtro-ano-de">Ano inicial</label>
-                            <input class="form-control @(yearError is null ? "" : "is-invalid")" id="filtro-ano-de" name="anoDe" type="text" inputmode="numeric" autocomplete="off" placeholder="de" value="@form.YearFrom" disabled="@(!form.Filters.HasFlag(SearchFilter.Year))" aria-describedby="erro-ano" data-range="ano" />
+                            <input class="form-control @(yearError is null ? "" : "is-invalid")" aria-invalid="@(yearError is null ? null : "true")" id="filtro-ano-de" name="anoDe" type="text" inputmode="numeric" autocomplete="off" placeholder="de" value="@form.YearFrom" disabled="@(!form.Filters.HasFlag(SearchFilter.Year))" aria-describedby="erro-ano" data-range="ano" />
                         </div>
                         <div class="col-6">
                             <label class="visually-hidden" for="filtro-ano-ate">Ano final</label>
-                            <input class="form-control @(yearError is null ? "" : "is-invalid")" id="filtro-ano-ate" name="anoAte" type="text" inputmode="numeric" autocomplete="off" placeholder="até" value="@form.YearTo" disabled="@(!form.Filters.HasFlag(SearchFilter.Year))" aria-describedby="erro-ano" data-range="ano" />
+                            <input class="form-control @(yearError is null ? "" : "is-invalid")" aria-invalid="@(yearError is null ? null : "true")" id="filtro-ano-ate" name="anoAte" type="text" inputmode="numeric" autocomplete="off" placeholder="até" value="@form.YearTo" disabled="@(!form.Filters.HasFlag(SearchFilter.Year))" aria-describedby="erro-ano" data-range="ano" />
                         </div>
                     </div>
                     <div class="invalid-feedback d-block" id="erro-ano" role="alert" data-error-for="ano" hidden="@(yearError is null)">@yearError</div>
                 </fieldset>
                 <div class="mb-3" data-filter="km" hidden="@(!form.Filters.HasFlag(SearchFilter.Km))">
                     <label class="form-label" for="filtro-km-max">Quilometragem máx. (km)</label>
-                    <input class="form-control @(kmError is null ? "" : "is-invalid")" id="filtro-km-max" name="kmMax" type="text" inputmode="numeric" autocomplete="off" value="@form.KmMax" disabled="@(!form.Filters.HasFlag(SearchFilter.Km))" aria-describedby="erro-km" />
+                    <input class="form-control @(kmError is null ? "" : "is-invalid")" aria-invalid="@(kmError is null ? null : "true")" id="filtro-km-max" name="kmMax" type="text" inputmode="numeric" autocomplete="off" value="@form.KmMax" disabled="@(!form.Filters.HasFlag(SearchFilter.Km))" aria-describedby="erro-km" />
                     <div class="invalid-feedback d-block" id="erro-km" role="alert" hidden="@(kmError is null)">@kmError</div>
                 </div>
                 <fieldset class="mb-3" data-filter="area" hidden="@(!form.Filters.HasFlag(SearchFilter.Area))" aria-describedby="erro-area">
@@ -184,11 +184,11 @@
                     <div class="row g-2">
                         <div class="col-6">
                             <label class="visually-hidden" for="filtro-area-min">Área mínima</label>
-                            <input class="form-control @(areaError is null ? "" : "is-invalid")" id="filtro-area-min" name="areaMin" type="text" inputmode="decimal" autocomplete="off" placeholder="mín" value="@form.AreaMin" disabled="@(!form.Filters.HasFlag(SearchFilter.Area))" aria-describedby="erro-area" data-range="area" />
+                            <input class="form-control @(areaError is null ? "" : "is-invalid")" aria-invalid="@(areaError is null ? null : "true")" id="filtro-area-min" name="areaMin" type="text" inputmode="decimal" autocomplete="off" placeholder="mín" value="@form.AreaMin" disabled="@(!form.Filters.HasFlag(SearchFilter.Area))" aria-describedby="erro-area" data-range="area" />
                         </div>
                         <div class="col-6">
                             <label class="visually-hidden" for="filtro-area-max">Área máxima</label>
-                            <input class="form-control @(areaError is null ? "" : "is-invalid")" id="filtro-area-max" name="areaMax" type="text" inputmode="decimal" autocomplete="off" placeholder="máx" value="@form.AreaMax" disabled="@(!form.Filters.HasFlag(SearchFilter.Area))" aria-describedby="erro-area" data-range="area" />
+                            <input class="form-control @(areaError is null ? "" : "is-invalid")" aria-invalid="@(areaError is null ? null : "true")" id="filtro-area-max" name="areaMax" type="text" inputmode="decimal" autocomplete="off" placeholder="máx" value="@form.AreaMax" disabled="@(!form.Filters.HasFlag(SearchFilter.Area))" aria-describedby="erro-area" data-range="area" />
                         </div>
                     </div>
                     <div class="invalid-feedback d-block" id="erro-area" role="alert" data-error-for="area" hidden="@(areaError is null)">@areaError</div>

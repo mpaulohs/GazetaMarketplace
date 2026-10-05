@@ -40,7 +40,7 @@ internal static class PublishingFlow
     }
 
     /// <summary>Cadastra um anúncio de <paramref name="category"/> (uma categoria de Produtos em geral) com <paramref name="photos"/> fotos, envia para revisão e publica; devolve o título. A conta já deve estar entrada.</summary>
-    public static async Task<string> PublishAsync(IPage page, string prefix, int photos, string category = "Livros e revistas")
+    public static async Task<string> PublishAsync(IPage page, string prefix, int photos, string category = "Livros e revistas", string price = "5000")
     {
         string title = Unique(prefix);
         await page.GotoAsync(Url("/painel/anuncios/novo")).ConfigureAwait(false);
@@ -50,7 +50,7 @@ internal static class PublishingFlow
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false); // a troca de categoria busca os campos do grupo; o que se digita antes de a resposta chegar se perderia
         await page.GetByLabel("Descrição").FillAsync("Edição 2020, sem anotações").ConfigureAwait(false);
         await page.GetByLabel("Condição").SelectOptionAsync(new SelectOptionValue { Index = 1 }).ConfigureAwait(false);
-        await page.GetByLabel("Preço").FillAsync("5000").ConfigureAwait(false);
+        await page.GetByLabel("Preço").FillAsync(price).ConfigureAwait(false);
         await page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
         await Microsoft.Playwright.Assertions.Expect(page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
         await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);

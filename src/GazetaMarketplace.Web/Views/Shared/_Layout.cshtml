@@ -31,7 +31,7 @@
                     <partial name="_SearchCarry" model="carry" />
                 }
                 <div class="input-group">
-                    <input class="form-control@(ViewData["SearchError"] is null ? "" : " is-invalid")" id="busca-q" name="q" type="search" placeholder="Buscar anúncios…" autocomplete="off" value="@(ViewData["SearchText"] as string)" aria-describedby="@(ViewData["SearchError"] is null ? null : "busca-q-erro")" />
+                    <input class="form-control@(ViewData["SearchError"] is null ? "" : " is-invalid")" id="busca-q" name="q" type="search" placeholder="Buscar anúncios…" autocomplete="off" value="@(ViewData["SearchText"] as string)" aria-describedby="@(ViewData["SearchError"] is null ? null : "busca-q-erro")" aria-invalid="@(ViewData["SearchError"] is null ? null : "true")" />
                     <button class="btn btn-primary alvo-toque" type="submit"><i class="fa fa-search me-1" aria-hidden="true"></i>Buscar</button>
                 </div>
                 @if (ViewData["SearchError"] is string searchError)

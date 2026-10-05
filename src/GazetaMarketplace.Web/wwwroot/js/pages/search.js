@@ -163,7 +163,10 @@ function limparErro(form, nome) {
     area.hidden = true;
   }
 
-  for (const campo of form.querySelectorAll(`[data-range="${nome}"]`)) campo.classList.remove("is-invalid");
+  for (const campo of form.querySelectorAll(`[data-range="${nome}"]`)) {
+    campo.classList.remove("is-invalid");
+    campo.removeAttribute("aria-invalid");
+  }
 }
 
 function configurarEnvio(form) {
@@ -191,7 +194,11 @@ function configurarEnvio(form) {
       const [minimo, maximo] = campos;
       const invertida = minimo.value.trim() !== "" && maximo.value.trim() !== "" && lerNumero(minimo.value) > lerNumero(maximo.value);
       const area = form.querySelector(`[data-error-for="${nome}"]`);
-      for (const campo of campos) campo.classList.toggle("is-invalid", invertida);
+      for (const campo of campos) {
+        campo.classList.toggle("is-invalid", invertida);
+        if (invertida) campo.setAttribute("aria-invalid", "true");
+        else campo.removeAttribute("aria-invalid");
+      }
       if (area) {
         area.textContent = invertida ? mensagem : "";
         area.hidden = !invertida;
@@ -221,7 +228,9 @@ function configurarEnvio(form) {
   });
 
   // Voltar com o botão do navegador pode trazer a página de volta como estava: o botão não pode ficar travado
-  window.addEventListener("pageshow", restaurar);
+  window.addEventListener("pageshow", (evento) => {
+    if (evento.persisted) restaurar();
+  });
 }
 
 function configurarOrdem() {
