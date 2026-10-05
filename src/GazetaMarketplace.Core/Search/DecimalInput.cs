@@ -7,7 +7,7 @@ namespace GazetaMarketplace.Core.Search;
 /// <summary>
 /// Número digitado num filtro (preço em reais, área em m²): <c>50000</c>, <c>50.000</c>, <c>50.000,00</c>, <c>50000,5</c> ou <c>50000.50</c>. Ponto de milhar só em
 /// grupos de três dígitos; vírgula é sempre a separadora de decimais; ponto seguido de um ou dois dígitos também vale como decimal. Qualquer outra coisa (letra, sinal,
-/// três casas decimais, vírgula dupla) é ilegível. Nunca lança.
+/// três casas decimais, vírgula dupla) é ilegível. Nunca lança. Os dígitos são só <c>0-9</c>: a mesma gramática do <c>lerNumero</c> do <c>search.js</c> (que confere a faixa antes de enviar); os dois são provados na mesma tabela de entradas.
 /// </summary>
 public static partial class DecimalInput
 {
@@ -70,15 +70,15 @@ public static partial class DecimalInput
         return true;
     }
 
-    [GeneratedRegex(@"^\d+$")]
+    [GeneratedRegex("^[0-9]+$")]
     private static partial Regex Plain();
 
-    [GeneratedRegex(@"^\d{1,3}(\.\d{3})+(,\d{1,2})?$")]
+    [GeneratedRegex(@"^[0-9]{1,3}(\.[0-9]{3})+(,[0-9]{1,2})?$")]
     private static partial Regex Thousands();
 
-    [GeneratedRegex(@"^\d+,\d{1,2}$")]
+    [GeneratedRegex("^[0-9]+,[0-9]{1,2}$")]
     private static partial Regex CommaDecimals();
 
-    [GeneratedRegex(@"^\d+\.\d{1,2}$")]
+    [GeneratedRegex(@"^[0-9]+\.[0-9]{1,2}$")]
     private static partial Regex DotDecimals();
 }

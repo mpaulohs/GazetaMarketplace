@@ -321,6 +321,67 @@ public class SearchE2ETests : SitePage
     }
 
     [TestMethod]
+    public async Task Paridade_LerNumeroDoJavaScript_DaOMesmoValorQueODecimalInputDoServidor_NaMesmaTabela()
+    {
+        // A mesma tabela do DecimalInputTests (C#): (o que se digita, o valor esperado ou nulo se ilegível). A conferência de faixa do navegador e a do servidor não podem discordar.
+        (string Typed, string Expected)[] table =
+        [
+            ("50000", "50000"),
+            ("50.000", "50000"),
+            ("50.000,00", "50000"),
+            ("50000,5", "50000.5"),
+            ("50000.50", "50000.5"),
+            ("R$ 1.234,56", "1234.56"),
+            ("R$1.234,56", "1234.56"),
+            ("r$ 5", "5"),
+            ("0", "0"),
+            ("0,01", "0.01"),
+            ("007", "7"),
+            ("1.234", "1234"),
+            ("1.23", "1.23"),
+            ("12.345.678,9", "12345678.9"),
+            (" 42 ", "42"),
+            ("\t42\n", "42"),
+            ("99999999,99", "99999999.99"),
+            ("", null),
+            ("   ", null),
+            ("R$", null),
+            ("abc", null),
+            ("-5", null),
+            ("+5", null),
+            ("1,2,3", null),
+            ("50.00.0", null),
+            ("50000,123", null),
+            ("1e3", null),
+            ("5 000", null),
+            ("1.2345", null),
+            (".5", null),
+            ("5.", null),
+            (",5", null),
+            ("1.000.00", null),
+            ("12,3.4", null),
+            ("1,234.56", null),
+            ("٣٠", null),
+            ("5\u00a0000", null),
+            ("5,", null),
+            ("1..000", null),
+            ("1.000,", null)
+        ];
+        IPage visitor = await VisitorAsync("/busca").ConfigureAwait(false);
+
+        double?[] results = await visitor.EvaluateAsync<double?[]>(
+            "async (typed) => { const { lerNumero } = await import('/js/pages/search.js'); return typed.map((t) => { const n = lerNumero(t); return Number.isNaN(n) ? null : n; }); }",
+            table.Select(row => row.Typed).ToArray()).ConfigureAwait(false);
+
+        Assert.AreEqual(table.Length, results.Length);
+        for (int i = 0; i < table.Length; i++)
+        {
+            double? expected = table[i].Expected is null ? null : double.Parse(table[i].Expected, System.Globalization.CultureInfo.InvariantCulture);
+            Assert.AreEqual(expected, results[i], $"\"{table[i].Typed}\"");
+        }
+    }
+
+    [TestMethod]
     public async Task US002S12_Celular320px_PainelRecolhidoAbreEFecha_SemRolagemHorizontal()
     {
         string token = await TokenAsync().ConfigureAwait(false);
