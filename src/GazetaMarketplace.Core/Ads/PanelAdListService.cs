@@ -23,7 +23,7 @@ public sealed class PanelAdListService(IPanelAdListReadRepository repository, IC
         byte? status = PanelAdListFilters.ParseStatus(situation);
         // O Redator só vê os próprios anúncios; o autor vem da sessão e nenhum valor do pedido o troca
         int? authorId = currentUser.IsAdministrator ? null : currentUser.UserId ?? throw new InvalidOperationException("Lista do painel sem usuário.");
-        PanelAdListQuery query = new(authorId, status, ExcludeArchived: status != AdStatus.Archived, Normalizer.Normalize(typed), Math.Max(page, 1), PanelAdListFilters.PageSize);
+        PanelAdListQuery query = new(authorId, status, ExcludeArchived: status != AdStatus.Archived, Normalizer.Normalize(typed), Math.Clamp(page, 1, PanelAdListFilters.MaxPage), PanelAdListFilters.PageSize);
 
         PanelAdListRows result = await repository.ListAsync(query, cancellationToken);
         if (result.Rows.Count == 0 && result.Total > 0 && query.Page > 1)

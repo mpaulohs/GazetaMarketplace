@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Ads;
+using GazetaMarketplace.Core.Fields;
 using GazetaMarketplace.Core.Settings;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Data;
@@ -268,6 +269,38 @@ public sealed class ReviewQueueTests
     }
 
     [TestMethod]
+    public async Task PreVisualizar_RotuloDoCampoMudou_AsAreasEOTipoContinuamNoLugar_PorqueOCodigoUsaAChave()
+    {
+        // Um leitor que devolve os mesmos campos com outros rótulos: se a tela procurasse por "Área" ou "Tipo", o bloco da vaga sumiria e o valor do serviço viraria "R$"
+        using DraftSite site = await DraftSite.StartAsync(services: s => s.AddScoped<IAdSpecsReader, RelabelledSpecsReader>());
+        int jobId = await AddInReviewAsync(site, Ana, "Pizzaiolo", 96, Day(29), ad =>
+        {
+            ad.SetPrice(280_000);
+            ad.SetAttributes(new AdAttributes().Set("jobAreaIds", new[] { 1, 2 }));
+        });
+        int serviceId = await AddInReviewAsync(site, Ana, "Diarista", 66, Day(29), ad =>
+        {
+            ad.SetPrice(null);
+            ad.SetAttributes(new AdAttributes().Set("serviceTypeId", 1));
+        });
+
+        string job = await site.Admin.GetStringAsync(PreviewUrl(jobId));
+        string service = await site.Admin.GetStringAsync(PreviewUrl(serviceId));
+
+        StringAssert.Matches(job, new Regex(@"data-job-block>[\s\S]*?Vaga de emprego</h2>\s*<ul[^>]*>\s*<li>[^<]+</li>\s*<li>[^<]+</li>"), "as duas áreas continuam no bloco da vaga");
+        Assert.IsFalse(job.Contains("(renomeado)", StringComparison.Ordinal), "o campo de áreas não se repete nas características");
+        StringAssert.Contains(Text(service), Text(FieldLists.ServiceType.Find(1).Label), "o tipo do serviço continua no lugar do preço");
+    }
+
+    private sealed class RelabelledSpecsReader : IAdSpecsReader
+    {
+        public Task<IReadOnlyList<AdSpec>> ReadAsync(Ad ad, int categoryId, FieldGroup group, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<AdSpec>>(AdAttributes.TryParse(ad.Attributes, out AdAttributes attributes)
+                ? [.. AdSpecs.Build(attributes, group, categoryId).Select(spec => spec with { Label = spec.Label + " (renomeado)" })]
+                : []);
+    }
+
+    [TestMethod]
     public async Task PreVisualizar_Servicos_MostraOTipoNoLugarDoPreco()
     {
         using DraftSite site = await DraftSite.StartAsync();
@@ -280,6 +313,7 @@ public sealed class ReviewQueueTests
         string html = await site.Admin.GetStringAsync(PreviewUrl(adId));
 
         StringAssert.Contains(html, "data-ad-value=\"tipo\"");
+        StringAssert.Contains(Text(html), FieldLists.ServiceType.Find(1).Label, "o tipo do serviço aparece no lugar do preço");
         Assert.IsFalse(html.Contains("R$", StringComparison.Ordinal), "Serviços não têm preço");
     }
 

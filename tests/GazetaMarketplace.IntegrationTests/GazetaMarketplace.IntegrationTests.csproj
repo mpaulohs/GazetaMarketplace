@@ -13,6 +13,7 @@
     <PackageReference Include="Dapper" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="Testcontainers.MsSql" />
   </ItemGroup>
 

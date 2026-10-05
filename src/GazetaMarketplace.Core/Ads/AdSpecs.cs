@@ -26,7 +26,7 @@ public static class AdSpecs
             string value = ValueOf(attributes, field, categoryId, catalogLabels);
             if (!string.IsNullOrWhiteSpace(value))
             {
-                specs.Add(new AdSpec(field.Label, value));
+                specs.Add(new AdSpec(field.Label, value, field.Key, field.Type == FieldType.MultiSelect ? ItemsOf(attributes, field, categoryId) : null));
             }
         }
 
@@ -48,11 +48,7 @@ public static class AdSpecs
             case FieldType.Select:
                 return attributes.TryGetInt(field.Key, out int id) ? field.OptionsFor(categoryId)?.Find(id)?.Label : null;
             case FieldType.MultiSelect:
-                {
-                    FieldList list = field.OptionsFor(categoryId);
-                    IEnumerable<string> labels = attributes.GetInts(field.Key).Select(i => list?.Find(i)?.Label).Where(l => l is not null);
-                    return string.Join(", ", labels);
-                }
+                return string.Join(", ", ItemsOf(attributes, field, categoryId));
 
             case FieldType.ModelYear:
                 return attributes.TryGetInt(field.Key, out int modelYear) ? (modelYear <= ModelYearRules.MinYear ? "1950 ou anterior" : modelYear.ToString(CultureInfo.InvariantCulture)) : null;
@@ -63,6 +59,12 @@ public static class AdSpecs
             default:
                 return null;
         }
+    }
+
+    private static string[] ItemsOf(AdAttributes attributes, FieldDefinition field, int categoryId)
+    {
+        FieldList list = field.OptionsFor(categoryId);
+        return [.. attributes.GetInts(field.Key).Select(i => list?.Find(i)?.Label).Where(l => l is not null)];
     }
 
     // Só a quilometragem e as horas de uso levam a unidade no valor; área e medidas já a trazem no rótulo ("Área (m²)", "Comprimento (m)")

@@ -193,6 +193,37 @@ public sealed class AdEntityTests
 
         ad.ApplyTransition(AdStatus.Archived, 99, Now, null);
         Assert.AreEqual(Now, ad.ArchivedAt);
+        Assert.AreEqual(99, ad.ArchivedById);
+    }
+
+    [TestMethod]
+    [DataRow(AdStatus.Draft)]
+    [DataRow(AdStatus.InReview)]
+    [DataRow(AdStatus.Rejected)]
+    [DataRow(AdStatus.Published)]
+    public void Arquivar_DeQualquerSituacao_GravaQuemEQuando(byte from)
+    {
+        Ad ad = AdFactory.At(from, 5, deciderId: 77);
+
+        ad.ApplyTransition(AdStatus.Archived, 42, Now, null);
+
+        Assert.AreEqual(AdStatus.Archived, ad.Status);
+        Assert.AreEqual(Now, ad.ArchivedAt);
+        Assert.AreEqual(42, ad.ArchivedById, "quem arquivou, não quem publicou nem quem rejeitou antes");
+    }
+
+    [TestMethod]
+    public void Arquivar_NaoMexeNaTrilhaDePublicacaoNemDeRejeicao_ENenhumaOutraPassagemGravaArquivamento()
+    {
+        Ad published = AdFactory.At(AdStatus.Published, 5, deciderId: 77);
+        Ad inReview = AdFactory.At(AdStatus.InReview, 5);
+
+        published.ApplyTransition(AdStatus.Archived, 42, Now, null);
+        inReview.ApplyTransition(AdStatus.Published, 42, Now, null);
+
+        Assert.AreEqual(77, published.PublishedById, "a publicação fica no histórico");
+        Assert.IsNull(inReview.ArchivedById);
+        Assert.IsNull(inReview.ArchivedAt);
     }
 
     [TestMethod]

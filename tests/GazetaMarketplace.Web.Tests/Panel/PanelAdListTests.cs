@@ -262,6 +262,21 @@ public sealed class PanelAdListTests
     }
 
     [TestMethod]
+    public async Task Paginacao_PaginaGigante_FicaNoLimiteEMostraAUltimaPagina_SemErro503()
+    {
+        using DraftSite site = await DraftSite.StartAsync();
+        Stub(site).Rows.AddRange(Enumerable.Range(1, 45).Select(i => Row(i, $"Anúncio {i:00}")));
+
+        HttpResponseMessage response = await site.Writer.GetAsync(ListUrl + "?pagina=2147483647");
+        string html = await DraftSite.BodyAsync(response);
+
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        Assert.AreEqual(5, RowCount(html), "a última página (a 3) tem 5 anúncios");
+        Assert.AreEqual(PanelAdListFilters.MaxPage, Stub(site).Queries[0].Page, "o pedido ao banco usa o limite, não o número digitado");
+        Assert.IsTrue(Stub(site).Queries.All(q => q.Page <= PanelAdListFilters.MaxPage));
+    }
+
+    [TestMethod]
     public async Task US012S08_FalhaAoCarregar_Da503ComAMensagemETentarNovamente_SemDetalheTecnico()
     {
         using DraftSite site = await DraftSite.StartAsync();

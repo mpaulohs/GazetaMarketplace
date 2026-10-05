@@ -103,6 +103,14 @@ public sealed class SqlBuilderTests
     }
 
     [TestMethod]
+    public void Paginar_ContaQueEstouraOInt_E_Recusada_EmVezDeVirarDeslocamentoNegativo()
+    {
+        // (2.147.483.647 - 1) * 20 passa de int.MaxValue: antes virava um OFFSET negativo e o SQL Server recusava
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => Base().Page(int.MaxValue, 20));
+        Assert.AreEqual(1_999_980, Base().OrderBy(null, null, Allowed, "a.Id").Page(100_000, 20).Build().Parameters.Get<int>("Offset"), "o limite da lista do painel cabe no int");
+    }
+
+    [TestMethod]
     public void FragmentoSomentePublicados_E_UnicoEReutilizado()
     {
         SqlQuery search = Base().OnlyPublished().Where("a.Title LIKE @Title").Parameter("Title", "%a%").OrderBy(null, null, Allowed, "a.Id").Build();

@@ -166,7 +166,7 @@ Os diagramas estão em `architecture/diagrams/`:
 | `VehicleBrandId`, `VehicleModelId`, `ModelYear`, `Km`, `AreaM2` | colunas calculadas persistidas a partir do JSON com `TRY_CAST(JSON_VALUE(...))` (`AreaM2` é `decimal(12,2)`; valor malformado vira `NULL`, ADR-002) | Só as usadas em filtro; indexadas |
 | `TitleSearch`, `DescriptionSearch` | `nvarchar(200)`, `nvarchar(max)` | Título e descrição sem acento e em minúsculas, para a busca; preenchidos só pela aplicação (ADR-006) |
 | `AuthorId` | FK → AspNetUsers | Dono do anúncio (S10) |
-| `SentAt`, `PublishedAt`, `PublishedById`, `RejectedAt`, `RejectedById`, `RejectionReason`, `ArchivedAt` | | Rastro de decisão (S10); motivo visível ao autor (S9) |
+| `SentAt`, `PublishedAt`, `PublishedById`, `RejectedAt`, `RejectedById`, `RejectionReason`, `ArchivedAt`, `ArchivedById` | | Rastro de decisão (S10); motivo visível ao autor (S9); quem arquivou (migration `AddArchivedBy`, US-011) |
 | auditoria (`CreatedAt/By`, `UpdatedAt/By`) + `RowVersion` | | Concorrência: dois administradores decidindo o mesmo anúncio → o segundo recebe a mensagem "por outro administrador" (302 de volta à pré-visualização) e nada é gravado duas vezes (US-010); edição concorrente → `409` |
 
 **AdPhotos** — `Id`, `AdId`, `SortOrder` (0 = capa), `StorageKey` (nome do arquivo, gerado — nunca o nome enviado), `Width`, `Height`, `SizeBytes`, `OriginalKey` (caminho do original em `_originals/`; **nulo depois da limpeza de 30 dias**), `CreatedAt`.

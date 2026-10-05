@@ -27,6 +27,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.15.0" />
     <PackageVersion Include="MSTest" Version="4.4.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
     <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.63.0" />
     <PackageVersion Include="Deque.AxeCore.Playwright" Version="4.13.0" />
   </ItemGroup>

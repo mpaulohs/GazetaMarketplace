@@ -16,7 +16,7 @@ internal static class ServicesGroup
         DescriptionLabel = "Informações adicionais",
         Fields =
         [
-            new FieldDefinition { Key = "serviceTypeId", Label = "Tipo", Type = FieldType.Select, Required = true, RequiredMessage = "Informe o tipo de serviço", Options = FieldLists.ServiceType }
+            new FieldDefinition { Key = FieldKeys.ServiceType, Label = "Tipo", Type = FieldType.Select, Required = true, RequiredMessage = "Informe o tipo de serviço", Options = FieldLists.ServiceType }
         ]
     };
 }

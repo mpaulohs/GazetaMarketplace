@@ -18,7 +18,7 @@ public sealed class EditViewModelsTests
 {
     private static readonly string[] DecisionProperties =
     [
-        "Status", "AuthorId", "Author", "PublishedAt", "PublishedById", "RejectedAt", "RejectedById", "RejectionReason", "SentAt", "ArchivedAt",
+        "Status", "AuthorId", "Author", "PublishedAt", "PublishedById", "RejectedAt", "RejectedById", "RejectionReason", "SentAt", "ArchivedAt", "ArchivedById",
         "CreatedBy", "CreatedAt", "UpdatedBy", "UpdatedAt", "Id", "TitleSearch", "DescriptionSearch", "Attributes"
     ];
 

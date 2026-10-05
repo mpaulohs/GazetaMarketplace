@@ -274,7 +274,9 @@ public sealed class AdServiceTests
         Assert.IsNull(unpublished.PublishedById);
 
         await TransitionAsync(db, adId, AdStatus.Archived);
-        Assert.AreEqual(db.Clock.Now.UtcDateTime, (await db.LoadAdAsync(adId)).ArchivedAt);
+        Ad archived = await db.LoadAdAsync(adId);
+        Assert.AreEqual(db.Clock.Now.UtcDateTime, archived.ArchivedAt);
+        Assert.AreEqual(admin, archived.ArchivedById, "quem arquivou fica gravado, como quem publicou e quem rejeitou");
         CollectionAssert.AreEqual(new[] { "ad.unpublish", "ad.archive" }, (await AuditAsync(db)).Select(e => e.Action).ToArray());
     }
 

@@ -64,6 +64,7 @@ internal sealed class AdConfiguration : IEntityTypeConfiguration<Ad>
         builder.HasOne<AppUser>().WithMany().HasForeignKey(a => a.AuthorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<AppUser>().WithMany().HasForeignKey(a => a.PublishedById).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<AppUser>().WithMany().HasForeignKey(a => a.RejectedById).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<AppUser>().WithMany().HasForeignKey(a => a.ArchivedById).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(a => new { a.Status, a.CategoryId, a.PublishedAt }).IsDescending(false, false, true).HasDatabaseName("IX_Ads_Status_CategoryId_PublishedAt");
         builder.HasIndex(a => new { a.Status, a.Uf, a.City }).HasDatabaseName("IX_Ads_Status_Uf_City");
@@ -75,6 +76,7 @@ internal sealed class AdConfiguration : IEntityTypeConfiguration<Ad>
         builder.HasIndex(a => a.CategoryId).HasDatabaseName("IX_Ads_CategoryId");
         builder.HasIndex(a => a.PublishedById).HasDatabaseName("IX_Ads_PublishedById");
         builder.HasIndex(a => a.RejectedById).HasDatabaseName("IX_Ads_RejectedById");
+        builder.HasIndex(a => a.ArchivedById).HasDatabaseName("IX_Ads_ArchivedById");
     }
 
     /// <summary>Tira do modelo o que só o SQL Server entende (colunas calculadas por JSON e CHECKs); as colunas calculadas viram colunas comuns, sempre nulas.</summary>

@@ -6,11 +6,12 @@ using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Fields;
 using GazetaMarketplace.Core.VehicleCatalog;
+using Microsoft.Extensions.Logging;
 
 namespace GazetaMarketplace.Infrastructure.Ads;
 
 /// <summary>Resolve no catálogo de veículos os nomes de marca, modelo e versão do anúncio e entrega as características prontas (<see cref="AdSpecs"/>).</summary>
-public sealed class AdSpecsReader(IVehicleCatalog catalog) : IAdSpecsReader
+public sealed class AdSpecsReader(IVehicleCatalog catalog, ILogger<AdSpecsReader> logger) : IAdSpecsReader
 {
     public async Task<IReadOnlyList<AdSpec>> ReadAsync(Ad ad, int categoryId, FieldGroup group, CancellationToken cancellationToken)
     {
@@ -24,14 +25,14 @@ public sealed class AdSpecsReader(IVehicleCatalog catalog) : IAdSpecsReader
         if (chain.Length > 0)
         {
             string kind = chain[0].Catalog.Kind == CatalogKind.Motorcycle ? VehicleKinds.Moto : VehicleKinds.Car;
-            await ResolveAsync(attributes, kind, labels, cancellationToken);
+            await ResolveAsync(ad.Id, attributes, kind, labels, cancellationToken);
         }
 
         return AdSpecs.Build(attributes, group, categoryId, labels);
     }
 
     // Um nome que o catálogo não conhece (carga trocada, id antigo) simplesmente não aparece
-    private async Task ResolveAsync(AdAttributes attributes, string kind, Dictionary<string, string> labels, CancellationToken cancellationToken)
+    private async Task ResolveAsync(int adId, AdAttributes attributes, string kind, Dictionary<string, string> labels, CancellationToken cancellationToken)
     {
         // O ano do catálogo é o próprio número
         if (attributes.TryGetInt("modelYear", out int modelYear))
@@ -54,8 +55,10 @@ public sealed class AdSpecsReader(IVehicleCatalog catalog) : IAdSpecsReader
                 }
             }
         }
-        catch (NotFoundException)
+        catch (NotFoundException ex)
         {
+            // O anúncio segue sem o nome que faltou; o registro avisa que o catálogo e o anúncio não combinam (carga trocada ou id antigo), sem dado pessoal
+            logger.LogWarning(ex, "O catálogo de veículos não conhece a marca, o modelo ou a versão do anúncio {AdId} (tipo {Kind}); o nome não será mostrado", adId, kind);
         }
     }
 }

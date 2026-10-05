@@ -48,6 +48,6 @@ public sealed class PrivacyTests
     {
         // A autoria é a conta da equipe (AspNetUsers), nunca o vendedor do bem
         string[] ids = [.. typeof(Ad).GetProperties().Select(p => p.Name).Where(n => n.EndsWith("ById", System.StringComparison.Ordinal) || n == nameof(Ad.AuthorId))];
-        CollectionAssert.AreEquivalent(new[] { "AuthorId", "PublishedById", "RejectedById" }, ids);
+        CollectionAssert.AreEquivalent(new[] { "ArchivedById", "AuthorId", "PublishedById", "RejectedById" }, ids);
     }
 }

@@ -6,6 +6,12 @@ public static class PanelAdListFilters
     /// <summary>Anúncios por página no painel (SPEC, US-012): uma lista de trabalho mais densa que a do site público.</summary>
     public const int PageSize = 20;
 
+    /// <summary>
+    /// Maior número de página aceito no endereço. Um valor maior (<c>?pagina=2147483647</c>) estouraria a conta do deslocamento na consulta; passa a valer este limite,
+    /// e a lista mostra a última página que existe.
+    /// </summary>
+    public const int MaxPage = 100_000;
+
     /// <summary>Tamanho máximo do termo de busca; o que passar disso é cortado.</summary>
     public const int SearchMaxLength = 100;
 

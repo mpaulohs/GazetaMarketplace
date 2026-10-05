@@ -115,4 +115,19 @@ public sealed class AdSpecsTests
         Assert.IsEmpty(AdSpecs.Build(attributes, Group(FieldGroupKeys.Cars), 33));
         Assert.IsEmpty(AdSpecs.Build(attributes, Group(FieldGroupKeys.RealEstate), 26));
     }
+
+    [TestMethod]
+    public void CadaLinha_GuardaAChaveDoCampo_EAMultiplaEscolhaOsItensUmAUm()
+    {
+        FieldGroup jobs = Group(FieldGroupKeys.Jobs);
+        FieldList list = jobs.Field(FieldKeys.JobAreas).OptionsFor(96);
+
+        IReadOnlyList<AdSpec> specs = AdSpecs.Build(new AdAttributes().Set(FieldKeys.JobAreas, new[] { 2, 1 }), jobs, 96);
+
+        AdSpec areas = specs.Single(s => s.Key == FieldKeys.JobAreas);
+        CollectionAssert.AreEqual(new[] { list.Find(2).Label, list.Find(1).Label }, areas.Items.ToArray(), "os itens vêm separados, sem depender de cortar o texto pela vírgula");
+        Assert.AreEqual(string.Join(", ", areas.Items), areas.Value);
+        Assert.IsNull(AdSpecs.Build(new AdAttributes().Set("km", 10), Group(FieldGroupKeys.Cars), 33).Single().Items, "só a múltipla escolha tem itens");
+        Assert.AreEqual("km", AdSpecs.Build(new AdAttributes().Set("km", 10), Group(FieldGroupKeys.Cars), 33).Single().Key);
+    }
 }

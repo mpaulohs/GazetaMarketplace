@@ -31,6 +31,8 @@
 
 ## 3. Decisão do Product Owner (não técnica)
 
+> **Respondido em 2026-10-05 (depois do Checkpoint 4):** reconferência de pendências **mantida** · `ArchivedById` **adicionado** (migration `AddArchivedBy`) · aviso ao autor na despublicação **fica no BACKLOG** · "Alterado em" = `UpdatedAt` **confirmado** · cache de 1 ano da foto retirada **risco aceito** · cor `#b02a37` **mantida**. As seis perguntas abaixo ficam como registro.
+
 | Item | Pergunta |
 |---|---|
 | Reconferência de pendências ao publicar ("Faltam N itens…") | O texto e a proteção (a SPEC só pede o telefone do site) valem? |

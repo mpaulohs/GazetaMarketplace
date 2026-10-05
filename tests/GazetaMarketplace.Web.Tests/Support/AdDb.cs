@@ -80,7 +80,7 @@ internal sealed class AdDb : IDisposable
     public async Task<int> AddAdAsync(int authorId, byte status = AdStatus.Draft, string title = "Honda Civic 2018", int? categoryId = null)
     {
         // Quem decidiu (publicou ou rejeitou) é uma conta de verdade: a chave estrangeira existe também no SQLite
-        int decider = status is AdStatus.Published or AdStatus.Rejected ? await AddUserAsync() : 99;
+        int decider = status is AdStatus.Published or AdStatus.Rejected or AdStatus.Archived ? await AddUserAsync() : 99;
         Ad ad = AdFactory.At(status, authorId, title, categoryId, decider);
         await WithContextAsync(async context =>
         {

@@ -685,7 +685,7 @@ public sealed class AdDraftServiceTests
 
     private static async Task<int> SeedAsync(DraftDb db, int authorId, byte status, int? categoryId = null, long? price = null)
     {
-        int decider = status is AdStatus.Published or AdStatus.Rejected ? await db.SignInAsync() : 99;
+        int decider = status is AdStatus.Published or AdStatus.Rejected or AdStatus.Archived ? await db.SignInAsync() : 99;
         Ad ad = AdFactory.At(status, authorId, "Honda Civic 2018", categoryId, decider);
         if (price is not null)
         {

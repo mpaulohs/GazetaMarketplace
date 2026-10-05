@@ -340,3 +340,6 @@ $RECYCLE.BIN/
 appsettings.Development.json
 web.Production.config
 *.pubxml.user
+
+# Relatórios brutos de cobertura (o resumo vai para reports/TEST_REPORT.md)
+reports/test-artifacts/

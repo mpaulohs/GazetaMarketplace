@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Escopo da cobertura (Gate 6). Fora do número ficam o código gerado e a "cola" de inicialização, que não têm teste por desenho:
+  migrações do EF Core, Program.cs, arquivos de Razor compilados, código gerado e o que leva [ExcludeFromCodeCoverage]/[GeneratedCode]/[CompilerGenerated].
+  Os projetos de teste e as ferramentas de linha de comando (tools/) também ficam de fora: medem-se só os três projetos do site.
+  Como rodar: docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md (seção de cobertura).
+-->
+<Configuration>
+  <CodeCoverage>
+    <ModulePaths>
+      <Include>
+        <ModulePath>.*GazetaMarketplace\.Core\.dll$</ModulePath>
+        <ModulePath>.*GazetaMarketplace\.Infrastructure\.dll$</ModulePath>
+        <ModulePath>.*GazetaMarketplace\.Web\.dll$</ModulePath>
+        <ModulePath>.*GazetaMarketplace\.Web\.Views\.dll$</ModulePath>
+      </Include>
+    </ModulePaths>
+    <Sources>
+      <Exclude>
+        <Source>.*\\Migrations\\.*</Source>
+        <Source>.*/Migrations/.*</Source>
+        <Source>.*\\Program\.cs$</Source>
+        <Source>.*/Program\.cs$</Source>
+        <Source>.*\.cshtml(\.g)?\.cs$</Source>
+        <Source>.*\\obj\\.*</Source>
+        <Source>.*/obj/.*</Source>
+      </Exclude>
+    </Sources>
+    <Attributes>
+      <Exclude>
+        <Attribute>^System\.Diagnostics\.CodeAnalysis\.ExcludeFromCodeCoverageAttribute$</Attribute>
+        <Attribute>^System\.CodeDom\.Compiler\.GeneratedCodeAttribute$</Attribute>
+        <Attribute>^System\.Runtime\.CompilerServices\.CompilerGeneratedAttribute$</Attribute>
+        <Attribute>^System\.ObsoleteAttribute$</Attribute>
+      </Exclude>
+    </Attributes>
+    <CollectFromChildProcesses>True</CollectFromChildProcesses>
+    <UseVerifiableInstrumentation>True</UseVerifiableInstrumentation>
+    <EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>
+  </CodeCoverage>
+</Configuration>

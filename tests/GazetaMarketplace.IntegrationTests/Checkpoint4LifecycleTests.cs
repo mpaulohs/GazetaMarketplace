@@ -158,6 +158,7 @@ public sealed class Checkpoint4LifecycleTests
         Ad archived = await AdData.LoadAsync(site.Connection, adId);
         Assert.AreEqual(AdStatus.Archived, archived.Status);
         Assert.IsNotNull(archived.ArchivedAt);
+        Assert.AreEqual(site.AdminAId, archived.ArchivedById, "quem arquivou fica gravado, e é o mesmo ator da auditoria");
 
         // Pedidos negados não gravam nada: o Redator tentando decidir, retirar ou publicar, e pedidos sem o token antiforgery
         int before = (await AuditsAsync(site.Connection, adId)).Count;

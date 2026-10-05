@@ -67,6 +67,7 @@ public sealed class AdsSchemaTests
         CollectionAssert.AreEqual(
             new[]
             {
+                "IX_Ads_ArchivedById|-|0|ArchivedById",
                 "IX_Ads_AreaM2|-|0|AreaM2",
                 "IX_Ads_AuthorId_Status_UpdatedAt|-|0|AuthorId,Status,UpdatedAt",
                 "IX_Ads_CategoryId|-|0|CategoryId",
@@ -197,6 +198,7 @@ public sealed class AdsSchemaTests
         Assert.AreEqual(CheckViolation, await AdData.InsertRawAsync(connection, 99999), "autor que não existe");
         Assert.AreEqual(CheckViolation, await AdData.InsertRawAsync(connection, author, ("PublishedById", 99999)), "quem publicou não existe");
         Assert.AreEqual(CheckViolation, await AdData.InsertRawAsync(connection, author, ("RejectedById", 99999)), "quem rejeitou não existe");
+        Assert.AreEqual(CheckViolation, await AdData.InsertRawAsync(connection, author, ("ArchivedById", 99999)), "quem arquivou não existe");
         Assert.AreEqual(adId, (await AdData.LoadAsync(connection, adId)).Id);
     }
 

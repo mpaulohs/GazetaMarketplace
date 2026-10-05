@@ -112,6 +112,19 @@ docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '
 
 O limite global de 100 pedidos por minuto por IP também conta tudo que a suíte faz, e a suíte já passa disso: o site do E2E sobe com `RateLimiting__GlobalPerMinute=1000` (ver a lista de variáveis acima). O limite de login e de recuperação de senha (5 por 15 minutos) não é configurável.
 
+## Cobertura de código (unitários e integração)
+
+Os dois projetos de teste trazem a extensão `Microsoft.Testing.Extensions.CodeCoverage`; o escopo (o que entra na conta e o que fica de fora) está em `coverage.settings.xml`, na raiz. Rode cada projeto uma vez com cobertura (a de integração precisa do Docker) e junte os dois relatórios:
+
+```bash
+for project in GazetaMarketplace.Web.Tests GazetaMarketplace.IntegrationTests; do
+  dotnet run --project tests/$project -- --coverage --coverage-settings coverage.settings.xml \
+    --coverage-output-format cobertura --coverage-output $project.cobertura.xml --results-directory reports/test-artifacts/coverage
+done
+```
+
+Cada projeto gera um arquivo Cobertura (XML). A cobertura do site é a **união** dos dois: uma linha conta como coberta se qualquer um dos dois a executou. O ramo (branch) de uma linha vale o maior número de ramos cobertos entre os dois, o que é um piso (a soma exata exigiria os dados por condição). Os números e a lista de métodos de regra de negócio com 0% ficam em `reports/TEST_REPORT.md` (seção "Cobertura pós-Checkpoint 4").
+
 ## Regenerar o script das migrations
 
 Depois de criar uma migration, rode `db/scripts/gerar-script.sh`. Ele chama `dotnet ef migrations script --idempotent` e põe no topo o `SET QUOTED_IDENTIFIER ON;` que o EF não emite. O teste `Script_LigaQuotedIdentifierNoTopo_AntesDeQualquerComando` e o teste de integração com a sessão em `QUOTED_IDENTIFIER OFF` falham se o `SET` faltar.

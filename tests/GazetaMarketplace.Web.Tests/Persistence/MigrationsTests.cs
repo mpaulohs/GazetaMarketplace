@@ -148,6 +148,17 @@ public sealed class MigrationsTests
     }
 
     [TestMethod]
+    public void MigrationAddArchivedBy_AcrescentaAColunaNula_ComChaveEstrangeiraSemCascataEIndice()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddArchivedBy", StringComparison.Ordinal))).Replace("\r", string.Empty, StringComparison.Ordinal);
+
+        StringAssert.Contains(section, "ALTER TABLE [Ads] ADD [ArchivedById] int NULL;", "anúncios já arquivados ficam sem o nome de quem arquivou (a auditoria guarda)");
+        StringAssert.Contains(section, "CREATE INDEX [IX_Ads_ArchivedById] ON [Ads] ([ArchivedById]);");
+        StringAssert.Contains(section, "CONSTRAINT [FK_Ads_AspNetUsers_ArchivedById] FOREIGN KEY ([ArchivedById]) REFERENCES [AspNetUsers] ([Id]) ON DELETE NO ACTION");
+        Assert.DoesNotContain("DROP", section, "só acrescenta: nada some");
+    }
+
+    [TestMethod]
     public void MigrationDosAnuncios_CriaAdsEAdPhotos_ComColunasCalculadasChecksEIndicesDoArchitecture()
     {
         string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddAds", StringComparison.Ordinal))).Replace("\r", string.Empty, StringComparison.Ordinal);

@@ -19,7 +19,7 @@ internal static class JobsGroup
         DescriptionHelp = "Inclua detalhes sobre o cargo, responsabilidades, remuneração, localização, ambiente de trabalho, etc",
         Fields =
         [
-            new FieldDefinition { Key = "jobAreaIds", Label = "Área", Type = FieldType.MultiSelect, Required = false, Options = FieldLists.JobArea }
+            new FieldDefinition { Key = FieldKeys.JobAreas, Label = "Área", Type = FieldType.MultiSelect, Required = false, Options = FieldLists.JobArea }
         ]
     };
 }

@@ -115,17 +115,17 @@ public sealed class ReviewQueueController(
             Cep = ad.Cep,
             Photos = gallery,
             IsJob = isJob,
-            JobAreas = isJob ? [.. characteristics.Where(s => s.Label == "Área").SelectMany(s => s.Value.Split(", "))] : [],
+            JobAreas = isJob ? [.. characteristics.Where(s => s.Key == FieldKeys.JobAreas).SelectMany(s => s.Items ?? [])] : [],
             Phone = hasPhone ? PhoneNumber.Format(phoneDigits) : null,
             PhoneDigits = hasPhone ? phoneDigits : null,
             Body = new AdBodyViewModel
             {
                 Title = ad.Title,
-                Value = AdPresentation.ValueOf(group, ad.PriceCents, group.HasPrice ? null : characteristics.FirstOrDefault(s => s.Label == "Tipo")?.Value),
+                Value = AdPresentation.ValueOf(group, ad.PriceCents, group.HasPrice ? null : characteristics.FirstOrDefault(s => s.Key == FieldKeys.ServiceType)?.Value),
                 Location = AdPresentation.Location(ad.City, ad.Uf),
                 DescriptionLabel = group.DescriptionLabel,
                 Description = ad.Description,
-                Specs = isJob ? [.. characteristics.Where(s => s.Label != "Área")] : characteristics,
+                Specs = isJob ? [.. characteristics.Where(s => s.Key != FieldKeys.JobAreas)] : characteristics,
                 HeadingLevel = 2
             }
         });

@@ -97,7 +97,10 @@ public sealed partial class SqlBuilder
         ArgumentOutOfRangeException.ThrowIfLessThan(size, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(size, 100);
 
-        _offset = (page - 1) * size;
+        // A conta é feita em 64 bits: um número de página enorme estourava o int e virava deslocamento negativo (erro 503 na lista)
+        long offset = (long)(page - 1) * size;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(offset, int.MaxValue);
+        _offset = (int)offset;
         _take = size;
         return this;
     }

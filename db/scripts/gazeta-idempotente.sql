@@ -1616,3 +1616,40 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261005153909_AddArchivedBy'
+)
+BEGIN
+    ALTER TABLE [Ads] ADD [ArchivedById] int NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261005153909_AddArchivedBy'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_ArchivedById] ON [Ads] ([ArchivedById]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261005153909_AddArchivedBy'
+)
+BEGIN
+    ALTER TABLE [Ads] ADD CONSTRAINT [FK_Ads_AspNetUsers_ArchivedById] FOREIGN KEY ([ArchivedById]) REFERENCES [AspNetUsers] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261005153909_AddArchivedBy'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261005153909_AddArchivedBy', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

@@ -86,6 +86,9 @@ public class Ad : BaseEntity
 
     public DateTime? ArchivedAt { get; private set; }
 
+    /// <summary>Quem arquivou (o Administrador), como <see cref="PublishedById"/> e <see cref="RejectedById"/> guardam quem decidiu.</summary>
+    public int? ArchivedById { get; private set; }
+
     /// <summary>Cria um rascunho. Só o título é obrigatório (US-008-S07, S08).</summary>
     /// <exception cref="ValidationException">Título vazio ou acima de <see cref="TitleMaxLength"/>.</exception>
     public static Ad CreateDraft(string title, int authorId)
@@ -199,6 +202,7 @@ public class Ad : BaseEntity
                 break;
             case AdStatus.Archived:
                 ArchivedAt = now;
+                ArchivedById = actorId;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(target), target, null);

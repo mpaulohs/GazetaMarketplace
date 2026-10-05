@@ -122,6 +122,20 @@ public sealed class PanelAdListQueryTests
 
     [TestMethod]
     [TestCategory("Integration")]
+    public async Task Paginacao_PaginaNoLimiteDoPainel_NoSqlServer_VoltaVaziaSemErro()
+    {
+        string connection = await SqlServerFixture.CreateMigratedDatabaseAsync();
+        int ana = await AddUserAsync(connection, "Ana Souza");
+        await AddAdAsync(connection, ana, "Único", AdStatus.Draft);
+
+        PanelAdListRows beyond = await Repository(connection).ListAsync(Query(page: PanelAdListFilters.MaxPage), CancellationToken.None);
+
+        Assert.AreEqual(1, beyond.Total, "o total continua certo");
+        Assert.IsEmpty(beyond.Rows, "a página além do fim vem vazia; o serviço então mostra a última");
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
     public async Task US012S03_FiltroPorSituacao_EArquivadosEscondidosAteFiltrarPorArquivado()
     {
         string connection = await SqlServerFixture.CreateMigratedDatabaseAsync();

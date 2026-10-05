@@ -119,6 +119,7 @@ public sealed class TakedownTests
         Ad ad = await site.LoadAsync(adId);
         Assert.AreEqual(AdStatus.Archived, ad.Status);
         Assert.IsNotNull(ad.ArchivedAt);
+        Assert.AreEqual(await site.UserIdAsync(PanelFixture.AdminEmail), ad.ArchivedById, "quem arquivou fica gravado");
         StringAssert.Contains(Text(await PageAsync(site.Admin, "/painel/anuncios")), "Anúncio arquivado");
         Assert.AreEqual(HttpStatusCode.NotFound, (await visitor.GetAsync(photoUrl)).StatusCode, "arquivado: a foto sai do ar");
         List<AuditEntry> audits = await AuditsAsync(site, "ad.archive", adId);
