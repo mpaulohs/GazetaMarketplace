@@ -989,8 +989,8 @@ Só os unitários já passam das duas metas, então o gate não depende do Docke
 | Unitários do site (SQLite) | 1.335 | 1.335 | 0 |
 | Ferramenta de catálogo | 43 | 43 | 0 |
 | Ferramenta de municípios | 27 | 27 | 0 |
-| Integração (SQL Server 2022 em contêiner) | 127 | (rodando) | 0 |
-| E2E (Playwright, site publicado com a migration nova) | 95 | (rodando) | 0 |
+| Integração (SQL Server 2022 em contêiner) | 127 | 127 | 0 |
+| E2E (Playwright, site publicado com a migration nova) | 95 | 95 | 0 |
 
 **Testes novos:** 22 unitários (`ShowcaseTests`), 6 de integração (`ShowcaseQueryTests`), 5 E2E (`ShowcaseE2ETests`), mais o teste da migration `AddPublishedAtIndex`.
 
@@ -1032,7 +1032,7 @@ Só os unitários já passam das duas metas, então o gate não depende do Docke
 
 **Outros achados da rodada**
 
-1. **`HomeController` tinha um construtor sem dependências** e os testes de layout que pedem `/` rodavam sem banco; passaram a usar o site de teste com banco (a página inicial agora lê categorias e anúncios).
+1. **A página inicial agora lê categorias e anúncios**, então os testes de layout que pedem `/` rodavam sem banco; passaram a usar o site de teste com banco (a página inicial agora lê categorias e anúncios).
 2. **E2E do cache de CEP dependia da ordem de execução** (os outros E2E deixam `13015-100` no cache de CEP; ao acrescentar uma classe a ordem mudou e a primeira consulta vinha do cache). `CepE2ETests` passou a usar o CEP `13015-300`, só dele, e deixou de depender da ordem.
 3. **Os cards já apontam para `/anuncio/{id}/{slug}`**, endereço que a página de detalhe (5.2) vai atender; até lá o clique leva a 404. Decisão de projeto: o endereço é o da ARCHITECTURE (NFR-21), não precisa mudar na 5.2.
 4. **Docker:** o `dockerd` caiu de novo com o reinício do worker e foi religado; a primeira tentativa de integração falhou 127 de 127 por isso (ambiente).
