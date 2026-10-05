@@ -1170,14 +1170,14 @@ Só os unitários já passam das duas metas, então o gate não depende do Docke
 | S12 320 px | `US002S12_…` (painel aberto no servidor; botões de abrir e fechar só com JavaScript; ordem busca, filtros, total e cards) e E2E em 320 px: painel recolhido ao carregar, abre e fecha, o foco volta ao botão, nada passa de 320 px, sem rolagem horizontal; com erro no filtro o painel não recolhe |
 | Sem JavaScript e acessibilidade | E2E sem JavaScript (formulário e "Ordenar" funcionam; a cidade libera depois de "Aplicar filtros"); axe sem violações em 5 páginas (com filtros de veículo, de terreno, com erro e sem resultado), em 1280 e 320 px |
 
-**Quais categorias oferecem cada filtro específico (lista exata, conferida por teste contra a árvore real de 100+ categorias):**
+**Quais categorias oferecem cada filtro específico (lista exata, conferida por teste contra a árvore real de 147 categorias):**
 
 | Filtros oferecidos | Categorias |
 |---|---|
 | Marca, modelo, ano e quilometragem máxima | **Carros, vans e utilitários** · **Motos** |
 | Ano e quilometragem máxima | **Caminhões** · **Ônibus** |
 | Área mínima e máxima | **Apartamentos** · **Casas** · **Terrenos, sítios e fazendas** · **Comércio e indústria** |
-| Nenhum | todas as outras: as 9 categorias principais (misturam grupos), Autopeças e as 5 peças, Barcos e aeronaves, Vagas, Serviços e Produtos em geral |
+| Nenhum | todas as outras: as 22 categorias principais (as que misturam grupos ficam sem filtro específico), Autopeças e as 5 peças, Barcos e aeronaves, Vagas, Serviços e Produtos em geral |
 
 **Ponto para decisão:** o filtro de **área** também aparece em Apartamentos, Casas e Comércio e indústria, não só em Terrenos. A busca segue o grupo de campos (ADR-006): o grupo Imóveis marca "Área (m²)" como filtrável para as quatro. Restringir a Terrenos pede uma regra por categoria no grupo; está no BACKLOG.
 
@@ -1209,7 +1209,7 @@ As três mutações de JavaScript rodaram no site publicado (apagando as cópias
 
 **Achados da rodada**
 
-1. **Paridade de implementação dupla (JavaScript × C#):** a conferência de faixa do navegador (`lerNumero`) repete a gramática do `DecimalInput` do servidor. As duas rodam sobre a mesma tabela de 41 entradas (`DecimalInputTests` e o E2E de paridade) e dão o mesmo valor em cada linha; o C# passou a usar `[0-9]` (o `\d` do .NET aceita dígitos de outros alfabetos, o do JavaScript não).
+1. **Paridade de implementação dupla (JavaScript × C#):** a conferência de faixa do navegador (`lerNumero`) repete a gramática do `DecimalInput` do servidor. As duas rodam sobre a mesma tabela de 40 entradas (`DecimalInputTests` e o E2E de paridade) e dão o mesmo valor em cada linha; o C# passou a usar `[0-9]` (o `\d` do .NET aceita dígitos de outros alfabetos, o do JavaScript não).
 2. **O texto casa em qualquer pedaço da palavra** ("acao" também acha "documentação"). É a decisão da ADR-006; registrado no BACKLOG.
 3. **Lista de cidades para o visitante:** a rota `/api/v1/cities` é só da equipe (com login e cache privado, testes antigos); a busca ganhou `/api/v1/public/cities`, pública e com cache compartilhável. 7 testes.
 4. **`SqlBuilder` recusa números soltos no SQL:** `CASE WHEN … THEN 1 ELSE 0 END` e `> 0` viraram parâmetros (`@First`, `@Last`, `@NoMatch`), no mesmo espírito de "valor nunca no texto do SQL".
