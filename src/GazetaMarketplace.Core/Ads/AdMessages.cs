@@ -11,6 +11,24 @@ public static class AdMessages
 
     public const string NotFound = "Anúncio não encontrado";
 
+    public const string Published = "Anúncio publicado";
+
+    public const string Rejected = "Anúncio rejeitado";
+
+    public const string PhoneNotConfigured = "Configure o telefone/WhatsApp do site antes de publicar";
+
+    /// <summary>
+    /// A frase para quem tentou decidir um anúncio que já não está Em revisão. Entre Administradores diferentes vale a frase da SPEC (US-010-S07, "por outro administrador");
+    /// o mesmo Administrador num clique duplo ou em duas abas ouve só "já foi publicado".
+    /// </summary>
+    public static string AlreadyDecided(byte currentStatus, bool sameAdministrator) => currentStatus switch
+    {
+        AdStatus.Published => sameAdministrator ? "Este anúncio já foi publicado" : "Este anúncio já foi publicado por outro administrador",
+        AdStatus.Rejected => sameAdministrator ? "Este anúncio já foi rejeitado" : "Este anúncio já foi rejeitado por outro administrador",
+        AdStatus.Archived => "Este anúncio foi arquivado",
+        _ => "Este anúncio não está mais em revisão"
+    };
+
     public const string RejectionReasonRequired = "Informe o motivo da rejeição";
 
     public static string RejectionReasonTooLong(int max) => $"O motivo pode ter no máximo {max} caracteres";

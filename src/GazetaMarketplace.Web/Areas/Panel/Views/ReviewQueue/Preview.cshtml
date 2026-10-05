@@ -10,11 +10,40 @@
 <p class="mb-2"><a class="alvo-toque d-inline-flex align-items-center" href="@PanelRoutes.ReviewQueue"><i class="fa fa-chevron-left me-1" aria-hidden="true"></i>Fila de revisão</a></p>
 <h1 class="fs-3">Pré-visualização do anúncio</h1>
 
+@if (Model.Alert is { Kind: ReviewAlertKind.Conflict } conflict)
+{
+    @* Outra pessoa decidiu antes (S07): a mensagem, e logo abaixo a situação verdadeira *@
+    <div class="alert alert-danger" role="alert" tabindex="-1" data-foco-inicial data-review-conflict>@conflict.Message</div>
+}
+else if (Model.Alert is { Kind: ReviewAlertKind.PhoneMissing } noPhone)
+{
+    <div class="alert alert-danger d-flex flex-wrap align-items-center gap-2" role="alert" data-review-phone>
+        <span>@noPhone.Message</span>
+        <a class="btn btn-outline-danger btn-sm alvo-toque ms-sm-auto" href="@PanelRoutes.Settings" data-foco-inicial>Configurações</a>
+    </div>
+}
+
+@if (Model.Pending.Count > 0)
+{
+    @* A decisão reconfere o que o envio à revisão exige: o anúncio pode ter sido editado depois (por exemplo, sem o preço ou sem a foto) *@
+    <div class="alert alert-warning" role="alert" tabindex="-1" data-foco-inicial data-review-pending>
+        <p class="fw-semibold mb-2">@(Model.Pending.Count == 1 ? "Falta 1 item para publicar este anúncio:" : $"Faltam {Model.Pending.Count} itens para publicar este anúncio:")</p>
+        <ul class="mb-0">
+            @foreach (AdPending pending in Model.Pending)
+            {
+                <li><a asp-area="Panel" asp-controller="Ads" asp-action="Edit" asp-route-id="@Model.Id" asp-fragment="@pending.Target">@pending.Message</a></li>
+            }
+        </ul>
+    </div>
+}
+
 @if (Model.InReview)
 {
     <div class="alert alert-info" role="status" data-preview-banner><i class="fa fa-info-circle me-1" aria-hidden="true"></i>Pré-visualização — ainda não publicado</div>
-    @* Hoje só "Editar" age; "Publicar" e "Rejeitar" chegam na tarefa 4.2 e "Arquivar", na 4.3 *@
+    @* "Arquivar" chega na tarefa 4.3 *@
     <div class="d-grid d-sm-flex gap-2 mb-3" data-preview-actions>
+        <a class="btn btn-primary alvo-toque" asp-area="Panel" asp-controller="ReviewQueue" asp-action="ConfirmPublish" asp-route-id="@Model.Id">Publicar</a>
+        <a class="btn btn-outline-danger alvo-toque" asp-area="Panel" asp-controller="ReviewQueue" asp-action="Reject" asp-route-id="@Model.Id">Rejeitar</a>
         <a class="btn btn-outline-primary alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="Edit" asp-route-id="@Model.Id">Editar</a>
     </div>
 }

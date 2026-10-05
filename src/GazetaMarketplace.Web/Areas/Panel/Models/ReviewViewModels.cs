@@ -11,6 +11,9 @@ public sealed class ReviewQueueViewModel
     public IReadOnlyList<ReviewQueueItem> Items { get; init; } = [];
 
     public int Count => Items.Count;
+
+    /// <summary>"Anúncio publicado" ou "Anúncio rejeitado", depois de uma decisão; nulo nas demais visitas.</summary>
+    public string Message { get; init; }
 }
 
 /// <summary>A pré-visualização do anúncio para o Administrador decidir (US-010-S02): a página como o visitante a veria, com a faixa de "ainda não publicado".</summary>
@@ -45,4 +48,35 @@ public sealed class ReviewPreviewViewModel
 
     /// <summary>Só os dígitos, para os links "tel:" e do WhatsApp.</summary>
     public string PhoneDigits { get; init; }
+
+    /// <summary>O aviso da última tentativa de decisão (conflito com outro Administrador, telefone do site ausente); nulo se não houve.</summary>
+    public ReviewAlert Alert { get; init; }
+
+    /// <summary>O que falta para publicar, quando a tentativa de publicar achou pendências.</summary>
+    public IReadOnlyList<AdPending> Pending { get; init; } = [];
 }
+
+/// <summary>Qual aviso a pré-visualização mostra depois de uma decisão que não passou.</summary>
+public enum ReviewAlertKind
+{
+    /// <summary>Outra pessoa decidiu antes: a situação mostrada é a verdadeira.</summary>
+    Conflict = 1,
+
+    /// <summary>O telefone/WhatsApp do site não foi configurado: leva a "Configurações".</summary>
+    PhoneMissing = 2
+}
+
+public sealed record ReviewAlert(ReviewAlertKind Kind, string Message);
+
+/// <summary>A página do motivo da rejeição (US-010-S04 e S05). <see cref="Reason"/> volta como foi digitado quando há erro.</summary>
+public sealed class RejectViewModel
+{
+    public required int Id { get; init; }
+
+    public required string Title { get; init; }
+
+    public string Reason { get; set; }
+}
+
+/// <summary>A página de confirmação de "Publicar" (US-010-S03).</summary>
+public sealed record PublishConfirmationViewModel(int Id, string Title);

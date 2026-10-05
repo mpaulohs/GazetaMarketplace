@@ -1480,7 +1480,7 @@
 
 **User stories**: US-010
 
-**Scenarios covered**: `@US-010-S03`, `@US-010-S04`, `@US-010-S05`, `@US-010-S07`, `@US-010-S08`
+**Scenarios covered**: `@US-010-S02` (o restante: os botões "Publicar" e "Rejeitar"; "Arquivar" chega na 4.3), `@US-010-S03`, `@US-010-S04` (a frase "vê o anúncio entre os mais recentes" e "o encontra na busca" ficam para a Fase 5), `@US-010-S05`, `@US-010-S07`, `@US-010-S08`
 
 **NFRs covered**: `NFR-13`
 
@@ -1488,34 +1488,34 @@
 
 **Objective**: Decidir o anúncio com registro de quem decidiu, motivo obrigatório na rejeição e proteção contra decisão simultânea.
 
-**Files to modify**:
-- `src/GazetaMarketplace.Core/Ads/ReviewService.cs`
-- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/ReviewQueueController.cs`
-- `src/GazetaMarketplace.Web/Areas/Panel/Views/ReviewQueue/_RejectDialog.cshtml`
+**Decisões aprovadas (2026-10-05)**: D1 páginas próprias de confirmação e de motivo (não diálogos; o diálogo vem depois como melhoria progressiva) · D2 a decisão de publicar roda `AdSubmissionRules` antes (se falta algo, a pré-visualização mostra "Faltam N itens…" e a situação não muda; proteção que a SPEC não pede, no BACKLOG) · D3 o motivo da rejeição é gravado também na auditoria `ad.reject` (autor, alvo, situação antes e depois, motivo até 500 caracteres) · D4 o mesmo administrador duas vezes recebe "Este anúncio já foi publicado"; corrida entre administradores, "…por outro administrador" · D5 a prova da 4.2 é o motivo na tela de edição de quem cadastrou, a situação no banco e a foto entregue ao visitante; "vê entre os mais recentes" e "encontra na busca" ficam para os testes da Fase 5 · D6 o cenário S08 é provado nos testes HTTP (o banco do E2E já tem telefone); o E2E cobre só o caminho feliz.
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Core/Ads/IAdReview.cs` (`IAdReview`, `ReviewOutcome`, `ReviewResult`) · `AdMessages.cs` (frases da SPEC: publicado, rejeitado, telefone, "já foi decidido")
+- `src/GazetaMarketplace.Infrastructure/Ads/AdReview.cs` (confere situação, telefone e pendências; decide pelo `IAdService.TransitionAsync`; refaz uma vez se o `RowVersion` mudou) · `AdService.cs` (a auditoria da rejeição leva o motivo) · `ServiceCollectionExtensions.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/ReviewQueueController.cs` (`GET`/`POST` `/painel/anuncios/{id}/publicar` e `/rejeitar`) · `Models/ReviewViewModels.cs` (`RejectViewModel`, `PublishConfirmationViewModel`, aviso da pré-visualização)
+- `Views/ReviewQueue/ConfirmPublish.cshtml`, `Reject.cshtml` · `Preview.cshtml` (Publicar, Rejeitar, Editar; avisos de conflito, de telefone e de pendências) · `Index.cshtml` (mensagem de sucesso)
+- `wwwroot/js/pages/ad-confirm.js` (rótulo do botão ocupado; foco no campo com erro) · `wwwroot/css/components/bootstrap-tema.css` (contraste do `btn-outline-danger`)
 
 **Acceptance Criteria**:
-- [ ] `@US-010-S03` (@happy): Publicar um anúncio — o *Then* do SPEC é atendido
-- [ ] `@US-010-S04` (@happy): Rejeitar um anúncio com motivo — o *Then* do SPEC é atendido
-- [ ] `@US-010-S05` (@negative): Rejeitar sem informar o motivo — o *Then* do SPEC é atendido
-- [ ] `@US-010-S07` (@edge): Dois administradores decidem o mesmo anúncio — o *Then* do SPEC é atendido
-- [ ] `@US-010-S08` (@negative): Publicar sem o telefone do site configurado — o *Then* do SPEC é atendido
-- [ ] Publicar exige o telefone do site configurado; publicado aparece no site e na busca na hora
-- [ ] Rejeitar exige motivo, que fica visível ao autor; `PublishedBy/At`, `RejectedBy/At` e a ação entram em `AuditEntries`
-- [ ] Dois administradores decidindo o mesmo anúncio: o segundo recebe 409 "Este anúncio já foi publicado por outro administrador" (`rowversion`)
+- [x] `@US-010-S03` (@happy): Publicar um anúncio — o *Then* do SPEC é atendido (situação, quem e quando no banco, sai da fila, foto passa a chegar ao visitante)
+- [x] `@US-010-S04` (@happy): Rejeitar um anúncio com motivo — atendido **em parte**: situação, quem/quando/motivo e o motivo na tela de edição de quem cadastrou; "vê entre os mais recentes" e "encontra na busca" ficam para a Fase 5
+- [x] `@US-010-S05` (@negative): Rejeitar sem informar o motivo — o *Then* do SPEC é atendido
+- [x] `@US-010-S07` (@edge): Dois administradores decidem o mesmo anúncio — o *Then* do SPEC é atendido
+- [x] `@US-010-S08` (@negative): Publicar sem o telefone do site configurado — o *Then* do SPEC é atendido
+- [x] Publicar exige o telefone do site configurado e confere de novo as pendências do anúncio
+- [x] Rejeitar exige motivo (aparado, até 500 caracteres), visível ao autor; `PublishedBy/At`, `RejectedBy/At/Reason` e a ação entram em `AuditEntries`
+- [x] Dois administradores decidindo o mesmo anúncio: só um passa (`RowVersion`), o outro vê "Este anúncio já foi publicado por outro administrador"
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S03_PublicarUmAnuncio` — `@US-010-S03`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S04_RejeitarUmAnuncioComMotivo` — `@US-010-S04`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S05_RejeitarSemInformarOMotivo` — `@US-010-S05`
-- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S07_DoisAdministradoresDecidemOMesmoAnuncio` — `@US-010-S07`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Revisão/ReviewE2ETests.US010S07_DoisAdministradoresDecidemOMesmoAnuncio` — `@US-010-S07` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Revisão/ReviewTests.US010S08_PublicarSemOTelefoneDoSiteConfigurado` — `@US-010-S08`
-- `tests/GazetaMarketplace.Web.Tests/Review/ConcurrencyTests.DoisAdministradores_SoUmDecide`
-- `tests/GazetaMarketplace.Web.Tests/Review/AuditingTests.Publicar_E_Rejeitar_RegistramAutorDataEAcao`
+**Tests added** (nomes reais):
+- `Web.Tests/Review/ReviewTests` — 17 métodos (19 casos): `US010S03`, `US010S04`, `US010S05` (3 motivos vazios), `US010S07` (dois administradores, nas duas ordens), `US010S08`, auditoria da publicação e da rejeição (com motivo), reenvio limpa o motivo e a auditoria guarda o histórico, limite de 500 caracteres, HTML no motivo, clique duplo do mesmo administrador, pendências reconferidas, matriz de situações, Redator (GET e POST), sem login, sem token, anúncio inexistente, foto entregue ao visitante
+- `Web.Tests/Review/ReviewSupport` — anúncio publicável, segundo administrador, telefone
+- `IntegrationTests/ReviewDecisionConcurrencyTests` — 4 pedidos ao mesmo tempo × 3 rodadas, publicar e rejeitar, no SQL Server real: uma passagem, uma auditoria, nenhum 500
+- `Web.Tests.Playwright/Ads/ReviewDecisionE2ETests` — 5 testes: publicar (foto do visitante antes e depois), rejeitar com motivo (lido na edição), rejeitar sem motivo, duas janelas (`US010S07`), axe e rolagem em 1280 e 320 px (inclui o erro)
 
 **Dependencies**: 4.1, 2.7, 0.6
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Publicar, rejeitar e simular a decisão simultânea em duas abas.
+**Verification**: Done when every test under "Tests added" passes (unitários 1253, integração 105, E2E 79) e as 9 mutações são mortas.
 
 **Estimate**: L
 

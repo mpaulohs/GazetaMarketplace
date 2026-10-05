@@ -10,6 +10,11 @@
 <h1 class="fs-3">Anúncios</h1>
 <partial name="_Tabs" model="Model.Count" />
 
+@if (Model.Message is not null)
+{
+    <div class="alert alert-success" role="status" data-review-message>@Model.Message</div>
+}
+
 @if (Model.Count == 0)
 {
     <div class="alert alert-info" role="status" data-review-empty>Nenhum anúncio aguardando revisão</div>

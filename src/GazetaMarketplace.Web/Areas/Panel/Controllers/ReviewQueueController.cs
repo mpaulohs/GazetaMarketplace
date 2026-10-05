@@ -22,13 +22,14 @@ namespace GazetaMarketplace.Web.Areas.Panel.Controllers;
 
 /// <summary>
 /// A fila de revisão e a pré-visualização do anúncio (US-010-S01, S02, S06 e S09). Só o Administrador entra; o Redator cai em "acesso negado" e nunca vê botão de decisão.
-/// Esta tela só <b>lê</b>: publicar e rejeitar chegam na tarefa 4.2 e arquivar, na 4.3, então hoje a única ação é "Editar". Quem pode ver cada anúncio continua sendo
-/// decidido no servidor pelo <see cref="IAdService"/>.
+/// Publicar e rejeitar (US-010-S03 a S05, S07 e S08) são páginas de confirmação e do motivo, que funcionam com e sem JavaScript; a decisão é do <see cref="IAdReview"/>.
+/// Arquivar chega na tarefa 4.3. Quem pode ver cada anúncio é decidido no servidor pelo <see cref="IAdService"/>.
 /// </summary>
 [Authorize(Policy = AccessPolicies.Administrator)]
 [Route("painel/anuncios")]
 public sealed class ReviewQueueController(
     IReviewQueue queue,
+    IAdReview review,
     IAdService ads,
     IAdPhotoService photos,
     IAdSpecsReader specs,
@@ -36,6 +37,13 @@ public sealed class ReviewQueueController(
     ISiteSettings settings,
     ILogger<ReviewQueueController> logger) : PanelControllerBase
 {
+    /// <summary>Chave do aviso de sucesso ("Anúncio publicado") que a fila mostra depois da decisão.</summary>
+    public const string MessageKey = "ReviewMessage";
+
+    private const string AlertKindKey = "ReviewAlertKind";
+    private const string AlertMessageKey = "ReviewAlertMessage";
+    private const string CheckPendingKey = "ReviewCheckPending";
+
     [HttpGet("fila")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
@@ -58,7 +66,7 @@ public sealed class ReviewQueueController(
             });
         }
 
-        return View(new ReviewQueueViewModel { Items = items });
+        return View(new ReviewQueueViewModel { Items = items, Message = TempData[MessageKey] as string });
     }
 
     [HttpGet("{id:int}/pre-visualizacao")]
@@ -81,6 +89,16 @@ public sealed class ReviewQueueController(
 
         IReadOnlyList<AdSpec> characteristics = categoryId is { } specsCategory ? await specs.ReadAsync(ad, specsCategory, group, cancellationToken) : [];
         IReadOnlyList<AdPhotoItem> gallery = isJob ? [] : await photos.ListAsync(id, cancellationToken);
+        ReviewAlert alert = TempData[AlertMessageKey] is string alertMessage
+            ? new ReviewAlert(TempData[AlertKindKey] is "phone" ? ReviewAlertKind.PhoneMissing : ReviewAlertKind.Conflict, alertMessage)
+            : null;
+        IReadOnlyList<AdPending> pending = [];
+        if (TempData[CheckPendingKey] is not null && ad.Status == AdStatus.InReview)
+        {
+            ReviewResult check = await review.CheckPublishAsync(id, cancellationToken);
+            pending = check.Pending ?? [];
+        }
+
         string phoneDigits = await settings.GetPhoneAsync(cancellationToken);
         bool hasPhone = !string.IsNullOrWhiteSpace(phoneDigits);
 
@@ -89,6 +107,8 @@ public sealed class ReviewQueueController(
             Id = ad.Id,
             StatusLabel = AdStatus.Label(ad.Status),
             InReview = ad.Status == AdStatus.InReview,
+            Alert = alert,
+            Pending = pending,
             CategoryPath = categoryId is { } path ? string.Join(" › ", snapshot.PathTo(path).Select(n => n.Name)) : null,
             LocationManual = ad.LocationManual,
             Cep = ad.Cep,
@@ -108,5 +128,113 @@ public sealed class ReviewQueueController(
                 HeadingLevel = 2
             }
         });
+    }
+
+    [HttpGet("{id:int}/publicar")]
+    public async Task<IActionResult> ConfirmPublish(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            ReviewResult check = await review.CheckPublishAsync(id, cancellationToken);
+            if (check.Outcome != ReviewOutcome.Done)
+            {
+                return BackToPreview(id, check);
+            }
+
+            Ad ad = await ads.GetAsync(id, cancellationToken);
+            return View(new PublishConfirmationViewModel(id, ad.Title));
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpPost("{id:int}/publicar")]
+    public async Task<IActionResult> Publish(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            ReviewResult result = await review.PublishAsync(id, cancellationToken);
+            if (result.Outcome != ReviewOutcome.Done)
+            {
+                return BackToPreview(id, result);
+            }
+
+            TempData[MessageKey] = AdMessages.Published;
+            return Redirect(PanelRoutes.ReviewQueue);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpGet("{id:int}/rejeitar")]
+    public async Task<IActionResult> Reject(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            ReviewResult check = await review.CheckRejectAsync(id, cancellationToken);
+            if (check.Outcome != ReviewOutcome.Done)
+            {
+                return BackToPreview(id, check);
+            }
+
+            Ad ad = await ads.GetAsync(id, cancellationToken);
+            return View(new RejectViewModel { Id = id, Title = ad.Title });
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpPost("{id:int}/rejeitar")]
+    public async Task<IActionResult> Reject(int id, string reason, CancellationToken cancellationToken)
+    {
+        try
+        {
+            ReviewResult result = await review.RejectAsync(id, reason, cancellationToken);
+            if (result.Outcome != ReviewOutcome.Done)
+            {
+                return BackToPreview(id, result);
+            }
+
+            TempData[MessageKey] = AdMessages.Rejected;
+            return Redirect(PanelRoutes.ReviewQueue);
+        }
+        catch (NotFoundException)
+        {
+            return NotFound();
+        }
+        catch (ValidationException ex)
+        {
+            // Motivo vazio ou longo demais (S05): a página volta com o que foi digitado e o erro ao lado do campo; a situação não mudou
+            Ad ad = await ads.GetAsync(id, cancellationToken);
+            ModelState.AddModelError(nameof(RejectViewModel.Reason), ex.Errors.Values.SelectMany(v => v).FirstOrDefault() ?? AdMessages.RejectionReasonRequired);
+            return View(new RejectViewModel { Id = id, Title = ad.Title, Reason = reason });
+        }
+    }
+
+    // Volta à pré-visualização com o aviso do que impediu a decisão (a situação mostrada é sempre a verdadeira)
+    private RedirectToActionResult BackToPreview(int id, ReviewResult result)
+    {
+        switch (result.Outcome)
+        {
+            case ReviewOutcome.PhoneNotConfigured:
+                TempData[AlertKindKey] = "phone";
+                TempData[AlertMessageKey] = result.Message;
+                break;
+            case ReviewOutcome.AlreadyDecided:
+                TempData[AlertKindKey] = "conflict";
+                TempData[AlertMessageKey] = result.Message;
+                break;
+            case ReviewOutcome.HasPending:
+                TempData[CheckPendingKey] = "1";
+                break;
+        }
+
+        return RedirectToAction(nameof(Preview), new { id });
     }
 }

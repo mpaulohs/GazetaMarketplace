@@ -710,3 +710,48 @@ Os arquivos foram restaurados depois de cada mutação; a compilação final fic
 4. **Menu:** o item "Anúncios" já ficava ativo na fila, então `PanelMenu` não precisou mudar.
 5. **`AdSpec` foi para o Core** (a 5.2 usa a mesma regra); a classe antiga da camada web foi removida.
 6. O E2E do Redator deixa uma conta nova por rodada no banco de teste (BACKLOG).
+
+## Tarefa 4.2 — publicar e rejeitar anúncios (US-010)
+
+> **Em resumo:** 1.253 testes unitários (19 novos), 43 e 27 das ferramentas, 105 de integração (2 novos, SQL Server real) e 79 de navegador (5 novos) passam. As 9 mutações (7 planejadas e 2 extras) foram derrubadas. Duas partes da S04 ficam **para a Fase 5** de propósito ("vê o anúncio entre os mais recentes" e "o encontra na busca" dependem da home e da busca). Veredito: **aprovado**.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.253 | 1.253 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 105 | 105 | 0 |
+| E2E (Playwright: Production + Development) | 79 | 79 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| M1 Publicar sem conferir o telefone do site | `US010S08`, clique duplo em paralelo |
+| M2 Rejeitar sem exigir o motivo | `US010S05` (3 motivos vazios) e mais 4 |
+| M3 Publicar anúncio que não está em revisão | `Decidir_AnuncioQueNaoEstaEmRevisao…` |
+| M4 Frase "já foi publicado" trocada com "por outro administrador" | `MesmoAdministradorDuasVezes…`, `US010S07`, `Decidir_AnuncioQueNaoEstaEmRevisao…` |
+| M5 Motivo gravado sem aparar os espaços | `US010S04`, `Rejeitar_GravaQuemQuandoEOMotivoSemEspacos` |
+| M6 Decisão sem auditoria | 23 (entre eles `US010S03`, `Publicar_RegistraUmaAuditoria…`) |
+| M7 Redator autorizado a decidir (política da fila trocada) | `US010S09`, `Redator_NaoAbreAFila…`, `Redator_NaoDecide…` |
+| (extra) E1 Publicar sem exigir o token antiforgery | `SemLogin_SemTokenEAnuncioInexistente_SaoRecusados` |
+| (extra) E2 `PublishedById` não gravado | `US010S03`, `MesmoAdministradorDuasVezes…`, `Decidir_AnuncioQueNaoEstaEmRevisao…` |
+
+Os arquivos foram restaurados depois de cada mutação; a compilação final ficou limpa (0 avisos, 0 erros).
+
+**O que cada camada prova**
+
+- **S03:** a página de confirmação ("Publicar este anúncio?", "Ele passa a aparecer no site para todos os visitantes.") leva ao POST; a situação vira Publicado, `PublishedAt` e `PublishedById` ficam gravados, o anúncio sai da fila e a fila mostra "Anúncio publicado". Antes de publicar o visitante recebe 404 na foto; depois, 200 com `image/*` (no HTTP e no navegador).
+- **S04 (em parte):** a situação vira Rejeitado, quem, quando e o motivo (aparado) ficam gravados, o anúncio não aparece ao público e o autor lê "Este anúncio foi rejeitado. Motivo: …" na tela de edição, inclusive depois de recarregar. A auditoria `ad.reject` guarda o motivo; ao reenviar, o motivo sai do anúncio e o histórico fica na auditoria. "Vê entre os mais recentes" e "encontra na busca" ficam para a Fase 5.
+- **S05:** motivo vazio, só espaços ou só quebras de linha mostram "Informe o motivo da rejeição" na própria página, devolvem o texto digitado, deixam o anúncio Em revisão e levam o foco ao campo. Exatamente 500 caracteres passa; 501 recusa com a frase do limite. HTML no motivo sai codificado.
+- **S07:** dois administradores, nas duas ordens: quem chega depois vê "Este anúncio já foi publicado por outro administrador" (ou "rejeitado") e a situação continua a da primeira decisão; o mesmo administrador duas vezes vê "Este anúncio já foi publicado". No SQL Server real, 4 pedidos simultâneos × 3 rodadas, para publicar e para rejeitar: exatamente uma passagem, uma auditoria e nenhum 500. No navegador, duas sessões da mesma conta reproduzem o aviso.
+- **S08:** sem telefone do site, publicar volta para a pré-visualização com o aviso e o link "Configurações", e a situação não muda. Provado só nos testes HTTP (o banco do E2E já tem telefone).
+- **Pendências reconferidas:** anúncio em revisão editado sem foto ou sem preço não vai ao ar ("Faltam N itens…").
+- **Acesso:** Redator recebe "acesso negado" no GET e no POST sem alterar nada; sem login vai para a entrada; sem token antiforgery é 400; anúncio inexistente é 404; Rascunho, Publicado, Rejeitado e Arquivado dão a mensagem da situação e nada muda.
+- **Acessibilidade:** axe sem violações na confirmação, na rejeição (também com o erro) e na pré-visualização em 1280 e 320 px, sem rolagem horizontal.
+
+**Achados desta rodada**
+
+1. **Contraste:** o botão "Rejeitar" (`btn-outline-danger`) dava 4,14:1 sobre o fundo cinza; o tema ganhou um vermelho mais escuro para todo `btn-outline-danger` (BACKLOG).
+2. **Foco no erro:** o atributo `autofocus` não levou o foco ao campo no navegador de teste; `ad-confirm.js` agora foca o campo com erro.
+3. **Cache de CEP:** `CepE2ETests` falha numa segunda rodada no mesmo banco (as entradas `13015100` e `60000000` já estão no cache). Limpar `CepCache` antes da rodada completa; documentado em `docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md` e no BACKLOG.
+4. **Ferramenta de mutação:** a restauração do arquivo deixava a data de modificação mais antiga que a compilação e o MSBuild não recompilava; o script passou a atualizar a data. As mutações M1 e M6 foram refeitas em separado depois da correção.
+5. **Cobertura parcial declarada:** S02 agora completa (Publicar, Rejeitar e Editar; "Arquivar" na 4.3); S04 sem as duas frases da Fase 5.

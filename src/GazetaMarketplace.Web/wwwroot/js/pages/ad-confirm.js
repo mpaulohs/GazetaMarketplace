@@ -1,5 +1,5 @@
-// Confirmação do envio à revisão: o primeiro clique trava o botão, para um clique duplo não mandar dois pedidos.
-// (Se mandasse, o servidor responderia "já foi enviado" a segunda vez; travar evita até esse pedido.)
+// Confirmações do painel (enviar à revisão, publicar, rejeitar): o primeiro clique trava o botão, para um clique duplo não mandar dois pedidos.
+// (Se mandasse, o servidor responderia "já foi decidido" a segunda vez; travar evita até esse pedido.)
 const formulario = document.querySelector("[data-confirm-submit]");
 const botao = formulario?.querySelector("[data-confirm-button]");
 
@@ -12,7 +12,7 @@ if (formulario && botao) {
     }
 
     botao.disabled = true;
-    botao.textContent = "Enviando…";
+    botao.textContent = botao.dataset.busyLabel ?? "Enviando…";
   });
 
   // Voltar pelo histórico traz a página do cache com o botão ainda travado
@@ -21,3 +21,6 @@ if (formulario && botao) {
     botao.textContent = rotulo;
   });
 }
+
+// Página que volta com erro de campo (motivo da rejeição em branco): o foco vai para o campo com problema
+document.querySelector("textarea[autofocus], input[autofocus]")?.focus();

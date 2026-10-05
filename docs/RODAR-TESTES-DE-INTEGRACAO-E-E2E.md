@@ -104,6 +104,12 @@ Sem as variáveis, os testes que dependem delas ficam ignorados (`PasswordRecove
 docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '<senha-sa>' -C -d gazeta_e2e -I -Q "DELETE FROM PasswordRecoveryAttempts"
 ```
 
+**Cache de CEP:** `CepE2ETests` espera que a primeira consulta de `13015100` e de `60000000` venha do ViaCEP de mentira; os outros E2E (que criam anúncios com o CEP `13015-100`) deixam essas entradas na tabela `CepCache` do banco por 30 dias. Antes de rodar a suíte inteira de novo no mesmo banco, limpe a tabela:
+
+```bash
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '<senha-sa>' -C -d gazeta_e2e -I -Q "DELETE FROM CepCache"
+```
+
 O limite global de 100 pedidos por minuto por IP também conta tudo que a suíte faz, e a suíte já passa disso: o site do E2E sobe com `RateLimiting__GlobalPerMinute=1000` (ver a lista de variáveis acima). O limite de login e de recuperação de senha (5 por 15 minutos) não é configurável.
 
 ## Regenerar o script das migrations

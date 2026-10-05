@@ -17,6 +17,7 @@ using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static GazetaMarketplace.Web.Tests.Review.ReviewSupport;
 
 namespace GazetaMarketplace.Web.Tests.Review;
 
@@ -27,52 +28,6 @@ public sealed class ReviewQueueTests
 #pragma warning restore CA1515
 {
     private const string Queue = "/painel/anuncios/fila";
-    private const string Ana = PanelFixture.WriterEmail;
-    private const string Bruno = "bruno.lima@exemplo.com.br";
-
-    private static DateTime Day(int day) => new(2026, 9, day, 13, 0, 0, DateTimeKind.Utc);
-
-    private static string PreviewUrl(int adId) => $"/painel/anuncios/{adId}/pre-visualizacao";
-
-    private static async Task EnsureBrunoAsync(DraftSite site)
-    {
-        if ((await site.Harness.Factory.ListUsersAsync()).All(u => u.Email != Bruno))
-        {
-            await site.Harness.Factory.CreateUserAsync(Bruno, "Bruno Lima", PanelFixture.Password, RoleNames.Writer);
-        }
-    }
-
-    /// <summary>Grava um anúncio Em revisão enviado em <paramref name="sentAt"/> (e, se pedido, antes rejeitado e reenviado).</summary>
-    private static async Task<int> AddInReviewAsync(
-        DraftSite site, string authorEmail, string title, int categoryId, DateTime sentAt, Action<Ad> configure = null)
-    {
-        await EnsureBrunoAsync(site);
-        int author = await site.UserIdAsync(authorEmail);
-        Ad ad = Ad.CreateDraft(title, author);
-        ad.SetCategory(categoryId);
-        ad.SetText(title, "Descrição do anúncio");
-        ad.SetPrice(6_200_000);
-        ad.SetLocation("13015100", "Campinas", "SP", false);
-        configure?.Invoke(ad);
-        ad.ApplyTransition(AdStatus.InReview, author, sentAt, null);
-        return await site.Harness.WithDbAsync(async db =>
-        {
-            db.Ads.Add(ad);
-            await db.SaveChangesAsync();
-            return ad.Id;
-        });
-    }
-
-    private static async Task SetPhoneAsync(DraftSite site, string digits)
-    {
-        await site.Harness.WithDbAsync(async db =>
-        {
-            db.SiteSettings.Add(new SiteSetting { Key = SiteSettingKeys.Phone, Value = digits });
-            await db.SaveChangesAsync();
-            return 0;
-        });
-        site.Harness.Factory.Services.GetRequiredService<ISiteSettings>().Invalidate();
-    }
 
     private static string Text(string html) => WebUtility.HtmlDecode(Regex.Replace(Regex.Replace(html, @"<[^>]+>", " "), @"\s+", " ")).Trim();
 
@@ -215,7 +170,7 @@ public sealed class ReviewQueueTests
     }
 
     [TestMethod]
-    public async Task US010S02_PreVisualizar_MostraFaixa_CorpoCompleto_FotosEContato_ESoOBotaoEditar()
+    public async Task US010S02_PreVisualizar_MostraFaixa_CorpoCompleto_FotosEContato_EOsTresBotoes()
     {
         using PhotoSite photos = await PhotoSite.StartAsync();
         DraftSite site = photos.Site;
@@ -236,10 +191,12 @@ public sealed class ReviewQueueTests
         StringAssert.Matches(html, new Regex(@"<h1[^>]*>Pré-visualização do anúncio</h1>\s*<div class=""alert alert-info"" role=""status""[^>]*>[\s\S]*?Pré-visualização — ainda não publicado</div>"));
         StringAssert.Matches(html, new Regex(@"<a [^>]*href=""/painel/anuncios/" + adId + @"/editar""[^>]*>Editar</a>"));
         StringAssert.Matches(html, new Regex(@"<a [^>]*href=""/painel/anuncios/fila""[^>]*>[\s\S]*?Fila de revisão</a>"));
-        // Hoje só "Editar" age; as outras ações chegam na 4.2 e na 4.3
-        foreach (string absent in new[] { "Publicar", "Rejeitar", "Arquivar", "Despublicar" })
+        // Os três botões da S02; "Arquivar" e "Despublicar" só chegam na 4.3
+        StringAssert.Matches(html, new Regex(@"<a class=""btn btn-primary[^""]*"" href=""/painel/anuncios/" + adId + @"/publicar"">Publicar</a>"));
+        StringAssert.Matches(html, new Regex(@"<a class=""btn btn-outline-danger[^""]*"" href=""/painel/anuncios/" + adId + @"/rejeitar"">Rejeitar</a>"));
+        foreach (string absent in new[] { "Arquivar", "Despublicar" })
         {
-            Assert.IsFalse(visible.Contains(absent, StringComparison.Ordinal), absent + " não existe na 4.1");
+            Assert.IsFalse(visible.Contains(absent, StringComparison.Ordinal), absent + " não existe antes da 4.3");
         }
 
         // O mesmo corpo da página pública: título, valor, local, descrição e características reais

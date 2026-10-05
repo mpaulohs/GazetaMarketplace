@@ -71,10 +71,14 @@ public sealed class AdService(AppDbContext context, ICurrentUser currentUser, IA
         ad.ApplyTransition(target, actor.UserId, time.GetUtcNow().UtcDateTime, reason);
 
         await audit.RecordAsync(
-            new AuditRecord(transition.Action, TargetType, id.ToString(CultureInfo.InvariantCulture), AuditResult.Success, AdStatus.Label(previous), AdStatus.Label(target)),
+            new AuditRecord(transition.Action, TargetType, id.ToString(CultureInfo.InvariantCulture), AuditResult.Success, AdStatus.Label(previous), NewAuditValue(ad, target)),
             cancellationToken);
         return ad;
     }
+
+    // A rejeição leva o motivo à auditoria: ao reenviar, o motivo sai do anúncio (ClearRejection) e o histórico fica aqui
+    private static string NewAuditValue(Ad ad, byte target) =>
+        target == AdStatus.Rejected ? $"{AdStatus.Label(target)} — motivo: {ad.RejectionReason}" : AdStatus.Label(target);
 
     private AdActor Actor() => new(currentUser.UserId, currentUser.IsAdministrator);
 
