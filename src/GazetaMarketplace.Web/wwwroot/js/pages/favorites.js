@@ -38,9 +38,8 @@ async function buscarLote(ids) {
   if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
 
   // O fragmento é o HTML do próprio servidor (o mesmo AdCard das demais listas)
-  const modelo = document.createElement("template");
-  modelo.innerHTML = await resposta.text();
-  const itens = [...modelo.content.querySelectorAll("li[data-ad-id]")];
+  const documento = new DOMParser().parseFromString(await resposta.text(), "text/html");
+  const itens = [...documento.querySelectorAll("li[data-ad-id]")];
   return { itens, voltaram: new Set(itens.map((li) => Number(li.dataset.adId))) };
 }
 

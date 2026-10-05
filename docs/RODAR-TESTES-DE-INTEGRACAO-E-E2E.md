@@ -115,7 +115,17 @@ O limite global de 100 pedidos por minuto por IP também conta tudo que a suíte
 
 ### Mutar um arquivo de `wwwroot` no site publicado
 
-O site do E2E serve, para cada script e folha de estilo, uma cópia comprimida ao lado do original (`search.js.gz` e `search.js.br`). Para testar uma mutação direto na pasta publicada, apague essas duas cópias do arquivo mutado antes de rodar o E2E (senão o navegador recebe o original comprimido) e restaure as três ao terminar. Confirme com `curl -k -H 'Accept-Encoding: identity' https://localhost:5443/js/pages/search.js` que o conteúdo servido é o mutado.
+O site do E2E serve cada script e folha de estilo pela **lista de arquivos publicados** (`GazetaMarketplace.Web.staticwebassets.endpoints.json`): para cada arquivo há três entradas (o original, a cópia `.gz` e a cópia `.br`), cada uma com o tamanho (`Content-Length`) já escrito. O navegador pede o arquivo comprimido; por isso mexer só no arquivo original **não** muta nada, e **apagar** as cópias comprimidas faz o site responder `200` com o corpo vazio (o script não carrega e todo teste que usa JavaScript falha, o que parece "mutação morta" mas não é).
+
+O jeito certo, para cada mutação:
+
+1. Troque o texto no arquivo original da pasta publicada (`wwwroot/js/…`).
+2. Na lista de arquivos publicados, tire as entradas `.gz` e `.br` desse arquivo e acerte o `Content-Length` da entrada do original para o tamanho novo, em bytes.
+3. **Reinicie o site** (a lista é lida só na partida). Reiniciar também zera o limite de login (5 por 15 minutos, em memória), que as rodadas repetidas esgotam.
+4. Confirme com `curl -k -H 'Accept-Encoding: gzip' https://localhost:5443/js/modules/favorites.js` que o corpo vem com o texto mutado e não vazio.
+5. Rode o E2E; ao terminar, restaure o arquivo e a lista (as cópias de segurança) e reinicie o site, ou publique de novo.
+
+Uma mutação **só conta como morta** se os testes que falharam são os que deveriam falhar por aquela mudança; se quase todos os testes de JavaScript falham, desconfie do passo 2 ou 3.
 
 ## Cobertura de código (unitários e integração)
 

@@ -1832,50 +1832,39 @@
 **Objective**: Favoritos em `localStorage`, página "Meus favoritos" e endpoint que devolve só anúncios publicados por ids.
 
 **Files to modify**:
-- src/GazetaMarketplace.Web/Controllers/Api/AdsController.cs (listAdsByIds)
-- `src/GazetaMarketplace.Web/Controllers/FavoritesController.cs`
-- `src/GazetaMarketplace.Web/wwwroot/js/modules/favorites.js`
-- `src/GazetaMarketplace.Web/Views/Favorites/Index.cshtml`
+- `src/GazetaMarketplace.Core/Showcase/` — `FavoriteIds.cs` (os ids aceitos), `PagedResult.cs`, `IShowcase.cs` (`ByIdsAsync`, `CardsByIdsAsync`), `ShowcaseService.cs`
+- `src/GazetaMarketplace.Infrastructure/Ads/ShowcaseReadRepository.cs` (`ByIdsAsync`, Dapper, só publicados)
+- `src/GazetaMarketplace.Web/Controllers/Api/PublicAdsController.cs` (`GET /api/v1/ads?ids=`) e `Models/AdCardDto.cs`
+- `src/GazetaMarketplace.Web/Controllers/FavoritesController.cs` · `Views/Favorites/Index.cshtml` e `List.cshtml` (fragmento de cards)
+- `src/GazetaMarketplace.Web/ViewComponents/AdCardViewComponent.cs` · `Views/Shared/Components/AdCard/Default.cshtml` (coração e "Remover") · `Views/Ad/Index.cshtml` (botão "Favoritar")
+- `src/GazetaMarketplace.Web/wwwroot/js/modules/favorites.js` · `modules/favorites-ui.js` · `pages/favorites.js` · `pages/layout.js` · `css/components/card.css`
 
 **Acceptance Criteria**:
-- [ ] `@US-005-S01` (@happy): Favoritar um anúncio pela lista — o *Then* do SPEC é atendido
-- [ ] `@US-005-S02` (@happy): Favoritar e desfavoritar pela página do anúncio — o *Then* do SPEC é atendido
-- [ ] `@US-005-S03` (@happy): Favoritos continuam depois de fechar o navegador — o *Then* do SPEC é atendido
-- [ ] `@US-005-S04` (@happy): Remover um anúncio da página Meus favoritos — o *Then* do SPEC é atendido
-- [ ] `@US-005-S05` (@edge): Lista de favoritos vazia — o *Then* do SPEC é atendido
-- [ ] `@US-005-S06` (@edge): Um favorito deixa de estar disponível — o *Then* do SPEC é atendido
-- [ ] `@US-005-S07` (@negative): O navegador não permite salvar favoritos — o *Then* do SPEC é atendido
-- [ ] `@US-005-S08` (@edge): Favoritos não acompanham o visitante em outro aparelho — o *Then* do SPEC é atendido
-- [ ] `@US-011-S04` (@edge): Anúncio arquivado some dos favoritos do visitante — o *Then* do SPEC é atendido
-- [ ] `GET /api/v1/ads?ids=` aceita até 100 ids numéricos e devolve só anúncios publicados, no envelope `PagedResult` com `priceCents` nulo em Serviços e `coverUrl` nulo em Vagas
-- [ ] Ids de anúncios despublicados ou arquivados não voltam; a página tira esses ids do `localStorage` e mostra o aviso
-- [ ] Armazenamento bloqueado mostra mensagem e o site continua funcionando; favoritos não acompanham o visitante em outro aparelho
+- [x] `@US-005-S01` (@happy): Favoritar um anúncio pela lista — o *Then* do SPEC é atendido
+- [x] `@US-005-S02` (@happy): Favoritar e desfavoritar pela página do anúncio — o *Then* do SPEC é atendido
+- [x] `@US-005-S03` (@happy): Favoritos continuam depois de fechar o navegador — o *Then* do SPEC é atendido
+- [x] `@US-005-S04` (@happy): Remover um anúncio da página Meus favoritos — o *Then* do SPEC é atendido
+- [x] `@US-005-S05` (@edge): Lista de favoritos vazia — o *Then* do SPEC é atendido
+- [x] `@US-005-S06` (@edge): Um favorito deixa de estar disponível — o *Then* do SPEC é atendido
+- [x] `@US-005-S07` (@negative): O navegador não permite salvar favoritos — o *Then* do SPEC é atendido
+- [x] `@US-005-S08` (@edge): Favoritos não acompanham o visitante em outro aparelho — o *Then* do SPEC é atendido
+- [x] `@US-011-S04` (@edge): Anúncio arquivado some dos favoritos do visitante — o *Then* do SPEC é atendido
+- [x] `GET /api/v1/ads?ids=` aceita até 100 ids numéricos e devolve só anúncios publicados, no envelope `PagedResult` com `priceCents` nulo em Serviços e `coverUrl` nulo em Vagas
+- [x] Ids de anúncios despublicados ou arquivados não voltam; a página tira esses ids do `localStorage` e mostra o aviso
+- [x] Armazenamento bloqueado mostra mensagem e o site continua funcionando; favoritos não acompanham o visitante em outro aparelho
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S01_FavoritarUmAnuncioPelaLista` — `@US-005-S01`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US005S01_FavoritarUmAnuncioPelaLista` — `@US-005-S01` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S02_FavoritarEDesfavoritarPelaPaginaDoAnuncio` — `@US-005-S02`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S03_FavoritosContinuamDepoisDeFecharONavegador` — `@US-005-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US005S03_FavoritosContinuamDepoisDeFecharONavegador` — `@US-005-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S04_RemoverUmAnuncioDaPaginaMeusFavoritos` — `@US-005-S04`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US005S04_RemoverUmAnuncioDaPaginaMeusFavoritos` — `@US-005-S04` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S05_ListaDeFavoritosVazia` — `@US-005-S05`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S06_UmFavoritoDeixaDeEstarDisponivel` — `@US-005-S06`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S07_ONavegadorNaoPermiteSalvarFavoritos` — `@US-005-S07`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US005S07_ONavegadorNaoPermiteSalvarFavoritos` — `@US-005-S07` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US005S08_FavoritosNaoAcompanhamOVisitanteEmOutroAparelho` — `@US-005-S08`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/FavoritesTests.US011S04_AnuncioArquivadoSomeDosFavoritosDoVisitante` — `@US-011-S04`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/FavoritesE2ETests.US011S04_AnuncioArquivadoSomeDosFavoritosDoVisitante` — `@US-011-S04` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Favorites/ApiTests.MaisDe100Ids_Devolve400`
-- `tests/GazetaMarketplace.Web.Tests/Favorites/ApiTests.IdsNaoNumericos_Devolve400`
-- `tests/GazetaMarketplace.Web.Tests/Favorites/ApiTests.SoPublicados_NaOrdemPedida`
-- `tests/GazetaMarketplace.Web.Tests/Favorites/FavoritosHandoffTests.IdsDoLocalStorage_ViramRespostaDaApi_ETiramOsAusentes (produtor: `favorites.js`; consumidor: `listAdsByIds`)`
+**Tests added** (classes em inglês; métodos de cenário em português com o prefixo `USxxxSnn`):
+- `tests/GazetaMarketplace.Web.Tests/Favorites/FavoritesTests` — os ids aceitos (`FavoriteIds`), a API (sem login, envelope, ordem pedida, 100 passam e 101 dão 400, ids inválidos dão 400 sem consultar), o fragmento `/favoritos/lista`, a página (aviso permanente, `noindex`, mensagem sem JavaScript), o coração do card e o botão da página do anúncio, o contador do topo, a pré-visualização do painel sem coração
+- `tests/GazetaMarketplace.IntegrationTests/FavoritesQueryTests` — SQL Server real: só publicados (um em cada situação, mais o despublicado), ordem pedida, 100 ids com capa, API e fragmento
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Showcase/FavoritesE2ETests` — S01/S02, S03/S04/S05/S08, S06 e US-011-S04 (singular e plural), S07, outra aba, teclado, lixo no armazenamento, 320 px, sem JavaScript, axe
 
 **Dependencies**: 3.8, 4.3
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Favoritar, despublicar o anúncio e abrir "Meus favoritos".
+**Verification**: Done when every test under "Tests added" passes, plus manual check: Favoritar, despublicar o anúncio e abrir "Meus favoritos".
 
 **Estimate**: M
+
+**Decisões aprovadas (2026-10-05)**: D1 a página busca `/favoritos/lista?ids=…`, um fragmento de HTML desenhado pelo `AdCard` (um só desenho de card); a API JSON foi entregue e testada mas a página não a usa · D2 favoritos só no navegador (sem conta, servidor ou sincronização) · D3 lotes de 100 ids por chamada, sem limite de total · D4 sem JavaScript não há coração nem botão e "Meus favoritos" pede para ativar o JavaScript · D5 aviso no singular e no plural · D6 `noindex, follow` (o SEO é a 5.6) · D7 nomes em inglês (`FavoritesController`, `PublicAdsController`, `favorites.js`, `FavoritesTests`, `FavoritesE2ETests`). O nome acessível do coração é constante e o estado vai em `aria-pressed`.
 
 ### Task 5.6: SEO básico das páginas públicas
 

@@ -363,7 +363,7 @@ public sealed class FavoritesTests
         StringAssert.Contains(heart, "aria-pressed=\"false\"");
         StringAssert.Contains(heart, "data-ad-id=\"1\"");
         StringAssert.Contains(heart, "type=\"button\"");
-        StringAssert.Matches(heart, new Regex(@"\bhidden\b"), "sem JavaScript não há onde guardar: o coração só aparece quando o JavaScript o liga");
+        StringAssert.Matches(heart, new Regex(@"^<button [^>]*\shidden[\s>]"), "sem JavaScript não há onde guardar: o coração só aparece quando o JavaScript o liga");
         StringAssert.Contains(heart, "ad-card__favorito");
         StringAssert.Contains(heart, "<i class=\"fa fa-heart-o\" aria-hidden=\"true\"></i>");
     }
@@ -394,7 +394,7 @@ public sealed class FavoritesTests
         string button = Regex.Match(raw, @"<button [^>]*data-favorite-toggle[\s\S]*?</button>").Value;
         StringAssert.Contains(button, $"data-ad-id=\"{id}\"");
         StringAssert.Contains(button, "aria-pressed=\"false\"");
-        StringAssert.Matches(button, new Regex(@"\bhidden\b"));
+        StringAssert.Matches(button, new Regex(@"^<button [^>]*\shidden[\s>]"), "o botão só aparece quando o JavaScript o liga");
         StringAssert.Contains(Text(button), "Favoritar");
         StringAssert.Matches(button, new Regex(@"<span data-favorite-label>Favoritar</span>"));
         StringAssert.Contains(button, "alvo-toque");

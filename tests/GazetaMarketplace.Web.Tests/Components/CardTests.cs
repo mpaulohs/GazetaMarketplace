@@ -103,7 +103,8 @@ public sealed class CardTests
         StringAssert.Contains(html, "data-ad-value=\"salario\"");
         StringAssert.Contains(Visible(html), "Salário R$ 2.800");
         Assert.AreEqual("Pizzaiolo, Salário R$ 2.800, Campinas/SP", LinkName(html));
-        Assert.AreEqual(1, Regex.Matches(html, @"aria-hidden=""true""").Count, "o bloco neutro é decorativo");
+        string withoutHeart = Regex.Replace(html, @"<button[^>]*data-favorite-toggle[\s\S]*?</button>", string.Empty);
+        Assert.AreEqual(1, Regex.Matches(withoutHeart, @"aria-hidden=""true""").Count, "o bloco neutro é decorativo (o ícone do coração é outro assunto)");
     }
 
     [TestMethod]

@@ -191,6 +191,7 @@ public class SearchE2ETests : SitePage
         await Select(visitor, "UF").SelectOptionAsync("SP").ConfigureAwait(false);
         await visitor.GetByLabel("Preço máximo").FillAsync("8000").ConfigureAwait(false);
         await Apply(visitor).ClickAsync().ConfigureAwait(false);
+        await Expect(visitor).ToHaveURLAsync(new Regex(@"precoMax=8000")).ConfigureAwait(false); // espera a página nova antes de mexer na ordem: senão a escolha cai na página que está saindo
         await Select(visitor, "Ordenar").SelectOptionAsync("menor-preco").ConfigureAwait(false);
         await Expect(visitor).ToHaveURLAsync(new Regex(@"ordem=menor-preco")).ConfigureAwait(false);
         string[] expected = await CardPricesAsync(visitor).ConfigureAwait(false);
@@ -226,9 +227,12 @@ public class SearchE2ETests : SitePage
         await Expect(city.Locator("option:checked")).ToHaveTextAsync("Todas as cidades").ConfigureAwait(false);
         await Expect(city.Locator("option", new() { HasText = "Campinas" })).ToHaveCountAsync(0).ConfigureAwait(false);
 
-        // Sem UF: a cidade volta a ficar desabilitada
+        // Sem UF: a cidade volta a ficar desabilitada e vazia (a cidade escolhida antes não fica guardada num campo travado)
+        await city.SelectOptionAsync(new SelectOptionValue { Label = "Rio de Janeiro" }).ConfigureAwait(false);
         await Select(visitor, "UF").SelectOptionAsync(string.Empty).ConfigureAwait(false);
         await Expect(city).ToBeDisabledAsync().ConfigureAwait(false);
+        await Expect(city).ToHaveValueAsync(string.Empty).ConfigureAwait(false);
+        await Expect(city.Locator("option")).ToHaveCountAsync(1).ConfigureAwait(false);
     }
 
     [TestMethod]

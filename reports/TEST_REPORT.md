@@ -1218,3 +1218,60 @@ As três mutações de JavaScript rodaram no site publicado (apagando as cópias
 7. **Na primeira rodada um E2E falhou ao publicar os anúncios de apoio** (etapa "Anúncio enviado para revisão" da tela, antes de tocar na busca) e não repetiu nas rodadas seguintes; o roteiro de publicação já era usado por outros E2E.
 8. **O campo "Preço" da tela do anúncio guarda os dígitos como centavos** (`5000` vira R$ 50,00): os anúncios de apoio usam `300000`, `500000` e `800000` (R$ 3.000, 5.000 e 8.000). Não é defeito: é a máscara do campo.
 9. **Docker:** nenhuma queda nesta rodada.
+
+## Tarefa 5.5 — favoritos no navegador (US-005 e US-011-S04, 2026-10-05)
+
+> **Em resumo:** o visitante favorita anúncios pelo coração do card e pelo botão da página do anúncio; a lista fica **só no navegador** (`localStorage`, chave `gazeta:favoritos:v1`), o contador do topo acompanha, e `/favoritos` mostra os cards pedindo-os ao servidor por id (só os publicados, na ordem em que foram favoritados). O anúncio que saiu do ar (despublicado, arquivado) some da lista e do armazenamento, com aviso. Os 9 cenários (S01 a S08 da US-005 e S04 da US-011) estão provados; a API `GET /api/v1/ads?ids=` (até 100 ids) também. Das 13 mutações, **13 mortas** (uma delas só depois de reforçar um teste).
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.620 | 1.620 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 155 | 155 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 141 | 141 | 0 |
+
+**Testes novos:** 56 unitários (`FavoritesTests`), 4 de integração (`FavoritesQueryTests`), 10 E2E (`FavoritesE2ETests`). Dois testes antigos foram ajustados (ver achados 1 e 2); o E2E `US002S09` ganhou uma espera e o `US002S10` uma checagem a mais.
+
+| Cenário | Prova |
+|---|---|
+| S01 favoritar pela lista | `FavoritesTests` (o coração do card: nome "Favoritar anúncio {título}", `aria-pressed="false"`, escondido sem JavaScript, na página inicial, na categoria e na busca) e E2E: o coração fica `aria-pressed="true"`, o contador do topo vai de 0 a 1 a 2, o armazenamento guarda os ids na ordem; clicar de novo desfavorita |
+| S02 pela página do anúncio | `FavoritesTests` (botão com o texto "Favoritar" e `aria-pressed`) e E2E: o botão passa a "Favoritado", o contador sobe, e depois de recarregar o estado volta |
+| S03 continua depois de fechar o navegador | E2E: o estado de armazenamento do contexto é gravado e aberto num contexto novo; `/favoritos` mostra os dois, na ordem em que foram favoritados |
+| S04 remover | E2E: "Remover {título} dos favoritos" tira o card, o texto passa de "2 anúncios" a "1 anúncio" e o contador do topo acompanha; o armazenamento fica com o outro id |
+| S05 lista vazia | E2E: "Você ainda não favoritou nenhum anúncio" com o link "Ir para a página inicial" (leva a `/`); o total some |
+| S06 e US-011-S04 anúncio que saiu do ar | E2E com 4 favoritos: o Administrador arquiva um pelo painel; `/favoritos` mostra "1 anúncio favoritado deixou de estar disponível e foi removido da sua lista.", os 3 que ficaram e o contador 3; o id também sai do armazenamento; ao recarregar o aviso não repete; arquivando mais dois, o aviso vem no plural ("2 anúncios favoritados deixaram de estar disponíveis e foram removidos da sua lista.") |
+| S07 armazenamento bloqueado | E2E com `setItem` lançando erro: o alerta "Não foi possível salvar seus favoritos neste navegador" aparece, o coração continua vazio, o contador fica em 0; em `/favoritos` aparece o aviso de armazenamento bloqueado (e não a lista vazia) |
+| S08 outro aparelho | E2E: outro contexto (outro navegador) abre `/favoritos` vazio, contador 0, e o aviso permanente "Seus favoritos ficam salvos apenas neste navegador…" continua lá |
+| API `GET /api/v1/ads?ids=` | `FavoritesTests`: sem login, envelope `PagedResult`, na ordem pedida, repetidos contam uma vez, 100 ids passam e 101 dão 400, `ids` vazio, ausente, com letra, negativo, decimal, vírgula dupla ou fora do limite dão 400 **sem consultar o banco**; SQL Server: só publicados (rascunho, em revisão, rejeitado, arquivado e despublicado ficam de fora), ordem pedida, 100 ids com capa |
+| Outros | E2E: outra aba (favoritar numa atualiza a segunda e a lista sem recarregar), teclado (Enter e Espaço favoritam, o foco fica no coração), lixo no armazenamento (JSON quebrado, texto, decimal, negativo, nulo, objeto, número fora do limite, repetidos: só os ids válidos, sem repetir; o próximo favorito grava a lista limpa), 320 px (sem rolagem horizontal; coração e "Remover" com pelo menos 24 × 24 px), sem JavaScript (sem coração nem botão; "Meus favoritos" com o aviso e "Para ver seus favoritos, ative o JavaScript"), axe sem violações em 1280 e 320 px na busca com coração marcado, na página do anúncio, na lista e na lista vazia |
+
+**Mutações (13; 13 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| F1 a API devolve não publicados | morta (3, integração) |
+| F2 a API devolve fora da ordem pedida | morta (3) |
+| F3 a API aceita mais de 100 ids | morta (2) |
+| F4 ids repetidos não são deduplicados no servidor | morta (2) |
+| F5 o coração sai do servidor sem `hidden` (aparece sem JavaScript) | **sobreviveu na primeira rodada** (o teste procurava `\\bhidden\\b` e achava o `aria-hidden` do ícone); o teste passou a olhar só a abertura do `<button>`; **morta** depois |
+| F6 `/favoritos` sem `noindex` | morta |
+| F7 o coração não atualiza o `aria-pressed` | morta (3, E2E) |
+| F8 o contador do topo não atualiza | morta (6) |
+| F9 o armazenamento não é limpo nem deduplicado | morta (1: o teste do lixo) |
+| F10 o anúncio indisponível não sai do armazenamento | morta (2) |
+| F11 o aviso fica sempre no singular | morta (1: S06 no plural) |
+| F12 o armazenamento bloqueado falha em silêncio | morta (2, incluindo S07) |
+| F13 "Remover" não atualiza o contador (o evento de mudança some) | morta (5) |
+
+Mutações da 5.4 refeitas (ver achado 3): J1 (`lerNumero` com 3 casas) e J2 (painel não recolhe) **mortas de verdade**; **J3 (trocar a UF não limpa a cidade) sobreviveu**, porque o preenchimento da lista já limpava a cidade; o `US002S10` ganhou a conferência "sem UF, a cidade escolhida antes some e o campo fica vazio e travado" e a mutação passou a morrer.
+
+**Achados da rodada**
+
+1. **Regressão pega pela varredura de `innerHTML` (RC-17):** a primeira versão de `pages/favorites.js` montava o fragmento do servidor com `template.innerHTML`; o teste `NenhumModuloUsaInnerHtmlComTextoDoServidor` falhou. Passou a usar `DOMParser` (não executa scripts nem lê no documento da página).
+2. **Regressão pega no teste do card de Vagas:** o ícone do coração tem `aria-hidden="true"`, e o teste que contava um só `aria-hidden` (o bloco neutro de Vagas) passou a contar sem o botão do coração.
+3. **As mutações de JavaScript da 5.4 (J1 a J3) tinham sido feitas pelo método do runbook antigo, que estava errado:** apagar as cópias `.gz` e `.br` deixa o site responder `200` com corpo vazio para quem pede compressão; nenhum script carrega e qualquer teste de JavaScript falha, o que simula "morta" sem provar nada. Nesta rodada as 7 primeiras mutações de JavaScript "morreram" por 10 testes cada, sinal do problema. O runbook foi reescrito (mutar o arquivo e a lista de arquivos publicados, reiniciar o site) e J1 a J3 foram refeitas: J1 e J2 mortas, **J3 sobrevivia** e agora morre.
+4. **Limite de login:** 5 por 15 minutos, em memória; cada rodada de E2E que entra no painel gasta um. O site é reiniciado antes de cada mutação (isso também zera o limite).
+5. **Dois E2E falharam numa rodada completa e passaram nas repetições:** `US002S09` tinha uma corrida do próprio teste (escolher a ordem enquanto a página nova ainda carregava; corrigido esperando o endereço novo) e `US003S03` (a página voltou 4 px abaixo do ponto da rolagem) não repetiu em quatro rodadas. Fica no BACKLOG com a pista a seguir se voltar.
+6. **O Docker caiu uma vez** (o daemon parou, de novo, ao rodar a integração); reiniciado como no runbook.
+7. **"Favoritar" muda o texto do botão da página do anúncio, o coração do card mantém o nome:** o nome acessível do coração é constante ("Favoritar anúncio {título}") e quem diz o estado é o `aria-pressed`; conferir com leitor de tela é item do `/verify` (BACKLOG).
