@@ -1653,3 +1653,24 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261005161939_AddPublishedAtIndex'
+)
+BEGIN
+    CREATE INDEX [IX_Ads_Status_PublishedAt_Id] ON [Ads] ([Status], [PublishedAt] DESC, [Id] DESC);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261005161939_AddPublishedAtIndex'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261005161939_AddPublishedAtIndex', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

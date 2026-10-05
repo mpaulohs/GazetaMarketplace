@@ -76,6 +76,7 @@ public sealed class AdsSchemaTests
                 "IX_Ads_RejectedById|-|0|RejectedById",
                 "IX_Ads_Status_CategoryId_PublishedAt|-|0|Status,CategoryId,PublishedAt DESC",
                 "IX_Ads_Status_PriceCents|([PriceCents] IS NOT NULL)|0|Status,PriceCents",
+                "IX_Ads_Status_PublishedAt_Id|-|0|Status,PublishedAt DESC,Id DESC",
                 "IX_Ads_Status_Uf_City|-|0|Status,Uf,City",
                 "IX_Ads_VehicleBrandId_ModelYear|-|0|VehicleBrandId,ModelYear"
             },

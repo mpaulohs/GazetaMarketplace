@@ -159,6 +159,16 @@ public sealed class MigrationsTests
     }
 
     [TestMethod]
+    public void MigrationAddPublishedAtIndex_SoAcrescentaOIndiceDosMaisRecentes_NaOrdemQueAConsultaPede()
+    {
+        string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddPublishedAtIndex", StringComparison.Ordinal))).Replace("\r", string.Empty, StringComparison.Ordinal);
+
+        StringAssert.Contains(section, "CREATE INDEX [IX_Ads_Status_PublishedAt_Id] ON [Ads] ([Status], [PublishedAt] DESC, [Id] DESC);", "situação e depois data e id do mais novo ao mais antigo, como o ORDER BY da vitrine");
+        Assert.DoesNotContain("DROP", section, "só acrescenta: nada some");
+        Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(section, @"CREATE (UNIQUE )?INDEX").Count);
+    }
+
+    [TestMethod]
     public void MigrationDosAnuncios_CriaAdsEAdPhotos_ComColunasCalculadasChecksEIndicesDoArchitecture()
     {
         string section = MigrationSection(Migrations.Single(m => m.EndsWith("_AddAds", StringComparison.Ordinal))).Replace("\r", string.Empty, StringComparison.Ordinal);

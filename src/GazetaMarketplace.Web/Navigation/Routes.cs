@@ -3,6 +3,11 @@ namespace GazetaMarketplace.Web.Navigation;
 /// <summary>Caminhos do site público usados pelo layout. Cada tarefa que cria a tela confirma o caminho aqui.</summary>
 public static class PublicRoutes
 {
+    public const string Home = "/";
+
+    /// <summary>Endereço da página de uma categoria: <c>/categoria/{slug}</c> (o slug é único na árvore, então um segmento basta).</summary>
+    public static string Category(string slug) => "/categoria/" + slug;
+
     public const string Search = "/busca";
 
     public const string Favorites = "/favoritos";

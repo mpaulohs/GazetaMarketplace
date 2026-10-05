@@ -6,6 +6,7 @@ using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Location;
 using GazetaMarketplace.Core.Photos;
 using GazetaMarketplace.Core.Settings;
+using GazetaMarketplace.Core.Showcase;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Core.VehicleCatalog;
 using GazetaMarketplace.Infrastructure.Ads;
@@ -62,6 +63,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAdTakedown, Ads.AdTakedown>();
         services.AddScoped<IPanelAdListReadRepository, Ads.PanelAdListReadRepository>();
         services.AddScoped<IPanelAdList, PanelAdListService>();
+        services.AddScoped<IShowcaseReadRepository, Ads.ShowcaseReadRepository>();
+        services.AddScoped<IShowcase, ShowcaseService>();
         services.AddScoped<IAdSpecsReader, Ads.AdSpecsReader>();
         services.AddScoped<IPhotoReprocessing, Photos.PhotoReprocessing>();
         services.AddSingleton<Photos.OriginalsCleanupService>();

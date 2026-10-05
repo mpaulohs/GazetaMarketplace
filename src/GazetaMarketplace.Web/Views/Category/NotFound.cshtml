@@ -1,0 +1,17 @@
+@using GazetaMarketplace.Core.Showcase
+@using GazetaMarketplace.Web.Navigation
+@model ShowcaseCategoryPage
+@{
+    ViewData["Title"] = "Categoria não encontrada";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />
+}
+
+@* Endereço de uma categoria que não existe (ou foi excluída), US-001-S07: a mensagem e os caminhos de volta *@
+<section class="py-3" aria-labelledby="nao-encontrada">
+    <h1 class="fs-3" id="nao-encontrada" tabindex="-1" data-foco-inicial>Categoria não encontrada</h1>
+    <p><a class="alvo-toque d-inline-flex align-items-center" href="@PublicRoutes.Home">Ir para a página inicial</a></p>
+    <h2 class="fs-6 text-body-secondary mb-2">Categorias</h2>
+    <partial name="_CategoryGrid" model="Model.Roots" />
+</section>

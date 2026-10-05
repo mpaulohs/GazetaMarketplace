@@ -1634,36 +1634,38 @@
 
 **Objective**: Página inicial com categorias e os 12 anúncios mais recentes, e página de categoria com subcategorias e caminho de navegação.
 
+**Decisões do Product Owner (2026-10-05):** 24 anúncios por página na categoria (`_Pagination`, página limitada a `ShowcaseFilters.MaxPage`) · sem o link "Filtrar e ordenar" (entra na 5.4) · endereço `/categoria/{slug}` (categoria excluída = 404) · índice `IX_Ads_Status_PublishedAt_Id` por migration (`AddPublishedAtIndex`) porque o plano de execução dos recentes varria a tabela e ordenava · sem cache · ícone neutro nas categorias · nomes em inglês (`ShowcaseService`, `ShowcaseTests`, `ShowcaseE2ETests`, `CategoryController`).
+
 **Files to modify**:
-- `src/GazetaMarketplace.Web/Controllers/HomeController.cs, CategoriaController.cs`
+- `src/GazetaMarketplace.Web/Controllers/HomeController.cs, CategoryController.cs`
 - `src/GazetaMarketplace.Web/Views/Home/Index.cshtml`
 - `src/GazetaMarketplace.Web/Views/Category/Index.cshtml`
-- `src/GazetaMarketplace.Core/Vitrine/VitrineService.cs`
+- `src/GazetaMarketplace.Core/Showcase/ShowcaseService.cs`
 
 **Acceptance Criteria**:
-- [ ] `@US-001-S01` (@happy): Página inicial mostra categorias e anúncios recentes — o *Then* do SPEC é atendido
-- [ ] `@US-001-S02` (@happy): Entrar em uma categoria principal — o *Then* do SPEC é atendido
-- [ ] `@US-001-S03` (@happy): Entrar em uma subcategoria e voltar pelo caminho de navegação — o *Then* do SPEC é atendido
-- [ ] `@US-001-S04` (@edge): Categoria sem anúncios publicados — o *Then* do SPEC é atendido
-- [ ] `@US-001-S05` (@edge): Site ainda sem nenhum anúncio publicado — o *Then* do SPEC é atendido
-- [ ] `@US-001-S06` (@negative): Falha ao carregar a página inicial — o *Then* do SPEC é atendido
-- [ ] `@US-001-S07` (@negative): Endereço de categoria que não existe — o *Then* do SPEC é atendido
-- [ ] `@US-001-S08` (@edge): Página inicial em tela de celular estreita — o *Then* do SPEC é atendido
-- [ ] A página inicial mostra as categorias principais e os 12 anúncios publicados mais recentes; vazia mostra "Em breve teremos novos anúncios"
-- [ ] A categoria principal mostra suas subcategorias e os anúncios de todas as descendentes; o caminho de navegação cobre até 3 níveis
-- [ ] Categoria inexistente mostra "Categoria não encontrada"; falha mostra mensagem com código de referência; 320 px sem rolagem horizontal
+- [x] `@US-001-S01` (@happy): Página inicial mostra categorias e anúncios recentes — o *Then* do SPEC é atendido
+- [x] `@US-001-S02` (@happy): Entrar em uma categoria principal — o *Then* do SPEC é atendido
+- [x] `@US-001-S03` (@happy): Entrar em uma subcategoria e voltar pelo caminho de navegação — o *Then* do SPEC é atendido
+- [x] `@US-001-S04` (@edge): Categoria sem anúncios publicados — o *Then* do SPEC é atendido
+- [x] `@US-001-S05` (@edge): Site ainda sem nenhum anúncio publicado — o *Then* do SPEC é atendido
+- [x] `@US-001-S06` (@negative): Falha ao carregar a página inicial — o *Then* do SPEC é atendido
+- [x] `@US-001-S07` (@negative): Endereço de categoria que não existe — o *Then* do SPEC é atendido
+- [x] `@US-001-S08` (@edge): Página inicial em tela de celular estreita — o *Then* do SPEC é atendido
+- [x] A página inicial mostra as categorias principais e os 12 anúncios publicados mais recentes; vazia mostra "Em breve teremos novos anúncios"
+- [x] A categoria principal mostra suas subcategorias e os anúncios de todas as descendentes; o caminho de navegação cobre até 3 níveis
+- [x] Categoria inexistente mostra "Categoria não encontrada"; falha mostra mensagem com código de referência; 320 px sem rolagem horizontal
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/VitrineTests.US001S01_PaginaInicialMostraCategoriasEAnunciosRecentes` — `@US-001-S01`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/VitrineTests.US001S02_EntrarEmUmaCategoriaPrincipal` — `@US-001-S02`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/VitrineTests.US001S03_EntrarEmUmaSubcategoriaEVoltarPeloCaminhoDeNavegacao` — `@US-001-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/VitrineTestsE2E.US001S03_EntrarEmUmaSubcategoriaEVoltarPeloCaminhoDeNavegacao` — `@US-001-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/VitrineTests.US001S04_CategoriaSemAnunciosPublicados` — `@US-001-S04`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/VitrineTests.US001S05_SiteAindaSemNenhumAnuncioPublicado` — `@US-001-S05`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/VitrineTests.US001S06_FalhaAoCarregarAPaginaInicial` — `@US-001-S06`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/VitrineTests.US001S07_EnderecoDeCategoriaQueNaoExiste` — `@US-001-S07`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/VitrineTests.US001S08_PaginaInicialEmTelaDeCelularEstreita` — `@US-001-S08`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/VitrineTestsE2E.US001S08_PaginaInicialEmTelaDeCelularEstreita` — `@US-001-S08` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Showcase/ShowcaseTests.US001S01_PaginaInicialMostraCategoriasEAnunciosRecentes` — `@US-001-S01`
+- `tests/GazetaMarketplace.Web.Tests/Showcase/ShowcaseTests.US001S02_EntrarEmUmaCategoriaPrincipal` — `@US-001-S02`
+- `tests/GazetaMarketplace.Web.Tests/Showcase/ShowcaseTests.US001S03_EntrarEmUmaSubcategoriaEVoltarPeloCaminhoDeNavegacao` — `@US-001-S03`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Showcase/ShowcaseE2ETests.US001S03_EntrarEmUmaSubcategoriaEVoltarPeloCaminhoDeNavegacao` — `@US-001-S03` (E2E, `/test`)
+- `tests/GazetaMarketplace.Web.Tests/Showcase/ShowcaseTests.US001S04_CategoriaSemAnunciosPublicados` — `@US-001-S04`
+- `tests/GazetaMarketplace.Web.Tests/Showcase/ShowcaseTests.US001S05_SiteAindaSemNenhumAnuncioPublicado` — `@US-001-S05`
+- `tests/GazetaMarketplace.Web.Tests/Showcase/ShowcaseTests.US001S06_FalhaAoCarregarAPaginaInicial` — `@US-001-S06`
+- `tests/GazetaMarketplace.Web.Tests/Showcase/ShowcaseTests.US001S07_EnderecoDeCategoriaQueNaoExiste` — `@US-001-S07`
+- `tests/GazetaMarketplace.Web.Tests/Showcase/ShowcaseTests.US001S08_PaginaInicialEmTelaDeCelularEstreita` — `@US-001-S08`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Showcase/ShowcaseE2ETests.US001S08_PaginaInicialEmTelaDeCelularEstreita` — `@US-001-S08` (E2E, `/test`)
 
 **Dependencies**: 3.8, 2.1, 0.7
 

@@ -1,0 +1,71 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using GazetaMarketplace.Core.Ads;
+using GazetaMarketplace.Core.Categories;
+
+namespace GazetaMarketplace.Core.Showcase;
+
+/// <summary>Os números da vitrine pública (US-001) num lugar só.</summary>
+public static class ShowcaseFilters
+{
+    /// <summary>Anúncios mais recentes da página inicial: 12 preenchem linhas completas em telas de 2, 3 e 4 colunas (SPEC, US-001).</summary>
+    public const int RecentCount = 12;
+
+    /// <summary>Anúncios por página na categoria: 24 também fecham linhas completas em 2, 3 e 4 colunas (decisão do Product Owner, 2026-10-05).</summary>
+    public const int PageSize = 24;
+
+    /// <summary>
+    /// Maior número de página aceito no endereço (<c>?pagina=</c>). Passou disso vale este limite, e a categoria mostra a última página que existe; sem o limite,
+    /// um número enorme estouraria a conta do deslocamento na consulta (mesma regra da lista do painel).
+    /// </summary>
+    public const int MaxPage = 100_000;
+
+    /// <summary>Maior tamanho de slug que vale a pena procurar na árvore; o texto maior nunca é de uma categoria.</summary>
+    public const int SlugMaxLength = SlugGenerator.MaxLength;
+}
+
+/// <summary>Um anúncio publicado como a consulta o entrega: tudo o que o card precisa, com os atributos ainda em JSON (o serviço traduz).</summary>
+public sealed record ShowcaseRow(int Id, string Title, int? CategoryId, long? PriceCents, string Attributes, string City, string Uf, int? CoverPhotoId, int? CoverWidth, int? CoverHeight);
+
+public sealed record ShowcaseRows(IReadOnlyList<ShowcaseRow> Rows, int Total);
+
+/// <summary>Leitura dos anúncios <b>publicados</b> para a vitrine. Nunca devolve outra situação nem dado do autor.</summary>
+public interface IShowcaseReadRepository
+{
+    /// <summary>Os publicados mais recentes (data de publicação, do mais novo ao mais antigo), no máximo <paramref name="take"/>.</summary>
+    Task<IReadOnlyList<ShowcaseRow>> RecentAsync(int take, CancellationToken cancellationToken);
+
+    /// <summary>Os publicados de qualquer uma das categorias, do mais novo ao mais antigo, com o total para a paginação.</summary>
+    Task<ShowcaseRows> ByCategoryAsync(IReadOnlyList<int> categoryIds, int page, int pageSize, CancellationToken cancellationToken);
+}
+
+/// <summary>A página inicial: as categorias principais e os anúncios publicados mais recentes.</summary>
+public sealed record ShowcaseHome(IReadOnlyList<CategoryNode> Roots, IReadOnlyList<AdCardModel> Recent);
+
+/// <summary>
+/// A página de uma categoria. <see cref="Category"/> é nulo quando o endereço não é de nenhuma categoria (<see cref="Roots"/> vem preenchida mesmo assim, para a página oferecer
+/// o caminho de volta). <see cref="Path"/> vai da categoria principal até a própria (no máximo 3 níveis).
+/// </summary>
+public sealed record ShowcaseCategoryPage(
+    CategoryNode Category,
+    IReadOnlyList<CategoryNode> Path,
+    IReadOnlyList<CategoryNode> Children,
+    IReadOnlyList<CategoryNode> Roots,
+    IReadOnlyList<AdCardModel> Ads,
+    int Total,
+    int Page,
+    int PageSize)
+{
+    public bool Found => Category is not null;
+
+    public int TotalPages => Total == 0 ? 1 : (Total + PageSize - 1) / PageSize;
+}
+
+public interface IShowcase
+{
+    Task<ShowcaseHome> HomeAsync(CancellationToken cancellationToken);
+
+    Task<ShowcaseCategoryPage> CategoryAsync(string slug, int page, CancellationToken cancellationToken);
+}

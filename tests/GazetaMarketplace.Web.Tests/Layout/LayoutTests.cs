@@ -65,7 +65,7 @@ public sealed class LayoutTests
     [TestMethod]
     public async Task PaginaNaoCarregaRecursosExternos()
     {
-        using WebFactory factory = new();
+        using WebFactory factory = new(withDatabase: true);
         using HttpClient client = factory.CreateClient();
 
         foreach (string path in _pages)
@@ -89,7 +89,7 @@ public sealed class LayoutTests
     [TestMethod]
     public async Task NenhumScriptOuEventoInline()
     {
-        using WebFactory factory = new();
+        using WebFactory factory = new(withDatabase: true);
         using HttpClient client = factory.CreateClient();
 
         foreach (string path in _pages)
@@ -126,7 +126,7 @@ public sealed class LayoutTests
 
     private static async Task<string> DownloadAsync(string path)
     {
-        using WebFactory factory = new();
+        using WebFactory factory = new(withDatabase: true);
         using HttpClient client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(WebFactory.RoleHeader, "Administrador");
         HttpResponseMessage response = await client.GetAsync(path);

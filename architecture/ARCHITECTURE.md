@@ -196,6 +196,7 @@ Os diagramas estão em `architecture/diagrams/`:
 | Índice | Por quê |
 |---|---|
 | `IX_Ads_Status_CategoryId_PublishedAt` | Listas públicas por categoria, mais recentes primeiro |
+| `IX_Ads_Status_PublishedAt_Id` (`PublishedAt` e `Id` em ordem decrescente) | Os 12 anúncios mais recentes da página inicial, já na ordem pedida (sem varrer a tabela nem ordenar à parte; medido na 5.1) |
 | `IX_Ads_Status_Uf_City` | Filtro por UF e cidade |
 | `IX_Ads_Status_PriceCents` (filtrado `PriceCents IS NOT NULL`) | Ordenação e faixa de preço, sem Serviços (A6) |
 | `IX_Ads_VehicleBrandId_ModelYear`, `IX_Ads_Km`, `IX_Ads_AreaM2` | Filtros de veículo e de terreno |

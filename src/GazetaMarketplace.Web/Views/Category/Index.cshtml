@@ -1,0 +1,64 @@
+@using GazetaMarketplace.Core.Categories
+@using GazetaMarketplace.Core.Showcase
+@using GazetaMarketplace.Web.Models
+@using GazetaMarketplace.Web.Navigation
+@model ShowcaseCategoryPage
+@{
+    ViewData["Title"] = Model.Category.Name;
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />
+}
+
+<nav aria-label="Caminho de navegação" class="categoria-caminho" data-breadcrumb>
+    <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="@PublicRoutes.Home">Início</a></li>
+        @for (int i = 0; i < Model.Path.Count; i++)
+        {
+            CategoryNode step = Model.Path[i];
+            if (i == Model.Path.Count - 1)
+            {
+                <li class="breadcrumb-item active" aria-current="page">@step.Name</li>
+            }
+            else
+            {
+                <li class="breadcrumb-item"><a href="@PublicRoutes.Category(step.Slug)">@step.Name</a></li>
+            }
+        }
+    </ol>
+</nav>
+
+<h1 class="fs-3 mb-3">@Model.Category.Name</h1>
+
+@if (Model.Children.Count > 0)
+{
+    <nav aria-label="Subcategorias" class="mb-4" data-subcategories>
+        <h2 class="fs-6 text-body-secondary mb-2">Subcategorias</h2>
+        <ul class="list-unstyled d-flex flex-wrap gap-2 mb-0">
+            @foreach (CategoryNode child in Model.Children)
+            {
+                <li><a class="btn btn-outline-secondary btn-sm alvo-toque d-inline-flex align-items-center" href="@PublicRoutes.Category(child.Slug)">@child.Name</a></li>
+            }
+        </ul>
+    </nav>
+}
+
+@if (Model.Total == 0)
+{
+    @* Categoria sem anúncios publicados (US-001-S04): a mensagem e o caminho para as demais categorias principais *@
+    <section class="py-3" aria-labelledby="sem-anuncios">
+        <p class="fs-5" id="sem-anuncios" role="status" data-category-empty>Ainda não há anúncios nesta categoria</p>
+        <h2 class="fs-6 text-body-secondary mb-2">Outras categorias</h2>
+        <partial name="_CategoryGrid" model="Model.Roots" />
+    </section>
+}
+else
+{
+    <section aria-labelledby="anuncios-titulo">
+        <h2 class="fs-5 mb-3" id="anuncios-titulo">Anúncios em @Model.Category.Name</h2>
+        <partial name="_AdGrid" model="Model.Ads" />
+        <div class="mt-4">
+            <partial name="_Pagination" model="new PaginationViewModel(Model.Page, Model.TotalPages, PublicRoutes.Category(Model.Category.Slug), [])" />
+        </div>
+    </section>
+}

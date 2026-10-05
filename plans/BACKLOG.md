@@ -193,3 +193,11 @@ Cobertura do site: 97,7% de linhas e 90,9% de ramos (`reports/TEST_REPORT.md`, "
 - [ ] `PanelAdListQueryTests.ConsultaDoRedator_UsaOIndiceDeAutorSituacaoEData` falhou uma vez com a cobertura ligada (o plano não citou `IX_Ads_AuthorId_Status_UpdatedAt`) e passou nas outras 3 rodadas; se voltar a falhar fora da cobertura, trocar a conferência por `FORCESEEK`/dica de índice ou por um volume maior de linhas — found by cobertura, 2026-10-05, tests/GazetaMarketplace.IntegrationTests/PanelAdListQueryTests.cs
 - [ ] A união dos relatórios usa o maior número de ramos por linha (piso); se os ramos chegarem perto da meta, medir por condição — found by cobertura, 2026-10-05, docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md
 
+## Registros do Checkpoint 4 e decisões da 5.1 (2026-10-05)
+
+- [ ] Conferir em tarefa futura os três métodos de uma linha chamados pelo site e medidos a 0% (`PasswordResetResult.BadLink`, `FieldValueParser.Invalid`, `UserManagement.NotFound`): provavelmente artefato de medição; se o 0% se confirmar, escrever o teste — found by Product Owner, 2026-10-05, reports/TEST_REPORT.md
+- [ ] `PanelAdListQueryTests.ConsultaDoRedator_UsaOIndiceDeAutorSituacaoEData` falhou uma vez com a cobertura ligada e passou em duas rodadas isoladas sem cobertura: possível sensibilidade do plano de execução à carga; se voltar a falhar, investigar — found by Product Owner, 2026-10-05, tests/GazetaMarketplace.IntegrationTests/PanelAdListQueryTests.cs
+- [ ] Runbook do E2E: sempre configurar `PLAYWRIGHT_BROWSERS_PATH` apontando para a pasta `pw` (a que traz a versão de navegador que o Playwright do projeto espera) antes de rodar o E2E; sem isso os 90 testes falham por "Executable doesn't exist" — found by Product Owner, 2026-10-05, docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md
+- [ ] 5.4 adiciona o link "Filtrar e ordenar" na página de categoria, apontando para `/busca?categoria={slug}` (a 5.1 não o mostra: link morto é pior que link ausente) — found by Product Owner, 2026-10-05, specs/wireframes/screens/US-001-pagina-inicial.md
+- [ ] Sem cache da página inicial e da página de categoria na 5.1 (decisão do Product Owner); definir gatilho numérico (por exemplo, consulta dos recentes acima de 100 ms com 10.000 anúncios publicados) e medir no `/verify` — found by Product Owner, 2026-10-05, src/GazetaMarketplace.Infrastructure/Ads/ShowcaseReadRepository.cs
+

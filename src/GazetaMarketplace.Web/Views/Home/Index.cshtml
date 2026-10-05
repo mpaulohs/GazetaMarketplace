@@ -1,6 +1,25 @@
+@using GazetaMarketplace.Core.Showcase
+@model ShowcaseHome
 @{
     ViewData["Title"] = "Início";
 }
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />
+}
 
-<h1 class="fs-3">GazetaMarketplace</h1>
-<p>O site está em construção.</p>
+<section class="mb-4" aria-labelledby="categorias-titulo">
+    <h1 class="fs-4 mb-3" id="categorias-titulo">Categorias</h1>
+    <partial name="_CategoryGrid" model="Model.Roots" />
+</section>
+
+<section aria-labelledby="recentes-titulo">
+    <h2 class="fs-4 mb-3" id="recentes-titulo">Anúncios mais recentes</h2>
+    @if (Model.Recent.Count == 0)
+    {
+        <p class="text-body-secondary" role="status" data-recent-empty>Em breve teremos novos anúncios</p>
+    }
+    else
+    {
+        <partial name="_AdGrid" model="Model.Recent" />
+    }
+</section>

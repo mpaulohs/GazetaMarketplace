@@ -6,6 +6,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Ads;
+using GazetaMarketplace.Core.Showcase;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Data;
 using GazetaMarketplace.Infrastructure.Identity;
@@ -105,6 +106,11 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
                 services.RemoveAll<IPanelAdListReadRepository>();
                 services.AddSingleton<StubPanelAdListRepository>();
                 services.AddSingleton<IPanelAdListReadRepository>(sp => sp.GetRequiredService<StubPanelAdListRepository>());
+
+                // O mesmo para a vitrine pública (página inicial e categorias)
+                services.RemoveAll<IShowcaseReadRepository>();
+                services.AddSingleton<StubShowcaseRepository>();
+                services.AddSingleton<IShowcaseReadRepository>(sp => sp.GetRequiredService<StubShowcaseRepository>());
             }
 
             _services?.Invoke(services);

@@ -59,7 +59,7 @@ public sealed class FontsAndThemeTests
     [TestMethod]
     public async Task TodoWoff2DeTodoCssDaPagina_EhServidoLocalmente()
     {
-        using WebFactory factory = new();
+        using WebFactory factory = new(withDatabase: true);
         using HttpClient client = factory.CreateClient();
 
         foreach (string path in _pages)
@@ -83,7 +83,7 @@ public sealed class FontsAndThemeTests
     [TestMethod]
     public async Task PreloadDasFontes_ApontaParaOProprioSite_ComCrossorigin()
     {
-        using WebFactory factory = new();
+        using WebFactory factory = new(withDatabase: true);
         using HttpClient client = factory.CreateClient();
 
         foreach (string path in _pages)
@@ -104,7 +104,7 @@ public sealed class FontsAndThemeTests
     [TestMethod]
     public async Task Paginas_SoCarregamBootstrapFontAwesomeEOCssDoProjeto()
     {
-        using WebFactory factory = new();
+        using WebFactory factory = new(withDatabase: true);
         using HttpClient client = factory.CreateClient();
         string[] forbidden = ["autolist", "owl", "select2", "mcustomscrollbar", "ionicons", "materialdesign", "simple-line", "themify", "typicons", "linearicons", "weathericons", "glyphicon", "switcher", "jquery"];
 
@@ -125,7 +125,7 @@ public sealed class FontsAndThemeTests
     [TestMethod]
     public async Task IconesFontAwesome_SaoDecorativos_ComAriaHidden()
     {
-        using WebFactory factory = new();
+        using WebFactory factory = new(withDatabase: true);
         using HttpClient client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(WebFactory.RoleHeader, "Administrador");
 
@@ -146,7 +146,7 @@ public sealed class FontsAndThemeTests
     [TestMethod]
     public async Task OutrasFamiliasDeIcones_NaoExistemNoSite()
     {
-        using WebFactory factory = new();
+        using WebFactory factory = new(withDatabase: true);
         using HttpClient client = factory.CreateClient();
 
         foreach (string path in _pages)

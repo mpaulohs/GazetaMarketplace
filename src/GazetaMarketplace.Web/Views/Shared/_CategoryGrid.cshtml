@@ -1,0 +1,20 @@
+@using GazetaMarketplace.Core.Categories
+@using GazetaMarketplace.Web.Navigation
+@model IReadOnlyList<CategoryNode>
+
+@* As categorias principais como botões grandes (US-001-S01): ícone igual para todas, porque a árvore é editável e não há imagem por categoria na v1 *@
+<nav aria-label="Categorias principais" data-category-grid>
+    <ul class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 list-unstyled mb-0">
+        @foreach (CategoryNode category in Model)
+        {
+            <li class="col">
+                <a class="categoria-tile card h-100 text-decoration-none alvo-toque" href="@PublicRoutes.Category(category.Slug)" data-category-tile>
+                    <span class="card-body d-flex flex-column gap-2">
+                        <i class="fa fa-th-large categoria-tile__icone" aria-hidden="true"></i>
+                        <span class="categoria-tile__nome">@category.Name</span>
+                    </span>
+                </a>
+            </li>
+        }
+    </ul>
+</nav>

@@ -58,7 +58,7 @@
 - [x] Fase 4 fechada (2026-10-05): correções do `/review`, cobertura medida e `ArchivedById` feitos
 
 ## Fase 5 — Site público
-- [ ] Task 5.1: Página inicial e páginas de categoria
+- [x] Task 5.1: Página inicial e páginas de categoria
 - [ ] Task 5.2: Detalhe do anúncio e galeria de fotos
 - [ ] Task 5.3: Contato por telefone e WhatsApp
 - [ ] Task 5.4: Busca e filtros

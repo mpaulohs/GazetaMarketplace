@@ -1,0 +1,34 @@
+/* Página inicial e páginas de categoria (US-001). Só Bootstrap + tokens --app-*; BEM só no que o Bootstrap não cobre. */
+
+/* O botão da categoria é um card inteiro clicável; o ícone é igual para todas porque a árvore é editável */
+.categoria-tile {
+  color: inherit;
+}
+
+.categoria-tile:hover,
+.categoria-tile:focus-visible {
+  border-color: var(--bs-primary);
+  background: var(--bs-tertiary-bg);
+}
+
+.categoria-tile:focus-visible {
+  outline: 3px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+.categoria-tile__icone {
+  color: var(--bs-primary);
+  font-size: 1.5rem;
+}
+
+.categoria-tile__nome {
+  font-weight: 600;
+  /* Nomes longos ("Automóveis, Peças e Acessórios") quebram em 320 px em vez de estourar o botão */
+  overflow-wrap: anywhere;
+}
+
+/* O caminho de navegação separa os passos com ">" como na SPEC ("Início > Motos") */
+.categoria-caminho .breadcrumb {
+  --bs-breadcrumb-divider: ">";
+  flex-wrap: wrap;
+}

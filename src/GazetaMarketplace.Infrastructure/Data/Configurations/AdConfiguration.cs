@@ -67,6 +67,8 @@ internal sealed class AdConfiguration : IEntityTypeConfiguration<Ad>
         builder.HasOne<AppUser>().WithMany().HasForeignKey(a => a.ArchivedById).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(a => new { a.Status, a.CategoryId, a.PublishedAt }).IsDescending(false, false, true).HasDatabaseName("IX_Ads_Status_CategoryId_PublishedAt");
+        // Os "mais recentes" da página inicial: sem este índice o SQL Server varre a tabela inteira e ordena (medido na integração, 5.1); com ele lê só as 12 primeiras entradas
+        builder.HasIndex(a => new { a.Status, a.PublishedAt, a.Id }).IsDescending(false, true, true).HasDatabaseName("IX_Ads_Status_PublishedAt_Id");
         builder.HasIndex(a => new { a.Status, a.Uf, a.City }).HasDatabaseName("IX_Ads_Status_Uf_City");
         builder.HasIndex(a => new { a.Status, a.PriceCents }).HasFilter("[PriceCents] IS NOT NULL").HasDatabaseName("IX_Ads_Status_PriceCents");
         builder.HasIndex(a => new { a.VehicleBrandId, a.ModelYear }).HasDatabaseName("IX_Ads_VehicleBrandId_ModelYear");

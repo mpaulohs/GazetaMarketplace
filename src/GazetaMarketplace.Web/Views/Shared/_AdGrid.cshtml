@@ -1,0 +1,12 @@
+@using GazetaMarketplace.Core.Ads
+@model IReadOnlyList<AdCardModel>
+
+@* A grade de cards: 2, 3 e 4 colunas (12 e 24 anúncios fecham linhas completas nas três). Só a primeira linha carrega a imagem já; o resto, ao chegar perto da tela *@
+<ul class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 list-unstyled mb-0" data-ad-grid>
+    @for (int i = 0; i < Model.Count; i++)
+    {
+        <li class="col">
+            @await Component.InvokeAsync("AdCard", new { ad = Model[i], eagerImage = i < 4 })
+        </li>
+    }
+</ul>
