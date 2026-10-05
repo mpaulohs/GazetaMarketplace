@@ -1616,6 +1616,8 @@
 - [x] Decisão simultânea: o segundo recebe a mensagem "por outro administrador" e nada é gravado duas vezes (302 + mensagem, não 409; decidido em 2026-10-05: o navegador usa POST/redirect/GET e a SPEC pede a mensagem, não o código HTTP; o 409 continua valendo para edição concorrente com `RowVersion`) (`Checkpoint4LifecycleTests.DoisAdministradores_…`, 2 contas × 4 pedidos × 3 rodadas, e `Checkpoint4E2ETests.DoisAdministradores_…`)
 - [x] Ações registradas em `AuditEntries`: uma linha por ação, com o ator e as situações, na ordem do ciclo; pedidos negados não gravam (`Checkpoint4LifecycleTests.CicloDeVidaCompleto_…`)
 
+> **Fechamento (2026-10-05):** Fase 4 fechada pelo Product Owner. Depois do checkpoint foram corrigidos os avisos 🟡 1, 5 e 6 do `/review`, escrito o teste determinístico das repetições (🟡 2), instalada a cobertura (🟡 4: 97,7% de linhas, 90,9% de ramos) e acrescentado `ArchivedById` (migration `AddArchivedBy`). Unitários 1.312, integração 121, E2E 90, ferramentas 43 e 27.
+
 ---
 
 ## Fase 5 — Site público

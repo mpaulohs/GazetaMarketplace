@@ -181,3 +181,15 @@
 - [x] Reconferência das pendências na publicação: **mantida**. "Alterado em" da lista do painel = `UpdatedAt`: **confirmado**. Cor global `#b02a37` de `btn-outline-danger`: **mantida**.
 - [x] Foto de anúncio retirado ficar em cache público por até 1 ano em quem já a baixou: **risco aceito** pelo Product Owner (a solução com `?v=` continua registrada acima, para o caso de o risco mudar).
 - [ ] Aviso ao autor quando o Administrador despublica um anúncio dele (hoje o autor só vê o anúncio de volta em Rascunho): fora do escopo da v1; a decisão de aviso (e-mail ou aviso na lista) fica para depois do Checkpoint 5 — found by Product Owner, 2026-10-05, src/GazetaMarketplace.Infrastructure/Ads/AdTakedown.cs
+
+## Cobertura de código: arquivos de menor cobertura de linhas (medido em 2026-10-05; metas atendidas, nada corrigido)
+
+Cobertura do site: 97,7% de linhas e 90,9% de ramos (`reports/TEST_REPORT.md`, "Cobertura (Gate 6)"). Os 15 arquivos com menos linhas cobertas, para pagar aos poucos:
+
+- [ ] `Infrastructure/Data/AppDbContextFactory.cs` 0% (0/9): fábrica de tempo de projeto do `dotnet ef`; só vale teste se passar a ser usada fora do `dotnet ef` — found by cobertura, 2026-10-05
+- [ ] `Infrastructure/Identity/AppRole.cs` 50% (3/6) · `Core/Fields/FieldDefinition.cs` 66,7% (4/6, o construtor estático de `FieldLimits`) · `Core/Team/IPasswordRecovery.cs` 75% (3/4, `PasswordResetResult.BadLink`) — found by cobertura, 2026-10-05
+- [ ] `Infrastructure/Ads/AdSubmission.cs` 80% (8/10) · `Infrastructure/Recovery/PasswordRecoveryQueue.cs` 83,3% (10/12) · `Web/Controllers/HomeController.cs` 83,3% (15/18) · `Infrastructure/Photos/FileSystemPhotoStorage.cs` 84,7% (111/131) · `Web/Middleware/BodyLimitMiddleware.cs` 85% (17/20) · `Infrastructure/Ads/AdTakedown.cs` 85,7% (12/14) · `Infrastructure/Photos/MagickImageProcessor.cs` 86,3% (63/73; ramos 23/40) · `Core/Ads/AdSubmissionRules.cs` 88,1% (52/59) · `Core/Photos/PhotoFormat.cs` 88,9% (8/9) · `Infrastructure/Ads/AdReview.cs` 88,9% (16/18) · `Web/Security/LoginFailureCounter.cs` 89,5% (51/57) — found by cobertura, 2026-10-05
+- [ ] Conferir os três métodos de uma linha chamados por código de produção e medidos a 0% (`PasswordResetResult.BadLink`, `FieldValueParser.Invalid`, `UserManagement.NotFound`): confirmar se é artefato da medição ou falta de teste — found by cobertura, 2026-10-05, reports/TEST_REPORT.md
+- [ ] `PanelAdListQueryTests.ConsultaDoRedator_UsaOIndiceDeAutorSituacaoEData` falhou uma vez com a cobertura ligada (o plano não citou `IX_Ads_AuthorId_Status_UpdatedAt`) e passou nas outras 3 rodadas; se voltar a falhar fora da cobertura, trocar a conferência por `FORCESEEK`/dica de índice ou por um volume maior de linhas — found by cobertura, 2026-10-05, tests/GazetaMarketplace.IntegrationTests/PanelAdListQueryTests.cs
+- [ ] A união dos relatórios usa o maior número de ramos por linha (piso); se os ramos chegarem perto da meta, medir por condição — found by cobertura, 2026-10-05, docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md
+

@@ -901,3 +901,79 @@ Os arquivos foram restaurados depois de cada mutação (`git diff` limpo); a com
 1. **Cobertura numérica:** não há pacote de cobertura instalado; medir pede `Microsoft.Testing.Extensions.CodeCoverage` (dependência nova, pelo processo de decisão de tecnologia). Fica como 🟡 4.
 2. **Docker:** o `dockerd` e o contêiner do E2E pararam de novo no meio da rodada e foram religados (já na documentação).
 3. **Auxiliar E2E copiado:** o Checkpoint 4 acrescentou uma versão com a página como parâmetro (5 cópias no total); a extração está no BACKLOG.
+
+---
+
+## Correções pós-Checkpoint 4 e cobertura de código (2026-10-05)
+
+> **Em resumo:** as decisões do Product Owner depois do Checkpoint 4 foram executadas: três avisos do `/review` corrigidos com teste, o teste determinístico das repetições por conflito de versão escrito, o pacote de cobertura instalado e `ArchivedById` gravado (migration `AddArchivedBy`). **A cobertura passa das duas metas do Gate 6: 97,7% de linhas (meta 80%) e 90,9% de ramos (meta 75%).**
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.312 | 1.312 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 121 | 121 | 0 |
+| E2E (Playwright: Production + Development, banco com a migration nova) | 90 | 90 | 0 |
+
+**O que mudou**
+
+| Item | Correção | Teste que prova |
+|---|---|---|
+| 🟡 1 `?pagina=2147483647` dava 503 | `PanelAdListFilters.MaxPage` (100.000) com `Math.Clamp` no serviço; `SqlBuilder.Page` conta em 64 bits e recusa o estouro | `PanelAdListTests.Paginacao_PaginaGigante_…` (a lista mostra a última página, sem 503), `SqlBuilderTests.Paginar_ContaQueEstouraOInt_…`, `PanelAdListQueryTests.Paginacao_PaginaNoLimiteDoPainel_NoSqlServer_…` |
+| 🟡 5 rótulo usado como chave na pré-visualização | `AdSpec` ganhou `Key` e `Items`; `FieldKeys.JobAreas` e `FieldKeys.ServiceType` valem para os grupos e para a tela | `ReviewQueueTests.PreVisualizar_RotuloDoCampoMudou_…` (um leitor que renomeia todos os rótulos; o bloco "Vaga de emprego" e o tipo do serviço continuam no lugar), `AdSpecsTests.CadaLinha_GuardaAChaveDoCampo_…` |
+| 🟡 6 `catch (NotFoundException)` vazio | `AdSpecsReader` registra `LogWarning` com o id do anúncio e o tipo do catálogo | `AdSpecsReaderTests` (a linha de registro, e nenhum aviso com o catálogo completo) |
+| 🟡 2 repetições por conflito de `RowVersion` sem teste | só teste: `IAdService` roteirizado lança `ConflictException` na ordem combinada | `DecisionRetryTests` (11 casos: 1 conflito repete; 2 conflitos repassam ou dizem a situação; "por outro administrador"; edição no meio vira pendências; o contexto é limpo entre as tentativas) |
+| `ArchivedById` | migration `AddArchivedBy` (coluna nula, FK sem cascata, índice `IX_Ads_ArchivedById`); `Ad.ApplyTransition` grava quem arquivou | `AdEntityTests` (4 situações de partida), `AdServiceTests`, `TakedownTests`, `Checkpoint4LifecycleTests` (mesmo ator da auditoria), `AdsSchemaTests`, `MigrationsTests.MigrationAddArchivedBy_…`, `ScriptTests` (12 migrations) |
+
+Anúncios arquivados antes da migration ficam com `ArchivedById` nulo; o ator deles está na auditoria `ad.archive`.
+
+**Mutações (13, todas mortas; arquivos restaurados depois de cada uma)**
+
+| Mutação | Testes que caíram |
+|---|---|
+| M1 sem o limite de página | 1 (`Paginacao_PaginaGigante_…`) |
+| M2 `SqlBuilder` sem a guarda de estouro | 1 |
+| M3 áreas da vaga procuradas pelo rótulo | 1 (`RotuloDoCampoMudou_…`) |
+| M4 tipo do serviço procurado pelo rótulo | 1 (mesmo teste) |
+| M5 log removido de `AdSpecsReader` | 1 |
+| M5b log em nível errado (Debug) | 1 |
+| M6 `AdReview` sem repetição | 5 |
+| M7 `AdTakedown` sem repetição | 3 |
+| M8 `AdReview` sem `ChangeTracker.Clear` | 1 |
+| M9 `AdTakedown` sem `ChangeTracker.Clear` | 1 |
+| M10 `ArchivedById` não gravado | 5 |
+| M11 `ArchivedById` com o ator errado (quem publicou) | 5 |
+| M12 `AdTakedown`: perde a corrida e repassa o erro em vez de dizer a situação | 1 |
+
+### Cobertura (Gate 6)
+
+**Como foi medido:** pacote `Microsoft.Testing.Extensions.CodeCoverage` 18.11.2 (aprovado em 2026-10-05), escopo em `coverage.settings.xml` (só os projetos do site; ficam de fora migrações do EF Core, `Program.cs`, Razor compilado, código gerado e o que tem `[ExcludeFromCodeCoverage]`, `[GeneratedCode]`, `[CompilerGenerated]`, `[Obsolete]`). Cada projeto de teste gera um relatório Cobertura; a cobertura do site é a **união** dos dois (linha coberta por qualquer um). O ramo de uma linha vale o maior número de ramos cobertos entre os dois, então o número de ramos é um piso. Comando em `docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md`. Os E2E não entram na conta (rodam contra o site publicado, fora do processo medido). Modo greenfield: o gate é o número do repositório inteiro.
+
+| Medida | Unitários | Integração | **União (o gate)** | Meta | Resultado |
+|---|---|---|---|---|---|
+| Linhas | 97,1% (4.853 de 4.998) | 79,4% (3.970 de 4.998) | **97,7% (4.882 de 4.998)** | ≥ 80% | atendida |
+| Ramos | 89,9% (1.282 de 1.426) | 51,9% (740 de 1.426) | **90,9% (1.296 de 1.426)** | ≥ 75% | atendida |
+
+| Projeto | Linhas | Ramos |
+|---|---|---|
+| `GazetaMarketplace.Core` | 99,0% (2.376 de 2.400) | 95,3% (683 de 717) |
+| `GazetaMarketplace.Infrastructure` | 96,7% (1.780 de 1.840) | 87,2% (333 de 382) |
+| `GazetaMarketplace.Web` | 95,8% (726 de 758) | 85,6% (280 de 327) |
+
+Só os unitários já passam das duas metas, então o gate não depende do Docker. Os 15 arquivos de menor cobertura de linhas estão no BACKLOG (nenhum foi corrigido, como combinado).
+
+**Métodos a 0% (12 de 661):** nenhum é regra de negócio sem teste *que ainda não é chamada*; os que o código de produção já chama estão marcados para conferência.
+
+| Método | Motivo |
+|---|---|
+| `AppDbContextFactory.CreateDbContext`, `SystemUser` (3 propriedades) | fábrica de tempo de projeto, só `dotnet ef` chama |
+| `AppRole..ctor(string)` | exigido pela API do Identity, nunca chamado pelo site |
+| `RecoveryTokenProvider.CanGenerateTwoFactorTokenAsync` | exigido pelo contrato do Identity (devolve `false`; o site não usa duplo fator) |
+| `FieldLimits..cctor`, `AdFormFactory..cctor` | construtores estáticos (membro estrutural) |
+| `AdFieldViewModel.HelpId` | propriedade de uma linha |
+| `PasswordResetResult.BadLink`, `FieldValueParser.Invalid`, `UserManagement.NotFound` | **chamados por código de produção** (`PasswordRecoveryService`, `FieldValueParser`, `UserManagement`) e testados por esses caminhos; o 0% pode ser artefato da medição de método de uma linha. Conferir: se a conferência confirmar 0%, vira teste (regra "já está em uso") |
+
+**Achado da rodada:** com a cobertura ligada, o teste de integração `PanelAdListQueryTests.ConsultaDoRedator_UsaOIndiceDeAutorSituacaoEData` falhou uma vez (o plano de execução não citou o índice); sem cobertura, a suíte inteira passou (121 de 121) e o teste também passou em duas rodadas isoladas. Registrado no BACKLOG como possível sensibilidade do plano à carga (tabela pequena, estatísticas); não é regressão do código.
+
+**Ambiente:** o `dockerd` parou de novo e o contêiner do E2E foi religado; a primeira rodada do E2E falhou 90 de 90 por o Playwright procurar o navegador em `/opt/pw-browsers` (versão 1243 está em outra pasta); com `PLAYWRIGHT_BROWSERS_PATH` correto, 90 de 90 passaram.

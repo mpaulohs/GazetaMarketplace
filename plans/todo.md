@@ -55,6 +55,7 @@
 - [x] Task 4.4: Lista de anúncios do painel
 
 ## Checkpoint 4 — Revisão completa
+- [x] Fase 4 fechada (2026-10-05): correções do `/review`, cobertura medida e `ArchivedById` feitos
 
 ## Fase 5 — Site público
 - [ ] Task 5.1: Página inicial e páginas de categoria
