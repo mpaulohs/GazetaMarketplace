@@ -1090,3 +1090,52 @@ Só os unitários já passam das duas metas, então o gate não depende do Docke
 4. **Teste unitário desatualizado:** a expressão do link de ampliar não conhecia o `draggable="false"` adicionado no item 3; corrigida e a suíte rodou de novo inteira.
 5. **Tensão entre S06 e "mesma mensagem para tudo":** a S06 pede o link da categoria no anúncio arquivado, e a regra de negócio pede que os casos indisponíveis sejam indistinguíveis. Implementado: corpo idêntico para rascunho, em revisão, rejeitado e inexistente; o arquivado só acrescenta o link da categoria (404, nunca 410). Registrado no BACKLOG para o Product Owner decidir se prefere tirar o link.
 6. **Docker:** o `dockerd` caiu de novo com reinício do worker durante a rodada e foi religado; sem efeito nos resultados finais.
+
+## Tarefa 5.3 — contato por telefone e WhatsApp (US-004, 2026-10-05)
+
+> **Em resumo:** a página do anúncio mostra o bloco "Fale com a Gazeta" a qualquer visitante, sem login: o telefone do site escrito e dois links comuns, "Ligar" (`tel:+55…`) e "Chamar no WhatsApp" (`https://wa.me/55…?text=…`, em nova aba com `noopener`). A mensagem traz o título e o endereço da página, codificados como URL, e o título chega exatamente como foi escrito. Os 5 cenários da US-004 estão provados (S01 a S05). Sem telefone configurado o bloco não aparece. O site não registra cliques: são links diretos, sem JavaScript e sem chamada ao servidor.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.416 | 1.416 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 131 | 131 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 113 | 113 | 0 |
+
+**Testes novos:** 38 unitários (13 de `ContactTests`, 25 casos de `WhatsAppLinkTests`), 1 de integração, 8 E2E (`ContactE2ETests`).
+
+| Cenário | Prova |
+|---|---|
+| S01 WhatsApp | `US004S01_…`: `https://wa.me/5511912345678?text=` e a mensagem lida como o WhatsApp lê (`Olá! Tenho interesse no anúncio “Honda Civic 2018”: https://localhost/anuncio/{id}/honda-civic-2018`); E2E: o número do `wa.me` é o escrito na tela e a mensagem é lida pelo próprio navegador (`URL.searchParams`) |
+| S02 Ligar | `US004S02_…` e E2E: `tel:+55{número}`; sem `target` |
+| S03 sem login | `US004S03_…` (visitante anônimo vê "Fale com a Gazeta", o número `(11) 91234-5678` e os dois botões; fixo de 10 dígitos sai `(11) 3456-7890`) e E2E em contexto sem cookie |
+| S04 título com símbolos | `US004S04_…` e E2E: `Sítio "Boa Vista" & Cia` chega idêntico; o `&` vai como `%26` e a query tem um único parâmetro |
+| S05 nova aba | `US004S05_…` (`target="_blank"`, `rel` com `noopener`, nome acessível avisa a nova aba) e E2E: o clique abre uma aba nova no `wa.me` (página do WhatsApp simulada), `window.opener` é nulo e a aba do anúncio continua com o mesmo endereço |
+| Sem rastreio | `Contato_NaoRegistraCliques_…` (só 2 links, ambos direto a `tel:` e `wa.me`; sem `onclick`, `ping` nem marcador de métrica) e E2E: **zero** pedidos ao servidor do site durante o clique |
+| Layout e acessibilidade | E2E: em 320 px o contato vem depois da descrição, botões de altura de pelo menos 44 px, um sobre o outro, sem rolagem horizontal; em 1280 px fica à direita; sem JavaScript funciona; foco por teclado com contorno; axe sem violações nos dois tamanhos |
+| Integração | `Contato_TelefoneVemDoBanco_…`: sem telefone no SQL Server o bloco não aparece; com `site.phone` gravado aparece com a mensagem certa |
+
+**Link do WhatsApp (`WhatsAppLinkTests`):** acentos, aspas, `&`, `#`, `%`, `?`, `+`, `=`, `<`, `>`, aspas simples, tabulação, quebra de linha e emoji (UTF-8) chegam iguais; título vazio vira "neste anúncio" (sem aspas vazias); título de 500 caracteres vira 120, sem reticências e com o endereço total abaixo de 700 caracteres; 119 e 120 passam sem corte; o corte no meio de um emoji deixa o par inteiro de fora (sem caractere partido); o corte não deixa espaço antes das aspas.
+
+**Mutações (8; 8 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| C1 mensagem sem o título | morta (20) |
+| C2 mensagem sem o endereço | morta (18) |
+| C3 título sem codificação | morta (13) |
+| C4 `tel:` sem o `+55` | morta (5) |
+| C5 nova aba sem `noopener` | morta (S05) |
+| C6 telefone sem formatação | morta (4) |
+| C7 bloco visível sem telefone configurado | morta |
+| C8 botão do WhatsApp só com ícone | morta (3) |
+
+**Achados da rodada**
+
+1. **O Razor escreve o `+` do `tel:` como `&#x2B;`** (HTML válido; o navegador lê `tel:+55…`). Os testes de página decodificam o atributo; o E2E lê o `href` já decodificado pelo navegador e confirmou `tel:+55{número}`.
+2. **A pré-visualização da fila e a página pública usam o mesmo bloco** (`_Contact`), com o endereço público do anúncio na mensagem; os testes antigos da pré-visualização passaram a conferir o `wa.me/…?text=`.
+3. **Aspas na mensagem:** a decisão escreveu `"{título}"`; implementei aspas tipográficas (“título”) para distinguir das aspas retas de um título como `Sítio "Boa Vista" & Cia` (registrado no BACKLOG, é uma linha para trocar).
+4. **Telefone fixo:** a US-015 aceita fixo de 10 dígitos, mas o `wa.me` só abre conversa de WhatsApp (registrado no BACKLOG para decisão).
+5. **Docker:** o `dockerd` caiu de novo no meio da rodada (todos os testes de integração falharam em 0 ms) e foi religado; sem efeito nos resultados finais.
+6. **O E2E de contato não depende de um número fixo:** lê o telefone escrito na tela e confere os links contra ele (o `SettingsE2ETests` troca o número do banco de teste).

@@ -1732,31 +1732,32 @@
 **Objective**: Bloco de contato do intermediário com "Ligar" e "Chamar no WhatsApp" e a mensagem pré-preenchida.
 
 **Files to modify**:
-- `src/GazetaMarketplace.Web/Views/Shared/_Contato.cshtml`
-- `src/GazetaMarketplace.Core/Contato/WhatsAppLink.cs`
+- `src/GazetaMarketplace.Web/Views/Shared/_Contact.cshtml` (usado na página pública e na pré-visualização da fila de revisão)
+- `src/GazetaMarketplace.Core/Contact/WhatsAppLink.cs` e `PhoneLink.cs`
+- `src/GazetaMarketplace.Web/Models/ContactViewModel.cs` · `Navigation/PublicUrl.cs` (endereço público compartilhado com o `canonical`)
 
 **Acceptance Criteria**:
-- [ ] `@US-004-S01` (@happy): Chamar no WhatsApp a partir de um anúncio — o *Then* do SPEC é atendido
-- [ ] `@US-004-S02` (@happy): Ligar a partir de um anúncio — o *Then* do SPEC é atendido
-- [ ] `@US-004-S03` (@happy): O contato é visível sem login — o *Then* do SPEC é atendido
-- [ ] `@US-004-S04` (@edge): Título com acentos e símbolos na mensagem do WhatsApp — o *Then* do SPEC é atendido
-- [ ] `@US-004-S05` (@edge): WhatsApp em computador sem o aplicativo instalado — o *Then* do SPEC é atendido
-- [ ] O contato aparece sem login com o telefone do site; título com acentos, aspas e símbolos vai codificado na mensagem
-- [ ] "Ligar" usa `tel:`; "Chamar no WhatsApp" usa `https://wa.me/` e abre em nova aba com `rel="noopener"`; em computador sem o aplicativo, o WhatsApp Web; nenhuma chamada do servidor
+- [x] `@US-004-S01` (@happy): Chamar no WhatsApp a partir de um anúncio — o *Then* do SPEC é atendido
+- [x] `@US-004-S02` (@happy): Ligar a partir de um anúncio — o *Then* do SPEC é atendido
+- [x] `@US-004-S03` (@happy): O contato é visível sem login — o *Then* do SPEC é atendido
+- [x] `@US-004-S04` (@edge): Título com acentos e símbolos na mensagem do WhatsApp — o *Then* do SPEC é atendido
+- [x] `@US-004-S05` (@edge): WhatsApp em computador sem o aplicativo instalado — o *Then* do SPEC é atendido
+- [x] O contato aparece sem login com o telefone do site; título com acentos, aspas e símbolos vai codificado na mensagem
+- [x] "Ligar" usa `tel:`; "Chamar no WhatsApp" usa `https://wa.me/` e abre em nova aba com `rel="noopener"`; em computador sem o aplicativo, o WhatsApp Web; nenhuma chamada do servidor
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/ContatoTests.US004S01_ChamarNoWhatsAppAPartirDeUmAnuncio` — `@US-004-S01`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/ContatoTests.US004S02_LigarAPartirDeUmAnuncio` — `@US-004-S02`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/ContatoTests.US004S03_OContatoEVisivelSemLogin` — `@US-004-S03`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/ContatoTests.US004S04_TituloComAcentosESimbolosNaMensagemDoWhatsApp` — `@US-004-S04`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/ContatoTests.US004S05_WhatsAppEmComputadorSemOAplicativoInstalado` — `@US-004-S05`
-- `tests/GazetaMarketplace.Web.Tests/Contato/WhatsAppLinkTests.TituloComAcentosEAspas_VaiCodificado`
+**Tests added** (classes em inglês; métodos de cenário em português com o prefixo `USxxxSnn`):
+- `tests/GazetaMarketplace.Web.Tests/Contact/ContactTests` — `US004S01` a `US004S05` (+ fixo de 10 dígitos, botões com rótulo de texto, sem telefone o bloco não aparece, sem rastreio de clique, posição do bloco, telefone novo vale na hora, Vaga, endereço do `Site:BaseUrl`)
+- `tests/GazetaMarketplace.Web.Tests/Contact/WhatsAppLinkTests` — acentos, aspas, `&`, `#`, `%`, `?`, `+`, emoji, quebra de linha, título vazio, título de 500 caracteres (corte em 120, sem reticências, sem partir par substituto), `tel:`
+- `tests/GazetaMarketplace.IntegrationTests/AdDetailQueryTests.Contato_TelefoneVemDoBanco_…` (SQL Server real)
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Showcase/ContactE2ETests` — `US004S01_S03`, `S04`, `S05` (nova aba, `noopener`, aba do anúncio continua, nenhuma chamada ao site), 320 px, desktop, sem JavaScript, teclado, axe
 
 **Dependencies**: 5.2, 2.7
 
 **Verification**: Done when every test under "Tests to add" passes, plus manual check: Abrir os links num celular e num computador.
 
 **Estimate**: S
+
+**Decisões aprovadas (2026-10-05)**: D1 mensagem "Olá! Tenho interesse no anúncio “{título}”: {endereço}", com o endereço de `Site:BaseUrl` · D2 título cortado em 120 caracteres, sem reticências · D3 o mesmo número para ligar e para o WhatsApp · D4 "Favoritar" fica para a 5.5; o contato fica na coluna lateral (depois da descrição no celular).
 
 ### Task 5.4: Busca e filtros
 
