@@ -17,7 +17,6 @@
 | Conferir que o site roda em um só processo | Os caches (árvore de categorias, catálogo, configurações) são por processo e demoram até 10 minutos para refletir mudanças |
 | Verificação manual de CEP e municípios com a rede real | O ambiente de desenvolvimento bloqueia `viacep.com.br` e o IBGE |
 | `?v=` na URL da foto antes de qualquer reprocessamento real | O cache `immutable` de 1 ano esconderia a foto nova (só vale se `IPhotoReprocessing` for usado) |
-| Autocomplete de Marca e Tipo de produto (`/api/v1/brands/suggest` e `/api/v1/product-types/suggest`, tarefa 3.3b) | Os campos funcionam como texto livre, mas o contrato está no `openapi.yaml` e ainda não existe; decidir se entra antes do lançamento |
 
 ## 2. Vai para as Fases 4 e 5 (ou para uma tarefa técnica já prevista)
 
@@ -32,6 +31,7 @@
 | Lista de Tipo de peça por categoria quando o grupo Peças for exibido | 5.x |
 | Diálogos de "Desativar" e "Redefinir senha" nas telas de usuários | melhoria progressiva futura |
 | Diálogo Bootstrap na confirmação do envio (hoje é página própria) | opcional, sem mudança no servidor |
+| **Primeira manutenção pós-lançamento:** autocomplete de Marca e Tipo de produto (3.3b) | Depende de anúncios publicados; antes do lançamento a lista viria vazia (decisão do Product Owner, 2026-10-05) |
 | Alinhar `architecture/design-system.md` §5.2 ("Serviço:") ao wireframe ("Tipo:") | próxima revisão do design-system |
 | Renomear classes CSS e hooks `data-*` para inglês; texto neutro de gênero ("conta ativa") | refactor de front-end |
 | Dívida de formatação: BOM em 14 arquivos antigos, `Test1.cs` do template, `MSTestSettings.cs` | commit só de formatação |
@@ -46,7 +46,6 @@
 
 | Item | Pergunta |
 |---|---|
-| Teto do preço: SPEC S28 diz R$ 9.999.999.999, ADR-004 diz R$ 99.999.999,99 | Confirmar o menor e alinhar o texto (o código já usa o menor) |
 | Limites assumidos: Quartos/Banheiros/Vagas 0–20, km até 9.999.999, horas de uso, medidas, Temporada, Condomínio/IPTU, área, motivo de rejeição de 500 caracteres | Confirmar ou ajustar |
 | SPEC v1.3 pendente: Redator vê o próprio anúncio Em revisão/Publicado/Arquivado em leitura; mensagem "Mova antes os anúncios desta categoria"; Motos na US-013-S08 | Emendar a SPEC |
 | Texto "Este anúncio não pode ser editado" para Publicado e Arquivado | Confirmar o texto |
@@ -59,6 +58,13 @@
 | Amostras reais (HEIC de iPhone, JPEG com GPS) | Para a verificação do item 1 |
 | Chave do Google Maps no histórico da branch antiga | Decidido: não reescrever o histórico (manter registrado) |
 
-## Itens que parecem já atendidos mas seguem sem `[x]` (conferir e marcar)
+## Conferência dos itens que pareciam atendidos (2026-10-05)
 
-Teto de preço aplicado na 3.3 · remoção de `Test1.cs` e renomeação das migrations · troca de `ICategoryUsage` pela implementação real (3.1) · ligação da cadeia do catálogo ao formulário (3.3) · pendências do envio (3.7, citadas como "da 3.7" nos itens da 3.3).
+| Item | Resultado |
+|---|---|
+| Teto de preço (SPEC S28 × ADR-004) | **Feito** `[x]`: validação e `CHECK` do banco em R$ 99.999.999,99; os textos dizem o mesmo (reais na SPEC e no ADR, centavos na ARCHITECTURE) |
+| Cadeia do catálogo ligada ao formulário (`CatalogItem`) | **Feito** `[x]`; a parte dos filtros da busca segue aberta (5.4) |
+| `ICategoryUsage` real no lugar do provisório | **Feito** `[x]`: `AdsCategoryUsage` registrada, `PendingAdsCategoryUsage` removida |
+| Pendências citadas como "da 3.7" nos itens da 3.3 | **Feito** `[x]` na 3.7 |
+| Remoção de `Test1.cs` | **Não feito**: o arquivo existe; segue aberto |
+| Renomeação das migrations | Feita (o item é só um aviso para quem tem banco antigo); segue aberto como aviso |
