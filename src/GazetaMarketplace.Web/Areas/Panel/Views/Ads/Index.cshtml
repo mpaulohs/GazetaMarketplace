@@ -1,15 +1,116 @@
-@using GazetaMarketplace.Core.Team
+@using GazetaMarketplace.Core.Ads
+@using GazetaMarketplace.Core.Formatting
+@model PanelAdListViewModel
 @{
-    // PROVISÓRIO: trocado pela lista de anúncios do painel na tarefa 4.4
-    string title = User.IsInRole(RoleNames.Administrator) ? "Anúncios" : "Meus anúncios";
-    ViewData["Title"] = title;
+    ViewData["Title"] = Model.Heading;
+    ViewData["ActiveTab"] = "all";
+    PanelAdListPage list = Model.Page;
+    bool nothingYet = list.Total == 0 && !list.HasFilters;
+    string[] situations = [string.Empty, .. AdStatus.All.Select(PanelAdListFilters.StatusSlug)];
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/ads-index.css" asp-append-version="true" />
 }
 
-@if (TempData[AdsController.MessageKey] is string message)
+@if (Model.IsAdministrator && Model.QueueCount is { } queueCount)
 {
-    <div class="alert alert-success" role="status" data-ads-message>@message</div>
+    <partial name="_Tabs" model="queueCount" view-data="ViewData" />
 }
 
-<h1 class="fs-3">@title</h1>
-<p><a class="btn btn-primary alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="New">Novo anúncio</a></p>
-<p class="text-body-secondary">Esta página é provisória: a lista de anúncios chega junto com as próximas telas do painel.</p>
+@if (Model.Message is not null)
+{
+    <div class="alert alert-success" role="status" data-ads-message>@Model.Message</div>
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="fs-3 mb-0">@Model.Heading</h1>
+    @if (!nothingYet)
+    {
+        <a class="btn btn-primary alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="New">Novo anúncio</a>
+    }
+</div>
+
+@if (nothingYet)
+{
+    @* Estado vazio: nenhum anúncio ainda (o Redator ainda não criou nenhum; no site ainda não há anúncios) *@
+    <div class="text-center py-5" data-ads-empty>
+        <p class="fs-5" role="status">@(Model.IsAdministrator ? "Nenhum anúncio cadastrado ainda" : "Você ainda não criou anúncios")</p>
+        <a class="btn btn-primary alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="New">Novo anúncio</a>
+    </div>
+}
+else
+{
+    <form method="get" asp-area="Panel" asp-controller="Ads" asp-action="Index" class="row g-2 align-items-end mb-3" role="search" data-ads-filters>
+        <div class="col-12 col-md-5">
+            <label class="form-label" for="busca">Buscar por título</label>
+            <input class="form-control" type="search" id="busca" name="q" value="@list.Search" maxlength="@PanelAdListFilters.SearchMaxLength" autocomplete="off" />
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="situacao">Situação</label>
+            <select class="form-select" id="situacao" name="situacao">
+                @foreach (string slug in situations)
+                {
+                    <option value="@slug" selected="@(slug == Model.SituationSlug)">@(slug.Length == 0 ? "Todas (exceto arquivados)" : AdStatus.Label(PanelAdListFilters.ParseStatus(slug)!.Value))</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-3 d-flex flex-wrap gap-2">
+            <button class="btn btn-primary alvo-toque" type="submit">Filtrar</button>
+            @if (list.HasFilters)
+            {
+                <a class="btn btn-outline-secondary alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="Index">Limpar filtros</a>
+            }
+        </div>
+    </form>
+
+    @if (list.Total == 0)
+    {
+        <div class="text-center py-5" data-ads-no-results>
+            <p class="fs-5" role="status">Nenhum anúncio encontrado</p>
+            <a class="btn btn-outline-secondary alvo-toque" asp-area="Panel" asp-controller="Ads" asp-action="Index">Limpar filtros</a>
+        </div>
+    }
+    else
+    {
+        <p role="status" data-ads-total>@(list.Total == 1 ? "1 anúncio" : list.Total + " anúncios")</p>
+        <div class="ads-lista">
+            <table class="table table-hover align-middle bg-body ads-lista__tabela">
+                <caption class="visually-hidden">@Model.Heading</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Título</th>
+                        @if (Model.IsAdministrator)
+                        {
+                            <th scope="col">Autor</th>
+                        }
+                        <th scope="col">Categoria</th>
+                        <th scope="col">Situação</th>
+                        <th scope="col">Alterado em</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (PanelAdListRowViewModel row in Model.Rows)
+                    {
+                        <tr data-ad-id="@row.Item.Id">
+                            <th scope="row" class="fw-normal" data-label="Título">
+                                <a class="alvo-toque d-inline-flex align-items-center text-break" href="@row.Href">@row.Item.Title</a>
+                                @if (row.Item.RejectionReason is not null)
+                                {
+                                    <p class="mb-0 small text-break" data-ad-rejection>Motivo da rejeição: @row.Item.RejectionReason</p>
+                                }
+                            </th>
+                            @if (Model.IsAdministrator)
+                            {
+                                <td data-label="Autor">@row.Item.AuthorName</td>
+                            }
+                            <td data-label="Categoria">@row.Item.CategoryName</td>
+                            <td data-label="Situação">@AdStatus.Label(row.Item.Status)</td>
+                            <td data-label="Alterado em"><time datetime="@row.Item.ChangedAt.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture)" title="@CurrencyAndDateFormatter.FormatDateTime(row.Item.ChangedAt)">@CurrencyAndDateFormatter.FormatDate(row.Item.ChangedAt)</time></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Pagination" model="new PaginationViewModel(list.Page, list.TotalPages, PanelRoutes.Ads, Model.Query)" />
+    }
+}

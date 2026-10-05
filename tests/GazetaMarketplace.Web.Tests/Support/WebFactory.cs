@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using GazetaMarketplace.Core.Ads;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Data;
 using GazetaMarketplace.Infrastructure.Identity;
@@ -99,6 +100,11 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
                 services.AddDbContext<AppDbContext>(options => options.UseSqlite(_connection));
                 services.RemoveAll<TimeProvider>();
                 services.AddSingleton<TimeProvider>(Clock);
+
+                // A lista do painel lê com Dapper em T-SQL (só SQL Server); no SQLite dos testes entra o repositório de mentira (a consulta real é provada na integração)
+                services.RemoveAll<IPanelAdListReadRepository>();
+                services.AddSingleton<StubPanelAdListRepository>();
+                services.AddSingleton<IPanelAdListReadRepository>(sp => sp.GetRequiredService<StubPanelAdListRepository>());
             }
 
             _services?.Invoke(services);

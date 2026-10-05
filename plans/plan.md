@@ -1565,7 +1565,7 @@
 
 **User stories**: US-012
 
-**Scenarios covered**: `@US-012-S01`, `@US-012-S02`, `@US-012-S03`, `@US-012-S04`, `@US-012-S05`, `@US-012-S06`, `@US-012-S07`, `@US-012-S08`
+**Scenarios covered**: `@US-012-S01`, `@US-012-S02`, `@US-012-S03`, `@US-012-S04`, `@US-012-S05`, `@US-012-S06`, `@US-012-S07`, `@US-012-S08`; fecha o filtro "Arquivado" e a lista padrão sem arquivados de `@US-011-S02` e `@US-011-S05`
 
 **NFRs covered**: `NFR-13`, `NFR-04`
 
@@ -1573,60 +1573,38 @@
 
 **Objective**: Lista de trabalho com busca por título, filtro por situação e 20 por página, lida por um *read repository* em Dapper.
 
-**Files to modify**:
-- Trocar a página **provisória** `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/Index.cshtml` (criada na 1.1) pela lista real de "Meus anúncios"; o Redator cai nela depois de entrar (`PanelRoutes.Ads`)
-- `src/GazetaMarketplace.Core/Ads/IPanelAdListReadRepository.cs`
-- src/GazetaMarketplace.Infrastructure/Ads/PainelListaReadRepository.cs (Dapper: junção de anúncios, categorias e autor; filtros e ordenação dinâmicos)
-- `src/GazetaMarketplace.Core/Ads/IPanelAdListReadRepository.cs`
-- src/GazetaMarketplace.Infrastructure/Ads/PainelListaReadRepository.cs (Dapper: junção de anúncios, categorias e autor; filtros e ordenação dinâmicos)
-- src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs (Index)
-- `src/GazetaMarketplace.Web/Areas/Panel/Views/Ads/Index.cshtml`
-- `src/GazetaMarketplace.Core/Ads/PanelAdListService.cs`
+**Decisões aprovadas (2026-10-05)**: D1 Dapper, como o plano e a ADR-004 mandam; os testes HTTP usam um repositório de mentira (páginas prontas), os filtros são provados na integração (SQL Server real) e o serviço com repositório espião, sem duplicar a regra de filtro · D2 o nome da categoria vem da árvore em memória, como na fila de revisão (sem junção) · D3 ordem fixa por "alterado em" decrescente e depois id decrescente; nenhum parâmetro do endereço escolhe a ordem · D4 Rascunho e Rejeitado abrem a edição; Em revisão abre a pré-visualização (Administrador) ou a leitura (Redator); Publicado abre a edição (Administrador) ou a leitura (Redator); Arquivado, a leitura · D5 filtros por formulário GET com "Filtrar" e "Limpar filtros", sem auto-envio; o estado "Carregando" (esqueleto) não se aplica a página renderizada no servidor · D6 textos novos: "Nenhum anúncio cadastrado ainda", "N anúncios", motivo da rejeição inteiro e sem corte · D7 plano de execução conferido; só haveria migration de índice se a integração mostrasse varredura inútil · D8 o teste instável `CliqueDuploEmParalelo` da 3.7 foi removido (a integração no SQL Server cobre a corrida de verdade).
+
+**Files created or modified**:
+- `src/GazetaMarketplace.Core/Ads/IPanelAdList.cs` (`IPanelAdListReadRepository`, `PanelAdListQuery`, `PanelAdListRow`, `PanelAdListRows`, `PanelAdListItem`, `PanelAdListPage`, `IPanelAdList`) · `PanelAdListFilters.cs` (situações no endereço, 20 por página, termo até 100 caracteres) · `PanelAdListService.cs` (autoria da sessão, arquivados escondidos, termo normalizado, página dentro do intervalo, nome da categoria pela árvore)
+- `src/GazetaMarketplace.Infrastructure/Ads/PanelAdListReadRepository.cs` (Dapper com `SqlBuilder`: parâmetros nomeados, ordem fixa, `CHARINDEX` sobre `TitleSearch` no lugar de `LIKE` (sem curinga, sem escape), `commandTimeout` de 10 s) · `Data/SqlFragments.cs` (filtros de situação num lugar só) · `ServiceCollectionExtensions.cs`
+- `src/GazetaMarketplace.Web/Areas/Panel/Controllers/AdsController.cs` (`Index` com `q`, `situacao` e `pagina`; erro 503 com "Tentar novamente") · `Models/PanelAdListViewModels.cs` · `Models/PaginationViewModel.cs`
+- `Views/Ads/Index.cshtml` (a página provisória da 1.1 virou a lista real), `LoadError.cshtml` · `Views/Shared/_Pagination.cshtml` (`nav` "Paginação", `aria-current`, links que preservam busca e situação) · `Areas/Panel/Views/Shared/_Tabs.cshtml` (a aba da fila ganhou o par "Todos os anúncios" ativo) · `wwwroot/css/pages/ads-index.css` (tabela em cartões em 320 px) · `wwwroot/css/components/bootstrap-tema.css` (contraste do `btn-outline-secondary`)
 
 **Acceptance Criteria**:
-- [ ] `@US-012-S01` (@happy): Redator vê apenas os próprios anúncios — o *Then* do SPEC é atendido
-- [ ] `@US-012-S02` (@happy): Administrador vê todos os anúncios com o autor — o *Then* do SPEC é atendido
-- [ ] `@US-012-S03` (@happy): Filtrar por situação — o *Then* do SPEC é atendido
-- [ ] `@US-012-S04` (@happy): Buscar um anúncio pelo título no painel — o *Then* do SPEC é atendido
-- [ ] `@US-012-S05` (@happy): Abrir um anúncio da lista — o *Then* do SPEC é atendido
-- [ ] `@US-012-S06` (@edge): Redator ainda sem anúncios — o *Then* do SPEC é atendido
-- [ ] `@US-012-S07` (@edge): Lista com mais de 20 anúncios — o *Then* do SPEC é atendido
-- [ ] `@US-012-S08` (@negative): Falha ao carregar a lista — o *Then* do SPEC é atendido
-- [ ] O Redator vê só os próprios anúncios; o Administrador vê todos com o autor; arquivados ficam escondidos até filtrar por "Arquivado"
-- [ ] Busca por título sem acento e sem diferença de maiúsculas; 20 por página, com total em `role="status"`
-- [ ] Lista vazia, sem resultado e erro com "Tentar novamente"; a lista não mostra preço (decisão do Product Owner)
-- [ ] A leitura é um *read repository* em Dapper com parâmetros nomeados e ordenação só por colunas permitidas; o Redator só recebe linhas dele (filtro de autoria dentro da própria consulta)
-- [ ] No `/build` as telas usam o repositório falso; a consulta é provada com SQL Server real no `/test`
-- [ ] A leitura é um *read repository* em Dapper com parâmetros nomeados e ordenação só por colunas permitidas; o Redator só recebe linhas dele (filtro de autoria dentro da própria consulta)
-- [ ] No `/build` as telas usam o repositório falso; a consulta é provada com SQL Server real no `/test`
-- [ ] **RC-15:** a consulta Dapper da lista do painel usa `commandTimeout` de 10 s
+- [x] `@US-012-S01` (@happy): Redator vê apenas os próprios anúncios — o *Then* do SPEC é atendido
+- [x] `@US-012-S02` (@happy): Administrador vê todos os anúncios com o autor — o *Then* do SPEC é atendido
+- [x] `@US-012-S03` (@happy): Filtrar por situação — o *Then* do SPEC é atendido
+- [x] `@US-012-S04` (@happy): Buscar um anúncio pelo título no painel — o *Then* do SPEC é atendido
+- [x] `@US-012-S05` (@happy): Abrir um anúncio da lista — o *Then* do SPEC é atendido
+- [x] `@US-012-S06` (@edge): Redator ainda sem anúncios — o *Then* do SPEC é atendido
+- [x] `@US-012-S07` (@edge): Lista com mais de 20 anúncios — o *Then* do SPEC é atendido
+- [x] `@US-012-S08` (@negative): Falha ao carregar a lista — o *Then* do SPEC é atendido
+- [x] O Redator vê só os próprios anúncios; o Administrador vê todos com o autor; arquivados escondidos até filtrar por "Arquivado"
+- [x] Busca por título sem acento e sem diferença de maiúsculas; 20 por página, com total em `role="status"`
+- [x] Lista vazia, sem resultado e erro com "Tentar novamente"; a lista não mostra preço
+- [x] Leitura em Dapper com parâmetros nomeados e sem ordenação vinda do endereço; a autoria do Redator vem da sessão e entra na própria consulta
+- [x] **RC-15:** a consulta Dapper da lista usa `commandTimeout` de 10 s (provado: bloqueio da tabela devolve 503 em cerca de 10 s)
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S01_RedatorVeApenasOsPropriosAnuncios` — `@US-012-S01`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S02_AdministradorVeTodosOsAnunciosComOAutor` — `@US-012-S02`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S03_FiltrarPorSituacao` — `@US-012-S03`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S04_BuscarUmAnuncioPeloTituloNoPainel` — `@US-012-S04`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S05_AbrirUmAnuncioDaLista` — `@US-012-S05`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S06_RedatorAindaSemAnuncios` — `@US-012-S06`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S07_ListaComMaisDe20Anuncios` — `@US-012-S07`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListTests.US012S08_FalhaAoCarregarALista` — `@US-012-S08`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S01_RedatorVeApenasOsPropriosAnuncios` — `@US-012-S01` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S02_AdministradorVeTodosOsAnunciosComOAutor` — `@US-012-S02` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S03_FiltrarPorSituacao` — `@US-012-S03` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S04_BuscarUmAnuncioPeloTituloNoPainel` — `@US-012-S04` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.US012S07_ListaComMaisDe20Anuncios` — `@US-012-S07` (consulta com SQL Server real, TestContainers, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Panel/ListTests.ArquivadosEscondidos_AteFiltrar`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.Redator_RecebeSoOsProprios_NaConsulta (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.ArquivadosEscondidos_AteFiltrarPorArquivado (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.Redator_RecebeSoOsProprios_NaConsulta (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.OrdenacaoForaDaLista_EIgnorada (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.ArquivadosEscondidos_AteFiltrarPorArquivado (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests/Panel/PanelAdListQueryTests.ConsultaQueEstouraOTempo_Devolve503SemPilha (TestContainers, roda no /test)`
+**Tests added** (nomes reais):
+- `Web.Tests/Panel/PanelAdListTests` — 15 testes (HTTP, repositório de mentira que guarda a consulta): `US012S01`, `US012S02`, `US012S03`, `US012S04`, `US012S05`, `US012S06`, `US012S07`, `US012S08`, sem resultado, abas só do Administrador, página fora do intervalo ou inválida, motivo inteiro e HTML codificado, parâmetros de autor e ordenação ignorados, data no fuso de São Paulo, sem login
+- `IntegrationTests/PanelAdListQueryTests` — 9 testes no SQL Server real: autoria (S01 e S02), situação e arquivados (S03), busca com acento, maiúsculas e `%`, `_`, `[` como texto (S04), 45 anúncios em 20/20/5 (S07), desempate pelo id, plano com o índice de autor (4.000 anúncios), a página inteira do Redator e do Administrador, 45 anúncios pela tela, tempo limite com 503
+- `Web.Tests.Playwright/Ads/PanelAdListE2ETests` — 5 testes: busca, situação e abrir cada linha, arquivados escondidos e "Limpar filtros", paginação com o banco do E2E, sem JavaScript, axe e rolagem em 1280, 768 e 320 px
+- Removido: `SubmitForReviewTests.CliqueDuploEmParalelo…` (instável; coberto por `SubmitForReviewConcurrencyTests` no SQL Server)
 
 **Dependencies**: 3.3, 1.1
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Conferir as listas dos dois papéis com mais de 20 anúncios.
+**Verification**: Done when every test under "Tests added" passes (unitários 1287, integração 117, E2E 88) e as mutações são mortas.
 
 **Estimate**: M
 

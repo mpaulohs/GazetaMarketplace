@@ -46,6 +46,7 @@ public class ReviewQueueE2ETests : SitePage
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
         await Page.GetByLabel("Título").FillAsync(title).ConfigureAwait(false);
         await Page.GetByLabel("Categoria").SelectOptionAsync(new SelectOptionValue { Label = "Livros e revistas" }).ConfigureAwait(false);
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false); // a troca de categoria busca os campos do grupo; o que se digita antes de a resposta chegar se perderia
         await Page.GetByLabel("Descrição").FillAsync("Edição 2020, sem anotações").ConfigureAwait(false);
         await Page.GetByLabel("Condição").SelectOptionAsync(new SelectOptionValue { Index = 1 }).ConfigureAwait(false);
         await Page.GetByLabel("Preço").FillAsync("5000").ConfigureAwait(false);

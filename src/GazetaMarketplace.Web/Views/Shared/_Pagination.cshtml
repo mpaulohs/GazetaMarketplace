@@ -1,0 +1,70 @@
+@using Microsoft.AspNetCore.WebUtilities
+@model PaginationViewModel
+@functions {
+    private string Href(int page)
+    {
+        Dictionary<string, string> query = Model.Query.ToDictionary(p => p.Key, p => p.Value);
+        if (page > 1)
+        {
+            query["pagina"] = page.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        return QueryHelpers.AddQueryString(Model.BasePath, query);
+    }
+
+    // Primeira, última e a vizinhança da atual; o resto vira reticências
+    private IEnumerable<int?> Pages()
+    {
+        int? previous = null;
+        foreach (int number in Enumerable.Range(1, Model.TotalPages).Where(n => n == 1 || n == Model.TotalPages || Math.Abs(n - Model.Page) <= 1))
+        {
+            if (previous is { } last && number - last > 1)
+            {
+                yield return null;
+            }
+
+            yield return number;
+            previous = number;
+        }
+    }
+}
+
+@* Paginação sem JavaScript: cada página é um link comum que preserva a busca e o filtro *@
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Paginação" data-pagination>
+        <ul class="pagination flex-wrap">
+            @if (Model.Page > 1)
+            {
+                <li class="page-item"><a class="page-link alvo-toque d-inline-flex align-items-center" href="@Href(Model.Page - 1)" rel="prev">Anterior</a></li>
+            }
+            else
+            {
+                <li class="page-item disabled"><span class="page-link alvo-toque d-inline-flex align-items-center" aria-disabled="true">Anterior</span></li>
+            }
+            @foreach (int? number in Pages())
+            {
+                if (number is null)
+                {
+                    <li class="page-item disabled" aria-hidden="true"><span class="page-link">…</span></li>
+                }
+                else if (number == Model.Page)
+                {
+                    <li class="page-item active"><a class="page-link alvo-toque d-inline-flex align-items-center" href="@Href(number.Value)" aria-current="page" aria-label="Página @number, página atual">@number</a></li>
+                }
+                else
+                {
+                    <li class="page-item"><a class="page-link alvo-toque d-inline-flex align-items-center" href="@Href(number.Value)" aria-label="Página @number">@number</a></li>
+                }
+            }
+            @if (Model.Page < Model.TotalPages)
+            {
+                <li class="page-item"><a class="page-link alvo-toque d-inline-flex align-items-center" href="@Href(Model.Page + 1)" rel="next">Próxima</a></li>
+            }
+            else
+            {
+                <li class="page-item disabled"><span class="page-link alvo-toque d-inline-flex align-items-center" aria-disabled="true">Próxima</span></li>
+            }
+        </ul>
+    </nav>
+}

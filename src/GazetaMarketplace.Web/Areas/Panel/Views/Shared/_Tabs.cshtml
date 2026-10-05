@@ -1,0 +1,18 @@
+@using GazetaMarketplace.Web.Navigation
+@model int
+@{
+    // A aba da fila é a ativa por padrão; a lista de anúncios passa ViewData["ActiveTab"] = "all"
+    bool all = ViewData["ActiveTab"] as string == "all";
+}
+
+@* As duas abas de "Anúncios" do Administrador: a fila de revisão (com o total) e a lista completa *@
+<nav aria-label="Anúncios">
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link alvo-toque @(all ? "" : "active")" href="@PanelRoutes.ReviewQueue" aria-current="@(all ? null : "page")">Fila de revisão (@Model)</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link alvo-toque @(all ? "active" : "")" href="@PanelRoutes.Ads" aria-current="@(all ? "page" : null)">Todos os anúncios</a>
+        </li>
+    </ul>
+</nav>

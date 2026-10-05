@@ -11,6 +11,16 @@
   --bs-btn-active-border-color: #b02a37;
 }
 
+/* O cinza padrão do Bootstrap (#6c757d) dá 4,29:1 sobre o fundo cinza da página ("Limpar filtros", "Cancelar" fora de um cartão); este dá mais de 4,5:1 */
+.btn-outline-secondary {
+  --bs-btn-color: #4a5568;
+  --bs-btn-border-color: #4a5568;
+  --bs-btn-hover-bg: #4a5568;
+  --bs-btn-hover-border-color: #4a5568;
+  --bs-btn-active-bg: #4a5568;
+  --bs-btn-active-border-color: #4a5568;
+}
+
 .card {
   --bs-card-bg: #fff;
   --bs-card-border-color: var(--bs-border-color);

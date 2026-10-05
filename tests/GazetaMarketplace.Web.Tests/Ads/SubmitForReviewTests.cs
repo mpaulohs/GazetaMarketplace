@@ -174,22 +174,6 @@ public sealed class SubmitForReviewTests
     }
 
     [TestMethod]
-    public async Task CliqueDuploEmParalelo_DoisPedidosAoMesmoTempo_SaemSemErro_ComUmaAuditoria()
-    {
-        using PhotoSite photos = await PhotoSite.StartAsync();
-        int adId = await CreateAsync(photos, Book);
-        string page = await photos.Site.Writer.GetStringAsync("/painel/anuncios/novo");
-        string token = Regex.Match(page, @"name=""__RequestVerificationToken""[^>]*value=""([^""]+)""").Groups[1].Value;
-
-        HttpResponseMessage[] responses = await Task.WhenAll(Enumerable.Range(0, 2).Select(_ =>
-            photos.Site.Writer.PostAsync($"/painel/anuncios/{adId}/enviar/confirmar", new FormUrlEncodedContent(new Dictionary<string, string> { ["__RequestVerificationToken"] = token }))));
-
-        Assert.IsTrue(responses.All(r => r.StatusCode == HttpStatusCode.Redirect), string.Join(",", responses.Select(r => (int)r.StatusCode)));
-        Assert.AreEqual(AdStatus.InReview, (await photos.Site.LoadAsync(adId)).Status);
-        Assert.AreEqual(1, await SubmitAuditsAsync(photos));
-    }
-
-    [TestMethod]
     public async Task OBotaoSalvaOFormularioAntesDeConferir_MesmoQuandoHaPendencias()
     {
         using PhotoSite photos = await PhotoSite.StartAsync();

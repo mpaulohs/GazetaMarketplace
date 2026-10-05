@@ -1,0 +1,39 @@
+/* Lista de anúncios do painel (4.4). Só tokens e variáveis do Bootstrap; sem atributo style (CSP). */
+
+/* Em telas estreitas cada linha vira um cartão empilhado: título, autor, categoria, situação e data (wireframe US-012, 320 px) */
+@media (max-width: 767.98px) {
+  .ads-lista__tabela thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .ads-lista__tabela,
+  .ads-lista__tabela tbody,
+  .ads-lista__tabela tr,
+  .ads-lista__tabela th,
+  .ads-lista__tabela td {
+    display: block;
+    width: 100%;
+  }
+
+  .ads-lista__tabela tr {
+    margin-bottom: 1rem;
+    padding: .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+  }
+
+  .ads-lista__tabela th,
+  .ads-lista__tabela td {
+    padding: .25rem 0;
+    border: 0;
+  }
+
+  .ads-lista__tabela td::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+  }
+}

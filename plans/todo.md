@@ -52,7 +52,7 @@
 - [x] Task 4.1: Fila de revisão e pré-visualização
 - [x] Task 4.2: Publicar e rejeitar anúncios
 - [x] Task 4.3: Despublicar e arquivar anúncios
-- [ ] Task 4.4: Lista de anúncios do painel
+- [x] Task 4.4: Lista de anúncios do painel
 
 ## Checkpoint 4 — Revisão completa
 

@@ -8,29 +8,75 @@ using GazetaMarketplace.Core.Exceptions;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Core.Location;
 using GazetaMarketplace.Web.Areas.Panel.Models;
+using GazetaMarketplace.Web.Models;
 using GazetaMarketplace.Web.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace GazetaMarketplace.Web.Areas.Panel.Controllers;
 
 /// <summary>
 /// Criar e editar o rascunho do anúncio (US-008). A página funciona sem JavaScript: salvar é um POST com redirecionamento, e trocar a categoria sem
 /// JavaScript é o botão "Atualizar campos", que refaz o formulário sem salvar. Quem pode ver ou editar cada anúncio é decidido no servidor
-/// (<see cref="IAdService"/>), não por esta tela. "Meus anúncios" continua provisório até a tarefa 4.4; a fila de revisão é do `ReviewQueueController`.
+/// (<see cref="IAdService"/>), não por esta tela. a lista do painel é a `Index` (US-012); a fila de revisão é do `ReviewQueueController`.
 /// Despublicar e arquivar (US-011) são páginas de confirmação só do Administrador, decididas pelo <see cref="IAdTakedown"/>.
 /// </summary>
 [Route("painel/anuncios")]
-public sealed class AdsController(IAdService ads, IAdDraftService drafts, IAdSubmission submissions, IAdTakedown takedown, AdFormFactory forms, ICurrentUser currentUser) : PanelControllerBase
+public sealed class AdsController(IAdService ads, IAdDraftService drafts, IAdSubmission submissions, IAdTakedown takedown, IPanelAdList list, AdFormFactory forms, ICurrentUser currentUser, ILogger<AdsController> logger) : PanelControllerBase
 {
     /// <summary>Chave do aviso de sucesso no TempData; a página "Meus anúncios" (provisória) também a lê.</summary>
     public const string MessageKey = "AdsMessage";
 
     private const string WarningKey = "AdsWarning";
 
+    /// <summary>
+    /// "Meus anúncios" (Redator) e "Anúncios" (Administrador), US-012: busca pelo título, filtro por situação e 20 por página, tudo por GET (funciona sem JavaScript).
+    /// A autoria do Redator vem da sessão, nunca do endereço; os arquivados só aparecem ao filtrar por "Arquivado".
+    /// </summary>
     [HttpGet("")]
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index([FromQuery(Name = "q")] string search, [FromQuery(Name = "situacao")] string situation, [FromQuery(Name = "pagina")] int page, CancellationToken cancellationToken)
+    {
+        PanelAdListPage result;
+        int? queueCount = null;
+        try
+        {
+            result = await list.ListAsync(search, situation, page, cancellationToken);
+            if (currentUser.IsAdministrator)
+            {
+                queueCount = await list.CountInReviewAsync(cancellationToken);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Falha ao ler a lista (US-012-S08): a tela diz o que houve e oferece "Tentar novamente", sem detalhe técnico
+            logger.LogError(ex, "Falha ao carregar a lista de anúncios (traceId {TraceId})", HttpContext.TraceIdentifier);
+            Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            return View("LoadError", new PageStateViewModel
+            {
+                Title = "Não foi possível carregar os anúncios.",
+                Message = "Tente novamente.",
+                ActionUrl = Request.Path + Request.QueryString,
+                ReferenceCode = HttpContext.TraceIdentifier
+            });
+        }
+
+        return View(new PanelAdListViewModel
+        {
+            IsAdministrator = currentUser.IsAdministrator,
+            Page = result,
+            QueueCount = queueCount,
+            Message = TempData[MessageKey] as string,
+            Rows = [.. result.Items.Select(item => new PanelAdListRowViewModel(item, RowHref(item)))]
+        });
+    }
+
+    // Rascunho e Rejeitado abrem a edição; Em revisão abre a pré-visualização do Administrador (o Redator, a leitura); Publicado e Arquivado abrem a tela do anúncio
+    // (edição para o Administrador no Publicado, leitura nos demais)
+    private string RowHref(PanelAdListItem item) => item.Status == AdStatus.InReview && currentUser.IsAdministrator
+        ? Url.Action("Preview", "ReviewQueue", new { area = "Panel", id = item.Id })
+        : Url.Action(nameof(Edit), new { id = item.Id });
 
     [HttpGet("novo")]
     public async Task<IActionResult> New(CancellationToken cancellationToken) =>

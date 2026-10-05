@@ -804,3 +804,57 @@ Os arquivos foram restaurados depois de cada mutação (com a data de modificaç
 2. **Teste instável antigo:** `SubmitForReviewTests.CliqueDuploEmParalelo…` (3.7, unitários) falha às vezes com duas auditorias (1 vez em 6 rodadas isoladas; caiu em 3 das 11 mutações sem relação). O SQLite compartilhado não garante a corrida; a prova real é a integração no SQL Server. Isso também explica por que a M1 da 4.2 listou esse teste entre os que "caíram": a queda real daquela mutação é `US010S08`. Registrado no BACKLOG para decisão.
 3. **Docker:** o `dockerd` e o contêiner do E2E pararam no meio da sessão e foram religados (já descrito na documentação).
 4. **Cobertura parcial declarada:** S01 e S02 sem "busca" e "endereço antigo" (Fase 5); S02 e S05 sem a lista com filtro (4.4); S04 (favoritos) é da Fase 5.
+
+## Tarefa 4.4 — lista de anúncios do painel (US-012)
+
+> **Em resumo:** 1.287 testes unitários (15 novos e 1 removido), 43 e 27 das ferramentas, 117 de integração (9 novos, SQL Server real) e 88 de navegador (5 novos) passam. As 15 mutações (as 9 planejadas, em variantes de serviço e de SQL, mais o tempo limite e 2 extras) foram derrubadas. O plano de execução usa o índice de autor, então não houve migration. Veredito: **aprovado**.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.287 | 1.287 | 0 |
+| Ferramenta de catálogo (`VehicleCatalogExport.Tests`) | 43 | 43 | 0 |
+| Ferramenta de municípios (`CitiesImport.Tests`) | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 117 | 117 | 0 |
+| E2E (Playwright: Production + Development) | 88 | 88 | 0 |
+
+| Mutação | Testes que caíram |
+|---|---|
+| Q1 Redator sem o filtro de autoria (serviço) | `US012S01`, `ParametrosForaDaLista…` |
+| Q1b Redator sem o filtro de autoria (SQL) | `US012S01_S02_Autoria…`, página inteira do Redator, plano do índice |
+| Q2 Arquivados aparecem por padrão (serviço) | `US012S03` |
+| Q2b Arquivados aparecem por padrão (SQL) | `US012S03_FiltroPorSituacao…`, página inteira |
+| Q3 Busca sem normalizar | `US012S04_Buscar_NormalizaOTermo…` |
+| Q4 Busca com `LIKE` e curingas sem escape | `US012S04_Busca_SemAcento…` (`%`, `_`, `[`) |
+| Q5 Página com deslocamento errado (SQL) | 7 (paginação, ordem, página inteira) |
+| Q5b Página além do fim não volta para a última (serviço) | `Paginacao_PaginaForaDoIntervalo…` |
+| Q6 Total ignorando todos os filtros | `US012S01_S02_Autoria…`, `US012S03_FiltroPorSituacao…` |
+| Q7 Filtro de situação ignorado | `US012S03_FiltroPorSituacao…`, página inteira |
+| Q8 Motivo da rejeição some da linha | `Rejeitado_MostraOMotivoInteiro…` |
+| Q9 Ordem trocada (id crescente) | `Ordem_ComAMesmaData…`, `US012S07`, página inteira |
+| Q10 Tempo limite de 30 s em vez de 10 s | `ConsultaQueEstouraOTempo…` |
+| (extra) E1 "Em revisão" do Administrador abre a edição | `US012S05` |
+| (extra) E2 Redator vê a coluna "Autor" | `US012S01` |
+
+O Q1 foi refeito uma vez porque a primeira forma da mutação não compilava (o parâmetro `currentUser` ficava sem uso); os arquivos foram restaurados depois de cada mutação, com a data de modificação atualizada, e a compilação final ficou limpa (0 avisos, 0 erros).
+
+**O que cada camada prova**
+
+- **S01 e S02:** no SQL Server real, com 5 anúncios da Ana e 3 do Bruno, a consulta do Redator devolve exatamente os 5 dele e a do Administrador devolve os 8 com o nome do autor; na tela, o Redator não vê a coluna "Autor" e o Administrador vê as abas "Fila de revisão (n)" e "Todos os anúncios". Cada linha mostra título (link), categoria, situação em texto e "Alterado em" (dd/mm/aaaa no fuso de São Paulo, hora no `title`). A autoria vem da sessão: `?autor=` e `?authorId=` na URL não mudam a consulta.
+- **S03:** filtrar por "Rejeitado" mostra só as rejeitadas e o total; a lista padrão esconde os arquivados e "Arquivado" os mostra (fecha o que a S02 e a S05 da US-011 deixaram para a 4.4); situação desconhecida não filtra.
+- **S04:** "civic" mostra só o Honda Civic; o termo é aparado, sem acento, sem diferença de maiúsculas e sem espaços repetidos; passa de 100 caracteres, é cortado; `%`, `_` e `[` valem como texto (a busca usa `CHARINDEX`, sem curinga); texto de ataque (`'; DROP TABLE Ads; --`) é só texto e a tabela continua inteira.
+- **S05:** Rascunho e Rejeitado abrem a edição; Em revisão abre a pré-visualização (Administrador) ou a leitura (Redator); Publicado e Arquivado abrem a tela do anúncio. No navegador, o Rascunho abre a edição e o Em revisão a pré-visualização.
+- **S06:** o Redator sem anúncios vê "Você ainda não criou anúncios" e um único "Novo anúncio", sem filtros; o Administrador sem anúncios vê "Nenhum anúncio cadastrado ainda". Busca ou filtro sem resultado mostra "Nenhum anúncio encontrado" e "Limpar filtros", mantendo o formulário.
+- **S07:** 45 anúncios saem em páginas de 20, 20 e 5, sem repetir nem perder nenhum, com o total em todas, do alterado mais recentemente ao mais antigo e com desempate pelo id; os links "Anterior", "Próxima" e das páginas preservam busca e situação, a atual leva `aria-current="page"`; página 0, negativa ou texto mostra a primeira e a 99 mostra a última. No navegador, o banco do E2E (mais de 20 anúncios) mostra 20 por página, a página 2 começa em outro anúncio e "Anterior" volta.
+- **S08:** falha na leitura devolve 503 com "Não foi possível carregar os anúncios. Tente novamente.", o botão "Tentar novamente" leva ao mesmo endereço com os filtros e a tela não mostra mensagem da exceção, servidor nem pilha. No SQL Server real, uma conexão que tranca a tabela faz a leitura estourar o tempo limite de 10 s (RC-15) e o site responde 503 em cerca de 10 s; solto o bloqueio, a lista volta.
+- **Motivo da rejeição:** a linha "Rejeitado" mostra o motivo inteiro (500 caracteres, sem corte); outras situações não mostram motivo; título e motivo com HTML saem codificados.
+- **Plano de execução (D7):** com 4.000 anúncios, a consulta do Redator usa `IX_Ads_AuthorId_Status_UpdatedAt` e não faz varredura inteira da tabela; nenhuma migration foi necessária.
+- **Navegador:** busca sem acento, filtro por situação, "Limpar filtros", arquivados escondidos até filtrar, o mesmo fluxo com JavaScript desligado (formulário GET), axe sem violações e sem rolagem horizontal em 1280, 768 e 320 px (lista, página 2, filtro e sem resultado), com as linhas virando cartões em 320 px.
+
+**Achados desta rodada**
+
+1. **Contraste:** "Limpar filtros" (`btn-outline-secondary`) dava 4,29:1 sobre o fundo cinza; o tema ganhou `#4a5568` para todo `btn-outline-secondary` (BACKLOG).
+2. **Guarda do filtro único:** o teste `FragmentoSomentePublicados_E_UnicoEReutilizado` recusa filtros de situação reescritos fora de `SqlFragments`; os filtros "esta situação" e "sem arquivados" da lista foram para `SqlFragments`, mantendo o filtro de situação num lugar só.
+3. **Hospedeiro de teste:** o repositório Dapper (T-SQL) não roda no SQLite; o hospedeiro dos testes registra por padrão `StubPanelAdListRepository` (devolve linhas fatiadas por página, guarda a consulta, não filtra). Sem isso 20 testes antigos, que entram em "Meus anúncios" ao fazer login, caíram em 503.
+4. **E2E instável de montagem:** uma vez em ~8 rodadas completas o auxiliar que monta o anúncio perdeu a descrição digitada logo depois de trocar a categoria; ele agora espera a rede ficar parada (BACKLOG).
+5. **Teste removido (D8):** `SubmitForReviewTests.CliqueDuploEmParalelo…` (instável); a corrida de verdade continua provada em `SubmitForReviewConcurrencyTests`.
+6. **Dois pontos de volume registrados:** a busca não usa índice (o termo pode estar no meio do título) e a lista do Administrador ordena por `COALESCE(UpdatedAt, CreatedAt)`; revisar com volume real (BACKLOG).
