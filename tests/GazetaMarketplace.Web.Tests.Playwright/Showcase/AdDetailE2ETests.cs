@@ -149,13 +149,13 @@ public class AdDetailE2ETests : SitePage
         IPage visitor = await VisitorAsync(path).ConfigureAwait(false);
         await Thumb(visitor, 5).ClickAsync().ConfigureAwait(false);
         await Expect(Counter(visitor)).ToHaveTextAsync("5 de 20").ConfigureAwait(false);
-        await visitor.EvaluateAsync("window.scrollTo(0, 120)").ConfigureAwait(false);
-        double before = await visitor.EvaluateAsync<double>("window.scrollY").ConfigureAwait(false);
+        await visitor.EvaluateAsync("window.scrollTo(0, 60)").ConfigureAwait(false);
 
         await visitor.Locator("[data-gallery-open]").ClickAsync().ConfigureAwait(false);
 
         ILocator dialog = visitor.GetByRole(AriaRole.Dialog);
         await Expect(dialog).ToBeVisibleAsync().ConfigureAwait(false);
+        double before = await visitor.EvaluateAsync<double>("window.scrollY").ConfigureAwait(false); // o ponto em que o visitante estava ao abrir
         await Expect(dialog.GetByRole(AriaRole.Button, new() { Name = "Fechar" })).ToBeVisibleAsync().ConfigureAwait(false);
         await Expect(dialog.GetByRole(AriaRole.Heading, new() { Name = "Foto 5 de 20" })).ToBeVisibleAsync().ConfigureAwait(false);
         await Expect(dialog.Locator("img")).ToHaveAttributeAsync("alt", new Regex(@"^Foto 5 de 20: ")).ConfigureAwait(false);

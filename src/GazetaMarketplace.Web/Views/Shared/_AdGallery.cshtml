@@ -12,8 +12,8 @@
 <section class="ad-galeria" aria-label="Fotos do anúncio" data-gallery data-total="@total" data-title="@Model.Title">
     <div class="ad-galeria__palco">
         <figure class="ad-galeria__destaque mb-0" data-gallery-stage>
-            <a class="ad-galeria__ampliar" href="@first.LargeUrl" data-gallery-open>
-                <img class="ad-galeria__imagem" src="@first.LargeUrl" width="@first.Width" height="@first.Height" alt="Foto 1 de @total: @Model.Title" fetchpriority="high" data-gallery-main />
+            <a class="ad-galeria__ampliar" href="@first.LargeUrl" draggable="false" data-gallery-open>
+                <img class="ad-galeria__imagem" src="@first.LargeUrl" width="@first.Width" height="@first.Height" alt="Foto 1 de @total: @Model.Title" fetchpriority="high" draggable="false" data-gallery-main />
                 <span class="visually-hidden">Ampliar a foto</span>
             </a>
             <div class="ad-galeria__indisponivel media-reservada" role="status" hidden data-gallery-broken><span class="fw-bold">Foto indisponível</span></div>

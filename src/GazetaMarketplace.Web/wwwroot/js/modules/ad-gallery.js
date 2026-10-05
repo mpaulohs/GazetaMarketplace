@@ -110,6 +110,9 @@ function startGallery(root) {
     startY = evento.clientY;
     swiped = false;
   });
+  stage.addEventListener("pointercancel", () => {
+    startX = startY = 0;
+  });
   stage.addEventListener("pointerup", (evento) => {
     const dx = evento.clientX - startX;
     const dy = evento.clientY - startY;
@@ -125,6 +128,7 @@ function startGallery(root) {
   const dialogTitle = dialog.querySelector("[data-gallery-dialog-title]");
   const dialogBroken = /** @type {HTMLElement} */ (dialog.querySelector("[data-gallery-dialog-broken]"));
   let origin = /** @type {HTMLElement} */ (opener);
+  let scrollBefore = 0;
 
   function renderDialog() {
     const photo = photos[index];
@@ -147,6 +151,7 @@ function startGallery(root) {
       return;
     }
     origin = opener;
+    scrollBefore = window.scrollY;
     renderDialog();
     dialog.showModal();
   });
@@ -160,7 +165,11 @@ function startGallery(root) {
     if (evento.target === dialog) dialog.close();
   });
   // Esc ou "Fechar": o foco volta a quem abriu e a página fica no mesmo ponto
-  dialog.addEventListener("close", () => origin.focus({ preventScroll: true }));
+  // (o navegador também devolve o foco ao fechar e pode rolar a página até o elemento; a posição de antes é restaurada)
+  dialog.addEventListener("close", () => {
+    origin.focus({ preventScroll: true });
+    window.scrollTo({ top: scrollBefore, left: window.scrollX, behavior: "instant" });
+  });
 }
 
 /** Liga todas as galerias da página. */
