@@ -1,0 +1,36 @@
+@using GazetaMarketplace.Web.Navigation
+@{
+    ViewData["Title"] = "Meus favoritos";
+}
+@section Head {
+    <meta name="robots" content="noindex, follow" />
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/showcase.css" asp-append-version="true" />
+}
+@section Scripts {
+    <script type="module" src="~/js/pages/favorites.js" asp-append-version="true"></script>
+}
+
+<h1 class="fs-3 mb-3" tabindex="-1" data-favorites-title>Meus favoritos</h1>
+
+<div class="alert alert-info" role="note" data-favorites-permanent-notice>Seus favoritos ficam salvos apenas neste navegador. Se você limpar os dados do navegador, perde a lista.</div>
+
+<noscript>
+    <div class="alert alert-warning" data-favorites-no-js>Para ver seus favoritos, ative o JavaScript.</div>
+</noscript>
+
+<div data-favorites-page>
+    <p class="fw-bold" role="status" data-favorites-count hidden></p>
+    <div class="alert alert-warning" role="status" data-favorites-unavailable hidden></div>
+    <div class="alert alert-danger" role="alert" data-favorites-blocked hidden>Não foi possível acessar os favoritos deste navegador. Ele está bloqueando o armazenamento de dados do site.</div>
+    <div class="alert alert-danger" role="alert" data-favorites-error hidden>
+        <p class="fw-bold mb-2">Não foi possível carregar seus favoritos. Tente novamente.</p>
+        <button type="button" class="btn btn-primary alvo-toque" data-favorites-retry>Tentar novamente</button>
+    </div>
+    <section class="py-3" aria-labelledby="favoritos-vazio" hidden data-favorites-empty>
+        <p class="fs-5" id="favoritos-vazio">Você ainda não favoritou nenhum anúncio</p>
+        <a class="btn btn-primary alvo-toque d-inline-flex align-items-center" href="@PublicRoutes.Home">Ir para a página inicial</a>
+    </section>
+    <div data-favorites-host></div>
+</div>

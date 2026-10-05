@@ -56,5 +56,7 @@
         {
             <partial name="_Contact" model="Model.Contact" />
         }
+        @* Só com JavaScript (os favoritos moram no navegador): o favorites-ui.js tira o "hidden" e troca o texto entre "Favoritar" e "Favoritado" *@
+        <button type="button" class="btn btn-outline-secondary alvo-toque w-100 mt-3" hidden data-favorite-toggle data-ad-id="@Model.AdId" aria-pressed="false"><i class="fa fa-heart-o me-2" aria-hidden="true"></i><span data-favorite-label>Favoritar</span></button>
     </div>
 </div>

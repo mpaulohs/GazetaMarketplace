@@ -45,6 +45,22 @@ public sealed class ShowcaseReadRepository(IDbConnection connection) : IShowcase
         return new ShowcaseRows([.. rows.Select(ToRow)], total);
     }
 
+    public async Task<IReadOnlyList<ShowcaseRow>> ByIdsAsync(IReadOnlyList<int> ids, CancellationToken cancellationToken)
+    {
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        // Só publicados, pelo mesmo fragmento das outras leituras públicas; a ordem pedida é do serviço
+        SqlQuery query = new SqlBuilder().Select(Columns).From("Ads a").Join(CoverJoin).OnlyPublished()
+            .Where("a.Id IN @Ids").Parameter("Ids", ids).Parameter("CoverCount", 1)
+            .OrderBy(null, null, NoUserSort, "a.Id ASC")
+            .Build();
+        IEnumerable<AdCardSql.Row> rows = await connection.QueryAsync<AdCardSql.Row>(Command(query, cancellationToken));
+        return [.. rows.Select(ToRow)];
+    }
+
     private static SqlBuilder Filtered(SqlBuilder builder, IReadOnlyList<int> categoryIds) =>
         builder.OnlyPublished().Where("a.CategoryId IN @CategoryIds").Parameter("CategoryIds", categoryIds);
 

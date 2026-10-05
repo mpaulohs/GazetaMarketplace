@@ -36,7 +36,13 @@ public interface IShowcaseReadRepository
 
     /// <summary>Os publicados de qualquer uma das categorias, do mais novo ao mais antigo, com o total para a paginação.</summary>
     Task<ShowcaseRows> ByCategoryAsync(IReadOnlyList<int> categoryIds, int page, int pageSize, CancellationToken cancellationToken);
+
+    /// <summary>Os publicados entre os ids pedidos, em qualquer ordem (o serviço põe na ordem pedida). Id de anúncio que não existe ou que não está publicado simplesmente não volta.</summary>
+    Task<IReadOnlyList<ShowcaseRow>> ByIdsAsync(IReadOnlyList<int> ids, CancellationToken cancellationToken);
 }
+
+/// <summary>Um card de anúncio com o nome da categoria dele (a API de favoritos devolve os dois).</summary>
+public sealed record ShowcaseAdCard(AdCardModel Card, string CategoryName);
 
 /// <summary>A página inicial: as categorias principais e os anúncios publicados mais recentes.</summary>
 public sealed record ShowcaseHome(IReadOnlyList<CategoryNode> Roots, IReadOnlyList<AdCardModel> Recent);
@@ -86,4 +92,10 @@ public interface IShowcase
     Task<ShowcaseHome> HomeAsync(CancellationToken cancellationToken);
 
     Task<ShowcaseCategoryPage> CategoryAsync(string slug, int page, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Os anúncios <b>publicados</b> entre os ids, <b>na ordem em que foram pedidos</b> (US-005, "Meus favoritos"). Os ids de anúncios despublicados, arquivados ou inexistentes não voltam:
+    /// quem chamou compara a lista e tira os ausentes dos favoritos. No máximo <see cref="FavoriteIds.MaxPerRequest"/> ids por chamada.
+    /// </summary>
+    Task<IReadOnlyList<ShowcaseAdCard>> CardsByIdsAsync(IReadOnlyList<int> ids, CancellationToken cancellationToken);
 }

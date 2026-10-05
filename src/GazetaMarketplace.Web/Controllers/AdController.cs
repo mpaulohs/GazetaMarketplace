@@ -44,6 +44,7 @@ public sealed class AdController(IShowcase showcase, AdDetailFactory factory, IS
             string pageUrl = PublicUrl.Absolute(Request, site.Value, canonicalPath);
             return View(new AdPageViewModel
             {
+                AdId = ad.Id,
                 Detail = detail,
                 CanonicalUrl = pageUrl,
                 Contact = ContactViewModel.Create(await settings.GetPhoneAsync(cancellationToken), ad.Title, pageUrl),

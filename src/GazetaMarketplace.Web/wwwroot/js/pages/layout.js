@@ -1,6 +1,7 @@
 // Módulo carregado por todas as páginas (site público e painel).
 
 import { watchAdCardImages } from "../modules/ad-card.js";
+import { ativarFavoritos } from "../modules/favorites-ui.js";
 
 const regiaoDeAvisos = document.getElementById("avisos-globais");
 
@@ -23,3 +24,6 @@ document.querySelector("[data-foco-inicial]")?.focus();
 
 // Foto de card que não carrega vira o bloco "Foto indisponível"
 watchAdCardImages();
+
+// Favoritos (US-005): contador do topo, coração dos cards e botão da página do anúncio
+ativarFavoritos();

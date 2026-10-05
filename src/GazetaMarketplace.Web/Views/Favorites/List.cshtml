@@ -1,0 +1,14 @@
+@using GazetaMarketplace.Core.Showcase
+@model IReadOnlyList<ShowcaseAdCard>
+@{
+    Layout = null;
+}
+@* O fragmento que o favorites.js põe na página: os cards publicados na ordem pedida, cada um com "Remover". O data-ad-id de cada item diz quais ids voltaram *@
+<ul class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 list-unstyled mb-0" data-ad-grid data-favorites-grid>
+    @for (int i = 0; i < Model.Count; i++)
+    {
+        <li class="col" data-ad-id="@Model[i].Card.Id">
+            @await Component.InvokeAsync("AdCard", new { ad = Model[i].Card, eagerImage = i < 4, favorite = "remove" })
+        </li>
+    }
+</ul>

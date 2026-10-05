@@ -6,6 +6,8 @@ namespace GazetaMarketplace.Web.Models;
 /// <summary>A página pública do anúncio (US-003): o que a tela mostra e o que vai no <c>&lt;head&gt;</c> (descrição e endereço canônico).</summary>
 public sealed class AdPageViewModel
 {
+    public required int AdId { get; init; }
+
     public required AdDetail Detail { get; init; }
 
     /// <summary>Endereço completo e definitivo da página, para <c>&lt;link rel="canonical"&gt;</c>.</summary>

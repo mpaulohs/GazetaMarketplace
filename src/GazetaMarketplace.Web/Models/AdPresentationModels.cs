@@ -32,6 +32,22 @@ public sealed class AdCardViewModel
 
     /// <summary>Verdadeiro na primeira linha de cards: a imagem carrega já (<c>loading="eager"</c>); nas demais, <c>lazy</c>.</summary>
     public bool EagerImage { get; init; }
+
+    /// <summary>O controle de favoritos do card (<see cref="AdCardFavorite"/>).</summary>
+    public string Favorite { get; init; } = AdCardFavorite.Heart;
+}
+
+/// <summary>Que controle de favoritos o card mostra (US-005).</summary>
+public static class AdCardFavorite
+{
+    /// <summary>O coração: favorita e desfavorita. Só aparece com JavaScript (os favoritos moram no navegador).</summary>
+    public const string Heart = "heart";
+
+    /// <summary>"Remover", na página Meus favoritos.</summary>
+    public const string Remove = "remove";
+
+    /// <summary>Sem controle (a pré-visualização do painel, que não é do visitante).</summary>
+    public const string None = "none";
 }
 
 /// <summary>O corpo textual do anúncio (título, valor, local, descrição e características). A galeria fica de fora: é da página de detalhe.</summary>

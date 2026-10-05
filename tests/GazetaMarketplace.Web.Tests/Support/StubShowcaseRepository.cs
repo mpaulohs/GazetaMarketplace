@@ -39,6 +39,21 @@ internal sealed class StubShowcaseRepository : IShowcaseReadRepository
         return Task.FromResult<IReadOnlyList<ShowcaseRow>>([.. Rows.Take(take)]);
     }
 
+    /// <summary>Os pedidos por ids (cada lista de ids).</summary>
+    public List<int[]> IdRequests { get; } = [];
+
+    // Devolve as linhas pedidas que o teste pôs em Rows (as que "estão publicadas"), fora da ordem pedida de propósito, para o serviço provar que ordena
+    public Task<IReadOnlyList<ShowcaseRow>> ByIdsAsync(IReadOnlyList<int> ids, CancellationToken cancellationToken)
+    {
+        if (Failure is not null)
+        {
+            throw Failure;
+        }
+
+        IdRequests.Add([.. ids]);
+        return Task.FromResult<IReadOnlyList<ShowcaseRow>>([.. Rows.Where(r => ids.Contains(r.Id)).OrderBy(r => r.Id)]);
+    }
+
     public Task<ShowcaseRows> ByCategoryAsync(IReadOnlyList<int> categoryIds, int page, int pageSize, CancellationToken cancellationToken)
     {
         if (Failure is not null)

@@ -44,3 +44,27 @@
 .ad-corpo__descricao {
   white-space: pre-line;
 }
+
+/* Coração de favoritos no canto do card, acima do link que cobre o card inteiro (o ::after do stretched-link tem z-index 1) */
+.ad-card__favorito {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  width: var(--app-touch-target);
+  height: var(--app-touch-target);
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ad-card__favorito[hidden] {
+  display: none;
+}
+
+.ad-card__favorito[aria-pressed="true"] .fa,
+[data-favorite-toggle][aria-pressed="true"] .fa {
+  color: var(--bs-danger);
+}

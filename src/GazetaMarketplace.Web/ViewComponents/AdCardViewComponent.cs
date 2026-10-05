@@ -13,7 +13,8 @@ public sealed class AdCardViewComponent : ViewComponent
 {
     /// <param name="ad">O anúncio, já lido do banco.</param>
     /// <param name="eagerImage">Verdadeiro na primeira linha de cards da página: a imagem carrega já; nas demais, só quando chega perto da tela.</param>
-    public IViewComponentResult Invoke(AdCardModel ad, bool eagerImage = false)
+    /// <param name="favorite">O controle de favoritos do card: <c>heart</c> (coração, o padrão), <c>remove</c> ("Remover", na página Meus favoritos) ou <c>none</c> (a pré-visualização do painel).</param>
+    public IViewComponentResult Invoke(AdCardModel ad, bool eagerImage = false, string favorite = AdCardFavorite.Heart)
     {
         FieldGroup group = FieldGroupRegistry.Get(ad.GroupKey) ?? FieldGroupRegistry.Default;
         AdValue value = AdPresentation.ValueOf(group, ad.PriceCents, ad.ServiceType);
@@ -36,7 +37,8 @@ public sealed class AdCardViewComponent : ViewComponent
             CoverWidth = showsCover ? ad.Cover.Width : 0,
             CoverHeight = showsCover ? ad.Cover.Height : 0,
             Placeholder = placeholder,
-            EagerImage = eagerImage
+            EagerImage = eagerImage,
+            Favorite = favorite
         });
     }
 }

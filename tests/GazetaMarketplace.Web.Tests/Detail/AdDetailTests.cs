@@ -122,8 +122,9 @@ public sealed class AdDetailTests
 
         StringAssert.Contains(visible, "Características do veículo");
         StringAssert.Matches(html, new Regex(@"<nav aria-label=""Caminho de navegação""[\s\S]*Início[\s\S]*Automóveis, Peças e Acessórios[\s\S]*Carros, vans e utilitários[\s\S]*Honda Civic 2018"));
-        Assert.IsTrue(Regex.IsMatch(html, @"data-contact-slot"), "o lugar do contato e do Favoritar fica reservado (5.3 e 5.5)");
-        Assert.IsFalse(Regex.IsMatch(html, @"href=""tel:|wa\.me|Favoritar"), "sem telefone configurado não há contato; o Favoritar chega na tarefa 5.5");
+        Assert.IsTrue(Regex.IsMatch(html, @"data-contact-slot"), "a coluna lateral existe: contato e Favoritar");
+        Assert.IsFalse(Regex.IsMatch(html, @"href=""tel:|wa\.me"), "sem telefone configurado não há contato");
+        Assert.IsTrue(Regex.IsMatch(html, @"<button [^>]*hidden[^>]*data-favorite-toggle[^>]*data-ad-id=""\d+""[^>]*aria-pressed=""false"""), "o botão Favoritar existe, escondido até o JavaScript ligar");
     }
 
     [TestMethod]

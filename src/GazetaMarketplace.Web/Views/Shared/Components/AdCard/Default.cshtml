@@ -2,6 +2,11 @@
 
 @* Card do anúncio (design-system §5.2): um só link cobre o card (stretched-link no título); o nome acessível é "título, valor, cidade/UF". A imagem é decorativa (alt vazio). *@
 <article class="card ad-card h-100" data-ad-card>
+    @if (Model.Favorite == AdCardFavorite.Heart)
+    {
+        @* Só com JavaScript (os favoritos moram no navegador): o favorites-ui.js tira o "hidden". O nome fica o mesmo; quem diz o estado é o aria-pressed *@
+        <button type="button" class="btn btn-light ad-card__favorito" hidden data-favorite-toggle data-ad-id="@Model.Ad.Id" aria-pressed="false" aria-label="Favoritar anúncio @Model.Ad.Title"><i class="fa fa-heart-o" aria-hidden="true"></i></button>
+    }
     @if (Model.CoverUrl is not null)
     {
         <img class="card-img-top ad-card__imagem" src="@Model.CoverUrl" width="@Model.CoverWidth" height="@Model.CoverHeight" alt="" loading="@(Model.EagerImage ? "eager" : "lazy")" decoding="async" data-ad-card-image />
@@ -21,4 +26,10 @@
             <p class="small text-body-secondary mb-0">@Model.Location</p>
         }
     </div>
+    @if (Model.Favorite == AdCardFavorite.Remove)
+    {
+        <div class="card-footer bg-transparent border-0 pt-0">
+            <button type="button" class="btn btn-outline-secondary btn-sm alvo-toque position-relative z-2" data-favorite-remove data-ad-id="@Model.Ad.Id">Remover<span class="visually-hidden"> @Model.Ad.Title dos favoritos</span></button>
+        </div>
+    }
 </article>

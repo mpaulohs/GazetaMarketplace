@@ -31,6 +31,27 @@ public sealed class ShowcaseService(IShowcaseReadRepository repository, IPublish
         return new ShowcaseAdPage(null, archivedCategory is { } category ? snapshot.Find(category) : null, snapshot.Roots);
     }
 
+    public async Task<IReadOnlyList<ShowcaseAdCard>> CardsByIdsAsync(IReadOnlyList<int> ids, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(ids.Count, FavoriteIds.MaxPerRequest);
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        CategoryTreeSnapshot snapshot = await tree.GetAsync(cancellationToken);
+        IReadOnlyList<ShowcaseRow> rows = await repository.ByIdsAsync(ids, cancellationToken);
+        Dictionary<int, ShowcaseRow> byId = rows.GroupBy(r => r.Id).ToDictionary(g => g.Key, g => g.First());
+
+        // Na ordem pedida; o que a consulta não devolveu (não publicado ou inexistente) fica de fora
+        return [.. ids.Where(byId.ContainsKey).Select(id =>
+        {
+            ShowcaseRow row = byId[id];
+            return new ShowcaseAdCard(ShowcaseCards.Create(row, snapshot), row.CategoryId is { } category ? snapshot.Find(category)?.Name : null);
+        })];
+    }
+
     public async Task<ShowcaseHome> HomeAsync(CancellationToken cancellationToken)
     {
         CategoryTreeSnapshot snapshot = await tree.GetAsync(cancellationToken);
