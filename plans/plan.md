@@ -1687,46 +1687,39 @@
 
 **Files to modify**:
 - `src/GazetaMarketplace.Web/Controllers/AdController.cs`
-- `src/GazetaMarketplace.Web/Views/Ad/Detalhe.cshtml`
-- src/GazetaMarketplace.Web/wwwroot/js/pages/ad-detail.js (galeria)
-- `src/GazetaMarketplace.Web/wwwroot/css/pages/anuncio-detalhe.css`
+- `src/GazetaMarketplace.Web/Views/Ad/Index.cshtml` e `Unavailable.cshtml` · `Views/Shared/_AdGallery.cshtml`
+- `src/GazetaMarketplace.Web/wwwroot/js/pages/ad-detail.js` e `modules/ad-gallery.js` (galeria)
+- `src/GazetaMarketplace.Web/wwwroot/css/pages/ad-detail.css`
+- `src/GazetaMarketplace.Web/Models/AdDetailFactory.cs` (montagem compartilhada com a pré-visualização da fila de revisão)
 
 **Acceptance Criteria**:
-- [ ] `@US-003-S01` (@happy): Abrir um anúncio completo — o *Then* do SPEC é atendido
-- [ ] `@US-003-S02` (@happy): Percorrer a galeria de um anúncio com 20 fotos — o *Then* do SPEC é atendido
-- [ ] `@US-003-S03` (@happy): Ampliar uma foto — o *Then* do SPEC é atendido
-- [ ] `@US-003-S04` (@edge): Anúncio de categoria sem ficha de veículo nem de terreno — o *Then* do SPEC é atendido
-- [ ] `@US-003-S05` (@edge): Anúncio com uma única foto — o *Then* do SPEC é atendido
-- [ ] `@US-003-S06` (@negative): Abrir um anúncio que não está mais disponível — o *Then* do SPEC é atendido
-- [ ] `@US-003-S07` (@negative): Uma foto não carrega — o *Then* do SPEC é atendido
-- [ ] `@US-003-S08` (@edge): Anúncio em tela de celular estreita — o *Then* do SPEC é atendido
-- [ ] Galeria com setas, miniaturas, contador "5 de 20", ampliar em janela com foco preso e Esc, navegação por teclado e toque; uma foto só não mostra setas nem miniaturas
-- [ ] Foto que não carrega mostra "Foto indisponível" e as outras continuam navegáveis
-- [ ] Anúncio que não está publicado (qualquer outra situação, ou endereço inexistente) mostra a **mesma** mensagem de indisponibilidade, sem revelar conteúdo
-- [ ] Fotos além da primeira carregam sob demanda; o endereço é `/anuncio/{id}/{slug}` e o preço/Salário/Tipo segue o grupo
+- [x] `@US-003-S01` (@happy): Abrir um anúncio completo — o *Then* do SPEC é atendido
+- [x] `@US-003-S02` (@happy): Percorrer a galeria de um anúncio com 20 fotos — o *Then* do SPEC é atendido
+- [x] `@US-003-S03` (@happy): Ampliar uma foto — o *Then* do SPEC é atendido
+- [x] `@US-003-S04` (@edge): Anúncio de categoria sem ficha de veículo nem de terreno — o *Then* do SPEC é atendido
+- [x] `@US-003-S05` (@edge): Anúncio com uma única foto — o *Then* do SPEC é atendido
+- [x] `@US-003-S06` (@negative): Abrir um anúncio que não está mais disponível — o *Then* do SPEC é atendido
+- [x] `@US-003-S07` (@negative): Uma foto não carrega — o *Then* do SPEC é atendido
+- [x] `@US-003-S08` (@edge): Anúncio em tela de celular estreita — o *Then* do SPEC é atendido
+- [x] Galeria com setas, miniaturas, contador "5 de 20", ampliar em janela com foco preso e Esc, navegação por teclado e toque; uma foto só não mostra setas nem miniaturas
+- [x] Foto que não carrega mostra "Foto indisponível" e as outras continuam navegáveis
+- [x] Anúncio que não está publicado (qualquer outra situação, ou endereço inexistente) mostra a **mesma** mensagem de indisponibilidade, sem revelar conteúdo
+- [x] Fotos além da primeira carregam sob demanda; o endereço é `/anuncio/{id}/{slug}` e o preço/Salário/Tipo segue o grupo
 
-**Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/DetalheTests.US003S01_AbrirUmAnuncioCompleto` — `@US-003-S01`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/DetalheTests.US003S02_PercorrerAGaleriaDeUmAnuncioCom20Fotos` — `@US-003-S02`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/DetalheTestsE2E.US003S02_PercorrerAGaleriaDeUmAnuncioCom20Fotos` — `@US-003-S02` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/DetalheTests.US003S03_AmpliarUmaFoto` — `@US-003-S03`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/DetalheTestsE2E.US003S03_AmpliarUmaFoto` — `@US-003-S03` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/DetalheTests.US003S04_AnuncioDeCategoriaSemFichaDeVeiculoNemDeTerreno` — `@US-003-S04`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/DetalheTests.US003S05_AnuncioComUmaUnicaFoto` — `@US-003-S05`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/DetalheTestsE2E.US003S05_AnuncioComUmaUnicaFoto` — `@US-003-S05` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/DetalheTests.US003S06_AbrirUmAnuncioQueNaoEstaMaisDisponivel` — `@US-003-S06`
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/DetalheTests.US003S07_UmaFotoNaoCarrega` — `@US-003-S07`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/DetalheTestsE2E.US003S07_UmaFotoNaoCarrega` — `@US-003-S07` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Vitrine/DetalheTests.US003S08_AnuncioEmTelaDeCelularEstreita` — `@US-003-S08`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Vitrine/DetalheTestsE2E.US003S08_AnuncioEmTelaDeCelularEstreita` — `@US-003-S08` (E2E, `/test`)
-- `tests/GazetaMarketplace.Web.Tests/Detalhe/IndisponivelTests.NaoPublicado_E_Inexistente_TemAMesmaResposta`
-- `tests/GazetaMarketplace.Web.Tests/Detalhe/PesoTests.FotosAlemDaPrimeira_TemLoadingLazy`
+**Tests added** (nomes em inglês nas classes; métodos de cenário em português com o prefixo `USxxxSnn`):
+- `tests/GazetaMarketplace.Web.Tests/Detail/AdDetailTests` — `US003S01` a `US003S08` (S04 também por grupo de campos), indisponível igual para rascunho, em revisão, rejeitado e inexistente (arquivado só acrescenta o link), redirecionamento 301 do endereço, data em São Paulo, Vaga, Serviço, SEO, privacidade, texto sem HTML, 503
+- `tests/GazetaMarketplace.Web.Tests/Detail/AdDetailRulesTests` — título das características por grupo, descrição de até 160 caracteres, montagem compartilhada
+- `tests/GazetaMarketplace.IntegrationTests/AdDetailQueryTests` — só publicado aparece, fotos na ordem da posição, endereço com título editado (SQL Server real)
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Showcase/AdDetailE2ETests` — `US003S02`, `S03`, `S05`, `S07`, `S08`, sem JavaScript, 301, 404, axe
+- `tests/GazetaMarketplace.Web.Tests/Security/RateLimiterTests.LimiteDeFotos_PodeSerConfigurado_…`
 
 **Dependencies**: 3.8, 3.4, 0.7
 
 **Verification**: Done when every test under "Tests to add" passes, plus manual check: Abrir anúncios dos três tipos e uma foto quebrada.
 
 **Estimate**: L
+
+**Decisões aprovadas (2026-10-05)**: D1 sem botões de contato nem "Favoritar" (5.3 e 5.5) · D2 `<dialog>` nativo · D3 slug errado → 301; indisponível → 404 igual, nunca 410 · D4 título das características por grupo · D5 data em São Paulo · D6 `AdDetailFactory` · D7 SEO básico, `sitemap.xml` no BACKLOG · D8 sem esqueleto, 503 com código · D9 nomes em inglês.
 
 ### Task 5.3: Contato por telefone e WhatsApp
 

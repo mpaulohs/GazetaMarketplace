@@ -59,7 +59,7 @@
 
 ## Fase 5 — Site público
 - [x] Task 5.1: Página inicial e páginas de categoria
-- [ ] Task 5.2: Detalhe do anúncio e galeria de fotos
+- [x] Task 5.2: Detalhe do anúncio e galeria de fotos
 - [ ] Task 5.3: Contato por telefone e WhatsApp
 - [ ] Task 5.4: Busca e filtros
 - [ ] Task 5.5: Favoritos no navegador

@@ -161,7 +161,7 @@ public sealed class AdDetailTests
         (_, string raw) = await GetRawAsync(site, Url(id, "Carro para ampliar"));
         string html = WebUtility.HtmlDecode(raw);
 
-        StringAssert.Matches(html, new Regex($@"<a class=""ad-galeria__ampliar"" href=""/fotos/{id}/{photos[0].Id}-1600\.webp"" data-gallery-open>"));
+        StringAssert.Matches(html, new Regex($@"<a class=""ad-galeria__ampliar"" href=""/fotos/{id}/{photos[0].Id}-1600\.webp"" draggable=""false"" data-gallery-open>"));
         StringAssert.Matches(html, new Regex(@"<dialog[^>]*data-gallery-dialog[\s\S]*data-gallery-close>Fechar</button>"));
         Assert.IsFalse(Regex.IsMatch(html, @"<dialog[^>]*\sopen[\s>]"), "a janela só abre por ação do visitante");
         Assert.IsFalse(Regex.IsMatch(html, @"\son(click|error|load)="), "nenhum manipulador embutido (CSP)");
