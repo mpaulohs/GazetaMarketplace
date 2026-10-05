@@ -1037,3 +1037,56 @@ Só os unitários já passam das duas metas, então o gate não depende do Docke
 3. **Os cards já apontam para `/anuncio/{id}/{slug}`**, endereço que a página de detalhe (5.2) vai atender; até lá o clique leva a 404. Decisão de projeto: o endereço é o da ARCHITECTURE (NFR-21), não precisa mudar na 5.2.
 4. **Docker:** o `dockerd` caiu de novo com o reinício do worker e foi religado; a primeira tentativa de integração falhou 127 de 127 por isso (ambiente).
 
+
+## Tarefa 5.2 — detalhe do anúncio e galeria (US-003, 2026-10-05)
+
+> **Em resumo:** `/anuncio/{id}/{slug}` mostra o anúncio publicado com galeria (destaque, miniaturas, contador, setas, teclado, toque e ampliação em janela nativa), características por grupo, local, data de publicação e descrição, e responde 404 com a mesma mensagem para tudo que não está publicado. Os 8 cenários da US-003 estão provados (S01 a S08); **a S01 fecha por completo só depois da 5.3 e da 5.5**, porque os botões de contato e "Favoritar" ficaram de fora desta tarefa (decisão do Product Owner, D1).
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.378 | 1.378 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 130 | 130 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 105 | 105 | 0 |
+
+**Testes novos:** 39 unitários (`AdDetailTests` 33 contando as linhas de `DataRow`, `AdDetailRulesTests` 6) mais 4 do limite de fotos, 3 de integração (`AdDetailQueryTests`), 10 E2E (`AdDetailE2ETests`).
+
+| Cenário | Prova |
+|---|---|
+| S01 anúncio completo | `AdDetailTests.US003S01_…` (capa, miniaturas, título, preço, categoria, local, "Publicado em 12/09/2026", descrição com quebras de linha como texto, características; o espaço do contato existe e **não traz telefone nem WhatsApp**); variantes de Vaga (sem fotos, bloco "Vaga de emprego") e Serviço (Tipo no lugar do preço); privacidade (nem nome, nem e-mail, nem telefone do autor) |
+| S02 galeria de 20 fotos | `US003S02_…` (o servidor entrega as 20 miniaturas e o contador "1 de 20"; só a primeira foto grande tem carga imediata) e E2E (quinta miniatura, seta, teclado, voltar ao começo; na carga só uma foto grande é pedida) |
+| S03 ampliar | `US003S03_…` (sem JavaScript a foto é um link para a versão grande; com JavaScript há `<dialog>` com "Fechar") e E2E (abre, setas, Esc devolve o foco, a página fica no mesmo ponto de rolagem) |
+| S04 sem ficha de veículo ou terreno | `US003S04_…` + por grupo: Carros, Motos, Caminhões e ônibus, Barcos e aviões → "Características do veículo"; Terrenos → "Características do terreno"; demais → "Características" |
+| S05 uma foto só | `US003S05_…` e E2E: sem miniaturas, setas nem contador; ampliar continua |
+| S06 indisponível | `US003S06_…` (404 com mensagem, links para o início e, **só no arquivado**, para a categoria; sem título, fotos nem descrição) e `NaoPublicado_E_Inexistente_…` (rascunho, em revisão, rejeitado e inexistente têm corpo idêntico) + integração no SQL Server |
+| S07 foto quebrada | `US003S07_…` (o lugar da mensagem vem no HTML) e E2E (fotos bloqueadas → "Foto indisponível"; as outras continuam navegáveis) |
+| S08 celular de 320 px | `US003S08_…` e E2E (sem rolagem horizontal; deslizar troca de foto; miniaturas rolam na própria faixa; alvos de toque de 44 px) |
+| Endereço | slug errado ou faltando → 301 para o endereço atual, com a query string; título editado depois não quebra o link; id inválido → 404 |
+| Outros | data em São Paulo (23:59 UTC = 20:59 do mesmo dia; 02:00 UTC = 23:00 do dia anterior), SEO (título, descrição até 160 caracteres, `canonical`; `noindex` só na indisponível), 503 com código de referência e sem detalhe, axe sem violações em desktop e celular, inclusive com a janela aberta |
+
+**Mutações (12; 12 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| W1 mostra anúncio não publicado | morta (2) |
+| W2 arquivado responde 410 | morta (2) |
+| W3 contato/Favoritar antes da hora | morta (S01) |
+| W4 miniaturas sem `lazy` | morta (S02) |
+| W5 uma foto mostra setas | morta (S05) |
+| W6 slug errado não redireciona | morta |
+| W7 descrição sem escape (`Html.Raw`) | morta |
+| W8 data em UTC | morta (caso das 02:00 UTC) |
+| W9 título das características sem Motos | morta (2) |
+| W10 fotos em ordem invertida (SQL Server) | morta |
+| W11 descrição curta sem limite de 160 | morta; a primeira versão (`if (true)`) não compilava (código inalcançável) e foi reformulada para `MaxLength + 100` |
+| W12 valor sem o Tipo do serviço | morta |
+
+**Achados da rodada**
+
+1. **Limite de fotos pegou o E2E (não era defeito dos testes de fotos):** a galeria de 20 fotos e dezenas de páginas de um IP só esgotaram os 300 pedidos por minuto da entrega de fotos e `PhotosE2ETests` (US008S02 e S03) recebeu 429. O limite passou a ser configurável por `RateLimiting:PhotosPerMinute` (padrão 300; zero, negativo ou ilegível voltam a 300; 4 testes), e o site do E2E sobe com 5000. **Achado de projeto no BACKLOG:** 300 por minuto por IP pode ser apertado para usuários reais atrás de um mesmo IP; decidir o valor no `/verify`.
+2. **Rolagem ao fechar a janela de ampliação:** devolver o foco ao link fazia a página pular; o código guarda e restaura a posição de rolagem, e o E2E mede o ponto depois de abrir.
+3. **Deslizar com o mouse:** o navegador arrastava a imagem e cancelava o gesto; `draggable="false"`, `user-drag: none` e tratamento de `pointercancel`. O E2E começa o gesto na parte de cima do palco (longe das setas).
+4. **Teste unitário desatualizado:** a expressão do link de ampliar não conhecia o `draggable="false"` adicionado no item 3; corrigida e a suíte rodou de novo inteira.
+5. **Tensão entre S06 e "mesma mensagem para tudo":** a S06 pede o link da categoria no anúncio arquivado, e a regra de negócio pede que os casos indisponíveis sejam indistinguíveis. Implementado: corpo idêntico para rascunho, em revisão, rejeitado e inexistente; o arquivado só acrescenta o link da categoria (404, nunca 410). Registrado no BACKLOG para o Product Owner decidir se prefere tirar o link.
+6. **Docker:** o `dockerd` caiu de novo com reinício do worker durante a rodada e foi religado; sem efeito nos resultados finais.
