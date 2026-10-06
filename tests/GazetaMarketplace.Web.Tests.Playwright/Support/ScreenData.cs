@@ -120,6 +120,7 @@ internal static class ScreenData
         // Um rascunho completo (com foto) e um anúncio em revisão
         await PublishingFlow.DraftAsync(page, "Telas rascunho").ConfigureAwait(false);
         values["draftId"] = Regex.Match(page.Url, @"/painel/anuncios/(\d+)/editar").Groups[1].Value;
+        await page.ReloadAsync().ConfigureAwait(false); // depois do envio a galeria é montada pelo JavaScript, sem o formulário de remover; recarregar traz a página do servidor
         string removeHref = (await page.Locator("form[action$='/remover']").First.GetAttributeAsync("action").ConfigureAwait(false))!;
         values["photoId"] = Regex.Match(removeHref, @"/fotos/(\d+)/remover").Groups[1].Value;
         string review = await PublishingFlow.SubmitAsync(page, "Telas em revisão").ConfigureAwait(false);
