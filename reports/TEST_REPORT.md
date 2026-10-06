@@ -1463,3 +1463,48 @@ As quatro mutações de JavaScript usaram o método do runbook reescrito (a list
 | M6 `@Html.Raw` no motivo da rejeição | morta (2: varredura e tela do painel) |
 | M7 rota nova `/painel/zzz` fora da matriz | morta (4; a primeira diz qual rota falta classificar) |
 | M8 `[IgnoreAntiforgeryToken]` numa escrita | morta (1) |
+
+## Tarefa 6.2 — acessibilidade e larguras de todas as telas (NFR-16 e NFR-17, 2026-10-06)
+
+> **Em resumo:** existe agora **uma lista única de 44 telas e estados** (`tests/GazetaMarketplace.Web.Tests/Screens/screens.json`) e dois testes de navegador que a percorrem: o axe-core (WCAG 2.1 níveis A e AA, em 1280 e em 320 px) e a conferência de rolagem horizontal (320, 768, 1024 e 1280 px). **Nenhuma das 44 telas tem violação do axe, e nenhuma rola na horizontal.** Uma rota de página nova sem entrada na lista falha um teste unitário. A prova de que os testes enxergam é a mutação: rótulo de campo removido, largura fixa e contraste baixo foram pegos, com a mensagem apontando o elemento.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.695 | 1.695 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 161 | 161 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 246 | 246 | 0 |
+
+**Testes novos:** 3 unitários (`Security/ScreenCoverageTests`) e 93 de navegador (44 de axe, 44 de larguras e 5 de `ScreenListTests`).
+
+| Arquivo | O que prova |
+|---|---|
+| `Security/ScreenCoverageTests` (3) | Toda rota GET de página (a descoberta das rotas é a da matriz de acesso) está na lista de telas ou na lista de "não é tela", com o motivo (pedaços de HTML, imagem, `robots.txt`, `sitemap.xml`); entrada da lista sem rota também falha; ids únicos, fichas conhecidas, status esperado; quem abre cada tela (visitante ou Administrador) bate com a matriz de acesso da 6.1 |
+| `Accessibility/AllScreensTests` (44) | Cada tela, no site publicado, não tem nenhuma violação do axe (etiquetas `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`) em 1280 px e em 320 px; a tela abre com o status esperado (200, 403 ou 404); as telas com passo de preparo são medidas depois dele (painel de filtros aberto, galeria ampliada, favoritos preenchidos) |
+| `Responsiveness/AllScreensTests` (44) | Cada tela é aberta de novo em 320, 768, 1024 e 1280 px e `scrollWidth` não passa de `clientWidth`; se passar, a mensagem diz os elementos que ultrapassam a borda |
+| `Accessibility/ScreenListTests` (5) | Fichas da lista = fichas que o preparo sabe preencher; ids únicos; telas do site público e do painel; fonte dos casos = a lista inteira; as quatro etiquetas do axe e as quatro larguras travadas |
+
+**As 44 telas:** 15 públicas (início, página de erro, categoria com anúncios, vazia e inexistente, busca em cinco estados, anúncio, galeria ampliada e anúncio inexistente, favoritos vazio e cheio), 4 da entrada do painel (entrar, esqueci a senha, link inválido, sem permissão) e 25 do painel como Administrador (lista de anúncios e vazia, anúncio novo e rascunho, confirmar envio e remoção de foto, fila, pré-visualização, publicar, rejeitar, despublicar, arquivar, categorias em seis estados, configurações, usuários em cinco estados, definir senha e o catálogo de componentes do site em Development).
+
+**Dados:** os dados públicos são criados de verdade pelas telas do painel na primeira tela medida (um anúncio publicado com duas fotos, um rascunho com foto e um anúncio em revisão); a categoria "Telas sem anúncios" e o Redator são reaproveitados se já existirem. O axe mede, portanto, o contraste do que o visitante vê.
+
+**Correções feitas durante a tarefa (todas no teste, nenhuma no produto):** o preparo lia o link de remover foto, que é um formulário e só existe na página recarregada; esperava uma URL exata depois de salvar a categoria; entrava de novo numa página que já estava dentro. Por causa disso, o preparo agora guarda a tarefa (uma falha aparece uma vez, não 88). Em paralelo com os testes de CEP as duas classes novas disputavam a porta do ViaCEP de mentira: ficaram `DoNotParallelize`. E o limite padrão de `Expect` passou de 5 para 15 s no conjunto (um caso por rodada completa, `Acessibilidade_ConfirmarEPaginaDeRejeicao…`, esgotava 5 s sob carga de 4 navegadores; passa isolado 5 de 5).
+
+**Atenção ao rodar a suíte completa duas vezes seguidas no mesmo banco:** os dois casos `CepJs_…` falham se a tabela `CepCache` já tem o CEP `13015100` (os E2E que publicam anúncios, as telas inclusive, o deixam lá); o runbook já pedia limpar a tabela (o `republish.sh` faz isso). Rodando limpo: 246 de 246.
+
+**Mutações (6 planejadas e 1 extra; 7 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| M1 tirar uma tela da lista (`Users.Index`) | morta (`ScreenCoverageTests`: rota de página sem tela) |
+| M2 rota GET de página nova sem entrada na lista | morta (3 testes: lista de telas, matriz de acesso, Redator) |
+| M3 tirar o rótulo de um campo (nome da categoria) | morta no navegador (`label (critical): Form elements must have labels`, 1280 e 320 px). A primeira forma, tirar o rótulo da busca, **sobreviveu** por ser equivalente: o campo tem `placeholder`, que o axe aceita como nome |
+| M4 largura fixa de 420 px no site público (CSS) | morta (`320 px: a página tem 440 px… main#conteudo`) |
+| M5 largura fixa de 420 px no painel (CSS) | morta (`320 px: a página tem 436 px… main#conteudo, nav, ul.nav`) |
+| M6 o axe sem a etiqueta `wcag2aa` | morta (`ScreenListTests.TheAxeRules_AreTheWcag21LevelsAAndAA`) |
+| M7 (extra) texto cinza claro no painel | morta (`color-contrast (serious)` no título, 1280 e 320 px) |
+
+Observação do método: o estilo escrito direto no HTML (`style="…"`) é bloqueado pela política de segurança do site e **não** muda nada; a primeira tentativa de M4 assim sobreviveu por esse motivo (e foi refeita por CSS). Está no runbook.
+
+**O que não foi medido (BACKLOG):** teclado e leitor de tela (NVDA) por tela e Firefox/Safari ficam para o `/verify`; os estados que dependem de falha provocada (erro 503, "sem permissão" do painel, erro de entrada com senha errada, redefinição com link válido); o Redator como conta de teste (a tela somente leitura do anúncio em revisão); e o endereço desconhecido, que devolve 404 com corpo vazio e portanto não tem página para medir.
