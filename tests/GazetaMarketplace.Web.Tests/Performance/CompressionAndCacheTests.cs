@@ -1,8 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using GazetaMarketplace.Web.Middleware;
 using GazetaMarketplace.Web.Tests.Ads;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GazetaMarketplace.Web.Tests.Performance;
@@ -98,6 +104,65 @@ public sealed class CompressionAndCacheTests
         }
 
         Assert.IsEmpty(wrong, string.Join("\n", wrong));
+    }
+
+    /// <summary>
+    /// Uma resposta de erro do painel é reexecutada numa página pública (<c>/Home/Status/404</c>, <c>/Home/Error</c>): o caminho do pedido muda, e uma regra que olhasse o caminho da reexecução comprimiria a resposta de quem está logado.
+    /// A regra é pelo pedido original (<c>/painel</c>), e o corpo da página de erro vista por quem está logado não pode levar o token junto com texto que o atacante controla.
+    /// </summary>
+    [TestMethod]
+    public async Task APanelRequestThatEndsInAnErrorPage_IsNeverCompressed_AndNeverCarriesTheToken()
+    {
+        using DraftSite site = await DraftSite.StartAsync();
+        List<string> wrong = [];
+
+        foreach (string url in new[] { "/painel/anuncios/999999/editar", "/painel/nao-existe", "/painel/anuncios/999999/revisar", "/painel/categorias/999999/editar", "/painel/usuarios/999999/desativar" })
+        {
+            using HttpResponseMessage response = await GetAsync(site.Admin, url, "br, gzip");
+            string body = await response.Content.ReadAsStringAsync();
+            if ((int)response.StatusCode < 400)
+            {
+                wrong.Add($"{url}: devia ser uma resposta de erro, veio {(int)response.StatusCode} (troque a rota de teste)");
+                continue;
+            }
+
+            if (Encoding(response) is not null)
+            {
+                wrong.Add($"{url} ({(int)response.StatusCode}) saiu comprimida ({Encoding(response)}): a página de erro foi reexecutada fora de /painel");
+            }
+
+            if (body.Contains("RequestVerificationToken", System.StringComparison.OrdinalIgnoreCase) || body.Contains("request-verification-token", System.StringComparison.OrdinalIgnoreCase))
+            {
+                wrong.Add($"{url} ({(int)response.StatusCode}): a página de erro leva o token antiforgery");
+            }
+        }
+
+        Assert.IsEmpty(wrong, string.Join("\n", wrong));
+    }
+
+    /// <summary>O caminho da falha lançada (500 reexecutado em <c>/Home/Error</c>): num servidor mínimo com a mesma ordem do <c>Program.cs</c> (tratador de exceção e depois a compressão pública).</summary>
+    [TestMethod]
+    public async Task AnExceptionInAPanelRequest_ReexecutedInTheErrorPage_IsNotCompressed_ButAPublicOneIs()
+    {
+        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddPublicResponseCompression();
+        await using WebApplication app = builder.Build();
+        app.UseExceptionHandler("/erro");
+        app.UsePublicResponseCompression();
+        app.MapGet("/painel/falha", (Func<string>)(() => throw new InvalidOperationException("falha de teste")));
+        app.MapGet("/publica/falha", (Func<string>)(() => throw new InvalidOperationException("falha de teste")));
+        app.MapGet("/erro", () => Results.Text(new string('a', 5000)));
+        await app.StartAsync();
+        using HttpClient client = app.GetTestClient();
+
+        using HttpResponseMessage panel = await GetAsync(client, "/painel/falha", "br, gzip");
+        using HttpResponseMessage publicPage = await GetAsync(client, "/publica/falha", "br, gzip");
+
+        Assert.AreEqual(System.Net.HttpStatusCode.InternalServerError, panel.StatusCode, "a página de erro mantém o 500 da falha");
+        Assert.AreEqual(5000, (await panel.Content.ReadAsStringAsync()).Length, "a página de erro foi servida");
+        Assert.IsNull(Encoding(panel), "a falha de um pedido do painel não pode sair comprimida");
+        Assert.AreEqual("br", Encoding(publicPage), "a mesma falha num pedido público segue comprimida (a regra só tira o painel)");
     }
 
     [TestMethod]
