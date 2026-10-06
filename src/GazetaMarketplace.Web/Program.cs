@@ -62,6 +62,7 @@ builder.Services.AddOptions<HttpsRedirectionOptions>().Configure<IConfiguration,
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseAndMigrationHealthCheck>("banco", tags: ["ready"]);
 builder.Services.AddRateLimiters();
+builder.Services.AddPublicResponseCompression();
 builder.Services.AddSecureForwarding();
 // Nenhuma política CORS: site e endpoints JSON são da mesma origem (ARCHITECTURE.md §7)
 builder.Services.AddAppOptions(builder.Configuration, builder.Environment.IsProduction());
@@ -88,6 +89,7 @@ app.UseWhen(
     pages => pages.UseExceptionHandler("/Home/Error"));
 
 app.UseHttpsRedirection();
+app.UsePublicResponseCompression();
 // Sem providers: ignora Accept-Language e cookies, a cultura é sempre pt-BR
 RequestLocalizationOptions location = new()
 {
@@ -98,6 +100,7 @@ RequestLocalizationOptions location = new()
 location.RequestCultureProviders.Clear();
 app.UseRequestLocalization(location);
 app.UseRouting();
+app.UseVersionedStaticAssetCache();
 app.UseMiddleware<BodyLimitMiddleware>();
 
 app.UseAuthentication();
