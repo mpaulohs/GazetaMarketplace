@@ -3,6 +3,8 @@
   "listPageWeightMaxBytes": 2097152,
   "detailPageWeightMaxBytes": 3145728,
   "listCardCount": 24,
+  "nonImageAllowanceBytes": 262144,
+  "galleryMaxPhotos": 20,
   "volumeActiveAds": 200,
   "serverP95MaxMs": 500,
   "warmupRequests": 20,

@@ -18,6 +18,11 @@ internal sealed class Budgets
 
     public int ListCardCount { get; set; }
 
+    /// <summary>Quanto cabe em tudo que não é foto (HTML, CSS, JavaScript e fontes) na primeira carga; o E2E mediu cerca de 170 KB.</summary>
+    public long NonImageAllowanceBytes { get; set; }
+
+    public int GalleryMaxPhotos { get; set; }
+
     public int VolumeActiveAds { get; set; }
 
     public double ServerP95MaxMs { get; set; }
