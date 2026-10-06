@@ -449,3 +449,772 @@ Nenhum.
 |----------|---------|
 | Conditions (if any) | 0 🔴. Antes do `/scan` o orquestrador corrige ou aceita explicitamente os 7 🟡 (Gate 7). Recomendo corrigir já: o **1** (cache imutável de `/js/`: uma linha de política e um teste; **precisa estar resolvido antes do `/deploy`**, quando passa a haver visitantes com cache), o **2** e o **3** (dois testes baratos, e o comentário errado), o **6** (a seção do Checkpoint 6, que já está a cargo de outro responsável) e o **7** (12 `!`, comportamento idêntico). O **4** e o **5** dependem do Product Owner: a aprovação da linha v1.6 da SPEC e o critério da página de status. Registrar no BACKLOG os 14 🟢 (P2). Nenhuma decisão de produto nova foi tomada pelo revisor, e nenhum arquivo de produto ou de teste foi alterado. |
 
+
+
+---
+
+# Code Review — Revisão formal do código completo (Fases 0 a 6)
+
+**Date**: 2026-10-06
+**Reviewer**: Code Reviewer agent (Five-Axis Framework), consolidando quatro revisores de leitura (A: Core, Infrastructure, banco e ferramentas · B1: Web em C# · B2: views, JavaScript e CSS · C: transversal, com regras, RC-N, ADRs, anti-vácuo, OPENs e plano)
+**Inputs**: specs/SPEC.md · architecture/ARCHITECTURE.md e adr/* · plans/plan.md · plans/todo.md · plans/BACKLOG.md · plans/BACKLOG-TRIAGEM-FASE-6.md · security/PRE_DEV_REVIEW.md · security/SECURITY_REQUIREMENTS.md · security/THREAT_MODEL.md · reports/TEST_REPORT.md (seção "/test — Gate 6 da Fase 6") · `.claude/rules/**`
+**Escopo**: todo o produto das Fases 0 a 6 (`src/`, `tests/`, `tools/`, `db/`), commit `f08e777`. Esta seção **não substitui** as seções anteriores deste arquivo (Fase 5 e Checkpoint 6); ela as consolida e as supera onde houver conflito.
+
+> **Como foi feito.** Nenhum dos quatro revisores rodou `dotnet build`, `dotnet test` nem abriu navegador; todos leram o código. Os achados cuja conclusão depende de comportamento do framework, do navegador ou do provedor, e que **nenhum teste confirma**, levam a marca **(a confirmar)**. O consolidador conferiu no repositório os números que sustentam os achados mais pesados (listados na seção 1).
+
+## 1. Executive Summary
+
+> **Em resumo:** o produto está em bom estado: as regras de negócio, a autorização por papel e por autoria, o SQL parametrizado, o tratamento de fotos e a maior parte dos controles de segurança (19 dos 21 RC-N) estão implementados **e provados por teste**, com 98,0% de linhas e 91,8% de ramos cobertos. Há, porém, **um defeito crítico de segurança (R-01)**: as chaves do Data Protection (o mecanismo que assina o cookie de login, o token de antiforgery e o link de redefinição de senha) **nunca são gravadas na pasta persistente** que a arquitetura, o ADR-011 e os requisitos de segurança descrevem. A pasta é exigida na partida e depois ignorada. O problema **não é explorável por um atacante**; o efeito é de disponibilidade e de falsa garantia: dependendo do que a hospedagem faz por padrão, cada reciclagem do IIS pode deslogar a equipe e invalidar links de redefinição já enviados. A correção é pequena (poucas linhas e dois testes). Além do crítico, há **17 avisos** e **51 sugestões**.
+
+**Verdict: APPROVE com condições** (no vocabulário do template, **equivale a REQUEST CHANGES até a correção do R-01**; o Gate 7 **não passa** enquanto o R-01 estiver aberto).
+
+| Severidade | Qtde (consolidada, após deduplicação) | Bruto dos revisores |
+|---|---|---|
+| 🔴 Crítico | **1** (R-01) | 2 (B1-01 e C-01 são o mesmo problema) |
+| 🟡 Aviso | **17** (R-02 a R-18) | 18 (B1-02 e C-02 são o mesmo) |
+| 🟢 Sugestão | **51** (R-19 a R-69) | 53 (C-10 = B1-06; C-11 absorvida por B1-14) |
+| ✅ Positivos | **18** (seção 3) | 49 |
+| **Total de achados 🔴+🟡+🟢** | **69** | 73 |
+
+Por revisor (bruto, antes de deduplicar): A 0 🔴 · 5 🟡 · 12 🟢; B1 1 🔴 · 4 🟡 · 17 🟢; B2 0 🔴 · 5 🟡 · 14 🟢; C 1 🔴 · 4 🟡 · 10 🟢. Dos 69 consolidados, **9 já estavam no `plans/BACKLOG.md`** (R-42 a R-48, R-61 e R-63) e **60 são novos**.
+
+**Decisões de severidade.** Mantive a severidade dada por cada revisor. Nenhuma foi alterada. Sobre o 🔴: é uma **lacuna de implementação** contra o que ARCHITECTURE §7, ADR-011 (linha 84) e SECURITY_REQUIREMENTS §4 afirmam (o item está marcado `[x]` lá). Mantive 🔴 por três razões somadas: (1) o código valida a configuração e a descarta, o que dá **garantia falsa** a quem opera; (2) a ameaça S3 do modelo de ameaças não tem nenhuma implementação; (3) o efeito possível atinge os dois fluxos principais da equipe (sessão e redefinição de senha) justamente na hospedagem alvo. **Não** mantive 🔴 por exploração: não há caminho de ataque. O efeito real depende do provedor: no IIS o ASP.NET Core só grava as chaves no registro se o pool foi provisionado com o script próprio, e só no perfil do usuário se o perfil estiver carregado; sem nenhum dos dois, o anel fica em memória. Qual desses casos vale no SmarterASP compartilhado **é incerto e não foi verificado por ninguém**.
+
+**Números conferidos pelo consolidador no repositório** (não repetidos de relatório):
+
+| Verificação | Resultado |
+|---|---|
+| `AddDataProtection` / `PersistKeysToFileSystem` em `src/` (só `.cs`) | 0 ocorrências; só há `KeyStorageOptions` validada em `OptionsExtensions.cs:25` |
+| `[EnableRateLimiting("auth")]` / `AuthPolicy` | `AuthPolicy` é definida em `RateLimitingExtensions.cs:21` e `:66`; **nenhuma ação a usa** (as políticas aplicadas por atributo são só `cep`, `fotos` e `fotos-envio`; o limite global vale para todo pedido) |
+| Operador `!` (null-forgiving) | 5 linhas em `src/` e 184 em `tests/` (o `TEST_REPORT` e o OPEN-005 diziam "cerca de 60") |
+| Arquivos `.claude.backup-*` versionados | 177 (`git ls-files`) |
+| Arquivo solto `web` na raiz citado pelo revisor C | **já não existe**; `git status --short` está vazio |
+
+## 2. Five-Axis Scores
+
+Regra de honestidade aplicada: eixo com 🔴 aberto fica em no máximo 2; eixo com 🟡 aberto, em no máximo 4; 5 só sem nenhum achado pendente. O 🔴 deste ciclo é de **Segurança**.
+
+| # | Axis | Score (1–5) | Notas por escopo (A · B1 · B2 · C) | One-line justification |
+|---|------|-------------|---|---|
+| 1 | Correctness | **3** | 3 · 2 · 3 · 4 | Sem 🔴 próprio do eixo, mas **12 🟡 abertos**: R-02 e R-03 podem gravar ou perder dado em silêncio, R-04 devolve 500 com entrada de forma errada, R-05 pode derrubar páginas no Windows, R-06 trava o envio de categorias novas, R-09 e R-10 estragam telas na sessão vencida e no token inválido, R-14 a R-18 são defeitos de acessibilidade e de tela medidos só por leitura. Os fluxos principais estão provados (35 de 36 cenários amostrados afirmam o efeito observável). O R-01 também pesa aqui (sessão e redefinição), mas o classifiquei em Segurança |
+| 2 | Readability | **4** | 4 · 4 · 4 · 4 | Código claro, com comentários do porquê. O único 🟡 do eixo é R-13 (operador `!` em 184 linhas de teste e 5 de `src/`, proibido pelas regras). Os 🟢 (R-22, R-28, R-40, R-41, R-52, R-54, R-63) são pequenos |
+| 3 | Architecture | **3** | 4 · 3 · 4 · 4 | Camadas e referências entre projetos respeitadas; 11 dos 12 ADRs cumpridos. O padrão que pesa: **documento afirma um mecanismo que o código não tem** (R-01 chaves, R-07 política `auth`, R-12 FluentValidation), mais R-65 (contrato e dados pessoais desatualizados). Dois 🟡 do eixo (R-07, R-12) e ADR-011 só parcial |
+| 4 | Security | **2** | 4 · 2 · 5 · 2 | **🔴 R-01** (anel de chaves sem persistência) limita a nota a 2. Somam-se 🟡 R-07 (limite documentado e nunca aplicado, com teste que prova um controlador de teste), R-08 (permissão negada sem registro no log) e R-11 (SEC-01 pendente: sem o proxy configurado, as proteções por IP valem para todos juntos). Pontos fortes reais: matriz de acesso por descoberta de rotas, SQL parametrizado, fotos confinadas e decodificadas com política, zero `innerHTML`/`Html.Raw`, CSP sem exceção |
+| 5 | Performance | **4** | 4 · 4 · 4 · 4 | Nenhum 🟡. Orçamentos medidos (p95 de 34,6 ms no volume da v1; tempo limite de consulta provado no SQL Server real). Pendências 🟢: R-32 (leitura de corpo antes do limite de 11 MB), R-56 (vendors sem versão e fonte 700 sem `preload`) e os itens já no BACKLOG. Não dou 5 porque há achados pendentes e números em rede real ainda por medir (`/verify`) |
+
+**Re-pontuação:** se o R-01 for corrigido e provado, Segurança sobe para no máximo 4 (restam os 🟡 R-07, R-08 e R-11); os demais eixos só sobem com o fechamento dos 🟡 de cada um.
+
+## 3. Findings (by severity: 🔴 → 🟡 → 🟢 → ✅)
+
+Cada achado traz o id consolidado `R-NN` e, entre parênteses, a origem (`A-`, `B1-`, `B2-` e `C-` são os revisores; "=" indica o mesmo problema achado por mais de um). **(a confirmar)** marca a conclusão só de leitura, sem teste que a confirme. Tabela de rastreio de ids: ver a seção 4 (Action Items) e `plans/BACKLOG-TRIAGEM-FASE-6.md` §4.
+
+### 🔴 Critical
+
+#### R-01 (B1-01 = C-01) — Data Protection não persiste as chaves; a pasta `DataProtection__KeysDirectory` é exigida em produção e nunca é usada
+- **Eixo:** Segurança (efeito também em Correção). **Base:** lido no código e confirmado por busca no repositório; o efeito em produção depende do provedor **(a confirmar no `/verify`)**.
+- **Where:** `src/GazetaMarketplace.Web/Program.cs:47-85` (nenhuma chamada a `AddDataProtection`); `src/GazetaMarketplace.Infrastructure/Configuration/OptionsExtensions.cs:25` (valida e liga `KeyStorageOptions`); `src/GazetaMarketplace.Core/Configuration/KeyStorageOptions.cs:6-11` (`KeysDirectory` com `[Required]`); `web.Production.config.example:17`; `tests/GazetaMarketplace.Web.Tests/Configuration/OptionsTests.cs:139-150` (só prova que a variável é exigida).
+- **Description:** ARCHITECTURE §7, ADR-011 (linha 84: "As chaves do Data Protection usam `PersistKeysToFileSystem`"), THREAT_MODEL S3 e SECURITY_REQUIREMENTS §4 (item `[x]`, RR-2 e RR-8) dizem que as chaves ficam numa pasta fora da raiz do site. A busca por `AddDataProtection`, `PersistKeysToFileSystem`, `SetApplicationName` e por qualquer leitor de `KeyStorageOptions` não acha nada. O site se recusa a subir sem a pasta e depois a ignora. **Não é explorável**; é lacuna de implementação com garantia falsa. O que acontece em produção é o padrão do ASP.NET Core para o host: no IIS, grava no registro se o pool foi provisionado com o script do IIS, grava no perfil do usuário se houver perfil carregado e, sem nenhum dos dois, mantém o anel só em memória. Na hospedagem compartilhada **não se sabe** qual desses casos vale. O token de redefinição (`RecoveryTokenProvider.cs:24`), o cookie `Gazeta.Team`, o antiforgery e o `TempData` dependem do anel.
+- **Cenário:** produção no SmarterASP; o IIS recicla o pool por inatividade (o ADR-010 conta com isso). Se o anel estiver em memória: (1) a equipe perde a sessão; (2) uma redatora que pediu a redefinição de senha 10 minutos antes abre o link e recebe "O link não é mais válido", e o fluxo US-007 passa a falhar de forma intermitente; (3) um formulário aberto antes da reciclagem volta com 400 (ver R-10). Nenhum teste enxerga isso: a suíte roda num só processo, com o anel padrão do host de teste.
+- **Recommendation:** em `Program.cs`, depois de `AddAppOptions`, `builder.Services.AddDataProtection().SetApplicationName("GazetaMarketplace").PersistKeysToFileSystem(new DirectoryInfo(keysDirectory))` lendo `KeyStorageOptions` (em Development e nos testes, uma pasta temporária). Prova: um teste que sobe dois hosts com a mesma pasta e mostra que o cookie, o token de redefinição e o token de antiforgery do primeiro valem no segundo, e outro que confere que a pasta recebe `key-*.xml`. Se a hospedagem não oferecer criptografia das chaves em repouso (DPAPI), registrar a decisão na AR-01, como o ADR-011 já prevê. Acrescentar o critério à Task 0.2.
+- Relates-to: ADR-003, ADR-011, AR-01, RR-2, RR-8, THREAT_MODEL S3, NFR-08, NFR-09, US-007, Task 0.2
+
+### 🟡 Warning
+
+#### R-02 (A-01) — O Administrador consegue deixar um anúncio **Publicado** incompleto (sem categoria, preço, descrição ou foto)
+- **Eixo:** Correção. **Base:** lido no código; o teste `DraftTests.cs:318` já posta só `Title`, `CategoryId` e `Price` e o servidor aceita.
+- **Where:** `src/GazetaMarketplace.Infrastructure/Ads/AdDraftService.cs:85-123` (`UpdateAsync`) e `:184-240` (`PrepareAsync`); `Photos/AdPhotoService.cs:89-105` (`DeleteAsync` aceita apagar a última foto); `AdSubmissionRules.Pending` só é chamada em `Ads/AdSubmission.cs:90` e `Ads/AdReview.cs:106`.
+- **Description:** a SPEC diz que editar um Publicado altera o site na hora (US-008, regra 2) e que só o envio exige os campos obrigatórios (US-009). O serviço usa a validação frouxa de rascunho em qualquer situação; quem edita um anúncio no ar não passa por conferência de completude.
+- **Cenário:** o Administrador abre um Publicado de Carros e salva com a categoria vazia, apaga a única foto ou esvazia a descrição. O anúncio continua `Published`: sem categoria some da categoria e da busca, mas segue na home e no mapa do site; sem foto aparece "Foto indisponível". `Attributes` é substituído inteiro em `Apply`, então os campos do grupo se perdem.
+- **Recommendation:** com `ad.Status == Published` (ou `InReview`), `UpdateAsync` recusa o que `AdSubmissionRules.Pending` recusaria (como `AdReview.PublishChecksAsync` já faz) e `AdPhotoService.DeleteAsync` recusa apagar abaixo de `MinPhotosToSubmit` nesses estados. Teste: salvar um Publicado sem categoria e sem descrição devolve 400/409 e não grava. **Decisão de produto** envolvida (ver triagem §4, decisão 2).
+- Relates-to: US-008 (regra 2, S13), US-009, US-010, US-003
+
+#### R-03 (A-02) — `CepService` chama `ChangeTracker.Clear()` no contexto compartilhado e solta o anúncio que `AdDraftService.UpdateAsync` está editando
+- **Eixo:** Correção (concorrência). **Base:** lido no código; o revisor não conseguiu executar para ver se o resultado é perda silenciosa ou erro 500 **(a confirmar com teste)**.
+- **Where:** `src/GazetaMarketplace.Infrastructure/Location/CepService.cs:72-76` (`catch (DbUpdateException) { context.ChangeTracker.Clear(); }`); `Ads/AdDraftService.cs:88` (`GetForEditAsync` rastreia o `Ad`), `:90` e `:388` (`PrepareAsync` chama `cep.GetAsync` no mesmo `AppDbContext`), `:100` e `:107` (usam `context.Entry(ad)` depois).
+- **Description:** se a gravação do cache do CEP falha (o caso previsto é duas pessoas gravando o mesmo CEP ao mesmo tempo), o `Clear()` desanexa tudo o que o contexto rastreava, inclusive o `Ad` carregado antes. `UpdateAsync` segue com um `ad` desanexado; `Apply(ad, …)` altera um objeto que o EF não vê e a auditoria `ad.update` é gravada sozinha.
+- **Cenário:** dois membros da equipe salvam anúncios com o mesmo CEP novo no mesmo instante. Um recebe "Rascunho salvo", mas o anúncio não mudou, e a auditoria descreve uma mudança que não aconteceu (ou, se o EF recusar a entrada desanexada, a pessoa recebe 500). O teste `CepAndCitiesTests.cs:97` prova só o `CepService` isolado, com contextos separados.
+- **Recommendation:** o `CepService` não deve limpar o rastreador do chamador: gravar o cache num contexto próprio (`IServiceScopeFactory`/`IDbContextFactory`, como `CategoryTree` faz) ou desanexar só a entrada que falhou. Teste: `UpdateAsync` com `cep.GetAsync` forçado a falhar a gravação do cache, conferindo que a edição foi gravada.
+- Relates-to: US-008 (CEP, S23 a S25), NFR-24, ADR-007, RC-16
+
+#### R-04 (A-03) — `PriceText` aceita dígitos de outros alfabetos no regex e depois lança `FormatException` (erro 500)
+- **Eixo:** Correção / entrada de borda. **Base:** lido no código.
+- **Where:** `src/GazetaMarketplace.Core/Formatting/PriceText.cs:28-29` (`\d` no regex `Shape`) e `:55` (`long.Parse(fraction, NumberStyles.None, InvariantCulture)`); chamadores `Ads/AdFormRules.cs:46-66` (`PriceError`) e `Fields/FieldValueParser.cs:132` (`ApplyMoney`, usado em Condomínio e IPTU).
+- **Description:** em .NET `\d` casa qualquer dígito Unicode (categoria Nd); `long.Parse` com `NumberStyles.None` só aceita 0-9. `DecimalInput`, `FavoriteIds` e `CepRules` usam 0-9 de propósito; `PriceText` é a exceção. A regra "wrong-type input" de `testing.md` pede 4xx documentado, não falha.
+- **Cenário:** o campo Preço (ou Condomínio) recebe `1,٥` por POST direto ou colado: `Shape()` casa, `PadRight` gera `"٥0"` e o `Parse` lança dentro de `PrepareAsync`: 500 em vez de "Informe o preço em reais". Com dígitos arábicos na parte inteira (`٦٢٠٠٠`) o código cai no ramo de estouro e devolve a mensagem errada ("entre R$ 0,01 e R$ 99.999.999,99").
+- **Recommendation:** trocar `\d` por `[0-9]` (ou `RegexOptions.ECMAScript`) e usar `TryParse` nas casas decimais; acrescentar à tabela de testes de `PriceText` um dígito arábico-índico e um de largura total (`１２３`).
+- Relates-to: US-008-S08, US-008 (preço, S28), testing.md (wrong-type input)
+
+#### R-05 (A-04) — O fuso de exibição usa um id IANA (`America/Sao_Paulo`) num inicializador estático; a hospedagem é Windows/IIS
+- **Eixo:** Correção / Arquitetura (risco de ambiente). **Base:** lido no código; o comportamento no servidor do provedor **(a confirmar no `/verify`)**; todos os testes rodaram em Linux.
+- **Where:** `src/GazetaMarketplace.Core/Formatting/CurrencyAndDateFormatter.cs:15` (`TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo")` em propriedade estática); usado também em `Fields/ModelYearRules.cs:17` (`CurrentYear`), chamado por `AdDraftService.cs:223` e `SearchService.cs:258`.
+- **Description:** a ARCHITECTURE (§Hospedagem) fixa o IIS compartilhado do SmarterASP (Windows). No Windows o id IANA só resolve em .NET 6+ com o ICU disponível; sem ele, `FindSystemTimeZoneById` lança `TimeZoneNotFoundException` e, por ser inicializador estático, o tipo fica quebrado (`TypeInitializationException` em toda chamada seguinte).
+- **Cenário:** o site sobe num Windows Server sem ICU; a primeira data exibida ou o primeiro salvamento com campo de ano lança e a página responde 500 até o processo reciclar.
+- **Recommendation:** tentar o id IANA e, se falhar, o id do Windows (`"E. South America Standard Time"`) num método com `try/catch`; pôr no checklist do `/deploy` uma chamada de teste (`/` com datas e o formulário de anúncio) na hospedagem real. Se o `/verify` confirmar a falha, vira bloqueio de lançamento.
+- Relates-to: NFR-20, ADR-004, AR-05
+
+#### R-06 (A-05) — Categoria criada pelo Administrador sob Imóveis, Roupas, Eletro ou Telefonia herda o grupo, mas não a lista do campo obrigatório: o anúncio nunca é enviado
+- **Eixo:** Correção. **Base:** lido no código.
+- **Where:** `src/GazetaMarketplace.Core/Fields/FieldDefinition.cs:156-157` (`OptionsFor` só procura o id exato da categoria); `Fields/FieldValueParser.cs:146-152` (`ApplySelect` devolve `InvalidOption` com lista nula); `Ads/AdSubmissionRules.cs:76-78` (obrigatório vazio vira pendência); campos afetados: `Groups/RealEstateGroup.cs:26-38` (`propertyTypeId`), `ClothingAndShoesGroup.cs:20-35` (`sizeId`), `AppliancesGroup.cs:22-36` e `TelephonyProductsGroup.cs:19-30` (`typeId`). O texto de `FieldGroupRegistry.cs:11` ("Categoria nova herda do pai sem nenhum trabalho") promete o contrário.
+- **Description:** a categoria nova usa o grupo do ancestral (A7(a)), mas a lista de opções desses quatro campos obrigatórios é indexada pelo **id** das categorias da carga inicial.
+- **Cenário:** o Administrador cria "Kitnets" dentro de "Apartamentos" (26). `propertyTypeId` é obrigatório; `OptionsFor(novoId)` devolve `null`; a tela mostra uma caixa sem opções, o servidor recusa qualquer valor e o envio fica sempre com a pendência "Informe o tipo do imóvel". Em Peças o campo não é obrigatório: só degrada.
+- **Recommendation:** `OptionsFor` cai para a lista da categoria ancestral mais próxima que tenha entrada (passando o caminho da árvore, como `ResolveFieldGroup`), ou para uma lista padrão; teste de paridade que crie uma filha de cada categoria com `OptionsByCategory` e confira que todo campo obrigatório de lista tem opções.
+- Relates-to: US-013, A7(a), ADR-002, Task 2.6
+
+#### R-07 (B1-02 = C-02) — A política de limite `auth` nunca é aplicada em produção, e o teste que a "prova" usa uma rota de mentira
+- **Eixo:** Arquitetura e Segurança. **Base:** lido no código; `AuthPolicy` só aparece nas linhas 21 e 66 de `RateLimitingExtensions.cs` (conferido).
+- **Where:** `src/GazetaMarketplace.Web/Security/RateLimitingExtensions.cs:21` e `:66-67`; `Areas/Panel/Controllers/AccountController.cs:59`, `:115`, `:137` (sem `[EnableRateLimiting]`); `tests/GazetaMarketplace.Web.Tests/Security/RateLimiterTests.cs:41-64` e `:119-131` com `Support/TestControllers.cs:38-39` (o atributo só existe na rota `/api/v1/teste/auth`).
+- **Description:** ARCHITECTURE §7 ("Login e 'Esqueci minha senha': 5 por 15 min por IP"), SECURITY_REQUIREMENTS §5 (`[x]`), o THREAT_MODEL (S1/D4) e `plan.md:269` descrevem um controle que nenhuma rota usa. O que existe é outro, e funciona: o login conta **falhas** em `LoginFailureCounter` (decisão registrada em `plan.md:485`) e a recuperação tem 3 pedidos por hora por e-mail e 10 por IP dentro de `PasswordRecoveryService.RequestAsync`. A política virou código morto e `SextaTentativaDeLogin_Devolve429` continuaria verde se o login ficasse sem limite (só o `US006S06` falharia).
+- **Cenário:** um cliente anônimo envia 100 POSTs por minuto para `/painel/esqueci-minha-senha` com e-mails aleatórios. Cada pedido grava uma linha em `PasswordRecoveryAttempts` e faz três `COUNT` (`PasswordRecoveryService.cs:46-52`) antes de o limite de 10 por hora calar o envio; só o limite global de 100 por minuto segura: cerca de 144 mil linhas por dia por IP e 400 consultas por minuto no banco do provedor. Também não há limite próprio em `POST /painel/redefinir-senha`.
+- **Recommendation:** decidir e alinhar: (a) aplicar `[EnableRateLimiting(AuthPolicy)]` só nos POSTs de `Forgot` e `Reset` (não no login, para não contar acertos), com números condizentes (por exemplo 10 por hora); (b) corrigir ARCHITECTURE §7, SECURITY_REQUIREMENTS §5, THREAT_MODEL S1/D4 e o critério da Task 0.4; (c) reescrever o teste para chamar a rota real e provar o 429; ou (d) apagar a política e o controlador de teste.
+- Relates-to: NFR-06, RC-11, RC-13, THREAT_MODEL S1/D4, Task 0.4, Task 1.4
+
+#### R-08 (B1-03) — "Permissão negada" nas páginas do painel não deixa nenhum registro no log
+- **Eixo:** Segurança. **Base:** lido no código.
+- **Where:** `Areas/Panel/Controllers/AdsController.cs:438-442` (`NoPermission`) e os `catch (ForbiddenException)` em `:123`, `:167`, `:197`; `AdPhotoPagesController.cs:69`, `:102`, `:114-118`; `AccountController.cs:187-195` (`AccessDenied`); `Security/IdentityExtensions.cs:111-120`.
+- **Description:** SECURITY_REQUIREMENTS §6 pede Serilog `Warning` para falha, bloqueio e recusa de login, **permissão negada** e limite excedido. Nas páginas, a recusa por papel e a recusa por autoria devolvem a tela 403 e nada mais: o `AdService` lança sem logar e o "Authorization failed" do framework é `Information`, abaixo do nível `Warning` configurado. Só a `/api` registra (`ExceptionHandlingMiddleware.cs:50`).
+- **Cenário:** o Redator B abre `/painel/anuncios/17/editar`, da Redatora A, 200 vezes variando o id. Cada resposta é um 403 correto e invisível; a investigação de um IDOR sondado não tem por onde começar. A mesma sondagem pela `/api` ficaria registrada.
+- **Recommendation:** `LogWarning("Acesso negado em {Method} {Path} ao usuário {UserId}", …)` no helper `NoPermission` dos dois controllers (ou num filtro de exceção para `ForbiddenException`) e na ação `AccessDenied`; teste de log nos moldes de `ErrorsTests`.
+- Relates-to: RC-16, NFR-13, US-006-S10, US-008-S10
+
+#### R-09 (B1-04) — Com a sessão vencida, o `fetch` de "trocar categoria" recebe a tela de login com status 200 e a injeta no formulário do anúncio
+- **Eixo:** Correção. **Base:** lido no código.
+- **Where:** `Security/IdentityExtensions.cs:96-109` (só `/api` ganha 401; o resto é 302); `Areas/Panel/Controllers/AdsController.cs:342-343` (`GET painel/anuncios/campos`); `wwwroot/js/pages/ad-edit.js:90-92` (`if (!resposta.ok)` e `DOMParser`, sem olhar `resposta.redirected`).
+- **Description:** a rota `campos` fica sob `/painel`; cookie vencido gera 302 para `/painel/entrar?ReturnUrl=…`; o `fetch` segue o redirecionamento, a tela de login volta com 200 e `resposta.ok` é verdadeiro.
+- **Cenário:** a pessoa abre "Novo anúncio", escreve a descrição por mais de 30 minutos sem nenhum pedido ao servidor e troca a categoria. A região `[data-group-region]` é substituída pelo corpo da página de login (campos de e-mail e senha e o token antiforgery da entrada) dentro do formulário do anúncio, e os campos do grupo somem. Salvar nessa tela cai de novo no login e o texto digitado se perde. A mesma mecânica faz um POST em sessão vencida voltar com `ReturnUrl` para uma rota só de POST, e depois do login a pessoa vê "Página não encontrada".
+- **Recommendation:** no servidor, 401 para pedido que não é navegação (`Sec-Fetch-Mode` diferente de `navigate`) em `OnRedirectToLogin` e `OnRedirectToAccessDenied`; no cliente, `if (resposta.redirected || !resposta.ok)` em `ad-edit.js` com o aviso "sua sessão expirou". Teste: pedido a `/painel/anuncios/campos` sem cookie e com `Sec-Fetch-Mode: cors` deve dar 401, não 302.
+- Relates-to: US-006-S08, US-008-S09, NFR-08
+
+#### R-10 (B1-05) — Em POST com token antiforgery inválido, a página amigável de 400 sai em branco
+- **Eixo:** Correção. **Base:** **(a confirmar)**: leitura do filtro do MVC (`AutoValidate` só dispensa GET, HEAD, OPTIONS e TRACE) e do fato de a reexecução manter o método; nenhum teste confirma.
+- **Where:** `Program.cs:48-53` (`AutoValidateAntiforgeryToken` global) e `:100-102` (`UseStatusCodePagesWithReExecute`); `Controllers/HomeController.cs:50` (`Status`, sem `[IgnoreAntiforgeryToken]`); `tests/.../Security/AntiforgeryTests.cs:24-33` (só confere o status 400, não o corpo) e `Middleware/StatusPagesTests.cs` (todos os pedidos são GET).
+- **Description:** a reexecução do pipeline mantém o método original; um POST cujo token falhou cai em `/Home/Status/400` também como POST, o filtro global valida o token de novo, falha de novo e devolve 400 vazio.
+- **Cenário:** a equipe abre `/painel/entrar` de manhã, o pool recicla (ver R-01) e a pessoa envia o formulário: o token da página aberta já não vale e o navegador mostra uma página totalmente em branco, não a tela "Algo deu errado" que o NFR-25 promete. O mesmo vale para duas abas: entra numa e envia o formulário anônimo da outra.
+- **Recommendation:** `[IgnoreAntiforgeryToken]` em `HomeController.Status` e `Error` (só leem estado); teste "POST sem token em página do painel mostra a página de status com 400".
+- Relates-to: NFR-25, NFR-11, Task 6.2
+
+#### R-11 (C-03) — SEC-01/RC-10 segue pendente e, sem o valor do provedor, o bloqueio de login e os limites viram um só para todos
+- **Eixo:** Segurança (disponibilidade). **Base:** lido no código; o desenho fail-closed está provado em teste, o que falta é o valor do provedor.
+- **Where:** `Web/Security/ForwardingExtensions.cs:40-43` (`UseSecureForwarding` só liga com `ForwardedHeaders:KnownProxies`); `web.Production.config.example:23-25` (a variável só aparece em comentário); `LoginFailureCounter.cs`; `PasswordRecoveryService.cs:56`; `RateLimitingExtensions.cs:133`.
+- **Description:** o desenho é correto (não confia em cabeçalho forjado). Mas, **se** o provedor encaminha por um proxy e o valor não for configurado, o IP visto é o do proxy para todos: cinco falhas de qualquer pessoa bloqueiam o login de **toda a equipe por 15 minutos**, o limite global de 100 por minuto é do site inteiro e o de 10 pedidos de redefinição por hora vale para todos juntos. O efeito de negação de serviço do contador de login não está descrito no PRE_DEV_REVIEW; o item não está no BACKLOG (só F6-03 cita o checklist, sem SEC-01) e o critério da 0.4 segue `[ ]`.
+- **Cenário:** no go-live a variável é esquecida; um bot erra a senha 5 vezes; ninguém da redação entra até as 15 minutos passarem.
+- **Recommendation:** pôr SEC-01 no checklist de implantação (F6-03) com teste de aceite (depois de configurar, duas origens distintas não compartilham o contador); `Warning` na partida quando `ForwardedHeaders:KnownProxies` está vazio em Production (hoje é silencioso); registrar no PRE_DEV que o efeito é de disponibilidade.
+- Relates-to: SEC-01, RC-10, RR-4, THREAT_MODEL S1/D1/D3, Task 0.4
+
+#### R-12 (C-04) — FluentValidation exigido pelas regras, aprovado na AR-06, marcado como feito e nunca adotado
+- **Eixo:** Arquitetura. **Base:** lido no código e confirmado por busca (sem `Core/Validators`, sem o pacote em `Directory.Packages.props`).
+- **Where:** `security/SECURITY_REQUIREMENTS.md` §3 ("FluentValidation em `GazetaMarketplace.Core.Validators`"); `rules/security.md` e `rules/api-conventions.md`; `Directory.Packages.props`; a validação real está em `FieldValueParser`, `AdFormRules`, `SearchService`, `UserManagement.CreateAsync` e anotações nos ViewModels.
+- **Description:** a validação existe e é bem testada, mas **não é a pilha aprovada**, não há ADR nem nota de desvio, e o documento de requisitos diz que foi feito de outro jeito. Mesmo padrão do R-07: o documento afirma um mecanismo que o código não tem.
+- **Cenário:** um auditor procura os validadores citados e não os encontra.
+- **Recommendation:** registrar a decisão ("validação nas regras de domínio e na entrada do serviço; FluentValidation não adotado, razões") numa linha de `ARCHITECTURE.md` §7 ou num ADR curto e corrigir SECURITY_REQUIREMENTS §3 e a AR-06; ou adotar o pacote pelo Technology Decision Process (custo alto, benefício baixo hoje). **Decisão do Product Owner** (triagem §4, decisão 3).
+- Relates-to: AR-06, NFR-22, Task 1.3, Task 3.3, Task 5.4
+
+#### R-13 (C-05 + OPEN-005) — O operador `!` está em 184 linhas de teste e 5 de `src/`, não "cerca de 60"
+- **Eixo:** Legibilidade e testes. **Base:** contagem conferida pelo consolidador (`[\w)\]]!` seguido de `. ; , ) [` ou fim de linha, sem `!=`): 5 em `src/`, 184 em `tests/`.
+- **Where:** `src/GazetaMarketplace.Infrastructure/Photos/FileSystemPhotoStorage.cs:53,75,104`; `src/.../Data/Configurations/AdConfiguration.cs:87,100`; 50 arquivos em `tests/` (por exemplo `Fields/VehicleGroupsTests.cs`, `Playwright/Showcase/ContactE2ETests.cs:135,146,160,161,216`).
+- **Description:** `lang-dotnet.md`, `code-style.md` e `testing.md` proíbem `?` e `!` porque `Nullable` está desligado. O `TEST_REPORT` (correção D1.3), o OPEN-005 e o BACKLOG (F6-32, que cita só dois) subestimam: são 184 linhas de teste mais 5 de produto.
+- **Cenário:** o item é dado como "pequeno, fora do escopo" três vezes seguidas e cresce a cada tarefa porque o hábito não é barrado.
+- **Recommendation:** uma passada `/simplify` que remova todos (substituição mecânica, sem mudar comportamento) e uma trava que falhe o build se voltar (regra de análise no `.editorconfig` ou teste de varredura como o `RawOutputTests`); corrigir o número no BACKLOG.
+- Relates-to: lang-dotnet.md, code-style.md, testing.md, OPEN-005, F6-32
+
+#### R-14 (B2-01) — O contorno de foco do projeto não vale para botões, paginação, abas, campos e caixas de seleção
+- **Eixo:** Correção (acessibilidade: WCAG 2.4.7 e 1.4.11). **Base:** **(a confirmar no navegador)**: leitura de `base.css` e do CSS do Bootstrap (verificado por `grep`).
+- **Where:** `src/GazetaMarketplace.Web/wwwroot/css/base.css:60-64` (regra `:focus-visible`, especificidade 0,1,0) contra `wwwroot/lib/bootstrap/dist/css/bootstrap.min.css`: `.btn:focus-visible`, `.page-link:focus`, `.nav-link:focus-visible`, `.form-select:focus`, `.form-check-input:focus` e `.navbar-toggler:focus` (todos com `outline:0; box-shadow:…`, especificidade 0,2,0).
+- **Description:** os seletores do Bootstrap vencem a regra global do projeto, que o `design-system.md:20` e `:191` descrevem como o contorno sólido `#0a58ca` (6,44:1). Na prática ele só chega a links comuns e ao "Ir para o conteúdo". No cabeçalho e no rodapé `.cabecalho :focus-visible` restaura o contorno, por isso a falha só aparece no corpo. O único teste de foco (`BaseCssTests.cs:38-50`) mede o link "Ir para o conteúdo"; o axe não avalia indicador de foco.
+- **Cenário:** na fila de revisão, `Tab` até "Publicar" (`btn btn-primary`): o foco vira anel `rgba(215,34,19,.5)` (cerca de 2,3:1 sobre `#f1f5fd`). Pior caso, o coração de favoritar dos cards: anel `rgba(211,212,213,.5)` sobre foto e fundo `#f8f9fa` que vai a `#d3d4d5`; quem navega por teclado quase não vê onde está.
+- **Recommendation:** subir a especificidade: `:is(.btn, .page-link, .nav-link, .form-select, .form-control, .form-check-input, .navbar-toggler):focus-visible { outline: var(--app-focus-outline); outline-offset: var(--app-focus-offset); box-shadow: none; }`; estender `BaseCssTests` para medir o contorno computado de um `.btn`, de um `.page-link` e do coração; confirmar com `Tab` em "Publicar", na paginação e no coração.
+- Relates-to: NFR-16, Task 0.7, Task 6.2
+
+#### R-15 (B2-02) — Painel de filtros `sticky` mais alto que a janela esconde "Aplicar filtros" no notebook
+- **Eixo:** Correção (usabilidade). **Base:** **(a confirmar no navegador)**: medida por cálculo a partir da folha do Bootstrap.
+- **Where:** `wwwroot/css/pages/search.css:339-344`; `Views/Search/Index.cshtml:82` e `:196-199`.
+- **Description:** a partir de 992 px o formulário é `position: sticky; top: 1rem` sem `max-height` nem rolagem própria. Com Carros ou Motos escolhidos o painel passa de uns 850 px; um elemento `sticky` mais alto que a janela fica preso no topo e o fim só reaparece quando a coluna termina.
+- **Cenário:** notebook 1366×768 (janela útil perto de 650 px), `/busca?categoria=carros`: "Aplicar filtros" e "Limpar filtros" ficam abaixo da dobra e não sobem com a rolagem; só aparecem com Enter num campo ou rolando os 24 resultados.
+- **Recommendation:** no mesmo `@media (min-width: 992px)`, `max-height: calc(100vh - 2rem); overflow-y: auto;` em `.search-filters`; conferir no Chromium a 1366×768 com Carros escolhido.
+- Relates-to: US-002 (S01, S02), NFR-17
+
+#### R-16 (B2-03) — O recuo da árvore de categorias na busca usa espaços comuns, que o navegador colapsa
+- **Eixo:** Correção. **Base:** **(a confirmar no navegador)**: certeza alta pelo comportamento padrão de `<option>`.
+- **Where:** `Views/Search/Index.cshtml:99` (`@(new string(' ', (option.Depth - 1) * 3))@option.Name`); o teste `SearchRulesTests.cs:465` confere o `Depth` do modelo, não o que o navegador mostra.
+- **Description:** o texto de um `<option>` tem o espaço em branco removido e colapsado; o recuo some. O painel (`CategoriesController.cs:160`) usa `—` e o formulário do anúncio (`AdFormFactory.cs:160`) usa `Pai › Nome` e `optgroup`; só a busca depende de espaço.
+- **Cenário:** "Serviços" (id 7, principal) e "Serviços" (id 66, filha) ficam idênticas numa lista plana de 147 opções; o visitante não sabe qual escolhe, e perde a noção de grupo e subgrupo de "Casas", "Apartamentos" etc.
+- **Recommendation:** usar espaço não separável (U+00A0, escrito como `&nbsp;` ou ` `), prefixo visível (`— `) ou `optgroup` por categoria principal como no formulário do anúncio; teste de integração que procure o recuo no HTML e E2E que leia o texto da opção.
+- Relates-to: US-002-S02, US-001, ADR-006
+
+#### R-17 (B2-04) — Voltar pelo histórico mostra contador e corações de favoritos desatualizados
+- **Eixo:** Correção. **Base:** **(a confirmar no navegador)**: leitura do código; o cache de página inteira (bfcache) não reexecuta o JavaScript.
+- **Where:** `wwwroot/js/modules/favorites-ui.js:39-64` (`ativarFavoritos` só pinta ao carregar e escuta o evento próprio e `storage`); `wwwroot/js/pages/favorites.js:110-114`; as páginas públicas não têm `no-store` (só a rota do fragmento, `FavoritesController.cs:22`).
+- **Description:** `storage` não chega a documentos no bfcache e o evento próprio só dispara na aba que gravou; ao restaurar a página nada chama `atualizarContador()` nem `pintarTodos()`. Os outros módulos já usam `pageshow` (`ad-confirm.js:19`, `ad-edit.js:250`, `search.js:224`).
+- **Cenário:** busca (contador 0, coração vazio) → abre um anúncio → "Favoritar" → Voltar: a busca volta com "Favoritos (0)" e o coração vazio. Em `/favoritos`: desfavorita na página do anúncio, volta, e o anúncio continua na lista.
+- **Recommendation:** `window.addEventListener("pageshow", (e) => { if (e.persisted) { atualizarContador(); pintarTodos(); } })` em `ativarFavoritos`; o mesmo gancho chamando `carregar()` em `pages/favorites.js`; E2E com `page.GoBackAsync()` depois de favoritar noutra página.
+- Relates-to: US-005 (S01, S03, S04), NFR-12
+
+#### R-18 (B2-05) — O selo "Cidade/UF informadas manualmente (CEP não conferido)" estoura 320 px
+- **Eixo:** Correção (responsividade, NFR-17). **Base:** **(a confirmar no navegador)**: medida por cálculo (52 caracteres em negrito de 12 px, `nowrap` do `.badge`).
+- **Where:** `Areas/Panel/Views/ReviewQueue/Preview.cshtml:61` (`badge text-bg-warning me-1`); `.badge{… white-space:nowrap}` no CSS do Bootstrap.
+- **Description:** o selo mede cerca de 330 a 400 px contra os 296 px úteis do `container` em 320 px e vira transbordo do documento (nenhuma folha define `overflow-x` no `body`).
+- **Cenário:** o Administrador abre a pré-visualização de um anúncio com localização digitada à mão (US-008-S14) num celular de 320 px; a tela ganha rolagem horizontal. A medição da 6.2 (44 telas, dados padrão com CEP automático) não incluiu este estado (`ScreenData.cs` não monta localização manual).
+- **Recommendation:** `text-wrap` no selo (`white-space: normal !important` do Bootstrap) ou `<span class="badge …">Manual</span>` seguido do texto em parágrafo normal; incluir a tela com localização manual no `ScreenCoverageTests`.
+- Relates-to: NFR-17, US-010, US-008-S14, Task 4.1
+
+### 🟢 Suggestion
+
+Formato compacto: cada sugestão traz os mesmos cinco campos. "Já no BACKLOG" indica onde o item já estava registrado (não é novo).
+
+#### R-19 (A-06) — Autorização de Administrador só no controller em quatro serviços de alto impacto
+- **Where:** `Infrastructure/Identity/UserManagement.cs:76,139,244`; `Categories/CategoryManagement.cs:27`; `Settings/SiteSettingsManagement.cs:17`; `Ads/ReviewQueue.cs:18`. Contraste: `AdReview.cs:28,35` e `AdTakedown.cs` chamam `EnsureAdministrator()`.
+- **Description:** NFR-13 e o comentário de `IAdService` dizem que o serviço decide a autoria, não o controller. Para as contas da equipe isso não vale: `ResetPasswordAsync` e `ChangeRoleAsync` (equivalentes a tomar uma conta) confiam em `[Authorize(Policy = Administrator)]` no `UsersController`.
+- **Cenário:** hoje sem caminho de exploração (a matriz do Checkpoint 6 descobre as 78 rotas por reflexão). Um controller, uma ação de API ou um serviço em segundo plano futuro que injete `IUserManagement` sem a política poderia promover a si mesmo sem que nenhum teste de serviço falhe.
+- **Recommendation:** `EnsureAdministrator()` (via `ICurrentUser`) no início de `UserManagement`, `CategoryManagement`, `SiteSettingsManagement` e `ReviewQueue`; `Forbidden` para os demais (o `BootstrapAdminInitializer` não passa por `IUserManagement`).
+- Relates-to: NFR-13, RC-16
+
+#### R-20 (A-07) — Fotos: acesso e situação do anúncio só são conferidos antes da transação, não dentro do bloqueio
+- **Where:** `Photos/AdPhotoService.cs:72,91` (`GetForEditAsync` antes de `InTransactionAsync`), `:49-59` (envio), `:107-131` (`InsertAsync` só reconfere a contagem).
+- **Description:** o `UPDLOCK` serializa os envios do mesmo anúncio, mas a transação não relê `Status`; o envio leva segundos.
+- **Cenário:** o autor envia uma foto e, na outra aba, "Enviar para revisão"; a foto termina depois e entra num anúncio Em revisão que ele já não pode editar. Defesa: a publicação reconfere as pendências, então um anúncio sem a foto mínima não seria publicado.
+- **Recommendation:** dentro de `InTransactionAsync`, depois do `UPDLOCK`, ler `Status`/`AuthorId` e repetir `AdAccess.CanEdit`.
+- Relates-to: US-008-S02, US-008-S06, NFR-13
+
+#### R-21 (A-08) — Duas implementações da mesma regra: dinheiro em reais e limite de ano
+- **Where:** `Formatting/CurrencyAndDateFormatter.cs:18` (`FormatCurrency`, chamada só numa mensagem de erro) contra `Ads/AdPresentation.cs:33` (`FormatMoney`); `Fields/ModelYearRules.cs` e `ManufactureYearRules.cs` (`IsValid`, sem chamador em `src`) contra `FieldValueParser.ApplyYear` e `SearchService.ParseYear`.
+- **Description:** hoje produzem o mesmo texto, mas `testing.md` pede uma só fonte ou tabela de paridade quando uma regra tem duas representações. Parte do tema (acentos) já está no BACKLOG 70.
+- **Cenário:** alguém muda o limite do ano ou o formato do dinheiro num lado e o outro continua com o valor antigo, sem teste que falhe.
+- **Recommendation:** `FormatMoney` chama `FormatCurrency` (ou o inverso) e os `IsValid` passam a ser o único lugar da comparação, ou saem. **Já no BACKLOG parcialmente** (item 70, só a normalização de acentos).
+- Relates-to: NFR-20, Task 3.8, testing.md (paridade)
+
+#### R-22 (A-09) — Código de teste e código sem chamador em produção
+- **Where:** `Recovery/PasswordRecoveryQueue.cs:41-54` (`WaitUntilIdleAsync` e o contador `_pending`, "serve aos testes", e usa `DateTime.UtcNow` em vez do `TimeProvider`); sem chamador em `src`: `ModelYearRules.IsValid`, `ManufactureYearRules.IsValid`, `AdStatus.IsValid`, `FieldGroupRegistry.All`, `CategoryTreeSnapshot.Empty`; `Core/ServiceCollectionExtensions.AddCore()` devolve a coleção sem registrar nada.
+- **Description:** o `_pending` faz `Interlocked` em toda fila só para um helper de teste.
+- **Cenário:** leitor novo gasta tempo achando quem usa cada um; o contador faz trabalho em produção que só os testes aproveitam.
+- **Recommendation:** mover o helper para o projeto de teste, remover o que só os testes usam ou comentar a intenção, e remover `AddCore` vazio ou registrar nele o que for do Core. **Já no BACKLOG parcialmente** (item 112, só `IPhotoReprocessing`).
+- Relates-to: Task 1.4, simplificação
+
+#### R-23 (A-10) — `ProductionGuard` das ferramentas confia na palavra "prod"
+- **Where:** `tools/CitiesImport/ProductionGuard.cs:19-24` e `tools/VehicleCatalogExport/ProductionGuard.cs:22-27`.
+- **Description:** a trava recusa `load` quando servidor, banco ou nome da aplicação contêm "prod". Bancos de hospedagem compartilhada costumam ter nomes como `DB_184233_gazeta`; `--environment Development` contra um deles passa (e a trava confia no `--environment` digitado).
+- **Cenário:** `CITIES_IMPORT_TARGET_CONNECTION` aponta, por engano, para o banco real; `load --environment Development` executa os `MERGE` em produção, sem a revisão do script que a trava existe para garantir. Importa agora: a carga real dos municípios (F6-01) e do catálogo (F6-04) usará estas ferramentas.
+- **Recommendation:** lista de permissão (`(local)`, `localhost`, `.`, `127.0.0.1`, `host.docker.internal`, nomes terminados em `-dev`/`_test`) em vez de lista de proibição, ou uma segunda variável explícita (`…_ALLOW_LOAD=1`).
+- Relates-to: ADR-008, Task 2.5, Task 3.2
+
+#### R-24 (A-11) — O validador do catálogo de veículos não confere os limites das colunas
+- **Where:** `tools/VehicleCatalogExport/CatalogValidator.cs:19-113`; colunas em `Infrastructure/Data/Configurations/VehicleCatalogConfiguration.cs:28,39,71` (marca e modelo `nvarchar(150)`, versão `nvarchar(250)`).
+- **Description:** nome acima de 150/250, `Id <= 0` e ano fora de uma faixa razoável passam pelo validador e só falham ao aplicar o script (`XACT_ABORT` desfaz tudo, sem dano). A ferramenta de municípios (`CityValidator`) já confere o limite de 80.
+- **Cenário:** o script é "aprovado", e a falha só aparece na hora da carga em produção.
+- **Recommendation:** validar tamanho (150/150/250), `Id > 0` e `Year` entre 1900 e ano atual + 2, enviando ao relatório de descartados.
+- Relates-to: ADR-008, Task 2.5 (A5)
+
+#### R-25 (A-12) — `BootstrapAdminInitializer` ignora o resultado de `AddToRoleAsync` e não é atômico
+- **Where:** `Identity/BootstrapAdminInitializer.cs:105-113`.
+- **Description:** se a atribuição do papel falhar (ou o processo cair entre as duas chamadas) existe um usuário sem papel; na próxima partida `GetUsersInRoleAsync` ainda devolve zero, o código tenta criar de novo e recebe "e-mail repetido", só registrado no log.
+- **Cenário:** o site sobe sem nenhum Administrador, justamente o caso que a rotina existe para evitar (S17).
+- **Recommendation:** checar o `IdentityResult` e, em falha, remover o usuário recém-criado, ou fazer os dois passos numa transação como `UserManagement.RunAsync`.
+- Relates-to: US-014-S17, ADR-003, ADR-011
+
+#### R-26 (A-13) — Redefinição pelo link: senha, desbloqueio e auditoria são gravações separadas
+- **Where:** `Recovery/PasswordRecoveryService.cs:107`, `:117-123`, `:126`.
+- **Description:** cada chamada do `UserManager` grava por si. O comentário "Atômico" (linha 106) vale só para o token e a política de senha.
+- **Cenário:** se a auditoria `user.recover_password` falhar, a senha já mudou e não há registro (RC-16).
+- **Recommendation:** reaproveitar o padrão de transação de `UserManagement.RunAsync`, ou registrar a auditoria primeiro como tentativa e confirmar depois.
+- Relates-to: US-007, RC-16, RC-12
+
+#### R-27 (A-14) — Cidade vinda do ViaCEP não tem o limite de 80 caracteres conferido
+- **Where:** `Location/ViaCepLookup.cs:79` (devolve `city.Trim()` sem limite), `Location/CepService.cs:43-50`, `Ads/AdDraftService.cs:388-390`; o ramo `Informed` já confere `Ad.CityMaxLength`.
+- **Description:** `CepCache.City` e `Ads.City` são `nvarchar(80)`; o primeiro erro é engolido por `StoreAsync` (e dispara o `Clear()` do R-03), o segundo vira "Não foi possível salvar o anúncio agora" sem causa visível. Sem a carga do IBGE (F6-01) o nome vem direto do ViaCEP.
+- **Cenário:** o ViaCEP devolve um nome fora do normal e o salvamento falha sem explicação.
+- **Recommendation:** recusar `localidade` maior que 80 como "resposta ilegível" em `ViaCepLookup.Parse`.
+- Relates-to: US-008 (CEP), ADR-007, NFR-24
+
+#### R-28 (A-15) — Espaços invisíveis e cultura criada em seis lugares
+- **Where:** `Formatting/PriceText.cs:79-81` (três `Replace` com **U+00A0** e **U+202F** literais no arquivo); `new CultureInfo("pt-BR")` em `PriceText`, `FieldValueParser`, `AdPresentation`, `AdSpecs`, `CurrencyAndDateFormatter` e `CityNames` (este com `GetCultureInfo`).
+- **Description:** caracteres invisíveis no editor, fáceis de "normalizar" por engano; a cultura é repetida.
+- **Cenário:** alguém troca os espaços especiais por espaços comuns e o formatador de preço quebra sem mensagem.
+- **Recommendation:** escrever os dois como `" "` e `" "` com comentário do motivo, e uma constante `Cultures.PtBr` única.
+- Relates-to: NFR-20, code-style.md
+
+#### R-29 (A-16) — A limpeza de fotos apaga todo arquivo sem registro, sem trava de proporção
+- **Where:** `Photos/OriginalsCleanupService.cs:130-131` e `:167-186` (`DeleteOrphanVersionsAsync`).
+- **Description:** é correto e protegido contra envio em andamento (carência de 24 horas, só nomes gerados pelo site, sem seguir atalhos). Falta uma trava para o caso de o banco consultado **não ser o dono da pasta**: o serviço roda em qualquer ambiente com `PhotoStorage:BasePath` configurado.
+- **Cenário:** um banco restaurado de backup antigo, ou um ambiente de teste apontando para a pasta de produção, faz toda versão WebP com mais de 24 horas parecer órfã e ser apagada na primeira rodada, 1 minuto depois da partida; sem backup de disco os arquivos não voltam.
+- **Recommendation:** abortar e registrar `Error` quando a rodada achar órfãos acima de, por exemplo, 20% das versões listadas (ou de um teto absoluto), exigindo confirmação por configuração; documentar no runbook que a pasta de fotos é exclusiva de um banco.
+- Relates-to: ADR-005, Task 3.6, AR-04
+
+#### R-30 (A-17) — O limite de pedidos de redefinição por e-mail permite que qualquer visitante silencie a recuperação de outra pessoa
+- **Where:** `Recovery/PasswordRecoveryService.cs:67-71` (`byEmail > 3` descarta sem enviar).
+- **Description:** consequência direta do RC-11 com resposta neutra (RC-13). O limite por IP (10/hora) barra um atacante parado, não um com vários IPs. O Administrador ainda é recuperável por outro Administrador (US-014-S10) e a conta não é bloqueada.
+- **Cenário:** 4 pedidos por hora com o e-mail do Administrador impedem o envio do e-mail verdadeiro naquela hora; repetido a cada hora, a recuperação por e-mail da conta fica indisponível.
+- **Recommendation:** decisão de produto: aceitar e registrar, ou contar só os pedidos para contas existentes (a contagem é interna e a resposta continua neutra). Confirmar o aceite no `/scan`.
+- Relates-to: RC-11, RC-13, US-007
+
+#### R-31 (B1-06 = C-10) — Conta desativada ou bloqueada responde sem gastar o hash: o tempo revela que a conta existe
+- **Where:** `Security/TeamSignInManager.cs:26-27`; `Areas/Panel/Controllers/AccountController.cs:42-43` (`DummyHash`), `:80-90`.
+- **Description:** o comentário (linhas 42-43) quer o mesmo tempo para e-mail inexistente e senha errada, mas `PasswordSignInAsync` faz `PreSignInCheck` antes de verificar a senha: conta desativada (`NotAllowed`) e bloqueada (`LockedOut`) saem sem rodar o PBKDF2.
+- **Cenário:** um atacante mede `POST /painel/entrar`: respostas de poucos milissegundos indicam conta existente e desativada ou bloqueada. Alcance pequeno (só a equipe tem conta; o contador por IP corta em 5 falhas), mas contradiz a intenção declarada e a mensagem única de US-006-S04/S05.
+- **Recommendation:** rodar `Hasher.VerifyHashedPassword(user, DummyHash, submittedPassword)` também quando o resultado for `IsNotAllowed` ou `IsLockedOut`; ou aceitar e registrar no `SCAN_REPORT` (F6-52).
+- Relates-to: THREAT_MODEL I2, US-006-S04, US-006-S05, NFR-06
+
+#### R-32 (B1-07) — Na `/api`, sem o cabeçalho `RequestVerificationToken` o servidor lê o corpo antes do limite de 11 MB
+- **Where:** `Filters/AntiforgeryJsonFilter.cs:22` (`Order = int.MinValue`) e `:36`; `Controllers/Api/AdPhotosController.cs:34` (`[RequestSizeLimit]`, ordem 900); `Middleware/BodyLimitMiddleware.cs:20-29`.
+- **Description:** sem o cabeçalho, `ValidateRequestAsync` lê o formulário em busca do campo do token, antes do `RequestSizeLimitFilter`; o teto vigente é o padrão do servidor (30 MB).
+- **Cenário:** uma conta de Redator envia POSTs em partes de 29 MB para `/api/v1/ads/1/photos` sem o cabeçalho; o servidor guarda o corpo em memória e disco temporário antes de responder 400 (só equipe logada, 30 por minuto).
+- **Recommendation:** em `AntiforgeryJsonFilter`, recusar de imediato quando o cabeçalho não existe, sem chamar `ValidateRequestAsync`: a `/api` só aceita o token pelo cabeçalho.
+- Relates-to: RC-21, NFR-11
+
+#### R-33 (B1-08) — Erros gerados pelo framework na `/api` saem fora do contrato do ARCHITECTURE §8
+- **Base:** lido no código; o ramo (3) é **(a confirmar com teste de corpo em partes)**.
+- **Where:** `Program.cs:48-53` (nenhum `ConfigureApiBehaviorOptions`); `Middleware/BodyLimitMiddleware.cs:24` e `:40` (413 sem corpo); `Controllers/Api/*.cs` (`[ApiController]`); `BodyLimitTests.cs:19-30` só cobre `Content-Length`.
+- **Description:** o §8 diz que a lista de códigos é exaustiva, com `traceId` sempre presente. Três saídas fogem: (1) corpo multipart malformado em `POST /api/v1/ads/{id}/photos` vira o 400 automático do `[ApiController]` (`ValidationProblemDetails` em inglês, sem `code`); (2) o 413 do `BodyLimitMiddleware` não tem corpo, `code` nem `traceId`; (3) corpo em partes acima do limite lança `BadHttpRequestException` dentro da leitura do formulário, que o `ExceptionHandlingMiddleware` tende a registrar como 500 `INTERNAL_ERROR` com `LogError`.
+- **Cenário:** o cliente `apiFetch` mostra `problem.detail ?? problem.title`, que no caso (1) é "One or more validation errors occurred.", em inglês, na tela de fotos.
+- **Recommendation:** `InvalidModelStateResponseFactory` que devolva `VALIDATION_ERROR` no formato do contrato; `ApiProblem.WriteAsync` no 413 da `/api`; tratar `BadHttpRequestException` pelo seu `StatusCode` no `ExceptionHandlingMiddleware`.
+- Relates-to: ARCHITECTURE §8, RC-21, US-008-S02, error-handling.md
+
+#### R-34 (B1-09) — A senha provisória não impede o uso da API de fotos, CEP e cidades
+- **Where:** `Areas/Panel/Controllers/PanelControllerBase.cs:15` (o `MustChangePasswordFilter` só cobre quem herda dela); `Controllers/Api/AdPhotosController.cs:24`, `CepController.cs:19`, `CitiesController.cs:19` (`[Authorize(Policy = Writer)]` apenas).
+- **Description:** US-006-S09 diz que a troca de senha vem antes de qualquer página; a `/api` não consulta o claim `must_change_password`.
+- **Cenário:** o Administrador redefine a senha de um Redator que já tem anúncios; com a senha provisória ele entra e chama `DELETE /api/v1/ads/{id}/photos/{photoId}` ou `POST …/cover` sem trocar a senha.
+- **Recommendation:** pôr a regra nas políticas (`RequireAssertion(ctx => !ctx.User.HasClaim(TeamClaims.MustChangePassword, "1"))` em `Writer` e `Administrator`) e dar a `PasswordController` uma política sem essa exigência.
+- Relates-to: US-006-S09, NFR-07
+
+#### R-35 (B1-10) — `CategoriesController` ignora o `ModelState`: `parentId` de tipo errado cria categoria principal
+- **Where:** `Areas/Panel/Controllers/CategoriesController.cs:60-63`; `Areas/Panel/Models/CategoryViewModels.cs` (`public int? ParentId`).
+- **Description:** `ParentId=abc` falha no binder, o valor fica `null` e `CreateAsync(null, name)` cria uma categoria **principal**; não há teste de tipo errado (busca por `ParentId` com texto em `tests/`).
+- **Cenário:** um formulário antigo ou adulterado de um Administrador envia `parentId=abc` e o item aparece na raiz da árvore, não sob "Imóveis".
+- **Recommendation:** `if (!ModelState.IsValid)` antes do serviço, voltando ao formulário com a mensagem; teste de tipo errado na rota real.
+- Relates-to: US-013, NFR-13, testing.md (wrong-type input)
+
+#### R-36 (B1-11) — Cabeçalhos `Server` e `X-Powered-By` não são removidos
+- **Where:** `Program.cs` e `web.Production.config.example` (nenhum `removeServerHeader`, `AddServerHeader=false` ou `<remove name="X-Powered-By"/>`).
+- **Description:** `rules/security.md` mostra `RemoveServerHeader()`; no IIS a resposta anuncia `Server: Microsoft-IIS/10.0` e `X-Powered-By: ASP.NET`.
+- **Cenário:** um scanner de versões identifica o servidor sem esforço (informação de reconhecimento, não exploração).
+- **Recommendation:** `<security><requestFiltering removeServerHeader="true"/></security>` e `<httpProtocol><customHeaders><remove name="X-Powered-By"/>` no `web.config` publicado, mais uma linha no checklist do `/deploy`.
+- Relates-to: NFR-10, A05
+
+#### R-37 (B1-12) — A CSP não tem `base-uri`
+- **Where:** `Middleware/SecurityHeadersMiddleware.cs:12-14` (e a linha idêntica no ARCHITECTURE §7); `CspTests.cs:16`.
+- **Description:** `default-src 'self'` não cobre `base-uri`; só `frame-ancestors` e `form-action` foram acrescentados.
+- **Cenário:** uma injeção de marcação que não execute script ainda poderia redefinir a base de URLs relativas; sem custo para fechar, pois o site não usa `<base>`.
+- **Recommendation:** acrescentar `base-uri 'self'; object-src 'none'` e atualizar o ARCHITECTURE §7 e `CspTests.cs:16`.
+- Relates-to: NFR-10
+
+#### R-38 (B1-13) — Os limites por IP valem para o endereço IPv6 completo
+- **Where:** `Security/RateLimitingExtensions.cs:133` (`ClientIp`); `Areas/Panel/Controllers/AccountController.cs:62` (origem do `LoginFailureCounter`) e `:123`.
+- **Description:** quem tem um bloco IPv6 /64 (qualquer conexão residencial) troca de endereço a cada pedido e escapa do contador de login (5 falhas), do limite global e do de recuperação. O bloqueio da conta (5 falhas, 15 minutos) segue valendo.
+- **Cenário:** um atacante com /64 testa senhas contra um e-mail sem nunca atingir o limite por IP; só o bloqueio da conta o detém.
+- **Recommendation:** usar o prefixo /64 como chave para IPv6 em `ClientIp` e em `source`; em conjunto com SEC-01 (R-11), que continua bloqueando o lançamento.
+- Relates-to: NFR-06, RC-10, SEC-01
+
+#### R-39 (B1-14 + C-11) — Chaves de configuração "só para testes" valem em Production e `Site__BaseUrl` aceita `http://` e `ftp://`
+- **Where:** `Security/RateLimitingExtensions.cs:34,42,52` e `Configured(...)` `:93-96` (`RateLimiting:GlobalPerMinute`, `PhotosPerMinute`, `PhotoUploadsPerMinute`); `SendGridOptions.BaseUrl`, `ViaCepOptions.BaseUrl`; `Core/Configuration/SiteOptions.cs` (`[Url]`), usada em `PublicUrl.cs:11`, no mapa do site, nos canônicos e no link de redefinição; `AuthenticationOptions.SessionMinutes` (1 a 120).
+- **Description:** um valor copiado do ambiente de teste para o `web.Production.config` afrouxaria RC-6 e o limite global em silêncio; apontar `SendGrid:BaseUrl` para outro host enviaria a chave de API para lá; `Site:BaseUrl` em `http` gera link de redefinição sem TLS e canônicos errados, e a validação em Production passa.
+- **Cenário:** `RateLimiting__PhotoUploadsPerMinute=1000` esquecido no arquivo de produção; ou `Site__BaseUrl=http://…`.
+- **Recommendation:** em Production, ignorar ou limitar (teto) as chaves de limite, recusar `BaseUrl` que não seja `https` e host conhecido (`api.sendgrid.com`, `viacep.com.br`), exigir `https` em `Site:BaseUrl` (`Uri.TryCreate` com esquema `https`), com teste em `OptionsTests`. **Já no BACKLOG parcialmente** (linha 277, "conferir o valor de produção no `/deploy`"; F6-12 fala do valor dos limites, não do risco da chave).
+- Relates-to: RC-6, RC-20, RC-21, ADR-009, ADR-011, US-007, F6-12
+
+#### R-40 (B1-15) — Identificadores em português contra `lang-dotnet.md`
+- **Where:** `Models/SearchViewModels.cs:16-55` (`Categoria`, `Cidade`, `PrecoMin`, `PrecoMax`, `Marca`, `Modelo`, `AnoDe`, `AnoAte`, `KmMax`, `AreaMin`, `AreaMax`, `Ordem`, `Pagina`); `Filters/AntiforgeryJsonFilter.cs:42` (chave de erro `"requisicao"` no JSON da API); `Security/RateLimitingExtensions.cs:29,37,63,138` (políticas `"fotos"`, `"fotos-envio"`, partição `"estaticos"`, categoria de log `"LimiteDeRequisicoes"`); `Program.cs:66` (verificação de saúde `"banco"`).
+- **Description:** a regra manda inglês para propriedades de ViewModel, códigos e identificadores de log. Os nomes do endereço (`?precoMin=`) ficam em português pelo `[FromQuery(Name = …)]`; só a propriedade C# muda.
+- **Cenário:** leitor ou ferramenta de busca por convenção não acha a propriedade; inconsistência com o resto do código.
+- **Recommendation:** renomear as propriedades (os nomes do endereço ficam no atributo), `"request"` na chave de erro e nomes em inglês nas políticas e na categoria de log. **Já no BACKLOG parcialmente** (linha 297, item 24, só CSS e JavaScript; F6-34).
+- Relates-to: lang-dotnet.md, F6-34
+
+#### R-41 (B1-16) — Constantes de rota sem uso e o caminho do link de redefinição em três lugares
+- **Where:** `Navigation/Routes.cs:44` (`PanelRoutes.ResetPassword`, sem chamador) e `:12` (`PublicRoutes.Ad`); `AccountController.cs:137` (`[HttpPost("redefinir-senha")]`); `Infrastructure/Recovery/RecoveryCode.cs:9` (`LinkPath`).
+- **Description:** a rota do link enviado por e-mail existe como atributo no controller, como constante de Infrastructure (a que o e-mail usa) e como constante do Web sem uso.
+- **Cenário:** mudar uma e esquecer a outra quebra o link sem aviso do compilador.
+- **Recommendation:** uma só fonte (a constante do Core/Infrastructure), teste que abre o link montado pelo `PasswordRecoveryMailer` na rota real, e remover `PanelRoutes.ResetPassword`. **Já no BACKLOG parcialmente** (linhas 302 e 312 citam `PublicRoutes.Ad`; F6-39).
+- Relates-to: US-007, F6-39
+
+#### R-42 (B1-17) — O site não tem `FallbackPolicy`: rota nova sem `[Authorize]` nasce pública
+- **Where:** `Security/IdentityExtensions.cs:75-77` (só `AddPolicy`). **Já no BACKLOG** (linha 318; F6-20, decisão do Product Owner).
+- **Description:** confirmado no código atual; `AccessMatrixTests` cobre o risco, mas só depois de rodar.
+- **Cenário:** um controller novo esquecido sem atributo fica público até o teste rodar.
+- **Recommendation:** adotar antes do lançamento (`[AllowAnonymous]` explícito nos controllers públicos: 7 de página, `PublicAds`, `PublicCities`, `VehicleCatalog` e o SEO); ver F6-20.
+- Relates-to: NFR-13, F6-20
+
+#### R-43 (B1-18) — `ConflictException` e `ForbiddenException` sem tratamento na publicação, rejeição e retirada
+- **Where:** `ReviewQueueController.cs:141-159`, `:181-206`; `AdsController.cs:256-276`. **Já no BACKLOG** (linha 168; F6-06).
+- **Description:** os `catch` cobrem só `NotFoundException` (e `ValidationException` na rejeição); o `Error` do `HomeController` mantém o status do `AppException` (409/403), então não há 500, mas a pessoa perde a mensagem da SPEC. O F6-06 diz "vira página 500", mas é página de erro genérica com 409.
+- **Cenário:** dois Administradores decidem o mesmo anúncio e o segundo vê a tela genérica de erro.
+- **Recommendation:** tratar as duas exceções nas três ações, devolvendo a mensagem da SPEC; corrigir o texto do F6-06.
+- Relates-to: US-010, US-011, T6, F6-06
+
+#### R-44 (B1-19) — `AdsController` agrega lista, formulário, envio e retirada
+- **Where:** `Areas/Panel/Controllers/AdsController.cs` (452 linhas, 8 dependências). **Já no BACKLOG** (linha 169; F6-30).
+- **Description:** confirmado.
+- **Cenário:** cada mudança numa das responsabilidades arrisca as outras.
+- **Recommendation:** dividir por responsabilidade num `/simplify`, sem mudar comportamento.
+- Relates-to: clean-code.md, F6-30
+
+#### R-45 (B1-20) — `ids` inválido em `/favoritos/lista` passa pelo tratador de exceções
+- **Where:** `FavoritesController.cs:27`, `PublicAdsController.cs`. **Já no BACKLOG** (linha 294, item 8; F6-38).
+- **Description:** lança `ValidationException` em rota de página: 400 correto, mas registrado com `LogError` e pilha.
+- **Cenário:** qualquer robô enche o log de erros.
+- **Recommendation:** devolver `BadRequest()` direto, sem lançar.
+- Relates-to: US-005, F6-38
+
+#### R-46 (B1-21) — `AllowedHosts: "*"`
+- **Where:** `appsettings.json:11`. **Já no BACKLOG** (linha 294, item 7; F6-51).
+- **Description:** com `Site__BaseUrl` obrigatório o risco é baixo (não há mais link montado do Host em produção).
+- **Cenário:** um cabeçalho `Host` forjado é aceito fora de Production.
+- **Recommendation:** restringir ao domínio real no `web.config` de produção.
+- Relates-to: NFR-10, F6-51
+
+#### R-47 (B1-22) — `/Home/Status/{código}` e `/Home/Error` acessíveis direto
+- **Where:** `Controllers/HomeController.cs:50,68`. **Já no BACKLOG** (linha 350, item 10, as 14 sugestões do Checkpoint 6; OPEN-006).
+- **Description:** a rota convencional responde direto a `/Home/Status/503` e `/Home/Error`.
+- **Cenário:** um 5xx sintético para testar monitoramento ou enganar um usuário.
+- **Recommendation:** restringir por `[NonAction]`/rota só de reexecução, ou aceitar com registro.
+- Relates-to: NFR-25, OPEN-006
+
+#### R-48 (B2-06) — `carregar()` em `favorites.js` pode rodar em duplicidade
+- **Where:** `wwwroot/js/pages/favorites.js:46-114` (`host.replaceChildren()` na linha 48; `host.append(lista)` na linha 80 depois de `await`). **Já no BACKLOG** (linha 296, item 17; F6-36).
+- **Description:** confirmado ainda aberto.
+- **Cenário:** 150 favoritos (dois lotes) e outra aba favorita mais um durante a espera: `aoMudar(true)` chama `carregar()` de novo; as duas anexam a sua `ul` (cards em dobro e contagem errada).
+- **Recommendation:** contador de geração; só a última chamada anexa.
+- Relates-to: US-005-S03, Task 5.5, F6-36
+
+#### R-49 (B2-07) — Listas encadeadas sem cancelamento e com falha só dentro do `<select>`
+- **Where:** `wwwroot/js/modules/catalog-chain.js:34-56`; `wwwroot/js/pages/ad-edit.js:198-212`.
+- **Description:** o `change` de Marca/Modelo/Ano e o de UF não guardam um `AbortController`, ao contrário da troca de categoria (`ad-edit.js:76-107`) e do CEP; a busca resolveu comparando o valor atual com o pedido (`search.js:67-74`). A mensagem de falha é o texto de uma `<option>` num `<select>` desabilitado (`catalog-chain.js:54`), sem `aria-live`.
+- **Cenário:** escolhe a Marca A e logo a Marca B; a resposta de A chega depois e preenche os modelos de A com a Marca B selecionada. O servidor valida a cadeia, então vira erro de campo no envio, não dado errado gravado.
+- **Recommendation:** comparar o valor pedido com o atual (como em `search.js`) ou usar `AbortController`; escrever a falha em `[data-ad-status]`.
+- Relates-to: US-008-S11, ADR-008
+
+#### R-50 (B2-08) — Contador de caracteres conta quebra de linha como 2 quando o formulário volta com erro
+- **Where:** `Areas/Panel/Views/Ads/_AdGroupRegion.cshtml:8-9` (`Model.Description?.Length`) com `AdFormFactory.cs:96`; `AdFormRules.NormalizeLineBreaks` só é chamado em `AdDraftService.cs:207`.
+- **Description:** a reexibição após erro (`Save`, `Create`, `Refresh`) usa o texto cru do navegador, com CRLF; o contador do servidor conta 2 por quebra, o do JS conta 1 (`counter.js:5`), e `AdFormRules.cs:11-14` diz que o número que a pessoa vê é o que o servidor confere.
+- **Cenário:** descrição com 40 quebras de linha e 1.980 caracteres, um erro em outro campo: o formulário volta com "2020/2000" até a próxima digitação (o servidor aceitaria 1.980).
+- **Recommendation:** normalizar `values.Description` em `AdFormFactory.BuildAsync` ou contar com `NormalizeLineBreaks` na view.
+- Relates-to: US-008, NFR-14
+
+#### R-51 (B2-09) — Duas implementações do limite do preço e um campo de dinheiro sem máscara
+- **Where:** `wwwroot/js/modules/price.js:2` (`MAXIMO_DE_DIGITOS = 10`) contra `FieldLimits.MaxMoneyCents`; `_AdField.cshtml:10-13` (Condomínio e IPTU, `FieldType.Money`, sem `data-price-input`).
+- **Description:** o teto está escrito dos dois lados sem ligação (o BACKLOG já registrou o conflito R$ 99.999.999,99 contra 9.999.999.999); na mesma tela "62000" no Preço vira "620,00" e no Condomínio vale R$ 62.000,00. **Já no BACKLOG parcialmente** (linha 86, só a máscara).
+- **Cenário:** alguém muda o valor em C# e a máscara continua cortando em 10 dígitos, sem teste que falhe.
+- **Recommendation:** passar o teto à view por `data-price-max-digits` calculado de `FieldLimits.MaxMoneyCents`, ou um teste que compare as duas constantes; aplicar `data-price-input` também aos campos `Money`, ou documentar a diferença.
+- Relates-to: US-008-S15, ADR-002, testing.md (paridade), F6-21
+
+#### R-52 (B2-10) — `<time>` sem `datetime` e totais do painel sem separador de milhar
+- **Where:** `Views/Shared/_AdBody.cshtml:27` (`<time>@Model.PublishedOn</time>` com "05/10/2026"); `Areas/Panel/Views/Ads/Index.cshtml:75`, `ReviewQueue/Index.cshtml:24`, `Categories/Index.cshtml:52` (`list.Total + " anúncios"`) contra `Search/Index.cshtml:208` e `Favorites` (`N0` em pt-BR).
+- **Description:** "05/10/2026" não é data válida para o HTML sem `datetime` (as listas do painel já fazem ISO, `Ads/Index.cshtml:108`); "1500 anúncios" contra "1.500".
+- **Cenário:** leitor de tela e rastreadores leem a data sem formato; o painel mostra números sem milhar.
+- **Recommendation:** `datetime` em ISO e `ToString("N0", pt-BR)` nos totais do painel.
+- Relates-to: US-003, US-012
+
+#### R-53 (B2-11) — Hierarquia de títulos pula níveis
+- **Where:** `Views/Shared/Components/AdCard/Default.cshtml:19` (`<h3>` fixo); `Views/Favorites/Index.cshtml:13` (`h1` → cards `h3`); `Views/Search/Index.cshtml:238` (`h1` → `h2` "Filtros" → cards `h3`).
+- **Description:** falta um `h2` de resultados; WCAG 1.3.1, boa prática.
+- **Cenário:** quem navega por títulos com leitor de tela encontra "h1, h3" sem o nível intermediário.
+- **Recommendation:** `h2` visível ou `visually-hidden` ("Resultados", "Seus favoritos") antes da grade.
+- Relates-to: NFR-16
+
+#### R-54 (B2-12) — Alvo de toque e padrão de erro de campo inconsistentes
+- **Where:** `_ErrorState.cshtml:12`, `_EmptyState.cshtml:12`, `_NoResultsState.cshtml:12` (botão sem `alvo-toque`, cerca de 39 px contra 44 px de `base.css:48`); `_FieldErrors.cshtml:9-15` e `_AdField.cshtml:40-50` (`ul.small.text-danger`, id `error-X`, `div role="alert"`) contra `Account/SignIn.cshtml:34,39` e `Forgot.cshtml:24` (`span.invalid-feedback`, id `erro-X`; só o `Forgot` tem `role="alert"`).
+- **Description:** duas aparências (vermelho `#dc3545` pequeno contra o vermelho escuro do Bootstrap) e dois padrões de id e anúncio; `#dc3545` sobre branco dá 4,52:1 (limite) e sobre `#f1f5fd` daria 4,14:1.
+- **Cenário:** um erro de campo some para leitor de tela numa tela e é anunciado em outra.
+- **Recommendation:** um parcial único de erro de campo (`.invalid-feedback` com a cor do tema) e `alvo-toque` nos botões dos estados.
+- Relates-to: NFR-16, frontend.md (Forms)
+
+#### R-55 (B2-13) — Código morto no produto
+- **Where:** `Views/Shared/_NoResultsState.cshtml`, `Views/Shared/_Skeleton.cshtml`, `Models/PageStateViewModel.cs:21-29` (`SkeletonViewModel`), `wwwroot/css/components/estados.css:9-33,47-55` (`.esqueleto*`).
+- **Description:** só as páginas de teste os usam; a busca escreveu a própria mensagem de "sem resultado" (`Search/Index.cshtml:222-235`). **Já no BACKLOG parcialmente** (linha 153 explica por que o esqueleto não se aplica ao painel; F6-44 cita que `_Skeleton.cshtml` não é incluído; a remoção não está registrada).
+- **Cenário:** manutenção de código que ninguém usa.
+- **Recommendation:** remover (e os testes de estado) ou ligar; `_NoResultsState` pode servir à busca e à lista do painel.
+- Relates-to: NFR-03, Task 0.7, F6-44
+
+#### R-56 (B2-14) — Arquivos de terceiros sem versão e peso de fonte sem `preload`
+- **Where:** `_Layout.cshtml:10-11,61` e `_PanelLayout.cshtml:19-20,66` (`bootstrap.min.css`, `font-awesome.min.css`, `bootstrap.bundle.min.js` sem `asp-append-version`); `poppins.css:19-25` (peso 700, sem `preload` nem `size-adjust`).
+- **Description:** sem `?v=` o arquivo sai com `no-cache` (`PerformanceExtensions.cs:55` só dá `immutable` com `v`): 6 pedidos de revalidação por página; o `font-awesome` não tem `font-display` e o peso 700 troca de fonte depois da primeira pintura. **Já no BACKLOG parcialmente** (L350, item 17, "fontes sem `?v=`"; F6-55 trata o peso).
+- **Cenário:** a cada navegação o navegador revalida arquivos que quase nunca mudam; o logo e preços em negrito trocam de fonte depois de pintados.
+- **Recommendation:** `asp-append-version="true"` nos três vendors e `preload` do 700 (ou usar 600 no logo).
+- Relates-to: NFR-03, NFR-05, OPEN-006, F6-55
+
+#### R-57 (B2-15) — "Favoritos (0)" aparece quando o número não é conhecido
+- **Where:** `Views/Shared/_Layout.cshtml:28` (`(<span data-favoritos-contagem>0</span>)`).
+- **Description:** sem JavaScript ou com `localStorage` bloqueado (S07) o cabeçalho diz "Favoritos (0)" em toda página, e o clique leva a uma página que diz "ative o JavaScript" (`Favorites/Index.cshtml:18`); com JavaScript há ainda um piscar de "0".
+- **Cenário:** uma pessoa com 5 favoritos e armazenamento bloqueado vê "0".
+- **Recommendation:** nascer sem o número (`hidden`) e mostrá-lo em `ativarFavoritos`.
+- Relates-to: US-005-S07
+
+#### R-58 (B2-16) — O formulário do anúncio não informa a obrigatoriedade a leitores de tela
+- **Where:** `_AdGroupRegion.cshtml:12,29,49`, `_AdLocation.cshtml:14,31,43`, `_AdField.cshtml` (asterisco em `<span aria-hidden="true">`, sem `aria-required`); as telas de conta e de usuários usam `aria-required="true"` (`Account/SignIn.cshtml:33`, `Users/New.cshtml:16`).
+- **Description:** a obrigatoriedade é "para enviar à revisão" (o rascunho só pede o título), então `required` nativo não serve; mas `aria-required` nos campos que as pendências exigem informaria o leitor de tela (WCAG 1.3.1, 3.3.2).
+- **Cenário:** o leitor de tela só descobre o que falta depois de clicar em "Enviar para revisão" e ler a lista de pendências.
+- **Recommendation:** `aria-required="true"` nos campos com `*` e ligar o parágrafo `:50` por `aria-describedby`.
+- Relates-to: US-008, US-009-S02, NFR-16
+
+#### R-59 (B2-17) — Falhas de rede sem retorno no campo (busca) e fila de fotos que pára com erro inesperado
+- **Where:** `wwwroot/js/pages/search.js:60-100,102-107` (`try/finally` sem `catch`: a falha vira `unhandledrejection`); `wwwroot/js/modules/photos.js:111-112,157-165` (`falhou` relança o que não é `ApiError`; os itens restantes ficam "Na fila…").
+- **Description:** só o aviso global "Algo deu errado" aparece, no alto da página.
+- **Cenário:** sem rede ao escolher a UF, a lista de cidades fica só com "Todas as cidades", habilitada, e o aviso aparece fora da vista se a página estiver rolada; na galeria, um `TypeError` ao montar a foto deixa as demais paradas.
+- **Recommendation:** `catch` com mensagem junto do campo (`aria-live`) e `try/catch` por foto dentro do laço de `processarFila`.
+- Relates-to: US-002-S03, US-008-S05
+
+#### R-60 (B2-18) — Duas técnicas para a tabela responsiva do painel
+- **Where:** `Areas/Panel/Views/Users/Index.cshtml:17-56` (tabela `d-none d-md-block` e lista de cartões `d-md-none`, com `_UserActions` renderizado duas vezes por pessoa) contra `Ads/Index.cshtml:76-113` e `ReviewQueue/Index.cshtml:25-50` (tabela empilhada por CSS, `ads-index.css:234-269`, `review-queue.css`).
+- **Description:** as duas folhas de CSS são cópias uma da outra; as tabelas com `display: block` em `table/tr/td` podem perder a semântica de tabela em leitores de tela (a conferência com NVDA está prevista no `/verify`, BACKLOG 307).
+- **Cenário:** um ajuste de layout tem de ser feito em três lugares.
+- **Recommendation:** uma classe comum (`.table-stack`) em `components/`, uma técnica só e `role="table|row|cell|columnheader"` nas variantes empilhadas.
+- Relates-to: NFR-17, US-012, US-010, F6-17
+
+#### R-61 (B2-19) — Achados da Fase 5 que continuam abertos no código (confirmação, não novos)
+- **Where:** `Search/Index.cshtml:137,173,178,192` (`invalid-feedback d-block` com `hidden`: o `d-block` vence o `[hidden]`, comprovado em `bootstrap.min.css`, e a região `role="alert"` vazia fica no DOM; BACKLOG linha 295, item 15); `pages/layout.js:9` contra `modules/favorites-ui.js:9` (`mostrarAviso` duplicado) e `favorites-ui.js:66` (`export { atualizarContador }` sem importador; linha 295, item 16); `pages/search.js:188` usa `lerNumero` também para o ano ("2.020" vale 2020 no navegador e é recusado pelo servidor; linha 296, item 18 cita só a tabela copiada à mão); nomes de CSS e JS em português (`categoria-tile`, `ad-galeria__*`, `configurarPainel`, `alvo-toque`, `cabecalho`; linhas 10 e 297, item 24). **Já no BACKLOG** (F6-34, F6-35).
+- **Description:** quatro itens agrupados, cada um já registrado.
+- **Cenário:** o grupo só some do BACKLOG quando os quatro fecharem.
+- **Recommendation:** tratar conforme F6-34 e F6-35; acrescentar a diferença do ano em `search.js:188` ao item 18.
+- Relates-to: Task 5.4, F6-34, F6-35
+
+#### R-62 (C-06) — Duas mensagens da SPEC são afirmadas pela constante do próprio código, e um cenário tem prova parcial
+- **Where:** `Team/AccountTests.cs:129-140` (`AccountController.TooManyAttemptsMessage`; o texto "Muitas tentativas. Tente novamente em alguns minutos." não aparece literal em nenhum teste); `Team/FirstAccessTests.cs:138` (`PasswordController.SameAsProvisionalMessage`); `Ads/SubmitForReviewTests.cs: US009S04…` (sem `RejectedById` nem `RejectedAt`; `ClearRejection` em `Ad.cs:214-218` limpa três campos e o teste afirma um).
+- **Description:** assertir a constante em vez do texto da SPEC deixa passar um erro de digitação na constante (o teste compara o código com ele mesmo).
+- **Cenário:** alguém altera a mensagem da constante para um texto errado e os testes continuam verdes.
+- **Recommendation:** literais da SPEC nos testes US-006-S06 e US-006-S09; acrescentar `RejectedAt`/`RejectedById` nulos ao `US009S04`.
+- Relates-to: US-006-S06, US-006-S09, US-009-S04
+
+#### R-63 (C-07) — Um teste vazio do template conta entre os 1.722
+- **Where:** `tests/GazetaMarketplace.Web.Tests/Test1.cs` (`TestMethod1` sem corpo). **Já no BACKLOG** (L12; F6-22).
+- **Description:** passa sempre; infla a contagem e contraria "testes são prova".
+- **Cenário:** o total de testes passa a valer 1.721 quando o arquivo sair.
+- **Recommendation:** remover o arquivo e o item do BACKLOG.
+- Relates-to: testing.md, F6-22
+
+#### R-64 (C-08) — Textos desatualizados: RR-10, "RC" do .NET e exemplo de `global.json`
+- **Where:** `security/PRE_DEV_REVIEW.md` (RR-10 "fixado em `10.0.0-rc.2`" e lista de bloqueios do lançamento); `architecture/ARCHITECTURE.md` §2 ("RC no momento") e AR-02; `CLAUDE.md` raiz (exemplo de `global.json` em `rc.2`); contra `global.json` (`10.0.100`) e `Directory.Packages.props` (`10.0.12`, Task 0.3b).
+- **Description:** o código já usa o .NET 10 final; o RR-10 aparece como bloqueio do lançamento que já foi resolvido (resta confirmar que o servidor do provedor tem o runtime ou publicar *self-contained*, AR-02).
+- **Cenário:** um leitor da lista de bloqueios acredita que ainda há um impedimento resolvido.
+- **Recommendation:** fechar o RR-10 no PRE_DEV (com a data da Task 0.3b) e manter só a AR-02.
+- Relates-to: RR-10, AR-02, Task 0.3b
+
+#### R-65 (C-09) — Contrato e modelo de dados não acompanham o código
+- **Where:** `architecture/api/openapi.yaml` (sem `/api/v1/public/cities`; os caminhos de `brands/suggest` e `product-types/suggest` constam sem implementação, por decisão); `ARCHITECTURE.md` §6.2 e NFR-19 (sem a tabela `PasswordRecoveryAttempts`, que guarda e-mail e **IP** por 24 h; o IP também vai ao log de 14 dias); ADR-012 e §2/§10 ("uma só tarefa em segundo plano"; hoje há `OriginalsCleanupService`, `PasswordRecoveryWorker`, `PasswordRecoveryCleanupService` e `BootstrapAdminInitializer`); ADR-009 (tempo limite 10 s, código 15 s em `Infrastructure/ServiceCollectionExtensions.cs:121`); ADR-004 (`RowVersion` no usuário; o código usa o `ConcurrencyStamp` do Identity e transação serializável).
+- **Description:** nenhum é defeito de código; são lacunas de documentação. A de dados pessoais merece atenção na LGPD: o NFR-19 diz "só nome, e-mail e hash".
+- **Cenário:** um auditor de privacidade lê o NFR-19 e não sabe que IP e e-mail de tentativas de recuperação ficam guardados.
+- **Recommendation:** uma passada de alinhamento em `/docs` ou `/arch` em modo conformidade: incluir o endpoint e a tabela, mencionar IP e e-mail em tentativas de recuperação e em logs, e atualizar o ADR-012 (F6-40 trata só do endpoint de favoritos).
+- Relates-to: NFR-19, ADR-004, ADR-009, ADR-012, F6-40
+
+#### R-66 (C-12) — 41 critérios de aceite desmarcados e três textos obsoletos em `plans/plan.md`
+- **Where:** `plans/plan.md:122-125, 159-164, 199-203, 236-237, 266-271, 310-312, 358-368, 457, 1065-1068`; `:1978` ("44 telas", e são 45).
+- **Description:** `todo.md` marca as tarefas como feitas e o código as cumpre (exceto as pendências R-07 e R-11), mas as caixas dos critérios nunca foram marcadas na Fase 0 e nos Checkpoints 0 e 2; o Checkpoint 0 ainda diz que a cobertura "não foi medida".
+- **Cenário:** o plano parece incompleto a quem confere os critérios; os dois critérios realmente abertos (limitadores da 0.4 e RC-10) ficam escondidos entre os 41.
+- **Recommendation:** marcar o que está atendido, deixar `[ ]` os dois critérios abertos com a razão, corrigir "44" para "45".
+- Relates-to: Task 0.1 a 0.6, Checkpoint 0, Checkpoint 2
+
+#### R-67 (C-13) — 177 arquivos de backup do kit versionados
+- **Where:** `.claude.backup-20260929-222958/` e `.claude.backup-20260929-225205/` (177 arquivos rastreados, incluindo dois `settings.json`; conferido com `git ls-files`). O arquivo solto `web` citado pelo revisor C **já não existe**.
+- **Description:** os backups do kit não são código do produto e carregam configuração antiga de hooks.
+- **Cenário:** um colaborador ou uma ferramenta lê o `settings.json` antigo como configuração válida; o repositório carrega ruído.
+- **Recommendation:** `git rm -r --cached` dos backups e entrada no `.gitignore`, num commit próprio (regra de propriedade do commit, `git-workflow.md`).
+- Relates-to: git-workflow.md (Commit ownership)
+
+#### R-68 (C-14) — O projeto de navegador não guarda evidência de falha
+- **Where:** `tests/GazetaMarketplace.Web.Tests.Playwright` (nenhum `Tracing`, `Screenshot` nem `.runsettings`; grep vazio); `BACKLOG.md:352` (39 testes falharam uma vez e o log da primeira rodada se perdeu); OPEN-001.
+- **Description:** duas instabilidades já ficaram sem causa porque a rodada que falhou não deixou nada para ler; é a razão pela qual o OPEN-001 não pode ser fechado. **Já no BACKLOG parcialmente** (BACKLOG:352 pede salvar o log).
+- **Cenário:** o teste `US005S06` falha de novo no `/verify` e, sem trace nem captura, continua sem causa.
+- **Recommendation:** ligar trace e captura de tela só em falha (`Context.Tracing` no ajudante da classe base, gravando em `reports/test-artifacts/runner/`) e salvar o log inteiro de cada rodada (o runbook já pede).
+- Relates-to: OPEN-001, OPEN-007, commands/test.md (artefatos de falha)
+
+#### R-69 (C-15) — Decisões de pilha sem registro e restos de template
+- **Where:** `Directory.Packages.props:23` (SQLite de teste, commit `eff1a0f`, sem decisão registrada); `wwwroot/lib/font-awesome` (4.7, de 2016, fora da lista de `frontend.md` e `tech-stack.md`; só `architecture/design-system.md` §1 e §5 a justificam); entradas de CPM sem referência (`Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation`, `Microsoft.AspNetCore.OpenApi`); versões de `Magick.NET-Q8-x64 14.17.2`, `Microsoft.Data.SqlClient 6.1.6`, `Dapper 2.1.89` e `Serilog.AspNetCore 10.0.0` não verificáveis aqui.
+- **Description:** desvios pequenos da pilha aprovada sem passar pelo Technology Decision Process.
+- **Cenário:** o `/scan` encontra um pacote vulnerável (o Magick.NET atualiza a cada correção do ImageMagick) sem registro prévio de por que está ali.
+- **Recommendation:** uma linha de decisão para SQLite (testes) e Font Awesome (licença e versão fixa) em `tech-stack.md` ou no design system; remover as duas entradas sem uso; rodar `dotnet list package --vulnerable --include-transitive` no `/scan`.
+- Relates-to: tech-stack.md (Technology Decision Process), AR-06, Gate 8
+
+### ✅ Good
+
+Os melhores pontos de cada revisor, consolidados (18):
+
+1. **Matriz de acesso por descoberta de rotas.** `AccessMatrixTests.cs` (tabela `Matrix`, linhas 38-127) lê a mesma verdade três vezes (tabela escrita à mão, atributos do código e chamadas reais sem login, como Redator e como Administrador); rota nova sem decisão quebra o teste; `EveryUnsafeEndpoint_RejectsARequestWithoutTheAntiforgeryToken` cobre toda escrita; `OwnershipMatrixTests` prova a posse por rota (13 rotas).
+2. **SQL sempre parametrizado, com barreira dupla.** `SqlBuilder.cs:50-125` (lista de caracteres permitida, recusa aspas, `--` e número solto; ordenação só por mapa fixo; `Page` com teto de 100), todos os repositórios Dapper com parâmetro nomeado e `CHARINDEX` no lugar de `LIKE`; `SqlBuilderTests.FragmentoComLiteralOuTextoPerigoso_E_Recusado`; nenhum `FromSqlRaw` nem `Database.Migrate()` em `src/`.
+3. **Filtro "só publicados" em um lugar.** `SqlFragments.OnlyPublished` (`Data/SqlFragments.cs`) em toda leitura pública; `PublishedAdReader.cs:15-19`; `PhotoDelivery.cs:20-38` devolve o mesmo `null` para "não existe" e "não pode ver" (`EntregaTests.AnuncioNaoPublicado_Devolve404IgualAoInexistente…`).
+4. **Fotos: caminho confinado e imagem decodificada com política.** Chaves por regex ancorada (`FileSystemPhotoStorage.cs:25-45`), `Confine` do caminho final (`:345-361`), atalhos ignorados; formato pela assinatura (`PhotoSignature.cs`), decodificador forçado e pixels limitados antes de decodificar (`MagickImageProcessor.cs:24-34`), `policy.xml` que nega tudo por padrão, no máximo 2 decodificações simultâneas (`PhotoIngestion.cs:19-21`), `Strip()` (GPS e EXIF não saem; `MetadadosTests.Gps_NaoSobrevive_NasVersoes`).
+5. **Concorrência de decisões bem desenhada.** `AdService.TransitionAsync` grava situação e auditoria no mesmo `SaveChanges` (`AdService.cs:70-75`); `AdReview`/`AdTakedown` refazem a decisão uma vez e devolvem `AlreadyDecided` (`AdReview.cs:46-86`); `AdSubmission` transforma o clique duplo em `AlreadySent` (`AdSubmission.cs:45-61`); `RowVersion` traduzido para `ConflictException` (`AppDbContext.cs:100-113`); transação `Serializable` em `UserManagement.cs:338-359` e `CategoryManagement.cs:238-263`; `ReviewDecisionConcurrencyTests` no SQL Server real.
+6. **Tabela de passagens única e conferida.** `AdStatusRules.cs:16-26` bate linha a linha com o Apêndice A da SPEC (9 passagens; só as duas de envio têm `AuthorAllowed`); `AdAccess.cs:14-35` aplica leitura, edição e passagem sem duplicar a regra.
+7. **Defesa em profundidade no banco.** `CK_Ads_*` e colunas calculadas com `TRY_CAST` (`AdConfiguration.cs:31-57`), sem cascata de exclusão; script idempotente com as 13 migrations (`db/scripts/gazeta-idempotente.sql`); `ComputedColumnsDifferentialTests` (teste diferencial exigido por `testing.md`).
+8. **Logs mascarados.** `MaskingEnricher.cs` mascara nomes sensíveis, e-mails e `token=`/`code=`, inclusive em propriedades aninhadas; nenhum log lê senha, token ou link (`PasswordRecoveryMailer.cs`, `BootstrapAdminInitializer.cs:53-60`); `MaskingTests`, `US001S06`, `US012S08`.
+9. **Recuperação de senha sem enumeração.** O pedido faz o mesmo trabalho exista a conta ou não (`PasswordRecoveryService.cs:44-84`), o envio sai da fila depois da resposta (`PasswordRecoveryWorker.cs`), o token é protegido, ligado ao propósito e ao carimbo de segurança e distingue expirado de usado (`RecoveryTokenProvider.cs:52-90`); `PasswordRecoveryLimitsTests`, `US007S04`, `US007S05`.
+10. **Entradas numéricas defendidas.** `DecimalInput.TryParseCents` compara antes de multiplicar (`:62-74`; o 🟡 do Checkpoint 5 está corrigido), `FavoriteIds` só aceita 0-9 sem zero à esquerda (`FavoriteIds.cs:18-62`), paridade JavaScript × C# com 48 entradas (`FavoriteIdsParityTests`).
+11. **Login, cookie e sessão.** Hash falso para e-mail inexistente e mensagem única (`AccountController.cs:43,84`); endereço de retorno só local (`:214-217`, `ReturnUrlExterno_E_Ignorado`); cookie `HttpOnly`, `Secure`, `SameSite=Lax`, 30 minutos deslizantes, revalidação a cada 5 minutos (`IdentityExtensions.cs:82-93`; `SessionTests.cs:34,82,99`).
+12. **Antiforgery, autoria e rascunho cego a concorrência.** `AntiforgeryJsonFilter.cs` responde no contrato da API; `PanelControllerBase.cs:13-15` junta `Authorize(Writer)`, `no-store` e o filtro da senha provisória; `AdFormSubmission` sem campos de decisão (RC-14, `EditViewModelsTests`); `AdDraftService.UpdateAsync:93-100` exige `RowVersion`.
+13. **Erro e saúde sem vazamento; encaminhamento fail-closed.** `ExceptionHandlingMiddleware.cs:41` (mensagem genérica, pilha só no log), `DatabaseAndMigrationHealthCheck.cs:29` (só o tipo da exceção), `ForwardingExtensions.cs:19-43` (sem `KnownProxies` o middleware nem entra; `RateLimiterTests.cs:160,171`), `CorrelationIdMiddleware.cs:23` (só `[A-Za-z0-9_-]{1,64}`).
+14. **Sem XSS e com CSP respeitada.** Zero `Html.Raw` com texto de usuário e zero `innerHTML`/`insertAdjacentHTML`/`eval` (`RawOutputTests`, `XssInAllScreensTests`, `JsModulesTests.cs:27`); nenhum `<script>` com corpo, `style=` nem manipulador inline nas 77 views; dados do servidor para o JavaScript só por `data-*`; `ActionUrl` passa por `Url.IsLocalUrl` (`_ErrorState.cshtml:10`).
+15. **Melhoria progressiva e armazenamento tolerante.** Filtros abrem por `:target` sem JavaScript (`search.css:362-364`), exclusão de categoria e remoção de foto têm página de confirmação e janela por cima, favoritos toleram armazenamento bloqueado, JSON quebrado e cota cheia (`favorites.js:10-16,23-30,47-54,61-73`).
+16. **Front-end acessível e estável.** Galeria com `<dialog>`, foco preso e devolvido, setas por teclado e `aria-live` (`ad-gallery.js:164-172`, `_AdGallery.cshtml:25`); CLS controlado por `width`/`height`/`aspect-ratio` e painel de filtros recolhido no HTML (`AdCard/Default.cshtml:12`, `Search/Index.cshtml:78-81`; `SearchLayoutShiftTests` mede 0,0043); contraste calculado e documentado (`base.css`, `bootstrap-tema.css:4-22`); mensagens iguais às da SPEC (conferidas por `grep`).
+17. **Provas fortes e honestas.** O limite de 10 s das consultas é medido trancando a tabela no SQL Server real (`PanelAdListQueryTests.cs:353`, `SearchQueryTests.cs:535`); 128 de 128 cenários da SPEC citados em teste e 35 de 36 amostrados afirmam o efeito; 11 mutações mortas; host de teste isolado (`WebFactory`, `IntegrationWebFactory`); o `TEST_REPORT` registra mutações, a investigação da contagem do E2E e cada lacuna com dono.
+18. **Ferramentas e utilitários.** `CityValidator` reaproveita o `Normalizer` do site (sem segunda implementação em SQL) e confere a mesma restrição única do banco; as duas ferramentas escrevem arquivo por temporário e trocam, e rodam o `load` numa transação; `ExpiringCache.cs:19-50` não guarda valor lido enquanto outra requisição invalidava.
+
+### Cobertura da leitura
+
+| Revisor | Leu por inteiro | Ficou de fora ou só em estrutura |
+|---|---|---|
+| A (Core, Infrastructure, db, tools) | `Core/**` (142 `.cs`), `Infrastructure/**` (97 `.cs` + `policy.xml`), `tools/**` (16 arquivos), cabeçalhos do script de banco | `Core/Fields/FieldLists.cs` (888 linhas de listas de opções; só a estrutura e as checagens de id duplicado do construtor); `Data/Seeds/InitialCategories.cs` (lidas as ~75 primeiras linhas); as **13 migrations e os Designers gerados** (só conferi que a lista bate com `gazeta-idempotente.sql`); `db/seed/**` (README e cabeçalho/rodapé das amostras) |
+| B1 (Web em C#) | 70 de 70 arquivos `.cs` do projeto Web, `Program.cs` linha a linha, `appsettings*`, `web.Production.config.example`, `launchSettings.json` | `.cshtml`, CSS e JavaScript (com o B2); Core e Infrastructure (com o A) |
+| B2 (views, JS, CSS) | 77 `.cshtml`, 18 módulos e páginas JavaScript, 12 arquivos de CSS próprio | `bootstrap.min.css` só conferido em seletores; **nenhum navegador foi aberto** (por isso os 🟡 R-14 a R-18 são "a confirmar") |
+| C (transversal) | os 17 arquivos `rules/*.md` e os 13 `rules/overrides/*.md`; PRE_DEV_REVIEW, SECURITY_REQUIREMENTS, THREAT_MODEL, ARCHITECTURE e ADR-001 a 012; `Program.cs`, a segurança e os middlewares do Web, serviços de Infrastructure; 36 cenários da SPEC contra seus testes; `AccessMatrixTests`, `OwnershipMatrixTests`, `RateLimiterTests`; TEST_REPORT, CODE_REVIEW, plan, todo, BACKLOG e triagem | `openapi.yaml` (só os caminhos); `dotnet list package --vulnerable` não foi rodado (sem rede e sem execução); o catálogo de componentes (só Development) |
+
+**Limite comum:** ninguém rodou build, testes nem navegador. Os números de cobertura e de testes vêm do `TEST_REPORT.md`; os do consolidador (seção 1) vêm de `grep` e `git ls-files`.
+
+## 4. Action Items
+
+Prioridade: **P0** bloqueia o lançamento ou é falha de segurança ou de dados; **P1** é tratar antes do lançamento; **P2** é melhoria ou aceitar com registro. O dono de cada item e o texto completo estão em `plans/BACKLOG-TRIAGEM-FASE-6.md` §4 (ids `F7-NN`); os novos achados abertos estão em `plans/BACKLOG.md`.
+
+- [ ] **P0 · R-01** (/fix-issue): persistir as chaves do Data Protection (`AddDataProtection` + `PersistKeysToFileSystem` + `SetApplicationName`) e provar com dois hosts na mesma pasta e com o conteúdo `key-*.xml`. **Bloqueia o Gate 7 e o `/scan`.**
+- [ ] **P0 · R-11** (/infra): obter do provedor o IP do proxy, configurar `ForwardedHeaders:KnownProxies` na implantação e provar que duas origens não compartilham o contador; `Warning` na partida quando vazio em Production.
+- [ ] **P1 · R-02, R-03, R-04, R-05, R-06** (/fix-issue): completude do Publicado editado pelo Administrador; `CepService` sem `ChangeTracker.Clear()`; `PriceText` só com 0-9; fuso com plano B do Windows; herança da lista de opções em categoria nova.
+- [ ] **P1 · R-07, R-08, R-09, R-10** (/fix-issue): decidir e alinhar a política `auth` (e o teste que prova uma rota de mentira); log `Warning` de permissão negada; sessão vencida no `fetch` de "trocar categoria"; `[IgnoreAntiforgeryToken]` nas páginas de status.
+- [ ] **P1 · R-14, R-15, R-16** (/fix-issue): foco visível em botões, paginação, abas e campos; "Aplicar filtros" sempre alcançável; recuo das categorias na busca.
+- [ ] **P1 · R-23, R-24, R-29, R-39** (/fix-issue): lista de permissão no `ProductionGuard`; limites das colunas no validador do catálogo; trava de proporção na limpeza de fotos; chaves de teste e esquema `https` em Production.
+- [ ] **P1 · R-36** (/infra): remover `Server` e `X-Powered-By` no `web.config` e pôr no checklist do `/deploy`.
+- [ ] **P1 · R-13** (/simplify): remover o operador `!` (184 linhas de teste e 5 de `src/`) e travar a volta.
+- [ ] **P1 · R-65** (/review): alinhar contrato, tabela `PasswordRecoveryAttempts`, retenção de IP e e-mail (LGPD) e ADRs 004, 009 e 012.
+- [ ] **P1 · R-68** (/test): trace e captura de tela em falha no projeto de navegador (pré-requisito para fechar OPEN-001).
+- [ ] **P1 · R-12** (decisão do Product Owner): aceitar e registrar que FluentValidation não foi adotado, ou adotar.
+- [ ] **P1 já na triagem:** R-42 (F6-20, `FallbackPolicy`, decisão do Product Owner) e R-43 (F6-06, conflito e proibição sem tratamento).
+- [ ] **P2:** os demais 38 achados novos (R-17, R-18, R-19 a R-22, R-25 a R-28, R-30 a R-35, R-37, R-38, R-40, R-41, R-47, R-49 a R-60, R-62, R-64, R-66, R-67, R-69), mais os 6 já na triagem (R-44, R-45, R-46, R-48, R-61, R-63), conforme a triagem §4.
+
+## 5. Test Coverage
+
+Números do `reports/TEST_REPORT.md`, seção **"/test — Gate 6 da Fase 6"** (commit `7f3d3d1`, Release, SQL Server 2022 real em contêiner): **2.211 testes distintos, 2.211 passaram, 0 falhas, 0 pulados** (1.722 unitários do site + 27 da ferramenta de municípios + 43 do catálogo de veículos + 162 de integração + 257 de navegador, dos quais 253 no E2E e 4 de métricas rodados à parte com `GAZETA_VITALS=1`). **Cobertura (gate, modo greenfield, união de unitários e integração): 98,0% de linhas (5.581 de 5.697) e 91,8% de ramos (1.642 de 1.788)**, contra as metas de 80% e 75%; `Core` 98,9% e 94,8%, `Infrastructure` 96,9% e 88,6%, `Web` 97,3% e 88,2%. **13 de 783 métodos a 0%**, todos estruturais ou de uma linha chamados por produção, nenhum com regra de negócio sem teste que o produto já chame. Veredito do Gate 6: **PASS**.
+
+**O que este review acrescenta aos números (anti-vácuo e plano):**
+- Dos 36 cenários da SPEC auditados pelo revisor C (abrir o teste e perguntar se falharia caso o recurso fosse removido), **35 afirmam o efeito observável e 1 é parcial** (`US009S04`: não afirma `RejectedAt` nem `RejectedById`, R-62). Duas mensagens da SPEC são afirmadas pela constante do código (R-62). O teste `RateLimiterTests.SextaTentativaDeLogin_Devolve429` **não** prova o limite do login real (R-07). Nenhum cenário só prova "sem erro".
+- A cobertura alta **não vê** o R-01 (a suíte roda num só processo), o R-03 (contextos separados), o R-04 (a tabela de `PriceText` não tem dígito Unicode), o R-10 (todos os testes de status são GET) nem os defeitos de CSS e de bfcache (R-14 a R-18): são lacunas de **tipo** de teste, não de linhas.
+- `plans/todo.md`: as 40 tarefas das Fases 0 a 6 e os 7 checkpoints estão `[x]`, com entrega no código para cada uma. `plans/plan.md` mantém 41 critérios `[ ]` (R-66), dos quais dois **realmente** não estão atendidos como escritos: os limitadores da 0.4 (R-07) e o RC-10 (R-11).
+- Matriz de permissões da SPEC (15 linhas) × `AccessMatrixTests`: todas cobertas.
+
+### Disposição dos OPEN-001 a OPEN-007
+
+> **Numeração.** Os sete ids e os títulos abaixo são os da seção 12 do `TEST_REPORT.md` ("Itens abertos para o `/review`"), que é a fonte. O pedido do Product Owner descrevia o **OPEN-007** como "métricas só com `GAZETA_VITALS=1`"; no relatório esse item é o **OPEN-004**, e o **OPEN-007** é "sem `results.json`/`.trx` do executor". Segui o relatório.
+
+| OPEN | Título (TEST_REPORT §12) | Disposição | Razão, evidência e dono |
+|---|---|---|---|
+| OPEN-001 | Instabilidade de `FavoritesE2ETests.US005S06_…` ("Enviar para revisão?" não aparece em 15 s), 1 vez em 5 rodadas completas | **DEFERRED-to-/verify** | `PublishingFlow.PublishAsync` já contém a correção da 5.6 (`SaveAndSubmitAsync` espera o título "Enviar para revisão?" antes do segundo clique, `PublishingFlow.cs:126`) e a espera já foi esticada para 15 s (`AssemblySetup.cs`); logo a falha restante não é o clique duplo. **Causa não determinada**: o projeto de navegador não tem `Tracing`, captura de tela nem `.runsettings` (R-68), então a falha não deixa evidência. Hipóteses a descartar com captura: limite global do site de teste, pendência de envio, resposta 409. **Dono: /verify (com trace ligado), depois de R-68 pelo /test** |
+| OPEN-002 | Dois testes de tela (axe e larguras de `not-found-page`) e a regra "compilar antes de `--no-build`" | **CLOSED** | `screens.json:16` tem a tela (45 telas no arquivo); `docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md:140` traz a regra de compilar o projeto de navegador antes de `--no-build`. Resta só a correção textual "44 telas" para 45 em `plan.md:1978` (R-66). **Dono: /test** |
+| OPEN-003 | Tripwire: confirmar o falso positivo do `viacep.com.br` (manipulador falso) | **CLOSED** | O cliente HTTP é registrado com `ConfigurePrimaryHttpMessageHandler(() => new StubHandler(respond))` (`Cep/CepEndpointTests.cs:198-199`), com o endereço pedido conferido no próprio manipulador (`:161`); `ViaCepLookupTests.cs:40` usa `DelegatingStub`; `CepHarness` troca o `ICepLookup` por um falso (`Support/CepHarness.cs:79-80`). Nenhum teste unitário alcança a rede. **Dono: /test** |
+| OPEN-004 | Os 4 testes de métricas só rodam com `GAZETA_VITALS=1`; incluir no roteiro do `/verify` | **DEFERRED-to-/verify** | Confirmado: `Performance/VitalsTests.cs:20` `[RequiresVariables("GAZETA_BASE_URL", "GAZETA_VITALS")]`. A variável está no comentário da classe (`:15`), em `plan.md:2026` e no `TEST_REPORT`, **mas não no runbook** `docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md` (busca sem resultado). Ação: uma linha no runbook e no roteiro do `/verify`. **Dono: /verify** |
+| OPEN-005 | Cerca de 60 usos antigos do operador `!` nos testes, sem efeito (nullable desligado) | **DEFERRED-to-/simplify** (P1, número corrigido) | O número real, contado pelo consolidador: **184 linhas em 50 arquivos de teste e 5 linhas em `src/`** (`FileSystemPhotoStorage.cs:53,75,104`; `AdConfiguration.cs:87,100`), mais de três vezes o dito. Sem efeito em execução (nullable desligado), mas proibido por `lang-dotnet.md`, `code-style.md` e `testing.md` (R-13). **Dono: /simplify** |
+| OPEN-006 | As 14 sugestões 🟢 do `/review` do Checkpoint 6 que continuam abertas | **PARCIALMENTE CLOSED** (3 fechados; 11 DEFERRED por item) | **Fechados:** 9 (BREACH em página reexecutada, corrigido em `79798a0`/`28557fc`, `CompressionAndCacheTests`), 21 (botão "Filtros" sem JavaScript: link `#filtros` com `:target`) e 15 (nota de relatório sobre o limite do oráculo do axe, sem ação). **Ainda valem 11:** 8 (`CompressionAndCacheTests.cs:177` engole resposta com falha) → /test; 10 (`/Home/Status/{código}` direto, R-47) → /fix-issue; 11 (`StatusPagesTests.cs:65-77` sem URL de saúde) → /test; 12 (`HomeController` repete a condição, namespace em bloco, sem `sealed`) → /simplify; 13 (`sem-js.css:23` `!important`) → /simplify; 14 (`RawOutputTests` não procura `style="…"`) → /test; 16 (6 `Assert.Inconclusive`) → /test; 17 (fontes sem `?v=`, R-56) → /fix-issue; 18 (`plan.md:1978` "44 telas", R-66) → /review; 19 (BACKLOG:318-321, F6-20/F6-52) → decisão do Product Owner (F6-20); 20 (p95 medido em processo) → /verify. O BACKLOG:350 ainda lista os 14 |
+| OPEN-007 | Sem `results.json`/`.trx` do executor: decidir se vale o pacote de relatório | **DEFERRED-to-/infra** | O executor da Microsoft.Testing.Platform só gera `.trx` com a extensão `Microsoft.Testing.Extensions.TrxReport` (pacote novo, passa pelo Technology Decision Process). Sem risco para o produto; só vale se houver CI. Ação: registrar no runbook que o resultado é o log e o código de saída. **Dono: /infra** |
+
+## 6. Compliance Check
+
+> `PASS` exige `Evidence` (arquivo:linha, ligação no pipeline ou nome de teste). Controles transversais citam **onde estão ligados** no pipeline de `Program.cs`, não só "definidos". Ordem real do pipeline: `:90` encaminhamento de cabeçalhos (só com `KnownProxies`) → `:91` correlation id → `:92` cabeçalhos de segurança e CSP → `:93-95` tratador de erros da API → `:96-98` tratador de erros das páginas → `:100-102` páginas de status → `:104` HTTPS → `:105` compressão (fora de `/painel`) → `:107-114` cultura → `:115` roteamento → `:116` cache dos estáticos versionados → `:117` limite de corpo → `:119` autenticação → `:121` limitador → `:122` autorização → `:127-128` saúde; filtros globais de antiforgery em `:50-52`.
+
+### 6.1 Uma linha por arquivo de regra (17 de `rules/` + 13 de `rules/overrides/` = 30)
+
+**Resultado: 6 PASS · 11 WARNING · 1 FAIL · 12 N/A.** A base é a tabela do revisor C (7 PASS · 10 WARNING · 1 FAIL · 12 N/A); **rebaixei `error-handling.md` de PASS para WARNING** porque os revisores B1 e C, lidos juntos, mostram duas saídas fora do contrato `ProblemDetails` com `traceId` que a regra exige (R-33: 400 automático em inglês e 413 sem corpo na `/api`; R-10: página de 400 em branco para POST sem token). A mudança é minha, não do revisor C.
+
+| Rule | Status | Evidence (file:line / test) | Notes |
+|------|--------|-----------------------------|-------|
+| api-conventions.md | WARNING | Rotas `api/v1/...` em kebab-case (`AccessMatrixTests.cs:38-127`); ProblemDetails com `code` e `traceId` (`ExceptionHandlingMiddleware.cs:36-71`, `ApiProblem.cs`); `PagedResult` (`PublicAdsController.cs:34`); contrato `RATE_LIMITED`/`FORBIDDEN` provado (`RateLimiterTests.cs:41-63`) | FluentValidation exigido pela regra e não adotado (R-12). Nenhum `[ProducesResponseType]` e nenhum pacote de versionamento (prefixo `v1` fixo). `openapi.yaml` sem `/api/v1/public/cities` (R-65) |
+| brownfield.md | N/A | `.claude/PROJECT_PROFILE.md:3` Mode greenfield | Não ativo |
+| clean-code.md | WARNING | Sem `.Result`/`.Wait()`/`async void` (busca em `src/`); `CancellationToken` propagado (`PanelAdListReadRepository.cs:28`); métodos pequenos nos serviços de domínio. Falhas já no BACKLOG: `AdsController` com 452 linhas e 8 dependências (R-44, F6-30), `SearchService.PrepareAsync` com 137 linhas (F6-35) | Código sem chamador (R-22, R-55); regra duplicada (R-21, R-51) |
+| code-style.md | WARNING | Namespace de arquivo e `using` explícitos na maioria; `dotnet format` limpo segundo o `TEST_REPORT`. Falhas: operador `!` em 184 linhas de teste e 5 de `src/` (R-13); `HomeController.cs:16-18` com namespace em bloco e sem `sealed` (OPEN-006 item 12) | Caracteres invisíveis no código (R-28) |
+| database.md | PASS | EF com `AsNoTracking`/projeção (`AdService.cs:87`); Dapper só por `SqlBuilder` com parâmetros nomeados (`SqlBuilder.cs:50-125`, `SqlBuilderTests.FragmentoComLiteralOuTextoPerigoso_E_Recusado`); nenhum `FromSqlRaw`/`Database.Migrate` (busca vazia); retry (`Infrastructure/ServiceCollectionExtensions.cs:45-47`); transações em `CreateExecutionStrategy` (`UserManagement.cs:341`, `AdDraftService.cs:62`, `CategoryManagement.cs:243`); script idempotente (`MigrationsTests`, `IntegrationTests/ScriptTests`) | Escritas Dapper só nas ferramentas, com `ProductionGuard` (a trava é frágil, R-23). O R-03 e o R-20 são de concorrência na camada de serviço, não de regra de banco |
+| error-handling.md | WARNING | Hierarquia `AppException` (7 arquivos em `Core/Exceptions`); middleware da API (`Program.cs:93-95`); páginas com `UseExceptionHandler("/Home/Error")` mantendo o status esperado (`HomeController.cs:72-74`); pilha só no log; `StatusPagesTests`, `ErrorsTests` | **Rebaixado de PASS (ver 6.1):** erros do framework na `/api` fora do contrato (R-33), página de 400 em branco no POST sem token (R-10), `ConflictException`/`ForbiddenException` sem tratamento em três ações (R-43). `catch` vazios só em limpeza de E/S filtrada por tipo (`FileSystemPhotoStorage.cs:384`, `PhotoIngestion.cs:48`) |
+| frontend.md | WARNING | Sem `Html.Raw` com texto de usuário nem `innerHTML` (`RawOutputTests.NoView_HasInlineScriptInlineHandlerOrJavascriptUrl`, `JsModulesTests.cs:27`); sem script nem manipulador inline; Bootstrap 5.3.8 estático (`wwwroot/lib/LEIAME.md`); jQuery só na validação (`_ValidationScriptsPartial.cshtml:1-2`); `lang="pt-BR"` (`_Layout.cshtml:3`) | Foco do Bootstrap vence o do projeto (R-14); painel `sticky` (R-15); recuo colapsado (R-16); bfcache (R-17); Font Awesome 4.7 fora da lista aprovada (R-69); nomes de CSS e JS em português (R-61, F6-34); `!important` em `sem-js.css:23` (OPEN-006 item 13) |
+| git-workflow.md | WARNING | Commits convencionais com atribuição (`git log` de `f08e777` para trás só tem `feat/fix/docs/test/...`); árvore limpa (`git status --short` vazio) | 177 arquivos `.claude.backup-*` versionados (R-67) |
+| monitoring.md | WARNING | Serilog JSON com máscara (`SerilogConfiguration.cs:19-27`, `MaskingEnricher.cs`); correlação (`CorrelationIdMiddleware.cs:20-39`); `/health/live` e `/health/ready` (`Program.cs:127-128`) | Sem OpenTelemetry, Prometheus e Jaeger: **desvio registrado** no ADR-010 (com gatilhos de reavaliação). "Permissão negada" sem registro nas páginas (R-08). Sem `/metrics` |
+| naming-conventions.md | PASS | Tabelas e colunas em PascalCase e `IX_`/`UQ_` (26 `HasDatabaseName` em `Data/Configurations`); variáveis de ambiente `Bootstrap__AdminEmail`, `Site__BaseUrl` (`web.Production.config.example`); rotas em kebab-case (`painel/esqueci-minha-senha`); testes `Metodo_Cenario_Resultado` | Identificadores em português são tema de `lang-dotnet.md` (R-40), não desta regra |
+| output-style.md | PASS | Todos os documentos lidos abrem com "Em resumo" (ARCHITECTURE, ADRs, PRE_DEV_REVIEW, TEST_REPORT, CODE_REVIEW, BACKLOG-TRIAGEM) e explicam o porquê das decisões | |
+| principles-and-practices.md | WARNING | Colunas de auditoria e `rowversion` (`AppDbContext.cs:87-90`, `:150-165`); registro de ações sensíveis (`AuditLog.cs`); achados fora de escopo em `plans/BACKLOG.md` (§2.5 item 17); idempotência do envio (`US009S05`) | Documentos que descrevem um estado antigo (R-64, R-65, R-66); chaves sem persistência (R-01); autorização só no controller em quatro serviços (R-19) |
+| project-structure.md | PASS | Core → só `Microsoft.Extensions.DependencyInjection.Abstractions` (`Core.csproj`); Infrastructure → Core; Web → Core e Infrastructure; nenhum `using` de ASP.NET, EF ou Dapper no Core (busca vazia); `AddInfrastructure`/`AddCore` em `Program.cs:81`, `:84` | `AddCore()` vazio (R-22) |
+| security.md | **FAIL** | Segredos fora do repositório (`SecretsTests.Repositorio_NaoContem_ConnectionStringComSenha`); consultas parametrizadas; cabeçalhos e CSP (`Program.cs:92` + `SecurityHeadersMiddleware.cs:11-33`, `HeadersTests`); CORS nenhuma (`CorsTests`); antiforgery (`Program.cs:50-60`); cookie `HttpOnly/Secure/Lax` (`IdentityExtensions.cs:87-90`); autenticação e autorização (`Program.cs:119,122`, `AccessMatrixTests`) | **R-01:** o controle "chaves do Data Protection em pasta persistente" (§Data Protection, ARCHITECTURE §7, ADR-011, ameaça S3) está definido e validado na partida, **mas não ligado**. Também R-07 (política `auth` sem uso), R-08 (permissão negada sem log), R-11 (SEC-01), R-12 (validação), R-36 (cabeçalhos `Server`/`X-Powered-By`), R-37 (CSP sem `base-uri`) |
+| system-design.md | PASS | Verificações de saúde (`Program.cs:127-128`); limitadores (`Program.cs:121`); tempo limite de consulta de 10 s provado no SQL Server real (`PanelAdListQueryTests.cs:353`, `SearchQueryTests.cs:535`); cache de memória de 10 minutos com invalidação (`AppDbContext.cs:134-141`, `ExpiringCache.cs:19-50`); paginação por deslocamento aceita no ADR-006 | Disjuntor e Polly fora da v1 (ADR-012) |
+| tech-stack.md | WARNING | Pilha respeitada: ASP.NET Core 10, EF Core 10 + Dapper, SQL Server, Serilog, MSTest, Playwright, Bootstrap; nenhum Moq, Redis, Kafka, Hangfire, Polly (`Directory.Packages.props`) | FluentValidation aprovado na AR-06 e não adotado (R-12); SQLite de teste e Font Awesome sem decisão registrada, entradas de CPM sem uso (R-69) |
+| testing.md | WARNING | Cobertura 98,0% e 91,8% (`TEST_REPORT` §6); teste diferencial das colunas calculadas (`ComputedColumnsDifferentialTests`); paridade de favoritos e de leitor de número; isolamento do host (`WebFactory`, `IntegrationWebFactory`, `git status` limpo no `/test`); 128 de 128 cenários citados | `!` nos testes (R-13); teste vazio `Test1.TestMethod1` (R-63); o teste de limite de login prova um controlador de teste (R-07); duas mensagens pela constante (R-62); sem trace nem captura de falha no E2E (R-68); lacuna de tipo de teste em `PriceText` (R-04) e `CategoriesController` (R-35) |
+| overrides/database-sqlserver.md | PASS | `int IDENTITY`, `rowversion` (`AppDbContext.cs:87-90`), `EnableRetryOnFailure`, PascalCase, índices `IX_/UQ_`, script idempotente, nunca `Migrate()`; segredos por variável de ambiente e `ValidateOnStart` (`OptionsExtensions.cs:16-36`) | O usuário usa o `ConcurrencyStamp` do Identity, não `rowversion` (R-65); sem `CommandTimeout(30)` explícito (o padrão do driver já é 30 s) |
+| overrides/lang-dotnet.md | WARNING | Identificadores em inglês, rotas e textos em português; injeção por construtor; `record` para DTOs; `CancellationToken` por último; `Nullable`/`ImplicitUsings` desligados, sem `?` de referência (busca vazia); CPM sem `Version=` em nenhum `.csproj` | Operador `!` (R-13); identificadores em português em ViewModels e políticas (R-40); `HomeController` sem `sealed` |
+| overrides/database-oracle.md | N/A | `.claude/PROJECT_PROFILE.md:6` SQL Server | Fora do Profile |
+| overrides/database-mysql.md | N/A | `.claude/PROJECT_PROFILE.md:6` | Fora do Profile |
+| overrides/database-postgres.md | N/A | `.claude/PROJECT_PROFILE.md:6` | Fora do Profile |
+| overrides/database-mongodb.md | N/A | `.claude/PROJECT_PROFILE.md:6` | Fora do Profile |
+| overrides/framework-nodejs-web.md | N/A | `.claude/PROJECT_PROFILE.md:5` Core C# | Fora do Profile |
+| overrides/framework-php-laravel.md | N/A | `.claude/PROJECT_PROFILE.md:5` | Fora do Profile |
+| overrides/lang-nodejs.md | N/A | `.claude/PROJECT_PROFILE.md:5` | Fora do Profile |
+| overrides/lang-php.md | N/A | `.claude/PROJECT_PROFILE.md:5` | Fora do Profile |
+| overrides/test-nodejs.md | N/A | `.claude/PROJECT_PROFILE.md:5` | Fora do Profile |
+| overrides/test-php.md | N/A | `.claude/PROJECT_PROFILE.md:5` | Fora do Profile |
+| overrides/monitoring-elk.md | N/A | `.claude/PROJECT_PROFILE.md:7` observabilidade base | Fora do Profile |
+
+**Contagem final: 30 linhas = 6 PASS (database, naming-conventions, output-style, project-structure, system-design, database-sqlserver) · 11 WARNING · 1 FAIL (security) · 12 N/A** (brownfield e os 11 overrides de pilhas que o Profile não declara: Oracle, MySQL, PostgreSQL, MongoDB, Node.js em três arquivos, PHP em três arquivos e ELK).
+
+### 6.2 RC-N × implementação × teste (RC-1 a RC-21 do PRE_DEV_REVIEW)
+
+**Resumo:** 19 implementados e provados; **RC-10 parcial** (código pronto, falta o valor do provedor: R-11); **RC-16 com ressalva** (só acréscimo vale no EF, não impede `ExecuteDelete` nem o banco, aceito em RR-6; a permissão negada nas páginas não é registrada, R-08). Nenhum RC ausente.
+
+| RC | Implementação (arquivo:linha) | Teste que prova | Situação |
+|---|---|---|---|
+| RC-1 formato pela assinatura | `Core/Photos/PhotoSignature.cs`; `PhotoIngestion.cs` decide o formato antes de qualquer outra coisa | `FormatoTests.Assinatura_DecideOFormato_NaoAExtensao`, `ArquivoFalsoComExtensaoJpg_ERecusado_ENadaVaiParaODisco` | Implementado |
+| RC-2 limites e decodificadores | `Photos/policy.xml` (`coder none *`, só 5 formatos), `MagickRuntime.cs:46-77` (memória 512 MB, 30 s, lado máximo), pixels antes de decodificar | `PhotosSecurityTests.DecodificadoresNaoUsados_EstaoDesligados`, `ImagemAcimaDoLimiteDePixels_E_Recusada_AntesDeDecodificar`, `LimitesDeRecursoDoMagick_FicamLigados` | Implementado; a prova no Windows do provedor segue pendente (AR-05, F6-02) |
+| RC-3 foto reprocessada, original nunca servido | `PhotoIngestion.cs` grava só as versões WebP; `PhotoDelivery.cs` só abre versões | `MetadadosTests.Gps_NaoSobrevive_NasVersoes`, `VersoesTests` | Implementado |
+| RC-4 caminho só com ids e conferido | `FileSystemPhotoStorage.cs:25-45` (regex de chave) e conferência do caminho final | `PhotosSecurityTests.ChaveForaDoFormato_ERecusada_SemTocarNoDisco`, `EntregaTests.TentativaDeSairDaPastaBase_E_Recusada` | Implementado |
+| RC-5 `_originals/` sem rota e apagado em 30 dias | Nenhuma rota para originais (`PhotosController` só entrega 480/1600); `OriginalsCleanupService` | `EntregaTests.OriginaisNaoTemRota`, `CleanupTests.ApagaSoOriginaisComMaisDeTrintaDias` | Implementado (a limpeza sem trava de proporção é R-29) |
+| RC-6 conversões limitadas e envios por usuário | `PhotoIngestion.cs:21` (2 vagas), `RateLimitingExtensions.cs:75` (`fotos-envio`, 30/min por usuário) | `FailureTests.DecodificacoesAoMesmoTempo_NuncaPassamDoLimite`, `PhotosEndpointsTests` (429 com `Retry-After`) | Implementado (chave de configuração afrouxável em Production: R-39) |
+| RC-7 antiforgery, autoria e limite de fotos no envio | `AntiforgeryJsonFilter.cs`; `AdPhotosController` com `[Authorize(Writer)]` e autoria no serviço | `AccessMatrixTests.EveryUnsafeEndpoint_RejectsARequestWithoutTheAntiforgeryToken`, `OwnershipMatrixTests.AnotherWriter_IsDeniedEveryRouteOfAnAdThatIsNotTheirs…`, `US008S04` | Implementado |
+| RC-8 foto só de anúncio publicado, 404 igual, `nosniff` | `PhotoDelivery.cs` (`isPublic`/`AdAccess.CanView`, `null` em toda recusa); `SecurityHeadersMiddleware.cs:22` | `EntregaTests.AnuncioNaoPublicado_Devolve404IgualAoInexistente_ParaQuemNaoPodeVer` | Implementado |
+| RC-9 falha no meio apaga o que foi gravado | `PhotoIngestion.cs:35-52` (catch com `DeleteAsync`), `FileSystemPhotoStorage.cs:55-66` | `FailureTests.FalhaNoMeio_ApagaArquivosGravados`, `US008S06_FalhaDeGravacao_NaoDeixaArquivosNemRegistro` | Implementado |
+| RC-10 IP do cliente atrás do proxy | `ForwardingExtensions.cs:22-43` (fail-closed), `Program.cs:75`, `:90` | `RateLimiterTests.IpDoCliente_VemDoCabecalhoEncaminhado_DeProxyConfiavel`, `CabecalhoEncaminhado_DeOrigemNaoConfiavel_E_Ignorado`, `SemProxiesConfigurados_…` | **Parcial:** falta o valor do provedor (SEC-01, bloqueia o lançamento; R-11; IPv6 em R-38) |
+| RC-11 3 pedidos por hora por e-mail e aviso aos 80 por dia | `PasswordRecoveryService.cs:31-37`, `:59-77` (também 10 por hora por IP) | `PasswordRecoveryLimitsTests.QuartoPedidoNaMesmaHora_NaoEnviaEmail_MasRespondeIgual`, `TotalDiarioChegaA80_RegistraWarning` | Implementado (efeito colateral aceitável a decidir: R-30) |
+| RC-12 redefinir limpa o bloqueio | `PasswordRecoveryService.cs:117-118` | `PasswordRecoveryLimitsTests.RedefinirComSucesso_LimpaOBloqueio` | Implementado (gravações separadas: R-26) |
+| RC-13 resposta igual e sem esperar o envio | `AccountController.cs:115-126`; fila em memória (`PasswordRecoveryQueue`, `PasswordRecoveryWorker`) | `PasswordRecoveryLimitsTests.ContaExistenteEInexistente_TemMesmaRespostaESemEsperarOEnvio`, `FalhaNoEnvio_NaoMudaARespostaNemDerrubaOSite_ELogaComTraceId` | Implementado (fila em memória aceita, BACKLOG:19) |
+| RC-14 ViewModels sem campos de decisão | `Areas/Panel/Models/AdViewModels.cs` | `Architecture/EditViewModelsTests.FormularioDeEdicao_NaoTemCamposDeDecisao`, `EntradaDoServicoDoRascunho_NaoTemCamposDeDecisao` | Implementado |
+| RC-15 termo de 100 caracteres e consulta de 10 s | `SearchLimits.MaxTermLength = 100` (`Core/Search/SearchModels.cs:20`); `CommandTimeoutSeconds = 10` (`PanelAdListReadRepository.cs:22`, `AdCardSql.cs:14`) | `SearchRulesTests.cs:96-100`; `PanelAdListQueryTests.cs:353` e `SearchQueryTests.cs:535` (trancam a tabela no SQL Server real e medem o tempo) | Implementado, com a melhor prova do conjunto |
+| RC-16 toda ação sensível registrada | `AuditLog.cs`; chamadas em `UserManagement`, `CategoryManagement`, `SiteSettingsManagement.cs:46`, `AdService.cs:73`, `AdDraftService.cs:72`, `:115`, `PasswordRecoveryService.cs:126`; só acréscimo em `AppDbContext.cs:172-176`; login no log (`AccountController.cs:96`, `:229-241`) | `UserAuditTests`, `AccountTests.FalhaEBloqueioDeLogin_SaoRegistradosNoLog`, `…EntradaESaida_SaoRegistradasNoLog_SemSenha`, `SettingsTests`, `CategoriesTests` | **Implementado com ressalva** (RR-6; permissão negada nas páginas sem log: R-08; redefinição não atômica: R-26) |
+| RC-17 sem `innerHTML` com texto do servidor | Nenhum `innerHTML`/`insertAdjacentHTML`/`eval` em `wwwroot/js` | `Layout/JsModulesTests.cs:27`, `RawOutputTests`, `XssInAllScreensTests` | Implementado |
+| RC-18 `returnUrl` só local | `AccountController.cs:214-217` (`Url.IsLocalUrl` e não a própria entrada) | `AccountTests.ReturnUrlExterno_E_Ignorado` (`https://evil.example` e `//evil.example`) | Implementado |
+| RC-19 aviso se as variáveis do Administrador continuam | `BootstrapAdminInitializer.cs:57-64` | `BootstrapAdminTests.VariaveisRemanescentes_RegistramWarning`, `SoUmaVariavelRemanescente_ComAdministrador_ApenasAvisa` | Implementado (papel sem checagem: R-25) |
+| RC-20 exemplo com aviso de guarda | `web.Production.config.example:2-5`; `.gitignore:340-342` | `SecretsTests.ArquivoDeExemplo_TemAvisoDeGuardaESemValorReal`, `GitIgnore_ProtegeArquivosLocaisDeConfiguracao` | Implementado |
+| RC-21 corpo de 1 MB (foto 11 MB) | `BodyLimitMiddleware.cs`; `Program.cs:117`; `[RequestSizeLimit]` no envio | `BodyLimitTests.CorpoAcimaDe1Mb_Devolve413_ExcetoNoEnvioDeFoto` | Implementado (só `Content-Length` testado; leitura antes do limite: R-32; 413 fora do contrato: R-33) |
+
+**Mitigações STRIDE (29 ameaças).** 25 implementadas e provadas; **S3 (forja por vazamento das chaves) não implementada: R-01**; D3 (inundação distribuída) parcial por desenho (RR-4) e dependente de SEC-01 (R-11); S1 implementada pelo contador de falhas, mas a política `auth` documentada não é usada (R-07); I8 (placas e rostos) e E3 (Administrador desonesto) aceitas como residuais (RR-5, RR-6). A tabela completa está no relatório do revisor C.
+
+### 6.3 ADR × respeitada? × evidência
+
+| ADR | Respeitada? | Evidência |
+|---|---|---|
+| ADR-001 monólito modular, 3 projetos | **Sim** | `GazetaMarketplace.slnx` (Core, Infrastructure, Web); `Core.csproj` só com `Microsoft.Extensions.DependencyInjection.Abstractions`; `AddCore()` e `AddInfrastructure()` em `Program.cs:81`, `:84`; projetos do template (`ClaudeStack.*`, `Example.*`) fora de `src/` e `tests/` |
+| ADR-002 campos por categoria em JSON | **Sim** | Grupos em código (`Core/Fields/Groups`, 19 arquivos), colunas calculadas com `TRY_CAST`, `ComputedColumnsDifferentialTests`. Ressalva: lista de opções de campo obrigatório não herdada por categoria nova (R-06) |
+| ADR-003 Identity com cookie | **Sim** | `IdentityExtensions.cs:34-121`; `MustChangePasswordFilter` em `PanelControllerBase.cs:15`; `BootstrapAdminInitializer`. Dependência declarada em "Risks": chaves do Data Protection fora da raiz (**não ligada**, R-01) |
+| ADR-004 EF para escrita, Dapper para leitura complexa | **Sim**, com desvio menor | Dapper só em 4 repositórios de leitura e 2 ferramentas; `SqlBuilder` único; `Database.Migrate()` ausente; `UPDLOCK` do envio de fotos; `rowversion`. O usuário usa `ConcurrencyStamp` (R-65) |
+| ADR-005 fotos fora da raiz, WebP, original 30 dias | **Sim** | `FileSystemPhotoStorage.cs`, `MagickImageProcessor`, `OriginalsCleanupService`, `PhotosController` com limite próprio (`RateLimitingExtensions.cs:80`) |
+| ADR-006 busca por texto normalizado | **Sim** | `CHARINDEX` sobre `TitleSearch`/`DescriptionSearch`, normalização só na aplicação (`Normalizer`) |
+| ADR-007 CEP no servidor com cache em tabela | **Sim** | `CepController` com `[Authorize(Writer)]` e `[EnableRateLimiting("cep")]`; `ViaCepLookup` (5 s, uma tentativa); `CepCache`; só cidade, UF e IBGE (cuidados em R-03 e R-27) |
+| ADR-008 catálogo importado uma vez | **Sim** | `tools/VehicleCatalogExport` fora da solução, chave composta com `Kind`, `Source`; o site nunca lê o banco do GazetaOnline |
+| ADR-009 SendGrid por HttpClient | **Sim**, com desvio menor | `SendGridEmailSender.cs` sem SDK; chave só no cabeçalho; tempo limite de **15 s** (`Infrastructure/ServiceCollectionExtensions.cs:121`) contra os 10 s do ADR (R-65) |
+| ADR-010 observabilidade em hospedagem compartilhada | **Sim** | Serilog em arquivo JSON, retenção de 14 dias (`SerilogConfiguration.cs`), `/health/live` e `/health/ready` sem detalhes (`Program.cs:127-128`) |
+| ADR-011 configuração e segredos por WebDeploy | **Parcial** | Opções tipadas com `ValidateOnStart` em produção (`OptionsExtensions.cs:16-44`), `web.Production.config.example`, `appsettings.Development.json` fora do git. **Falta** o `PersistKeysToFileSystem` das Implementation Notes (R-01) |
+| ADR-012 componentes fora da v1 | **Sim**, com premissa desatualizada | Nenhum Redis, Kafka, Hangfire, YARP, Keycloak, Polly, OpenTelemetry nem Docker em produção; a premissa "só há uma tarefa em segundo plano" já não vale (4 serviços hospedados, R-65) |
+
+Referências e pacotes: `Directory.Build.props` com `net10.0`, `Nullable=disable`, `ImplicitUsings=disable`, `TreatWarningsAsErrors=true`, sem sobrescrita em nenhum `.csproj`; `ManagePackageVersionsCentrally=true` e **nenhum `Version=`** em `src/`, `tests/` ou `tools/`; `global.json` com SDK `10.0.100` final e runner `Microsoft.Testing.Platform` (o RR-10 já não vale: R-64); `.gitignore` protege `appsettings.Development.json`, `web.Production.config`, `*.pubxml` (`:155`, `:340-342`). Vulnerabilidades de pacote **não foram verificadas** aqui (R-69; fica para o `/scan`).
+
+### 6.4 Controle × onde está ligado × teste (escopo Web, `Program.cs`)
+
+| Controle | Ligado em (`Program.cs`) | Teste que o prova | Observação |
+|---|---|---|---|
+| Cabeçalhos de segurança e CSP | `:92` `SecurityHeadersMiddleware` | `HeadersTests.TodaResposta_TemOsCabecalhosObrigatorios` (`HeadersTests.cs:20`), `CspTests.cs:16` | CSP sem `base-uri` (R-37) |
+| HSTS e HTTPS | `:61-64` opções, `:104` `UseHttpsRedirection`, HSTS em `SecurityHeadersMiddleware.cs:28` | `HeadersTests.cs:36,52,64,76` | HSTS só com `Request.IsHttps` (depende do encaminhamento: R-11) |
+| Antiforgery (páginas e JSON) | `:48-60` (filtros globais, cabeçalho e cookie) | `AntiforgeryTests.cs:24,36,49` (rotas de teste), `AccessMatrixTests` nas rotas reais | Corpo da resposta de falha não testado (R-10); leitura de corpo antes do limite (R-32) |
+| Rate limiting | `:67` registro, `:121` uso depois da autenticação | `RateLimiterTests.cs:66` (global), `:41` (política `auth`, rota de teste), `LoginFailureCounterTests` | **Política `auth` sem uso real** (R-07) |
+| Autenticação | `:79` `AddTeamIdentity`, `:119` `UseAuthentication` | `SessionTests.cs:34,58,82,99` | Falta teste de chaves persistentes (R-01) |
+| Autorização | `:122` `UseAuthorization`; políticas em `IdentityExtensions.cs:75-77` | `AccessMatrixTests`, `OwnershipMatrixTests` | Sem `FallbackPolicy` (R-42, F6-20) |
+| Tratador de exceções | `:93-95` `/api` (middleware próprio), `:96-98` páginas (`/Home/Error`) | `ErrorsTests.cs:25,47,69,81` | Erros do framework fora do contrato (R-33) |
+| Páginas de status | `:100-102` | `StatusPagesTests.cs` | Só GET testado (R-10) |
+| Compressão | `:68` serviço, `:105` uso (painel excluído) | `CompressionAndCacheTests.cs` | — |
+| Limite de corpo | `:117` `BodyLimitMiddleware`; `[RequestSizeLimit]` nos envios de foto | `BodyLimitTests.cs:19` | Só `Content-Length`; corpo em partes sem teste (R-33) |
+| Cabeçalhos encaminhados | `:75` registro, `:90` `UseSecureForwarding` (primeiro) | `RateLimiterTests.cs:149,160,171` | `KnownProxies` pendente (R-11) |
+| Correlação | `:91` | `CorrelationIdTests.cs`, `ErrorsTests.cs:81` | — |
+| Saúde | `:65-66`, `:127-128` | `HealthTests.cs:21,34,53,66,78` | — |
+| CORS (nenhum) | `:76` (comentário; nada registrado) | `CorsTests.cs:17` | — |
+| Cultura fixa | `:33-36`, `:107-114` | `CultureTests.cs:15` | Fuso IANA no Windows (R-05) |
+| **Data Protection (chaves)** | **Não ligado** | **Nenhum** | **R-01** |
+
+## 7. Approval Status
+
+| Decision | **APPROVE com condições** (rótulos do Product Owner: APPROVE · APPROVE com condições · REJECT). No vocabulário do template, **equivale a REQUEST CHANGES até a correção do R-01**: o Gate 7 **não passa** enquanto o 🔴 estiver aberto |
+|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Condição bloqueante | **Resolver o R-01** (persistir as chaves do Data Protection, provado por teste com dois hosts e pela presença de `key-*.xml` na pasta). Correção pequena: poucas linhas em `Program.cs` e dois testes. Sem isso, nem `/scan` nem `/deploy` |
+| Condições antes do `/scan` ou `/deploy` | **Registrar a decisão sobre os 17 🟡** (corrigir ou aceitar cada um, com dono). Recomendo corrigir antes do `/scan`: R-02 e R-03 (os dois que podem alterar dado em silêncio), R-07 (documentação, política e teste que dizem o que o código não faz), R-08 e R-10. Antes do `/deploy`: R-04, R-05 (confirmar no `/verify`), R-06, R-09, R-11 (SEC-01, já bloqueio de lançamento), R-14 a R-16 e R-36. R-12, R-13 e R-17/R-18 podem ir para `/simplify` e para depois do lançamento, com registro |
+| Dependem do Product Owner | R-02 (regra do Publicado editado), R-12 (FluentValidation), R-30 (limite de e-mail de recuperação), R-65 (retenção de IP e e-mail), R-69 (SQLite de teste e Font Awesome) e a obtenção do IP do proxy do provedor (R-11); ver triagem §4 |
+| O que NÃO bloqueia | Os 51 🟢 (nenhum é defeito de dados nem de segurança explorável; 8 já estavam na triagem) e os OPEN-001 a OPEN-007 (disposições na seção 5) |
+| Fronteira deste review | Nenhum arquivo de `src/`, `tests/`, `db/` ou `tools/` foi alterado; nenhum build, teste nem navegador foi executado; nada foi commitado por este review |
+
+**Re-pontuação esperada após a correção do R-01:** Segurança de 2 para no máximo 4; Arquitetura continua em 3 até R-07 e R-12 serem fechados; Correção continua em 3 até os 🟡 de comportamento (R-02 a R-06, R-09, R-10, R-14 a R-18) serem fechados. Quando o R-01 for corrigido, acrescentar aqui a subseção "Resolution" com (a) o que mudou, (b) os números da nova rodada de teste e (c) as notas recalculadas.

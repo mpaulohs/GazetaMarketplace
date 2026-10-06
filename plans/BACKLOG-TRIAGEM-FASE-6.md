@@ -141,3 +141,121 @@ São as 12 linhas cujo dono é a decisão do Product Owner (mais a decisão 2, c
 13. **F6-01** (P0). Quando o Product Owner consegue o arquivo oficial de municípios do IBGE (reclassificado depois do Checkpoint 6: era do `/verify`)? Hoje o site só tem a amostra de 40 cidades. **Recomendação:** Obter o arquivo agora; com ele, gerar `db/seed/cities.sql` com a ferramenta de municípios (que já tem 27 testes) e conferir o código e o nome das cidades da amostra. Sem a carga completa a lista de cidades por UF fica incompleta no lançamento.
 
 > Já decididas e só aguardando registro (não pedem resposta): autocomplete de Marca e Tipo de produto fica para a primeira manutenção depois do lançamento (decisão de 2026-10-05); o risco do cache de 1 ano da foto retirada foi aceito (2026-10-05); a chave do Google Maps no histórico não será reescrita.
+
+## 4. Acréscimos do /review formal (Fases 0 a 6)
+
+> **Em resumo:** o `/review` formal de todo o código achou **1 defeito crítico, 17 avisos e 51 sugestões** (69 achados; 60 novos e 9 que já estavam no BACKLOG). Esta seção só **classifica**: nenhum código nem o BACKLOG foi alterado por ela. Os achados novos viraram **59 linhas de trabalho** (`F7-NN`): **2 P0, 21 P1 e 36 P2**; os 8 achados que a triagem acima já cobria só são citados, sem linha nova. **O único item que bloqueia o próximo passo é o F7-01 (R-01):** sem ele o Gate 7 não passa e o `/scan` não deve começar. O F7-02 (SEC-01) já era bloqueio de lançamento e continua sendo.
+
+| Prioridade | O que significa | Linhas novas |
+|---|---|---|
+| **P0** | Bloqueia ir ao ar, ou é falha de segurança ou de dados | 2 |
+| **P1** | Deve ser tratado antes do lançamento, pelo dono indicado | 21 |
+| **P2** | Melhoria, ou aceitar com registro | 36 |
+| | **Total** | **59** |
+
+| Dono | P0 | P1 | P2 | Total |
+|---|---|---|---|---|
+| /fix-issue | 1 | 16 | 23 | 40 |
+| /simplify | 0 | 1 | 8 | 9 |
+| /test | 0 | 1 | 2 | 3 |
+| /review | 0 | 1 | 2 | 3 |
+| /scan | 0 | 0 | 0 | 0 |
+| /infra | 1 | 1 | 0 | 2 |
+| /verify | 0 | 0 | 0 | 0 |
+| decisão do Product Owner | 0 | 1 | 1 | 2 |
+| **Total** | 2 | 21 | 36 | **59** |
+
+**Como ler.** `R-NN` é o id do achado em `reports/CODE_REVIEW.md` (seção "Revisão formal do código completo (Fases 0 a 6)"); entre parênteses vão o revisor de origem (`A-`, `B1-`, `B2-`, `C-`) e, quando dois revisores acharam o mesmo problema, os dois ids. As linhas dos achados novos estão em `plans/BACKLOG.md` (seção "Revisão formal do código — Fases 0 a 6"). **(a confirmar)** marca a conclusão só de leitura. Os donos `/scan` e `/verify` só aparecem quando a ação é deles; nenhum achado novo coube só ao `/scan` (o `/scan` já recebe o R-69, o R-30 e o R-31 como verificações a fazer).
+
+### 4.1 Lista única, em ordem de prioridade (P0, P1, P2)
+
+| Id | Prio | Resumo | Origem | Dono | Ação esperada |
+|---|---|---|---|---|---|
+| F7-01 | P0 | Chaves do Data Protection nunca são gravadas na pasta persistente; a pasta é exigida e ignorada (sessão, link de redefinição e antiforgery podem cair a cada reciclagem do IIS; não explorável) | R-01 (B1-01 = C-01) | /fix-issue | `AddDataProtection().SetApplicationName(...).PersistKeysToFileSystem(...)` lendo `KeyStorageOptions`; testes com dois hosts na mesma pasta (cookie, token de redefinição e antiforgery valem no segundo) e presença de `key-*.xml`. **Bloqueia o Gate 7 e o `/scan`.** Ver decisão 1 |
+| F7-02 | P0 | SEC-01/RC-10: sem `ForwardedHeaders:KnownProxies`, se houver proxy no provedor, cinco falhas de qualquer pessoa bloqueiam o login de toda a equipe por 15 minutos e os limites por IP valem para todos juntos | R-11 (C-03) | /infra | Obter o IP do proxy (decisão 4), pôr a variável no checklist de implantação (F6-03) com teste de aceite (duas origens, dois contadores); `Warning` na partida quando vazio em Production (uma linha de código, pedir ao `/fix-issue`) |
+| F7-03 | P1 | Administrador deixa anúncio Publicado incompleto (sem categoria, descrição, preço ou foto) porque a edição usa a validação frouxa de rascunho | R-02 (A-01) | /fix-issue | Aplicar `AdSubmissionRules.Pending` em Publicado e Em revisão; recusar apagar a última foto nesses estados; teste. Ver decisão 2 |
+| F7-04 | P1 | `CepService` chama `ChangeTracker.Clear()` no contexto compartilhado e solta o anúncio em edição (a confirmar com teste) | R-03 (A-02) | /fix-issue | Gravar o cache de CEP num contexto próprio; teste de `UpdateAsync` com a gravação do cache forçada a falhar |
+| F7-05 | P1 | `PriceText` aceita dígitos Unicode no regex e lança `FormatException` (500) no Preço, Condomínio e IPTU | R-04 (A-03) | /fix-issue | `[0-9]` no lugar de `\d`, `TryParse`, entradas arábico-índica e de largura total na tabela de testes |
+| F7-06 | P1 | Fuso IANA `America/Sao_Paulo` em inicializador estático pode quebrar o site no Windows sem ICU | R-05 (A-04) | /fix-issue | Plano B com o id do Windows em `try/catch`; confirmar na hospedagem real no `/verify` (se falhar lá, sobe para P0) |
+| F7-07 | P1 | Categoria criada sob Imóveis, Roupas, Eletro ou Telefonia não herda a lista do campo obrigatório: o anúncio nunca é enviado | R-06 (A-05) | /fix-issue | `OptionsFor` herdado do ancestral mais próximo; teste de paridade com uma filha de cada categoria que tem `OptionsByCategory` |
+| F7-08 | P1 | Política de limite `auth` nunca aplicada; ARCHITECTURE §7, SECURITY_REQUIREMENTS §5 e `plan.md` descrevem um limite que nenhuma rota usa; o teste prova um controlador de teste | R-07 (B1-02 = C-02) | /fix-issue | Aplicar `[EnableRateLimiting(AuthPolicy)]` só em `Forgot`/`Reset` (por exemplo 10 por hora) e reescrever o teste na rota real, ou apagar política e controlador de teste; em qualquer caso corrigir os documentos e o critério da 0.4 |
+| F7-09 | P1 | "Permissão negada" nas páginas do painel não deixa log (só a `/api` registra) | R-08 (B1-03) | /fix-issue | `LogWarning` em `NoPermission` dos dois controllers e em `AccessDenied`; teste de log nos moldes de `ErrorsTests` |
+| F7-10 | P1 | Sessão vencida: o `fetch` de "trocar categoria" recebe a tela de login com 200 e a injeta no formulário do anúncio | R-09 (B1-04) | /fix-issue | 401 para pedido que não é navegação (`Sec-Fetch-Mode`) e `resposta.redirected` em `ad-edit.js`; teste de 401 em `/painel/anuncios/campos` |
+| F7-11 | P1 | POST com token antiforgery inválido: a página de status reexecutada como POST falha de novo e sai em branco (a confirmar com teste) | R-10 (B1-05) | /fix-issue | `[IgnoreAntiforgeryToken]` em `HomeController.Status` e `Error`; teste de POST sem token no painel |
+| F7-12 | P1 | FluentValidation aprovado (AR-06) e marcado como feito, mas nunca adotado; SECURITY_REQUIREMENTS §3 diz o contrário do código | R-12 (C-04) | decisão do Product Owner | Aceitar o desvio e registrar (linha em ARCHITECTURE §7 ou ADR curto) corrigindo SECURITY_REQUIREMENTS §3 e AR-06, ou adotar o pacote. Ver decisão 3 |
+| F7-13 | P1 | Operador `!` em 184 linhas de teste e 5 de `src/` (o relatório dizia "cerca de 60"; o F6-32 cita dois) | R-13 (C-05 + OPEN-005) | /simplify | Substituição mecânica sem mudar comportamento, mais uma trava (regra de análise ou teste de varredura); corrigir o número no BACKLOG. Substitui o F6-32 quanto ao `!` |
+| F7-14 | P1 | Contorno de foco do projeto perde para o Bootstrap em botões, paginação, abas, campos e caixas (a confirmar no navegador) | R-14 (B2-01) | /fix-issue | Subir a especificidade em `base.css`; estender `BaseCssTests` para medir o contorno de `.btn`, `.page-link` e do coração |
+| F7-15 | P1 | Painel de filtros `sticky` mais alto que a janela: "Aplicar filtros" some abaixo da dobra em 1366×768 (a confirmar) | R-15 (B2-02) | /fix-issue | `max-height: calc(100vh - 2rem); overflow-y: auto` em `.search-filters`; conferir no Chromium |
+| F7-16 | P1 | Recuo da árvore de categorias na busca usa espaços comuns, que o navegador colapsa: as duas "Serviços" ficam iguais (a confirmar) | R-16 (B2-03) | /fix-issue | Espaço não separável, prefixo visível ou `optgroup`; teste de integração e E2E do texto da opção |
+| F7-17 | P1 | `ProductionGuard` das ferramentas confia na palavra "prod" (banco `DB_184233_gazeta` passa com `--environment Development`) | R-23 (A-10) | /fix-issue | Lista de permissão ou segunda variável explícita; antes da carga real de municípios e catálogo (F6-01, F6-04) |
+| F7-18 | P1 | Validador do catálogo de veículos não confere os limites das colunas (150/150/250, `Id > 0`, ano) | R-24 (A-11) | /fix-issue | Validar e mandar ao relatório de descartados; antes da carga real (F6-04) |
+| F7-19 | P1 | Limpeza de fotos apaga todo arquivo sem registro, sem trava de proporção (banco restaurado ou ambiente de teste na pasta de produção) | R-29 (A-16) | /fix-issue | Abortar e registrar `Error` acima de cerca de 20% de órfãos; documentar no runbook que a pasta é exclusiva de um banco |
+| F7-20 | P1 | Cabeçalhos `Server` e `X-Powered-By` não são removidos no IIS | R-36 (B1-11) | /infra | `removeServerHeader` e `<remove name="X-Powered-By"/>` no `web.config` publicado; linha no checklist do `/deploy` (F6-03) |
+| F7-21 | P1 | Chaves "só para testes" (`RateLimiting:*`, `SendGrid:BaseUrl`, `ViaCep:BaseUrl`) valem em Production; `Site__BaseUrl` aceita `http://` e `ftp://` | R-39 (B1-14 + C-11) | /fix-issue | Teto em Production, host conhecido, `https` obrigatório; teste em `OptionsTests`. Complementa o F6-12 |
+| F7-22 | P1 | Contrato e modelo de dados desatualizados: `/api/v1/public/cities`, tabela `PasswordRecoveryAttempts` (e-mail e IP por 24 h, IP também no log por 14 dias), quatro serviços em segundo plano, tempo do SendGrid, concorrência do usuário | R-65 (C-09) | /review | Alinhar `openapi.yaml`, ARCHITECTURE §6.2, NFR-19 e ADRs 004, 009 e 012. Ver decisão 6 (retenção) |
+| F7-23 | P1 | Projeto de navegador sem evidência de falha (sem trace nem captura de tela): o OPEN-001 não tem causa | R-68 (C-14) | /test | Ligar trace e captura só em falha em `reports/test-artifacts/runner/` e guardar o log de cada rodada; depois o `/verify` investiga o OPEN-001 |
+| F7-24 | P2 | Voltar pelo histórico (bfcache) mostra contador e corações de favoritos desatualizados (a confirmar) | R-17 (B2-04) | /fix-issue | Gancho `pageshow` com `persisted` em `ativarFavoritos` e em `favorites.js`; E2E com `GoBackAsync` |
+| F7-25 | P2 | Selo "Cidade/UF informadas manualmente" estoura 320 px na pré-visualização (a confirmar) | R-18 (B2-05) | /fix-issue | `text-wrap` ou selo curto; incluir a tela no `ScreenCoverageTests` |
+| F7-26 | P2 | Autorização de Administrador só no controller em `UserManagement`, `CategoryManagement`, `SiteSettingsManagement` e `ReviewQueue` | R-19 (A-06) | /fix-issue | `EnsureAdministrator()` no início de cada serviço (defesa em profundidade, sem exploração hoje) |
+| F7-27 | P2 | Fotos: acesso e situação do anúncio só conferidos antes da transação | R-20 (A-07) | /fix-issue | Reler `Status` e `AuthorId` depois do `UPDLOCK` e repetir `AdAccess.CanEdit` |
+| F7-28 | P2 | Duas implementações do formato de dinheiro (`FormatCurrency` × `FormatMoney`) e do limite de ano | R-21 (A-08) | /simplify | Uma só fonte ou tabela de paridade. Soma-se ao F6-41 |
+| F7-29 | P2 | Código sem chamador e helper de teste em produção (`WaitUntilIdleAsync`, `*.IsValid`, `AddCore()` vazio) e front-end morto (`_NoResultsState`, `_Skeleton`, `.esqueleto*`) | R-22 (A-09) + R-55 (B2-13) | /simplify | Mover o helper para os testes e remover o que só os testes usam. Soma-se ao F6-43 e ao F6-44 |
+| F7-30 | P2 | `BootstrapAdminInitializer` ignora o resultado de `AddToRoleAsync`: pode sobrar usuário sem papel e o site sem Administrador | R-25 (A-12) | /fix-issue | Checar o `IdentityResult` e remover o usuário em falha, ou usar transação |
+| F7-31 | P2 | Redefinição pelo link: senha, desbloqueio e auditoria são gravações separadas (auditoria pode faltar) | R-26 (A-13) | /fix-issue | Reaproveitar a transação de `UserManagement.RunAsync` |
+| F7-32 | P2 | Cidade do ViaCEP sem limite de 80 caracteres | R-27 (A-14) | /fix-issue | Recusar `localidade` maior que 80 em `ViaCepLookup.Parse` |
+| F7-33 | P2 | Espaços invisíveis (U+00A0, U+202F) e `CultureInfo("pt-BR")` criada em seis lugares | R-28 (A-15) | /simplify | `"\u00A0"`/`"\u202F"` com comentário e constante `Cultures.PtBr` |
+| F7-34 | P2 | O limite de pedidos de redefinição por e-mail permite silenciar a recuperação de outra pessoa | R-30 (A-17) | decisão do Product Owner | Aceitar e registrar, ou contar só contas existentes. Ver decisão 5 |
+| F7-35 | P2 | Tempo do login distingue conta desativada ou bloqueada de senha errada | R-31 (B1-06 = C-10) | /fix-issue | Gastar o hash falso também em `IsNotAllowed` e `IsLockedOut`, ou aceitar no `SCAN_REPORT` (F6-52) |
+| F7-36 | P2 | `/api` lê o corpo antes do limite de 11 MB quando falta o cabeçalho do token | R-32 (B1-07) | /fix-issue | Recusar de imediato sem o cabeçalho em `AntiforgeryJsonFilter` |
+| F7-37 | P2 | Erros do framework na `/api` fora do contrato (400 em inglês, 413 sem corpo, `BadHttpRequestException` possivelmente 500) | R-33 (B1-08) | /fix-issue | `InvalidModelStateResponseFactory`, `ApiProblem.WriteAsync` no 413 e tratamento no middleware; teste de corpo em partes para confirmar o ramo 3 |
+| F7-38 | P2 | Senha provisória não impede o uso da `/api` de fotos, CEP e cidades | R-34 (B1-09) | /fix-issue | Regra nas políticas `Writer` e `Administrator`; `PasswordController` com política própria |
+| F7-39 | P2 | `CategoriesController` ignora o `ModelState`: `parentId=abc` cria categoria principal | R-35 (B1-10) | /fix-issue | `if (!ModelState.IsValid)` e teste de tipo errado na rota real |
+| F7-40 | P2 | CSP sem `base-uri` e `object-src` | R-37 (B1-12) | /fix-issue | Acrescentar `base-uri 'self'; object-src 'none'` e atualizar ARCHITECTURE §7 e `CspTests` |
+| F7-41 | P2 | Limites por IP valem para o IPv6 completo (quem tem /64 escapa) | R-38 (B1-13) | /fix-issue | Chave pelo prefixo /64; junto com SEC-01 (F7-02) |
+| F7-42 | P2 | Identificadores em português em ViewModels de busca, chave de erro, políticas e log | R-40 (B1-15) | /simplify | Renomear a propriedade C# mantendo `[FromQuery(Name = …)]`. Soma-se ao F6-34 |
+| F7-43 | P2 | Constantes de rota sem uso e caminho do link de redefinição em três lugares | R-41 (B1-16) | /simplify | Uma só fonte e teste que abre o link do mailer. Soma-se ao F6-39 |
+| F7-44 | P2 | `/Home/Status/{código}` e `/Home/Error` acessíveis direto (14 sugestões do Checkpoint 6, item 10) | R-47 (B1-22) | /fix-issue | Restringir à reexecução ou aceitar com registro (OPEN-006) |
+| F7-45 | P2 | Listas encadeadas (Marca→Modelo→Ano, UF→cidade) sem cancelamento; falha só dentro do `<select>` | R-49 (B2-07) | /fix-issue | Comparar o valor pedido com o atual e escrever a falha em `[data-ad-status]` |
+| F7-46 | P2 | Contador de caracteres conta CRLF como 2 ao reexibir o formulário com erro | R-50 (B2-08) | /fix-issue | Normalizar `values.Description` em `AdFormFactory.BuildAsync` |
+| F7-47 | P2 | Teto do preço escrito em C# e em JavaScript, e Condomínio/IPTU sem a máscara do Preço | R-51 (B2-09) | /test | Teste de paridade entre `price.js` e `FieldLimits.MaxMoneyCents`; decisão da máscara no F6-21 |
+| F7-48 | P2 | `<time>` sem `datetime` e totais do painel sem separador de milhar | R-52 (B2-10) | /fix-issue | `datetime` ISO e `N0` pt-BR |
+| F7-49 | P2 | Hierarquia de títulos pula de `h1` para `h3` na busca e nos favoritos | R-53 (B2-11) | /fix-issue | `h2` visível ou `visually-hidden` antes da grade |
+| F7-50 | P2 | Alvo de toque e padrão de erro de campo inconsistentes entre telas | R-54 (B2-12) | /simplify | Um parcial único de erro de campo e `alvo-toque` nos botões dos estados |
+| F7-51 | P2 | Vendors (Bootstrap, Font Awesome) sem versão revalidam a cada página; fonte 700 sem `preload` | R-56 (B2-14) | /fix-issue | `asp-append-version="true"` nos três vendors e `preload` do 700. Soma-se ao F6-55 e ao item 17 de OPEN-006 |
+| F7-52 | P2 | "Favoritos (0)" aparece quando o número não é conhecido (sem JavaScript ou armazenamento bloqueado) | R-57 (B2-15) | /fix-issue | Nascer `hidden` e mostrar em `ativarFavoritos` |
+| F7-53 | P2 | Formulário do anúncio sem `aria-required` nos campos obrigatórios | R-58 (B2-16) | /fix-issue | `aria-required="true"` nos campos com `*` e `aria-describedby` |
+| F7-54 | P2 | Falha de rede sem retorno no campo (busca) e fila de fotos que pára com erro inesperado | R-59 (B2-17) | /fix-issue | `catch` com mensagem junto do campo e `try/catch` por foto em `processarFila` |
+| F7-55 | P2 | Duas técnicas para a tabela responsiva do painel (CSS copiado, `display: block` sem papéis) | R-60 (B2-18) | /simplify | `.table-stack` em `components/` e `role` nas variantes empilhadas. Soma-se ao F6-17 |
+| F7-56 | P2 | Duas mensagens da SPEC afirmadas pela constante do código; `US009S04` com prova parcial | R-62 (C-06) | /test | Literais da SPEC em US-006-S06 e US-006-S09; `RejectedAt`/`RejectedById` nulos no `US009S04` |
+| F7-57 | P2 | Textos desatualizados: RR-10 ainda aberto, "RC" do .NET e 41 critérios de aceite `[ ]` em `plan.md` (inclui "44 telas") | R-64 (C-08) + R-66 (C-12) | /review | Fechar o RR-10, marcar os critérios atendidos, deixar `[ ]` só os limitadores da 0.4 e o RC-10, corrigir 44 para 45 |
+| F7-58 | P2 | 177 arquivos `.claude.backup-*` versionados | R-67 (C-13) | /simplify | `git rm -r --cached` e `.gitignore`, num commit próprio |
+| F7-59 | P2 | SQLite de teste e Font Awesome 4.7 sem decisão registrada; duas entradas de CPM sem uso; `dotnet list package --vulnerable` ainda não rodou | R-69 (C-15) | /review | Uma linha de decisão em `tech-stack.md`, remover as duas entradas e rodar a verificação no `/scan`. Ver decisão 7 |
+
+### 4.2 Achados que a triagem acima já cobria (sem linha nova)
+
+| Achado | Já em | Prio | Observação |
+|---|---|---|---|
+| R-42 (B1-17) sem `FallbackPolicy` | F6-20 | P1 | Decisão do Product Owner; este review reforça a recomendação de adotar antes do lançamento (decisão 8) |
+| R-43 (B1-18) conflito e proibição sem tratamento | F6-06 | P1 | O F6-06 diz "vira página 500"; na verdade é a página de erro genérica com status 409 ou 403 (`HomeController.cs:72-74`); corrigir o texto |
+| R-44 (B1-19) `AdsController` com 452 linhas | F6-30 | P2 | Confirmado |
+| R-45 (B1-20) `ids` inválido em favoritos | F6-38 | P2 | Confirmado |
+| R-46 (B1-21) `AllowedHosts: "*"` | F6-51 | P2 | Confirmado; risco baixo com `Site__BaseUrl` obrigatório |
+| R-48 (B2-06) `carregar()` duplicado | F6-36 | P2 | Confirmado ainda aberto |
+| R-61 (B2-19) itens da Fase 5 ainda abertos | F6-34, F6-35 | P2 | `invalid-feedback d-block` com `hidden`, `mostrarAviso` duplicado, `lerNumero` para ano, nomes em português |
+| R-63 (C-07) `Test1.cs` vazio | F6-22 | P2 | Remover o arquivo; o total cai de 1.722 para 1.721 |
+
+Itens com parte já triada e linha nova só para o que faltava: F7-13 (R-13, corrige a contagem do F6-32), F7-21 (R-39, complementa o F6-12), F7-28 (R-21, soma-se ao F6-41), F7-29 (R-22 e R-55, soma-se ao F6-43 e ao F6-44), F7-42 (R-40, soma-se ao F6-34), F7-43 (R-41, soma-se ao F6-39), F7-47 (R-51, soma-se ao F6-21), F7-51 (R-56, soma-se ao F6-55) e F7-23 (R-68, complementa a linha 352 do BACKLOG).
+
+### 4.3 Decisões que dependem do Product Owner
+
+Cada decisão traz uma recomendação. Nenhuma delas bloqueia a correção do F7-01, exceto a 1 se o provedor não permitir pasta fora da raiz.
+
+1. **F7-01 / R-01 (P0).** O provedor permite uma pasta gravável fora da raiz do site para as chaves, e o perfil do pool está carregado? Se a hospedagem não oferecer criptografia das chaves em repouso, aceita que fiquem como arquivos protegidos só pela permissão da pasta? **Recomendação:** **Pedir ao provedor o caminho e confirmar o perfil do pool; aceitar a proteção por permissão da pasta** se não houver criptografia (o ADR-011 e a AR-01 já preveem). Registrar a resposta na AR-01.
+2. **F7-03 / R-02 (P1).** Quando o Administrador edita um anúncio já Publicado, o anúncio deve continuar obrigatoriamente completo (categoria, preço, descrição, CEP e fotos mínimas)? **Recomendação:** **Sim.** Aplicar as mesmas pendências do envio e acrescentar uma linha à SPEC (US-008, regra 2) por emenda aprovada.
+3. **F7-12 / R-12 (P1).** FluentValidation, aprovado na AR-06, não foi adotado: a validação está nas regras de domínio e na entrada dos serviços. Aceita o desvio? **Recomendação:** **Aceitar e registrar** (linha em ARCHITECTURE §7, correção de SECURITY_REQUIREMENTS §3 e da AR-06). Adotar o pacote agora custa caro e não muda o comportamento.
+4. **F7-02 / R-11 (P0).** Pode perguntar ao SmarterASP se há um proxy na frente do site e qual o IP dele? **Recomendação:** **Perguntar já.** Se o provedor confirmar que não há proxy, a variável não é necessária e o SEC-01 se fecha com essa resposta guardada; se houver, a variável entra no checklist de implantação.
+5. **F7-34 / R-30 (P2).** Quatro pedidos de redefinição por hora com o e-mail do Administrador impedem o envio do e-mail verdadeiro naquela hora. Aceita? **Recomendação:** **Aceitar e registrar:** é consequência do RC-11 com resposta neutra, a conta não é bloqueada e outro Administrador pode redefinir a senha (US-014-S10). Revisar se houver abuso real.
+6. **F7-22 / R-65 (P1).** O banco guarda e-mail e IP das tentativas de recuperação por 24 horas, e o log guarda o IP por 14 dias. Aceita esse prazo e a menção no NFR-19 e no texto de privacidade? **Recomendação:** **Aceitar 24 horas e 14 dias** e declarar no NFR-19 (hoje diz "só nome, e-mail e hash") e no texto de privacidade do site.
+7. **F7-59 / R-69 (P2).** SQLite (só nos testes) e Font Awesome 4.7 entraram sem decisão registrada. Aprova os dois como exceções? **Recomendação:** **Aprovar ambos:** SQLite só para testes unitários; Font Awesome fixada em 4.7 (fonte sob SIL OFL e CSS sob MIT), registrados em `tech-stack.md` e `architecture/design-system.md`.
+8. **F6-20 / R-42 (P1, já na triagem).** O site já deve nascer "seguro por padrão" (`FallbackPolicy` exigindo login, com `[AllowAnonymous]` nos controllers públicos)? **Recomendação:** **Adotar antes do lançamento**, num commit pequeno, como o F6-20 já recomendava: hoje só o `AccessMatrixTests`, e só depois de rodar, impede uma rota nova de nascer pública.
+
