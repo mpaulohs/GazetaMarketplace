@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace GazetaMarketplace.Web.Security;
@@ -115,6 +116,8 @@ public static class IdentityExtensions
                 return ApiProblem.WriteAsync(context.HttpContext, StatusCodes.Status403Forbidden, "FORBIDDEN", "Você não tem permissão para esta operação.");
             }
 
+            // Antes de redirecionar: aqui o endereço ainda é o que a pessoa pediu (a tela de destino já não diz qual foi)
+            AccessDeniedLog.Write(context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(AccessDeniedLog.Category), context.HttpContext);
             context.Response.Redirect(context.RedirectUri);
             return System.Threading.Tasks.Task.CompletedTask;
         };

@@ -134,6 +134,8 @@ app.UseVersionedStaticAssetCache();
 app.UseMiddleware<BodyLimitMiddleware>();
 
 app.UseAuthentication();
+// Depois da autenticação (precisa saber quem é) e antes de tudo o que pode negar: registra o 403 das telas do painel (RC-16)
+app.UseMiddleware<AccessDeniedLoggingMiddleware>();
 // Depois da autenticação: a política "cep" conta por usuário e precisa saber quem é. Os limites por IP (global e login) não dependem disso
 app.UseRateLimiter();
 app.UseAuthorization();
