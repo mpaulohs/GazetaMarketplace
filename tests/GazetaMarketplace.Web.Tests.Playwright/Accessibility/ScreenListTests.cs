@@ -33,8 +33,26 @@ public class ScreenListTests
     [TestMethod]
     public void EveryScreen_IsFoundByTheSameSourceTheTwoSuitesUse()
     {
+        if (ScreenCatalog.IsFiltered)
+        {
+            Assert.Inconclusive("GAZETA_SCREENS está definida: a fonte dos testes mostra só as telas pedidas");
+        }
+
         string[] ids = [.. ScreenCatalog.Ids().Select(d => (string)d[0])];
 
         CollectionAssert.AreEqual(ScreenCatalog.All.Select(s => s.Id).ToArray(), ids);
+    }
+
+    [TestMethod]
+    public void TheAxeRules_AreTheWcag21LevelsAAndAA()
+    {
+        // NFR-16 fala em "0 falhas de nível A ou AA" do WCAG 2.1: se uma etiqueta sair daqui, o axe deixa de olhar uma família de regras (contraste, por exemplo, é de wcag2aa) e nenhuma tela reclamaria
+        CollectionAssert.AreEquivalent(new[] { "wcag2a", "wcag2aa", "wcag21a", "wcag21aa" }, AxeHelper.Tags);
+    }
+
+    [TestMethod]
+    public void TheWidths_AreTheFourOfTheSpec()
+    {
+        CollectionAssert.AreEqual(new[] { 320, 768, 1024, 1280 }, WidthHelper.Widths);
     }
 }

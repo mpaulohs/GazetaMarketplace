@@ -29,8 +29,18 @@ internal static class ScreenCatalog
 
     public static Screen Find(string id) => All.Single(s => s.Id == id);
 
-    /// <summary>Fonte do <c>[DynamicData]</c>: um caso por tela, identificado pelo id.</summary>
-    public static IEnumerable<object[]> Ids() => All.Select(s => new object[] { s.Id });
+    /// <summary>
+    /// Fonte do <c>[DynamicData]</c>: um caso por tela, identificado pelo id. Com a variável <c>GAZETA_SCREENS</c> (ids separados por vírgula) mede só essas telas, para olhar uma tela de cada vez
+    /// ou repetir uma mutação sem rodar as 44; sem a variável, são todas.
+    /// </summary>
+    public static IEnumerable<object[]> Ids()
+    {
+        string only = Environment.GetEnvironmentVariable("GAZETA_SCREENS");
+        string[] wanted = string.IsNullOrWhiteSpace(only) ? [] : only.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return All.Where(s => wanted.Length == 0 || wanted.Contains(s.Id)).Select(s => new object[] { s.Id });
+    }
+
+    public static bool IsFiltered => !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("GAZETA_SCREENS"));
 
     public static string DisplayName(MethodInfo method, object[] data) => $"{method.Name}({data[0]})";
 }
