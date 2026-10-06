@@ -66,6 +66,7 @@
 - [x] Task 5.6: SEO básico das páginas públicas
 
 ## Checkpoint 5 — Site público completo
+- [x] Fase 5 fechada (2026-10-06): jornada sem login, Serviços e Vagas, mapa, revisão de código e cobertura
 
 ## Fase 6 — Verificações transversais
 - [ ] Task 6.1: Verificação transversal de acesso e de texto digitado

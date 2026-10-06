@@ -1909,10 +1909,11 @@
 ---
 ## Checkpoint 5 — Site público completo
 
-**Verify before proceeding**:
-- [ ] Início, categoria, busca, detalhe, contato e favoritos funcionam sem login
-- [ ] Serviços e Vagas aparecem corretamente nos cards, no detalhe e na busca
-- [ ] Sitemap só com anúncios publicados
+**Verify before proceeding** (verificado em 2026-10-06; evidências em `reports/TEST_REPORT.md` §Checkpoint 5):
+- [x] Início, categoria, busca, detalhe, contato e favoritos funcionam sem login (`Checkpoint5PublicTests` e `Checkpoint5E2ETests`)
+- [x] Serviços e Vagas aparecem corretamente nos cards, no detalhe e na busca (`Checkpoint5ServicesJobsTests` no SQL Server real e `Checkpoint5E2ETests`)
+- [x] Sitemap só com anúncios publicados; arquivar e despublicar tiram na hora (`Checkpoint5ServicesJobsTests`, `SitemapQueryTests`, `SeoE2ETests`)
+- [x] Revisão de código da fase (`reports/CODE_REVIEW.md`): APPROVE com condições, 0 🔴 · 5 🟡 · 23 🟢; cobertura 97,9% de linhas e 91,5% de ramos
 
 ---
 

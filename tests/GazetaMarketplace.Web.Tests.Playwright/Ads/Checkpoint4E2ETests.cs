@@ -95,6 +95,8 @@ public class Checkpoint4E2ETests : SitePage
     private async Task SendForReviewAsync(IPage page)
     {
         await page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);
+        // Espera a página de confirmação: sem isso o segundo clique pode cair no botão da página que está saindo e reenviar o mesmo formulário
+        await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Enviar para revisão?" })).ToBeVisibleAsync().ConfigureAwait(false);
         await page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);
         await Expect(page.GetByText("Anúncio enviado para revisão")).ToBeVisibleAsync().ConfigureAwait(false);
     }

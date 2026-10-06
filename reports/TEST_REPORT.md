@@ -1325,3 +1325,66 @@ Mutações da 5.4 refeitas (ver achado 3): J1 (`lerNumero` com 3 casas) e J2 (pa
 4. **Um teste existente caiu:** `PaginaNaoCarregaRecursosExternos` proibia qualquer endereço absoluto no HTML; o canônico é absoluto por definição e não carrega nada, então ficou fora da conta.
 5. **Padrão seguro:** a página que não pede para ser indexada sai `noindex, follow`; só início, categoria e anúncio publicado pedem.
 6. **Docker e E2E:** nenhuma queda e nenhum teste instável nesta rodada.
+
+## Checkpoint 5 — Site público completo (fechamento da Fase 5, 2026-10-06)
+
+> **Em resumo:** os três itens do checkpoint foram provados com um visitante sem login, no SQL Server real e no site publicado: todo endereço público abre sem pedir entrada e o painel continua fechado; Serviços (tipo, sem preço) e Vagas (salário, sem foto) aparecem certos em cards, detalhe, busca, favoritos, API e mapa; e arquivar um Serviço e despublicar uma Vaga os tira de todos esses lugares na hora. A revisão de código (5.1 a 5.6) deu **APPROVE com condições** (0 🔴, 5 🟡, 23 🟢). A cobertura passa das duas metas (**97,9% de linhas, 91,5% de ramos**). O E2E instável `US003S03` foi explicado e corrigido (11 falhas em 20 → 0 em 20), e uma segunda causa de instabilidade nos roteiros de publicação também. **6 mutações, 6 mortas.**
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.654 | 1.654 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 161 | 161 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 146 | 146 | 0 |
+
+**Testes novos do checkpoint:** 4 unitários (`Checkpoint5PublicTests`), 1 de integração (`Checkpoint5ServicesJobsTests`), 2 E2E (`Checkpoint5E2ETests`). O roteiro de publicação do E2E ganhou `PublishServiceAsync` e `PublishJobAsync`.
+
+| Item do checkpoint | Prova |
+|---|---|
+| Início, categoria, busca, detalhe, contato e favoritos funcionam sem login | `Checkpoint5PublicTests`: 13 endereços públicos (início, categoria e página 2, busca com e sem filtros, anúncio, favoritos e o fragmento, a API de ids, as cidades da UF, o mapa e o `robots.txt`) respondem 200 para um visitante e **nenhum redireciona**; o que não existe dá 404 sem pedir login; 6 endereços do painel e a lista de cidades da equipe **continuam pedindo login**; o visitante não recebe cookie de entrada. E2E: o visitante vai do início ao anúncio, vê "Ligar" (`tel:+5511912345678`) e "Chamar no WhatsApp", favorita, abre "Meus favoritos" pelo link do topo, abre a categoria pelo caminho de navegação e busca pela caixa do topo ("3 anúncios encontrados"), sem sair da vitrine e com **nenhuma chamada do site com erro** |
+| Serviços e Vagas em cards, detalhe e busca | `Checkpoint5ServicesJobsTests` (SQL Server real): o Serviço mostra "Serviços domésticos" e **nenhum "R$"** (com capa), a Vaga mostra "Salário R$ 2.800" e **nenhum `<img>`** (bloco neutro); a página do Serviço não tem preço e a da Vaga não tem galeria nem `og:image`; na busca, o Serviço fica fora da faixa de preço e **no fim** de "Menor preço" e de "Maior preço"; nos favoritos e na API o Serviço tem `priceCents` nulo e a Vaga `coverUrl` nulo. E2E: os mesmos pontos no navegador, com os três anúncios publicados pelas telas |
+| Mapa só com publicados; arquivar e despublicar tiram na hora | integração: o mapa lista os três publicados e nunca o rascunho; depois de **arquivar o Serviço e despublicar a Vaga** eles somem da página inicial, da busca, da categoria, do fragmento de favoritos, da API e do mapa (a categoria de Serviços sai do mapa), e as duas páginas viram 404. E2E: os dois somem da página inicial e da busca, os favoritos mostram "2 anúncios favoritados deixaram de estar disponíveis e foram removidos da sua lista.", e o mapa também os perde |
+
+**Mutações (6; 6 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| K1 "Meus favoritos" exige login | morta (matriz sem login) |
+| K2 o Serviço deixa de ir para o fim de "Menor preço" | morta (integração) |
+| K3 o card do Serviço perde o tipo | morta |
+| K4 a Vaga mostra a foto no card | morta (a primeira versão apontava para o arquivo errado, refeita) |
+| K5 a página inicial mostra anúncio não publicado | morta |
+| K6 a página do anúncio exige login | morta (2) |
+
+### Revisão de código (`reports/CODE_REVIEW.md`)
+
+- **Veredito:** APPROVE com condições. Notas dos 5 eixos: Corretude 3, Legibilidade 4, Arquitetura 4, Segurança 4, Desempenho 4. **🔴 0 · 🟡 5 · 🟢 23 · ✅ 13.** A Corretude fica em 3 porque os cinco 🟡 caem nela.
+- **🟡:** (1) um número de 27 a 29 dígitos num filtro de preço faz `DecimalInput.TryParseCents` lançar `OverflowException` e a busca responde 503 (**reproduzido em execução** nesta rodada); (2) cobertura numérica e seção do Checkpoint 5 (**resolvido aqui**); (3) quatro decisões aprovadas do Product Owner ainda não voltaram à SPEC (S08 "lista sem a faixa", filtro de área em quatro categorias, telefone fixo só com "Ligar", link da categoria no anúncio arquivado); (4) o caminho de mais de 100 favoritos (lotes) não tem teste; (5) a regra de ids dos favoritos existe em JS e em C# sem tabela de paridade (já diferem no id 0).
+- **Nada do código de produto foi corrigido**, como combinado ("só relatar").
+
+### Cobertura (Gate 6)
+
+Medida como na seção "Correções pós-Checkpoint 4" (`Microsoft.Testing.Extensions.CodeCoverage`, escopo em `coverage.settings.xml`), unitários e integração, e unida por linha.
+
+| Medida | Unitários | Integração | **União (o gate)** | Meta | Resultado |
+|---|---|---|---|---|---|
+| Linhas | 96,2% (5.366 de 5.576) | 81,5% (4.546 de 5.576) | **97,9% (5.457 de 5.576)** | ≥ 80% | atendida |
+| Ramos | 88,8% (1.533 de 1.726) | 58,2% (1.004 de 1.726) | **91,5% (1.580 de 1.726)** | ≥ 75% | atendida |
+
+| Projeto | Linhas | Ramos |
+|---|---|---|
+| `GazetaMarketplace.Core` | 99,0% (2.810 de 2.839) | 94,9% (899 de 947) |
+| `GazetaMarketplace.Infrastructure` | 96,9% (1.854 de 1.914) | 88,2% (365 de 414) |
+| `GazetaMarketplace.Web` | 96,4% (793 de 823) | 86,6% (316 de 365) |
+
+Só os unitários já passam das duas metas. Antes da fase: 97,7% de linhas e 90,9% de ramos; o acréscimo de ~580 linhas da Fase 5 não baixou a cobertura.
+
+**Métodos a 0% (13 de 769):** nenhum é regra de negócio sem teste *que o produto já chama*. Os 12 do relatório anterior continuam (fábrica de tempo de projeto, contrato do Identity, construtores estáticos, propriedade de uma linha e três métodos de uma linha chamados por produção e provados por esses caminhos). **Novo:** `PublicRoutes.Ad(int, string)` — **nenhum código de produção nem de teste o chama** (as telas usam `AdRoutes.Detail`); é um atalho sem uso, no BACKLOG para remover ou usar.
+
+### Achados da rodada
+
+1. **`US003S03` instável explicado e corrigido.** Em 20 rodadas o teste falhou 11 vezes (a página "voltava" a 64, 41 ou 28 px em vez de 60). Duas causas, as duas **do teste**: (a) o Playwright rola a página até o botão antes de clicar, então a posição lida depois de abrir o diálogo não era a do instante do clique; (b) ao fechar, o navegador rola até o botão e só depois dispara o evento `close`, em que o `ad-gallery.js` restaura o ponto de antes; o teste lia a rolagem no instante em que o diálogo sumia, antes do evento. Passou a medir a posição dentro do clique e a esperar a restauração (até 2 s). **20 de 20** depois. **Pista para o produto:** há um salto de 1 quadro entre o navegador rolar e o script restaurar; se incomodar, restaurar antes (por exemplo, `scrollTo` no próprio clique de fechar). Fica no BACKLOG.
+2. **Segunda instabilidade corrigida:** a etapa "Anúncio enviado para revisão" falhava de vez em quando em vários E2E (3 ocorrências desde a 5.4). Causa: o roteiro clica em "Enviar para revisão" duas vezes e o segundo clique podia cair no botão da página que ainda estava saindo, reenviando o mesmo formulário. Agora espera o título "Enviar para revisão?" da página de confirmação entre os dois cliques, nos 6 roteiros que repetiam o trecho. Última rodada completa do E2E: 146 de 146.
+3. **O método de mutação de arquivos estáticos** (runbook reescrito na 5.5) foi usado nas mutações de JavaScript anteriores a este checkpoint; as deste checkpoint são todas de C# e de Razor.
+4. **O número de testes** subiu de 1.620 para 1.654 nos unitários e de 155 para 161 na integração desde o fim da 5.5 (5.6 e checkpoint).

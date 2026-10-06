@@ -233,3 +233,11 @@ Auditoria anti-vacuous: os testes abertos (`AdDetailTests.cs:269`, `FavoritesQue
 | Decision | APPROVE |
 |----------|---------|
 | Conditions (if any) | 0 🔴. Antes do `/scan` o orquestrador corrige ou aceita explicitamente os 5 🟡 (Gate 7): recomendo corrigir já o 1 (barato, uma linha de guarda mais três linhas de teste), o 2 (rodar a cobertura e escrever a seção do Checkpoint 5), o 4 e o 5 (um E2E e uma tabela); o 3 depende do Product Owner (emenda v1.5 da SPEC com as quatro decisões já aprovadas). Registrar no BACKLOG os 23 itens 🟢 (P2). Nenhuma decisão de produto nova foi tomada pelo revisor. |
+
+## Atualização do orquestrador (2026-10-06)
+
+- **Aviso 🟡 1 (estouro de `decimal`):** **reproduzido em execução** com um teste descartável (`DecimalInput.TryParseCents("7000000000000000000000000000", …)` lança `OverflowException`). Sem correção de código, como combinado (só relatar); aguarda a decisão do Product Owner.
+- **Aviso 🟡 2 (cobertura e seção do Checkpoint 5):** **resolvido.** A cobertura foi medida (união dos unitários e da integração: **97,9% de linhas e 91,5% de ramos**, 13 métodos a 0%, nenhum de regra de negócio sem justificativa) e a seção "Checkpoint 5" está em `reports/TEST_REPORT.md`.
+- **Achado 🟢 27 (estado do repositório):** resolvido. O relatório da Fase 4 foi preservado em `reports/CODE_REVIEW-FASE-4.md` e entrou no commit.
+- **Avisos 🟡 3, 4 e 5 e os 🟢 restantes:** abertos, sem correção de código, no BACKLOG (seção "Revisão do Checkpoint 5") aguardando a decisão do Product Owner.
+- **Itens de teste achados fora da revisão e já corrigidos:** o E2E `US003S03` falhava em 11 de 20 rodadas (leitura antes do evento `close`) e agora passa em 20 de 20; a espera da página de confirmação entre os dois cliques de "Enviar para revisão" (falha recorrente na etapa "Anúncio enviado para revisão") foi corrigida nos 6 roteiros que a repetiam.
