@@ -135,7 +135,7 @@ internal static class ScreenData
             await page.GetByRole(AriaRole.Link, new() { Name = "Nova categoria" }).ClickAsync().ConfigureAwait(false);
             await page.GetByLabel(new Regex("^Nome")).FillAsync(EmptyCategoryName).ConfigureAwait(false);
             await page.GetByRole(AriaRole.Button, new() { Name = "Salvar" }).ClickAsync().ConfigureAwait(false);
-            await page.WaitForURLAsync(new Regex(@"/painel/categorias$")).ConfigureAwait(false);
+            await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Link, new() { Name = "Editar " + EmptyCategoryName, Exact = true })).ToBeVisibleAsync().ConfigureAwait(false);
         }
 
         values["emptyCategoryId"] = await IdOfAsync(page, "Editar " + EmptyCategoryName, @"/categorias/(\d+)/editar").ConfigureAwait(false);
