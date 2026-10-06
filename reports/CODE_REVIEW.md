@@ -241,3 +241,12 @@ Auditoria anti-vacuous: os testes abertos (`AdDetailTests.cs:269`, `FavoritesQue
 - **Achado 🟢 27 (estado do repositório):** resolvido. O relatório da Fase 4 foi preservado em `reports/CODE_REVIEW-FASE-4.md` e entrou no commit.
 - **Avisos 🟡 3, 4 e 5 e os 🟢 restantes:** abertos, sem correção de código, no BACKLOG (seção "Revisão do Checkpoint 5") aguardando a decisão do Product Owner.
 - **Itens de teste achados fora da revisão e já corrigidos:** o E2E `US003S03` falhava em 11 de 20 rodadas (leitura antes do evento `close`) e agora passa em 20 de 20; a espera da página de confirmação entre os dois cliques de "Enviar para revisão" (falha recorrente na etapa "Anúncio enviado para revisão") foi corrigida nos 6 roteiros que a repetiam.
+
+## Atualização do orquestrador — decisões do Product Owner (2026-10-06)
+
+- **Aviso 🟡 1 (`OverflowException`):** corrigido (comparação antes da multiplicação), com teste de 27 a 29 dígitos no preço mínimo e no máximo.
+- **Aviso 🟡 3 (decisões fora da SPEC):** resolvido, SPEC v1.5 com as quatro emendas.
+- **Aviso 🟡 4 (mais de 100 favoritos):** resolvido, testes do servidor e E2E de 150 e de 101 ids.
+- **Aviso 🟡 5 (paridade dos ids dos favoritos):** resolvido, tabela de 48 entradas; o C# passou a recusar id 0 e zero à esquerda.
+- **Avisos 🟡 2 e os 23 🟢:** 🟡 2 resolvido antes; os 🟢 seguem no BACKLOG. **Todos os 🟡 estão fechados.**
+

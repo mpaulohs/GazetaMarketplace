@@ -1388,3 +1388,37 @@ Só os unitários já passam das duas metas. Antes da fase: 97,7% de linhas e 90
 2. **Segunda instabilidade corrigida:** a etapa "Anúncio enviado para revisão" falhava de vez em quando em vários E2E (3 ocorrências desde a 5.4). Causa: o roteiro clica em "Enviar para revisão" duas vezes e o segundo clique podia cair no botão da página que ainda estava saindo, reenviando o mesmo formulário. Agora espera o título "Enviar para revisão?" da página de confirmação entre os dois cliques, nos 6 roteiros que repetiam o trecho. Última rodada completa do E2E: 146 de 146.
 3. **O método de mutação de arquivos estáticos** (runbook reescrito na 5.5) foi usado nas mutações de JavaScript anteriores a este checkpoint; as deste checkpoint são todas de C# e de Razor.
 4. **O número de testes** subiu de 1.620 para 1.654 nos unitários e de 155 para 161 na integração desde o fim da 5.5 (5.6 e checkpoint).
+
+## Correções pós-Checkpoint 5 (2026-10-06)
+
+> **Em resumo:** as decisões do Product Owner sobre os avisos 🟡 da revisão do Checkpoint 5 foram executadas: o estouro de `decimal` no filtro de preço foi corrigido, a SPEC foi emendada (v1.5) com as quatro decisões que só estavam no BACKLOG, o caminho de mais de 100 favoritos ganhou testes e a regra de ids dos favoritos ganhou uma **tabela de paridade de 48 entradas** em que o JavaScript e o C# rodam sobre as mesmas linhas (a primeira rodada achou e corrigiu uma diferença real: o id 0). **6 mutações, 6 mortas.**
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.673 | 1.673 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 161 | 161 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 149 | 149 | 0 |
+
+| Aviso | O que foi feito | Teste que prova |
+|---|---|---|
+| 🟡 1 `OverflowException` num preço de 27 a 29 dígitos | `DecimalInput.TryParseCents` compara `reais` com `maxCents / 100m` **antes** de multiplicar por 100; vale para o preço mínimo e o máximo (os dois passam por `ParseCents`) | `DecimalInputTests.Centavos_NumeroEnormeQueCabeEmDecimalMasEstouraNaMultiplicacao_RecusaSemLancar` (6 números, de 28 dígitos ao `decimal.MaxValue` e 38 dígitos), `Centavos_NoTeto_Passa_EUmCentavoAcima_Recusa`, `SearchTests.PrecoEnormeNoFiltro_…` (quatro casos: o preço mínimo e o máximo mostram a mensagem "Informe um valor em reais…" junto do campo, o valor digitado fica no campo, a lista sai sem a faixa e a resposta é 200, **não 503**) |
+| 🟡 3 quatro decisões fora da SPEC | `specs/SPEC.md` v1.5: US-002-S08 "a lista de resultados **sai sem a faixa de preço**"; filtro de área nos quatro tipos de Imóveis (regra de filtros da US-002 e Apêndice B; a área continua obrigatória só em Terrenos); telefone fixo só com "Ligar" (US-004 e US-015); exceção do arquivado na regra de indisponibilidade (US-003). Quatro linhas no histórico; o campo Version, que ainda dizia v1.3, passou a v1.5 | testes que leem a SPEC (`AppendixBTests`, `ListsTests`, `ParityTests`) continuam verdes |
+| 🟡 4 mais de 100 favoritos sem teste | testes do servidor e do navegador (a regra dos lotes mora no `favorites.js`) | `FavoritesTests.Api_150Ids_EmDuasChamadas100Mais50_…` e `Fragmento_150Ids_…` (cada lote é atendido na ordem; 150 numa chamada só dão 400; o repositório recebe um pedido de 100 e outro de 50); E2E `MaisDe100Favoritos_BuscamEmLotesDe100Mais50_…` (150 ids no `localStorage`, dois reais, um em cada lote: o navegador faz **duas chamadas, de 100 e de 50 ids**, o segundo lote começa onde o primeiro parou, os dois cards saem na ordem, o aviso diz "148 anúncios favoritados deixaram de estar disponíveis…" e o armazenamento fica só com os dois) e `Exatamente101Favoritos_UmLoteDe100EOutroDe1` |
+| 🟡 5 paridade JS × C# dos favoritos | tabela `tests/GazetaMarketplace.Web.Tests/Favorites/favorite-ids-parity.json` (29 valores e 19 listas = **48 entradas**: id 0, menos zero, negativo, `int.MinValue`, `int.MaxValue` e +1, 2^32, acima de 2^53, 1,5, notação científica, texto, texto vazio, dígito de outro alfabeto, `null`, `true`, array e objeto dentro do item, repetidos, ordem, lista só de inválidos, texto, objeto, número e `null` no lugar do array e JSON quebrado), compartilhada pelos dois projetos de teste | `FavoriteIdsParityTests` (lado C#: cada entrada dá o veredito da tabela) e E2E `Paridade_OJavaScriptDaOMesmoResultadoQueATabela_EOServidorConcorda` (o `limpar` do navegador **e** a resposta real do servidor, 200 ou 400, batem com a tabela) |
+
+**Diferenças achadas e corrigidas pela tabela:** o C# aceitava o id `0` e zeros à esquerda (`007`), e o JavaScript descartava os dois. `FavoriteIds` passou a seguir o JavaScript (id de anúncio é um inteiro de 1 em diante, sem zero à esquerda), e os testes antigos que esperavam `0` e `007` válidos foram invertidos. Duas diferenças que ficam **por desenho** e estão escritas na tabela: o JavaScript **descarta** o item inválido de uma lista e o servidor **recusa** o pedido inteiro; e o JavaScript lê `1e3` e `1.0` como 1000 e 1, mas o endereço que ele monta usa o texto canônico (`1000`, `1`).
+
+**Mutações (6; 6 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| P1 o preço enorme volta a estourar na multiplicação | morta (4) |
+| P2 o servidor volta a aceitar id 0 e zero à esquerda | morta (5) |
+| P3 o JavaScript aceita id 0 | morta (3, E2E) |
+| P4 lote de 200 ids no `favorites.js` | morta (2) |
+| P5 só os ausentes do último lote são contados | morta (2) |
+| P6 o JavaScript aceita número escrito como texto ("5") | morta (a tabela de paridade) |
+
+As quatro mutações de JavaScript usaram o método do runbook reescrito (a lista de arquivos publicados, com o site reiniciado a cada rodada).
