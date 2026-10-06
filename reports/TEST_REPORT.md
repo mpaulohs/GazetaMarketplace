@@ -1508,3 +1508,58 @@ As quatro mutações de JavaScript usaram o método do runbook reescrito (a list
 Observação do método: o estilo escrito direto no HTML (`style="…"`) é bloqueado pela política de segurança do site e **não** muda nada; a primeira tentativa de M4 assim sobreviveu por esse motivo (e foi refeita por CSS). Está no runbook.
 
 **O que não foi medido (BACKLOG):** teclado e leitor de tela (NVDA) por tela e Firefox/Safari ficam para o `/verify`; os estados que dependem de falha provocada (erro 503, "sem permissão" do painel, erro de entrada com senha errada, redefinição com link válido); o Redator como conta de teste (a tela somente leitura do anúncio em revisão); e o endereço desconhecido, que devolve 404 com corpo vazio e portanto não tem página para medir.
+
+## Tarefa 6.3 — orçamentos de desempenho (NFR-01 a NFR-05, 2026-10-06)
+
+> **Em resumo:** o site público agora sai comprimido (Brotli e gzip) e os arquivos com `?v=` ficam um ano no cache do navegador; o painel **não** é comprimido, de propósito (ataque BREACH). Com o volume da v1 (200 anúncios num SQL Server de verdade) o servidor responde a busca em **34,6 ms** e o detalhe em **11,1 ms** no p95, contra o limite de 500 ms. As páginas pesam **171 KB** (lista de 24) e **168 KB** (detalhe) contra 2 MB e 3 MB. LCP, INP e CLS medidos no perfil de celular ficam dentro dos limites, com **uma exceção real**: a busca em celular lento pode pular (CLS de 0,36), registrada no BACKLOG para decisão.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.702 | 1.702 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 162 | 162 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 253 | 253 | 0 (4 puladas: as de métricas, que exigem `GAZETA_VITALS=1`) |
+
+**Mudança no produto (pequena e na lista de arquivos do plano):** `Middleware/PerformanceExtensions.cs`, ligada em `Program.cs`. (1) Compressão Brotli e gzip em tudo fora de `/painel`. Os estáticos já saíam pré-comprimidos. Motivo da exceção: o HTML do painel leva o token antiforgery, e comprimir segredo por HTTPS permite o BREACH (decisão do Product Owner, registrada no ARCHITECTURE §7). (2) `Cache-Control: public, max-age=31536000, immutable` para arquivo estático pedido com `?v=` (o `asp-append-version`); antes saía `no-cache` e o navegador revalidava cada CSS e JS a cada visita.
+
+**Números medidos**
+
+| O que | Medido | Limite |
+|---|---|---|
+| Servidor, busca, início e categoria (200 anúncios, 200 pedidos) | p50 16,4 ms · **p95 34,6 ms** · máx 65,8 ms | p95 < 500 ms |
+| Servidor, detalhe (200 pedidos) | p50 7,3 ms · **p95 11,1 ms** · máx 17,5 ms | p95 < 500 ms |
+| Lista de 24 cards (celular, cache vazio) | **171 KB**: HTML 5 KB, fontes 99 KB, CSS 35 KB, JS 25 KB, 24 capas de 480 px 7 KB | 2.048 KB |
+| Detalhe (8 anúncios da lista; o mais pesado) | **168 KB** (só a 1ª foto grande, as outras sob demanda) | 3.072 KB |
+| O que não é foto (HTML, CSS, JS, fontes) | ≈ 170 KB | folga de 256 KB |
+| Miniatura de 480 px de uma foto de câmera granulada de 4000 × 3000 px | 1 KB (cabem 74 KB por capa na lista) | 74 KB por capa |
+| Versão grande de 1600 px da mesma foto | 279 KB (cabem 2.800 KB no detalhe, já com 20 miniaturas) | 2.800 KB |
+| LCP (início, categoria, busca, detalhe) | ≈ 1,0 a 1,3 s · ≈ 1,0 s · 1,5 a 1,9 s · 0,45 a 0,5 s | 2,5 s |
+| INP (mesmas páginas; 4 a 9 interações reais cada) | 64 a 112 ms · 64 a 112 ms · 88 a 184 ms · 88 a 96 ms | 200 ms |
+| CLS | 0,0000 em início, categoria e detalhe; **busca: 0,0000 na maioria, 0,3561 em 3 de cerca de 25 medições** | 0,1 |
+
+**Testes novos (+7 unitários, +1 de integração, +7 de navegador)**
+
+| Arquivo | O que prova |
+|---|---|
+| `Performance/CompressionAndCacheTests` (5, unitário) | Site público, API, mapa e `robots.txt` saem em Brotli com `Accept-Encoding: br, gzip` e em gzip com `gzip`, com `Vary: Accept-Encoding`; sem `Accept-Encoding` não comprime; **as páginas do painel nunca saem comprimidas** e continuam levando o token (a razão da regra); **nenhuma página pública leva o token**; arquivo com `?v=` sai com cache de um ano e `immutable`, sem `v`, inexistente ou página com `?v=` não |
+| `Performance/PhotoWeightBudgetTests` (2, unitário) | A miniatura de 480 px e a versão grande de 1600 px de uma foto de câmera granulada (a pior que o limite de 10 MB deixa passar) cabem no que sobra do orçamento: 24 miniaturas na lista, e a versão grande mais a faixa de 20 miniaturas no detalhe |
+| `IntegrationTests/Performance/VolumeOfV1Tests` (1) | 200 anúncios publicados de quatro tipos (carros, livros, serviços, vagas) em cinco cidades, com 0 a 5 fotos; aquece 20 pedidos e mede 200 de busca com filtros, início e categoria e 200 de detalhe, no site inteiro em processo e SQL Server em contêiner; p95 abaixo do limite de `budgets.json` |
+| `Performance/PageWeightTests` (3, navegador) | Lista de 24 e detalhe de 8 anúncios, no perfil de celular e sem cache, pelo protocolo do Chrome: bytes que trafegaram (cabeçalhos e corpo comprimidos) abaixo do limite; o que não é foto abaixo da folga; a lista só baixa capas `-480.webp`; o detalhe baixa uma só foto grande antes de qualquer toque; o HTML sai comprimido; todo arquivo com `?v=` das páginas públicas tem cache imutável |
+| `Performance/VitalsTests` (4, navegador, `GAZETA_VITALS=1`) | LCP, INP e CLS no perfil de celular (412 × 823, toque, processador 4 vezes mais lento, rede 4G de 1,6 Mbit/s e 150 ms), com `PerformanceObserver` e interações de verdade (favoritar, filtros, passar e ampliar foto); mostra a fonte de cada mudança de layout |
+
+**Limites do que foi provado:** (1) as fotos do E2E são minúsculas (as 24 capas somam 7 KB), então o peso real com fotos de celular não foi medido; o que está provado é a soma "o que não é foto ≈ 170 KB + 24 miniaturas + a foto grande" com o teto de cada termo (`PhotoWeightBudgetTests` e a folga do E2E). A miniatura sintética pesou 1 KB, mais leve que uma foto de verdade (um caso em `BACKLOG`: medir com 24 fotos reais no `/verify`). (2) O cache do navegador (guardar por um ano e não perguntar de novo) não pôde ser provado: o site de teste usa certificado de desenvolvimento e o Chrome não guarda em cache resposta de HTTPS com erro de certificado; provou-se o cabeçalho em todo arquivo versionado. (3) LCP, INP e CLS são uma **amostra**: rede e processador simulados, site de teste na mesma máquina. Valem os números do `/verify` contra o artefato.
+
+**Achado real (BACKLOG, decisão do Product Owner):** na busca, em celular lento, o painel de filtros nasce aberto no HTML e o `search.js` o recolhe depois da primeira pintura. Com o processador 4 vezes mais lento e a máquina ocupada, a pintura vem antes e a lista de resultados sobe de uma vez (CLS 0,3561; fonte: `div.col-12 › section › article.card`). Não corrigi porque a correção (nascer recolhido por CSS e aberto sem JavaScript por `<noscript>`) muda uma decisão testada da US-002-S12. Outras medições: INP de 224 ms no início numa primeira rodada com a máquina compilando ao lado (as 6 seguintes ficaram em 64 a 112 ms).
+
+**Mutações (7; 7 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| M1 a lista baixa a capa de 1600 px | morta (`PageWeightTests`: "a lista só baixa a capa de 480 px", lista as URLs `-1600.webp`) |
+| M2 compressão desligada | morta (`PublicPagesAndApi_AreCompressed…`) |
+| M3 cache imutável removido | morta (`VersionedStaticFile_GetsOneYearImmutableCache…`) |
+| M4 atraso de 600 ms na busca | morta (`VolumeOfV1Tests`: p95 da busca 629,6 ms contra 500 ms) |
+| M5 um bloco entra 800 ms depois da carga, empurrando o conteúdo | morta (`VitalsTests`: CLS 0,2903 na busca). A primeira forma da mutação (tirar `width`, `height` e `aspect-ratio` das capas) **não** foi pega: as miniaturas minúsculas chegam antes da primeira pintura e não deslocam nada; foi trocada |
+| M6 o limite da lista no `budgets.json` mudado para 1000 bytes | morta (`ListOf24…`: "limite 0 KB"; prova que o teste lê o arquivo) |
+| M7 o painel também comprimido (BREACH) | morta (`PanelPages_AreNeverCompressed_…`) |
