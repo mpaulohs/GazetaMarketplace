@@ -94,4 +94,9 @@ public sealed class TestPageController : Controller
 
     [HttpGet("pagina-erro")]
     public IActionResult Error() => throw new InvalidOperationException("segredo-interno-123");
+
+    // Um POST de página que falha: a página de erro é reexecutada como POST
+    [HttpPost("pagina-erro")]
+    [Microsoft.AspNetCore.Mvc.IgnoreAntiforgeryToken]
+    public IActionResult ErrorOnPost() => throw new InvalidOperationException("segredo-interno-123");
 }

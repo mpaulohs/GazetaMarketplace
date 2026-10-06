@@ -46,6 +46,9 @@ namespace GazetaMarketplace.Web.Controllers
         /// A página de uma resposta de erro que saiu sem corpo (endereço que não existe, ação que devolveu <c>NotFound()</c>): o <c>UseStatusCodePagesWithReExecute</c> a chama com o código no endereço
         /// e o status da resposta continua o mesmo (404 segue 404, para os buscadores e para os testes).
         /// </summary>
+        // Alvo de reexecução: o pedido volta com o método original (um POST recusado por falta de token chega aqui como POST). A página só mostra uma mensagem e não muda nada;
+        // exigir o token de novo deixaria a resposta em branco (R-06)
+        [IgnoreAntiforgeryToken]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Status(int id)
         {
@@ -64,6 +67,8 @@ namespace GazetaMarketplace.Web.Controllers
             });
         }
 
+        // Alvo do UseExceptionHandler: um POST que falha reexecuta esta ação como POST; sem isto, o filtro de antiforgery deixaria a resposta em branco (R-06)
+        [IgnoreAntiforgeryToken]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
