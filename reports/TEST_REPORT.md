@@ -1422,3 +1422,42 @@ Só os unitários já passam das duas metas. Antes da fase: 97,7% de linhas e 90
 | P6 o JavaScript aceita número escrito como texto ("5") | morta (a tabela de paridade) |
 
 As quatro mutações de JavaScript usaram o método do runbook reescrito (a lista de arquivos publicados, com o site reiniciado a cada rodada).
+
+## Tarefa 6.1 — verificação transversal de acesso e de texto digitado (NFR-13 e NFR-15, 2026-10-06)
+
+> **Em resumo:** agora o site prova por teste, e não por confiança, duas coisas: (1) **toda rota** do site sabe quem pode chamá-la (sem login, Redator ou Administrador), e uma rota nova que ninguém classificou **falha o teste**; (2) texto digitado com código dentro (`<script>`, `<img onerror>`, aspas, `&`, `javascript:`) aparece **como texto** em todas as telas, nunca roda. Nenhuma brecha de acesso ou de texto foi encontrada no produto; a varredura achou só cinco `Html.Raw` de texto fixo, que foram trocados para a lista de exceções ficar vazia.
+
+| Camada | Total | Passaram | Falharam |
+|---|---|---|---|
+| Unitários do site (SQLite) | 1.692 | 1.692 | 0 |
+| Ferramenta de catálogo | 43 | 43 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 |
+| Integração (SQL Server 2022 em contêiner) | 161 | 161 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 153 (primeira rodada; segunda em andamento) | 151 | 2 (`US005S01_S02` e `US002S09`: tempo de 5 s esgotado com 4 navegadores em paralelo; passam 3 de 3 rodadas isoladas) |
+
+**Testes novos (19 unitários + 4 E2E):**
+
+| Arquivo | O que prova |
+|---|---|
+| `Security/AccessMatrixTests` (7) | A matriz escrita à mão (77 linhas: método, endereço, ação → Público, Entrada do painel, Redator ou Administrador) bate com as rotas descobertas no site (`EndpointDataSource`) nos dois sentidos; o papel declarado no código (`[Authorize]`) bate com a matriz; sem login o painel vai para `/painel/entrar` e a API responde 401, sem corpo; o Redator é negado em toda rota de Administrador (página → `/painel/acesso-negado`; API → 403 "Você não tem permissão para esta operação.") e não é negado nas dele; o Administrador não é negado em lugar nenhum; toda escrita sem token antiforgery responde 400; só as rotas de controller existem, fora elas só arquivos estáticos, saúde e a página padrão |
+| `Security/OwnershipMatrixTests` (2) | O Redator B chama as 13 rotas do anúncio da Redatora A (editar, salvar, atualizar, enviar, confirmar, fotos da página e da API): todas negadas (403 ou 404), sem o título nem a descrição na resposta, e o banco fica igual (situação, título, descrição, foto); a autora e o Administrador abrem o mesmo anúncio |
+| `Security/XssInAllScreensTests` (6) | Texto hostil de 109 caracteres em título, descrição, cidade, nome de pessoa, motivo de rejeição, nome de categoria e busca (seis ataques isolados mais o combinado): 21 endereços públicos (início, categoria, busca, anúncio com endereço torto, favoritos, fragmento) e 19 do painel (lista, fila, pré-visualização, editar, as seis páginas de confirmação, usuários, categorias, configurações), mais as devoluções de formulário com erro (entrada, usuário, categoria repetida, anúncio novo); nada vira marcação (leitor de marcação procura `<script>` com código, atributo `on…=`, endereço `javascript:`, segundo `</title>`) e o texto **aparece** como texto; a API devolve o título como dado JSON (`application/json`, `nosniff`); o mapa do site continua XML válido |
+| `Security/RawOutputTests` (4) | Varredura de todas as views e do código do site: nenhuma saída crua (`Html.Raw`, `HtmlString`, `AppendHtml`, `SetHtmlContent`…), nenhum `<script>` com código, nenhum `on…=`, nenhum `javascript:` fixo; lista de exceções **vazia**; um teste prova que as expressões reconhecem cada forma de risco |
+| `Showcase/XssE2ETests` (4, navegador) | Anúncio com título e descrição de ataque cadastrado, enviado e publicado pelas telas, aberto no painel e por visitante (início, anúncio, favoritos, busca); pessoa e categoria com nome de ataque; motivo de rejeição de ataque lido pela autora; busca com os sete textos de ataque, pelo endereço e digitada. Em cada passo: nenhuma janela abre (`alert`), `window.__xss` não existe, não nasce a imagem do ataque, e o texto aparece literal |
+
+**O que foi corrigido no produto:** `Categories/Index.cshtml` usava `@Html.Raw` cinco vezes para abrir e fechar `<ul>`/`<li>` com texto fixo (não era brecha); passou para linhas `@:` do Razor, com a mesma marcação (os 112 testes de categorias passam), para a lista de exceções ficar vazia. No E2E, `PublishingFlow` ganhou o parâmetro `description` e o método `SubmitAsync` (envia para revisão sem publicar), usados pelos testes novos.
+
+**Descobertas (registradas no BACKLOG, nenhuma é brecha):** o site não tem política padrão de entrada (rota nova sem atributo nasce pública; a matriz pega); o JSON da API usa o escape relaxado do MVC (seguro com `application/json` + `nosniff`); a negação por posse é 403 e não 404; o envio de foto valida o arquivo antes da autoria.
+
+**Mutações (8 planejadas; 8 mortas)**
+
+| Mutação | Resultado |
+|---|---|
+| M1 `[AllowAnonymous]` na ação de arquivar | morta (3: papel declarado × matriz, sem login, Redator) |
+| M2 `Users` com a política de Redator no lugar da de Administrador | morta (2) |
+| M3 `[AllowAnonymous]` no controller de configurações | morta (3) |
+| M4 a autoria deixa de ser conferida (`AdAccess.CanView`) | morta (1: matriz de posse). A primeira forma, tirar a autoria só do `CanEdit`, **sobreviveu** por ser equivalente: o `CanView` roda antes e já nega (defesa em duas camadas) |
+| M5 `@Html.Raw` no título do card | morta (2: varredura e tela pública) |
+| M6 `@Html.Raw` no motivo da rejeição | morta (2: varredura e tela do painel) |
+| M7 rota nova `/painel/zzz` fora da matriz | morta (4; a primeira diz qual rota falta classificar) |
+| M8 `[IgnoreAntiforgeryToken]` numa escrita | morta (1) |
