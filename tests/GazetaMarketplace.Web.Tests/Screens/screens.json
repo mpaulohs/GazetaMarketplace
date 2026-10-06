@@ -1,0 +1,61 @@
+{
+  "_comment": "A lista única de telas do site (NFR-16 e NFR-17). Quem lê: ScreenCoverageTests (unitário: compara com as rotas reais) e, no E2E, ScreenCatalog (acessibilidade e larguras). Cada tela: id, action (Controller.Ação da rota), state (o estado mostrado), as (visitor | admin), site (main | dev), path (com {fichas} que o E2E preenche), status esperado, prepare (passo antes de medir).",
+  "tokens": [
+    "adPath", "categorySlug", "emptyCategorySlug", "searchToken", "draftId", "photoId", "inReviewId", "publishedId", "emptyCategoryId", "protectedCategoryId", "writerId"
+  ],
+  "notScreens": [
+    { "action": "Favorites.List", "reason": "pedaço de HTML que o favorites.js põe dentro de /favoritos; a página que o contém é a tela medida" },
+    { "action": "Ads.Fields", "reason": "pedaço de HTML dos campos por categoria que o formulário de anúncio busca; a página que o contém é a tela medida" },
+    { "action": "Photos.Get", "reason": "entrega a imagem (WebP), não uma página" },
+    { "action": "Seo.Robots", "reason": "texto puro (robots.txt)" },
+    { "action": "Seo.Sitemap", "reason": "XML (sitemap.xml)" }
+  ],
+  "screens": [
+    { "id": "home", "action": "Home.Index", "state": "com anúncios", "as": "visitor", "path": "/", "status": 200 },
+    { "id": "home-error", "action": "Home.Error", "state": "página de erro", "as": "visitor", "path": "/Home/Error", "status": 200 },
+    { "id": "category-with-ads", "action": "Category.Index", "state": "com anúncios", "as": "visitor", "path": "/categoria/{categorySlug}", "status": 200 },
+    { "id": "category-empty", "action": "Category.Index", "state": "sem anúncios", "as": "visitor", "path": "/categoria/{emptyCategorySlug}", "status": 200 },
+    { "id": "category-unknown", "action": "Category.Index", "state": "categoria que não existe", "as": "visitor", "path": "/categoria/nao-existe-6-2", "status": 404 },
+    { "id": "search-form", "action": "Search.Index", "state": "sem busca", "as": "visitor", "path": "/busca", "status": 200 },
+    { "id": "search-results", "action": "Search.Index", "state": "com resultados", "as": "visitor", "path": "/busca?q={searchToken}", "status": 200 },
+    { "id": "search-empty", "action": "Search.Index", "state": "sem resultados", "as": "visitor", "path": "/busca?q=zzzsemresultado62", "status": 200 },
+    { "id": "search-inverted-range", "action": "Search.Index", "state": "faixa de preço invertida", "as": "visitor", "path": "/busca?q={searchToken}&precoMin=9000&precoMax=100", "status": 200 },
+    { "id": "search-filters-open", "action": "Search.Index", "state": "painel de filtros aberto (celular)", "as": "visitor", "path": "/busca?q={searchToken}", "status": 200, "prepare": "open-filters" },
+    { "id": "ad-detail", "action": "Ad.Index", "state": "anúncio publicado", "as": "visitor", "path": "{adPath}", "status": 200 },
+    { "id": "ad-gallery-open", "action": "Ad.Index", "state": "galeria ampliada", "as": "visitor", "path": "{adPath}", "status": 200, "prepare": "open-gallery" },
+    { "id": "ad-unavailable", "action": "Ad.Index", "state": "anúncio que não existe", "as": "visitor", "path": "/anuncio/999999/nao-existe", "status": 404 },
+    { "id": "favorites-empty", "action": "Favorites.Index", "state": "sem favoritos", "as": "visitor", "path": "/favoritos", "status": 200 },
+    { "id": "favorites-with-items", "action": "Favorites.Index", "state": "com favoritos", "as": "visitor", "path": "/favoritos", "status": 200, "prepare": "seed-favorites" },
+
+    { "id": "sign-in", "action": "Account.SignIn", "state": "entrada", "as": "visitor", "path": "/painel/entrar", "status": 200 },
+    { "id": "forgot-password", "action": "Account.Forgot", "state": "pedido de nova senha", "as": "visitor", "path": "/painel/esqueci-minha-senha", "status": 200 },
+    { "id": "reset-password-bad-link", "action": "Account.Reset", "state": "link inválido", "as": "visitor", "path": "/painel/redefinir-senha", "status": 200 },
+    { "id": "access-denied", "action": "Account.AccessDenied", "state": "sem permissão", "as": "visitor", "path": "/painel/acesso-negado", "status": 403 },
+
+    { "id": "panel-ads", "action": "Ads.Index", "state": "com anúncios", "as": "admin", "path": "/painel/anuncios", "status": 200 },
+    { "id": "panel-ads-empty", "action": "Ads.Index", "state": "busca sem resultados", "as": "admin", "path": "/painel/anuncios?q=zzzsemresultado62", "status": 200 },
+    { "id": "panel-ad-new", "action": "Ads.New", "state": "formulário novo", "as": "admin", "path": "/painel/anuncios/novo", "status": 200 },
+    { "id": "panel-ad-edit", "action": "Ads.Edit", "state": "rascunho com foto", "as": "admin", "path": "/painel/anuncios/{draftId}/editar", "status": 200 },
+    { "id": "panel-ad-confirm-submit", "action": "Ads.ConfirmSubmit", "state": "confirmar o envio", "as": "admin", "path": "/painel/anuncios/{draftId}/enviar/confirmar", "status": 200 },
+    { "id": "panel-photo-confirm-removal", "action": "AdPhotoPages.ConfirmRemoval", "state": "confirmar a remoção da foto", "as": "admin", "path": "/painel/anuncios/{draftId}/fotos/{photoId}/remover", "status": 200 },
+    { "id": "panel-review-queue", "action": "ReviewQueue.Index", "state": "fila com anúncio", "as": "admin", "path": "/painel/anuncios/fila", "status": 200 },
+    { "id": "panel-review-preview", "action": "ReviewQueue.Preview", "state": "pré-visualização", "as": "admin", "path": "/painel/anuncios/{inReviewId}/pre-visualizacao", "status": 200 },
+    { "id": "panel-review-confirm-publish", "action": "ReviewQueue.ConfirmPublish", "state": "confirmar a publicação", "as": "admin", "path": "/painel/anuncios/{inReviewId}/publicar", "status": 200 },
+    { "id": "panel-review-reject", "action": "ReviewQueue.Reject", "state": "motivo da rejeição", "as": "admin", "path": "/painel/anuncios/{inReviewId}/rejeitar", "status": 200 },
+    { "id": "panel-ad-confirm-unpublish", "action": "Ads.ConfirmUnpublish", "state": "confirmar despublicar", "as": "admin", "path": "/painel/anuncios/{publishedId}/despublicar", "status": 200 },
+    { "id": "panel-ad-confirm-archive", "action": "Ads.ConfirmArchive", "state": "confirmar arquivar", "as": "admin", "path": "/painel/anuncios/{publishedId}/arquivar", "status": 200 },
+    { "id": "panel-categories", "action": "Categories.Index", "state": "árvore", "as": "admin", "path": "/painel/categorias", "status": 200 },
+    { "id": "panel-category-new", "action": "Categories.New", "state": "formulário novo", "as": "admin", "path": "/painel/categorias/nova", "status": 200 },
+    { "id": "panel-category-edit", "action": "Categories.Edit", "state": "editar", "as": "admin", "path": "/painel/categorias/{emptyCategoryId}/editar", "status": 200 },
+    { "id": "panel-category-confirm-delete", "action": "Categories.ConfirmDelete", "state": "confirmar a exclusão", "as": "admin", "path": "/painel/categorias/{emptyCategoryId}/excluir", "status": 200 },
+    { "id": "panel-category-confirm-delete-protected", "action": "Categories.ConfirmDelete", "state": "categoria protegida (tem anúncios)", "as": "admin", "path": "/painel/categorias/{protectedCategoryId}/excluir", "status": 200 },
+    { "id": "panel-settings", "action": "Settings.Index", "state": "telefone do site", "as": "admin", "path": "/painel/configuracoes", "status": 200 },
+    { "id": "panel-users", "action": "Users.Index", "state": "lista", "as": "admin", "path": "/painel/usuarios", "status": 200 },
+    { "id": "panel-user-new", "action": "Users.New", "state": "formulário novo", "as": "admin", "path": "/painel/usuarios/novo", "status": 200 },
+    { "id": "panel-user-edit", "action": "Users.Edit", "state": "editar", "as": "admin", "path": "/painel/usuarios/{writerId}/editar", "status": 200 },
+    { "id": "panel-user-confirm-deactivation", "action": "Users.ConfirmDeactivation", "state": "confirmar a desativação", "as": "admin", "path": "/painel/usuarios/{writerId}/desativar", "status": 200 },
+    { "id": "panel-user-reset-password", "action": "Users.ResetPassword", "state": "nova senha provisória", "as": "admin", "path": "/painel/usuarios/{writerId}/redefinir-senha", "status": 200 },
+    { "id": "panel-set-password", "action": "Password.SetPassword", "state": "definir a senha", "as": "admin", "path": "/painel/definir-senha", "status": 200 },
+    { "id": "panel-components", "action": "Components.Index", "state": "catálogo de componentes (só em Development)", "as": "admin", "site": "dev", "path": "/painel/componentes", "status": 200 }
+  ]
+}

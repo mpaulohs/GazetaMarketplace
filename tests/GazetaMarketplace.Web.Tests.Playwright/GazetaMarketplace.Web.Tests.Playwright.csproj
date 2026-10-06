@@ -15,6 +15,7 @@
     <None Include="Photos\Fixtures\*" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\GazetaMarketplace.Web.Tests\Photos\Fixtures\sample.heic" Link="Photos\Fixtures\sample.heic" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\GazetaMarketplace.Web.Tests\Favorites\favorite-ids-parity.json" Link="Favorites\favorite-ids-parity.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\GazetaMarketplace.Web.Tests\Screens\screens.json" Link="Screens\screens.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

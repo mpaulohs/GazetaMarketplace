@@ -105,7 +105,30 @@ internal static class PublishingFlow
         await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Anúncio publicado" })).ToBeVisibleAsync().ConfigureAwait(false);
     }
 
+    /// <summary>Cadastra um anúncio completo (Livros e revistas, uma foto) e deixa como <b>Rascunho</b>, na página de edição dele; devolve o título.</summary>
+    public static async Task<string> DraftAsync(IPage page, string prefix)
+    {
+        string title = Unique(prefix);
+        await OpenFormAsync(page, title, "Livros e revistas").ConfigureAwait(false);
+        await page.GetByLabel("Descrição").FillAsync("Edição 2020, sem anotações").ConfigureAwait(false);
+        await page.GetByLabel("Condição").SelectOptionAsync(new SelectOptionValue { Index = 1 }).ConfigureAwait(false);
+        await page.GetByLabel("Preço").FillAsync("5000").ConfigureAwait(false);
+        await SaveAndUploadAsync(page, 1).ConfigureAwait(false);
+        return title;
+    }
+
     private static async Task SaveAndSubmitAsync(IPage page, int photos)
+    {
+        await SaveAndUploadAsync(page, photos).ConfigureAwait(false);
+
+        await page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);
+        // Espera a página de confirmação: sem isso o segundo clique pode cair no botão da página que está saindo e reenviar o mesmo formulário
+        await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Enviar para revisão?" })).ToBeVisibleAsync().ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);
+        await Microsoft.Playwright.Assertions.Expect(page.GetByText("Anúncio enviado para revisão")).ToBeVisibleAsync().ConfigureAwait(false);
+    }
+
+    private static async Task SaveAndUploadAsync(IPage page, int photos)
     {
         await page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
         await Microsoft.Playwright.Assertions.Expect(page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
@@ -120,11 +143,5 @@ internal static class PublishingFlow
             await page.GetByRole(AriaRole.Button, new() { Name = "Enviar fotos" }).ClickAsync().ConfigureAwait(false);
             await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = $"Fotos ({photos} de" })).ToBeVisibleAsync(new() { Timeout = 120_000 }).ConfigureAwait(false);
         }
-
-        await page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);
-        // Espera a página de confirmação: sem isso o segundo clique pode cair no botão da página que está saindo e reenviar o mesmo formulário
-        await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Enviar para revisão?" })).ToBeVisibleAsync().ConfigureAwait(false);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);
-        await Microsoft.Playwright.Assertions.Expect(page.GetByText("Anúncio enviado para revisão")).ToBeVisibleAsync().ConfigureAwait(false);
     }
 }
