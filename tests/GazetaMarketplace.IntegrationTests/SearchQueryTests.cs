@@ -97,8 +97,22 @@ public sealed class SearchQueryTests
         int? yearFrom = null, int? yearTo = null, int? kmMax = null, decimal? areaMin = null, decimal? areaMax = null, SearchOrder order = SearchOrder.Recent, int page = 1, int pageSize = 24) =>
         new()
         {
-            Words = words ?? [], CategoryIds = categories ?? [], Uf = uf, City = city, PriceMinCents = priceMin, PriceMaxCents = priceMax, BrandId = brand, ModelId = model,
-            YearFrom = yearFrom, YearTo = yearTo, KmMax = kmMax, AreaMin = areaMin, AreaMax = areaMax, Order = order, Page = page, PageSize = pageSize
+            Words = words ?? [],
+            CategoryIds = categories ?? [],
+            Uf = uf,
+            City = city,
+            PriceMinCents = priceMin,
+            PriceMaxCents = priceMax,
+            BrandId = brand,
+            ModelId = model,
+            YearFrom = yearFrom,
+            YearTo = yearTo,
+            KmMax = kmMax,
+            AreaMin = areaMin,
+            AreaMax = areaMax,
+            Order = order,
+            Page = page,
+            PageSize = pageSize
         };
 
     // Um conjunto de anúncios que serve a quase todos os testes (somente leitura): criado uma vez

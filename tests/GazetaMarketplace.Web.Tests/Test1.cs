@@ -1,6 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace GazetaMarketplace.Web.Tests; 
+namespace GazetaMarketplace.Web.Tests;
 
 [TestClass]
 #pragma warning disable CA1515 // Test classes must be public for MSTest

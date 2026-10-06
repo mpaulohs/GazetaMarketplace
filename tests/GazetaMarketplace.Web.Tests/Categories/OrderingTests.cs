@@ -3,9 +3,9 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Categories;
+using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GazetaMarketplace.Web.Tests.Categories;

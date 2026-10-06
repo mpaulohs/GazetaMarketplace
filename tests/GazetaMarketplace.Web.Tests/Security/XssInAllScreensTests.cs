@@ -335,7 +335,10 @@ public sealed class XssInAllScreensTests
         // Nova pessoa da equipe com nome e e-mail hostis
         using HttpResponseMessage user = await site.Admin.PostFormAsync("/painel/usuarios/novo", "/painel/usuarios/novo", new Dictionary<string, string>
         {
-            ["FullName"] = Hostile, ["Email"] = Hostile, ["Role"] = RoleNames.Writer, ["ProvisionalPassword"] = "x"
+            ["FullName"] = Hostile,
+            ["Email"] = Hostile,
+            ["Role"] = RoleNames.Writer,
+            ["ProvisionalPassword"] = "x"
         });
         string userHtml = await user.Content.ReadAsStringAsync();
         AssertHarmless(wrong, "POST /painel/usuarios/novo", userHtml, mustShow: false);

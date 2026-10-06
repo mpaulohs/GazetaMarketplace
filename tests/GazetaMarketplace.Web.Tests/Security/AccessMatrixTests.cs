@@ -129,7 +129,11 @@ public sealed class AccessMatrixTests
     // Valor de exemplo de cada parâmetro de rota (os que não aparecem aqui valem 1)
     private static readonly Dictionary<string, string> Samples = new()
     {
-        ["slug"] = "x", ["size"] = "480", ["cep"] = "13015100", ["direction"] = "up", ["year"] = "2020"
+        ["slug"] = "x",
+        ["size"] = "480",
+        ["cep"] = "13015100",
+        ["direction"] = "up",
+        ["year"] = "2020"
     };
 
     internal sealed record Endpoint(string Key, string Pattern, string Method, string Controller, string Action)
