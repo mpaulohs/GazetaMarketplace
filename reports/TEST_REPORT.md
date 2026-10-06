@@ -1278,7 +1278,7 @@ Mutações da 5.4 refeitas (ver achado 3): J1 (`lerNumero` com 3 casas) e J2 (pa
 
 ## Tarefa 5.6 — SEO básico das páginas públicas (NFR-21, 2026-10-05)
 
-> **Em resumo:** início, categorias e anúncios publicados têm título e descrição próprios, endereço canônico com o endereço do site e, no anúncio, o Open Graph mínimo (título, descrição e a capa) para a prévia no WhatsApp. Toda outra página (busca, favoritos, anúncio indisponível, categoria que não existe, páginas de erro) sai com `noindex`. `/sitemap.xml` traz só o início, as categorias com anúncio publicado e os anúncios publicados; arquivar tira o anúncio do mapa na hora. `/robots.txt` libera o site, fecha o painel e a API e aponta o mapa. A S7 da SPEC foi confirmada (v1.4). **12 mutações, 12 mortas.**
+> **Em resumo:** início, categorias e anúncios publicados têm título e descrição próprios, endereço canônico com o endereço do site e, no anúncio, o Open Graph mínimo (título, descrição e a capa) para a prévia no WhatsApp. Toda outra página (busca, favoritos, anúncio indisponível, categoria que não existe, páginas de erro) sai com `noindex`. `/sitemap.xml` traz só o início, as categorias com anúncio publicado e os anúncios publicados; arquivar tira o anúncio do mapa na hora. `/robots.txt` libera o site, fecha o painel e a API e aponta o mapa. A S7 da SPEC foi confirmada (v1.4). **11 mutações, 11 mortas** (as 6 do Checkpoint 6 repetidas mais 5 novas, uma por correção).
 
 | Camada | Total | Passaram | Falharam |
 |---|---|---|---|
@@ -1643,3 +1643,65 @@ Depois de cada mutação o código voltou ao original (`git checkout`) e o site 
 **Fica para o `/verify` (manual ou fora deste ambiente):** celular de verdade e abertura do WhatsApp; Firefox e Safari; teclado e leitor de tela (NVDA); peso com fotos reais de celular; cache do navegador com certificado real (o Chrome não guarda cache de HTTPS com erro de certificado); compressão no IIS; LCP, INP e CLS medidos no site publicado; carga real dos municípios do IBGE, componente nativo do Magick.NET (HEIC e WebP) e script do banco com `sqlcmd -I` na hospedagem; catálogo real de veículos.
 
 **Testes que o verde não mostra:** os 4 de métricas (`GAZETA_VITALS`), o do peso da lista quando faltam 24 anúncios na categoria "Livros e revistas" (fica inconclusivo) e as 2 telas do catálogo de componentes sem `GAZETA_DEV_BASE_URL`: listar como pendência no `/test` se não rodarem.
+
+## Correções pós-Checkpoint 6 (2026-10-06)
+
+> **Em resumo:** as decisões do Product Owner sobre os avisos 🟡 e os dois 🟢 que escondiam defeito foram executadas. **Corrigido com teste:** o cache de um ano agora cobre a cadeia de módulos de cada página (antes um deploy podia juntar página antiga com módulo novo); a página de erro de quem está logado no painel **saía comprimida** (BREACH; reproduzido em 5 rotas, corrigido); o botão "Filtros" abre o painel mesmo se o JavaScript do Bootstrap não carregar; o teste de peso da foto agora prova o limite (a miniatura de pior caso pesa 45 KB contra os 74 KB, antes pesava 1 KB); as capas têm teste de `width`/`height`/proporção; os 12 `!` saíram. **1.722 unitários, 70 das ferramentas, 162 de integração e 253 de navegador passam, com 0 falhas** (4 de navegador puladas: as de métricas). **12 mutações, 12 mortas.**
+
+### Resultado das suítes (rodada completa depois das correções, site republicado, `CepCache` limpo)
+
+| Camada | Total | Passaram | Falharam | Puladas |
+|---|---|---|---|---|
+| Unitários do site (SQLite) | 1.722 | 1.722 | 0 | 0 |
+| Ferramenta de catálogo de veículos | 43 | 43 | 0 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 | 0 |
+| Integração (SQL Server real, Docker) | 162 | 162 | 0 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 257 | 253 | 0 | 4 (métricas, `GAZETA_VITALS=1`) |
+
+Testes novos: 15 unitários (12 de `ModuleVersionsTests`, 1 de capas em `CardTests`, 2 de BREACH em `CompressionAndCacheTests`) e 1 de navegador (`SearchE2ETests`: o painel com o JavaScript do Bootstrap bloqueado). Unitários: 1.707 → 1.722. Navegador: a listagem (`--list-tests`) dá **256 no commit do Checkpoint 6 e 257 agora** (+1, o novo); a rodada de fechamento do Checkpoint 6 tinha relatado total 254, dois a menos que a listagem, e a rodada de hoje executou todos os 257. **Não investiguei por que as rodadas anteriores contaram 2 a menos** (testes ignorados por variável faltando seria a hipótese); no `/test`, conferir que o total executado bate com a listagem. A cobertura (97,9% de linhas, 91,7% de ramos) é a do Checkpoint 6; o código novo tem teste direto.
+
+### O que mudou e como foi provado
+
+| Decisão | Correção | Prova |
+|---|---|---|
+| **D1.1 cache de módulos** | `ModuleVersions` + `ModuleScriptTagHelper`: o `?v=` de um script de página é o hash da página e de **todos** os módulos que ela importa (`import`, `export … from`, `import()` relativos). 13 views passaram de `asp-append-version` para `asp-module-version`. Os módulos importados saem sem `?v=` e continuam revalidando (um pedido condicional a mais por módulo, sem baixar o arquivo de novo) | `ModuleVersionsTests`: mudar qualquer arquivo da cadeia muda a versão; mudar um módulo alheio não muda; ciclo; `import()`; **contra os arquivos reais de `wwwroot/js`** (cada `import` relativo achado por outra expressão, mais simples, muda a versão de quem importa); toda página sai com `?v=` de 16 caracteres |
+| **D1.2 peso da foto** | A foto de pior caso passa a ser 4000 × 3000 com grão de sensor (±32 de 255) que sobrevive à redução: miniatura de **45 KB** (limite por capa 74 KB), versão grande de 422 KB (cabem 1.919 KB). O teste exige que a miniatura pese ao menos um quarto do limite, para não voltar a passar vazio. Ruído total (0 a 255 por canal) deu 101 KB, acima do limite, mas isso não é uma foto de câmera. **Não há foto real no repositório**: a conferência com fotos de verdade (HEIC de iPhone, JPEG grande de Android, 24 fotos) continua no `/verify`, com amostras do Product Owner | `PhotoWeightBudgetTests`; mutação N4 |
+| **D1.3 operador `!`** | Os 12 usos dos testes novos (`PageMeter`, `ScreenData`, `AccessMatrixTests`) saíram (nullable está desligado, o `!` não fazia nada). Há ~60 usos antigos em outros testes, fora do escopo, no BACKLOG | `dotnet format --verify-no-changes` e build Release sem aviso |
+| **D1.5 capas** | Teste novo: a capa do card traz `width` e `height` positivos no HTML e o CSS fixa `aspect-ratio`, `width: 100%` e `height: auto` | `CardTests.ACapa_ReservaOEspaco…`; mutação N3 |
+| **D2.1 BREACH em página reexecutada** | **Era real:** 404 de `/painel/...` saía em Brotli (a página de erro tem o caminho `/Home/Status/404`). A regra olha também o caminho do pedido original (`IStatusCodeReExecuteFeature.OriginalPath` e `IExceptionHandlerPathFeature.Path`). A página de erro vista por quem está logado não leva o token (conferido), então não houve vazamento do segredo, mas a regra "o painel nunca é comprimido" estava furada | `CompressionAndCacheTests`: 5 rotas do painel com 404 e uma falha lançada num servidor mínimo com a mesma ordem do `Program.cs`; mutação N2 |
+| **D2.2 painel sem JavaScript do Bootstrap** | **Não estava coberto** (o `<noscript>` só vale com JavaScript desligado, e o botão era um `<button>` que depende do Bootstrap). O botão virou um link `href="#filtros"` (padrão do Bootstrap) e o `search.css` mostra o painel pelo `:target`; com o JavaScript funcionando nada muda | `SearchE2ETests.US002S12_Celular_SeOJavaScriptDoBootstrapNaoCarrega…`; mutação N5 |
+| **D1.4 SPEC e ARCHITECTURE** | SPEC v1.7: NFR-25 (página de status), os dois critérios aprovados (D4) e o botão como link; ARCHITECTURE §7: BREACH reexecutado, páginas de status e versão dos scripts | — |
+
+### Mutações (11; 11 mortas)
+
+| Mutação | Resultado |
+|---|---|
+| U1 tirar `[Authorize(Policy = Administrator)]` do `UsersController` | morta (`AccessMatrixTests`, 2 testes) |
+| U2 `@Html.Raw(Model.Title)` em `_NoResultsState.cshtml` | morta (`RawOutputTests.NoView_WritesTextWithoutEncoding`) |
+| U3 compressão pública desligada | morta (`PublicPagesAndApi_AreCompressed…`) |
+| U4 sem a página de status | morta (`StatusPagesTests`, 2 testes) |
+| N1 a versão do script deixa de seguir os imports | morta (`ModuleVersionsTests`, 7 testes) |
+| N2 a regra do painel olha só o caminho atual (volta o BREACH reexecutado) | morta (os 2 testes novos de `CompressionAndCacheTests`) |
+| N3 capa sem `width` e `height` | morta (`CardTests`, 2 testes) |
+| N4 qualidade do WebP a 100 | morta (`PhotoWeightBudgetTests`: miniatura de 365 KB contra 74 KB) |
+| E1 `main { min-width: 700px }` | morta (`AllScreensTests.Screen_DoesNotScrollHorizontally_AtFourWidths`, 3 de 3 telas) |
+| E2 painel de filtros de novo aberto no HTML | morta (`SearchLayoutShiftTests`). **A primeira tentativa não valeu:** o `sed` usou o número de linha antigo, não mudou o arquivo e o teste passou; refeita pelo texto |
+| N5 sem a regra `:target` do `search.css` | morta (`US002S12_Celular_SeOJavaScriptDoBootstrapNaoCarrega…`) |
+
+Depois de cada mutação o código voltou ao original (`git status` limpo), o site foi republicado e os testes do salto e do botão de filtros passaram de novo no código restaurado. Mutação com número de linha é frágil; mudar o arquivo e conferir `git diff --numstat` antes de rodar.
+
+### Achado para o `/test`
+
+O teste "Filtros" do E2E agora acha o botão pelo papel `button` (o link tem `role="button"`); qualquer teste novo que procure `<button>` ali não acha.
+
+### Pronto para o `/test` (estado em 2026-10-06, depois destas correções)
+
+| Item | Estado |
+|---|---|
+| Código | `claude/admiring-cray-wrjfmg`, árvore limpa; `dotnet build -c Release` sem aviso; `dotnet format --verify-no-changes` limpo |
+| Docker | contêiner `gazeta-e2e-sql` ligado (SQL Server do E2E, porta 14330, banco `gazeta_e2e`); a integração sobe os próprios contêineres. Se o daemon parar: `dockerd` e `docker start gazeta-e2e-sql` |
+| Sites de teste | publicados do código atual (Release): Production em `https://localhost:5443` e Development em `https://localhost:5444` (só para o catálogo de componentes); o `CepCache` e o `PasswordRecoveryAttempts` foram limpos na republicação |
+| Variáveis do E2E | `PLAYWRIGHT_BROWSERS_PATH`, `GAZETA_BASE_URL`, `GAZETA_DEV_BASE_URL`, `GAZETA_E2E_EMAIL`, `GAZETA_E2E_PASSWORD`, `GAZETA_E2E_SESSION_MINUTES=1`, `GAZETA_E2E_SENDGRID_PORT=5990`, `GAZETA_E2E_VIACEP_PORT=5991`; as do site: `RateLimiting__GlobalPerMinute=1000`, `RateLimiting__PhotosPerMinute=5000`, `RateLimiting__PhotoUploadsPerMinute=1000`, `Authentication__SessionMinutes=1` (runbook: seção do E2E) |
+| Totais esperados | unitários 1.722 · municípios 27 · catálogo 43 · integração 162 · E2E 257 (253 passam, 4 puladas: métricas) |
+| Comandos | `dotnet run --project tests/GazetaMarketplace.Web.Tests`, `tests/CitiesImport.Tests`, `tests/VehicleCatalogExport.Tests`, `tests/GazetaMarketplace.IntegrationTests` e `tests/GazetaMarketplace.Web.Tests.Playwright` (E2E, com as variáveis acima); cobertura pelo comando do runbook. Todos rodaram hoje, sem falha |
+| Ao republicar | limpar `CepCache`; salvar o log inteiro do E2E em arquivo; conferir que o total executado bate com `--list-tests` (257) |
