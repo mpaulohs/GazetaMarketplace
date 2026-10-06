@@ -13,6 +13,7 @@
   "screens": [
     { "id": "home", "action": "Home.Index", "state": "com anúncios", "as": "visitor", "path": "/", "status": 200 },
     { "id": "home-error", "action": "Home.Error", "state": "página de erro", "as": "visitor", "path": "/Home/Error", "status": 200 },
+    { "id": "not-found-page", "action": "Home.Status", "state": "endereço que não existe (404 amigável)", "as": "visitor", "path": "/pagina-que-nao-existe", "status": 404 },
     { "id": "category-with-ads", "action": "Category.Index", "state": "com anúncios", "as": "visitor", "path": "/categoria/{categorySlug}", "status": 200 },
     { "id": "category-empty", "action": "Category.Index", "state": "sem anúncios", "as": "visitor", "path": "/categoria/{emptyCategorySlug}", "status": 200 },
     { "id": "category-unknown", "action": "Category.Index", "state": "categoria que não existe", "as": "visitor", "path": "/categoria/nao-existe-6-2", "status": 404 },

@@ -40,6 +40,7 @@ public sealed class AccessMatrixTests
         // ---- Site público ----
         ["* {controller=Home}/{action=Index}/{id?} -> Home.Index"] = Access.Public,
         ["* {controller=Home}/{action=Index}/{id?} -> Home.Error"] = Access.Public,
+        ["* {controller=Home}/{action=Index}/{id?} -> Home.Status"] = Access.Public,
         ["GET anuncio/{id:int}/{slug?} -> Ad.Index"] = Access.Public,
         ["GET busca -> Search.Index"] = Access.Public,
         ["GET categoria/{slug} -> Category.Index"] = Access.Public,

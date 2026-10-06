@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using GazetaMarketplace.Core;
 using GazetaMarketplace.Core.Interfaces;
@@ -87,6 +88,10 @@ app.UseWhen(
 app.UseWhen(
     context => !context.Request.Path.StartsWithSegments("/api"),
     pages => pages.UseExceptionHandler("/Home/Error"));
+// Resposta de erro sem corpo (endereço que não existe, NotFound() do painel) vira uma página em português com o mesmo status; API, verificações de saúde e arquivos (.js, .php...) ficam como estão
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/api") && !context.Request.Path.StartsWithSegments("/health") && !Path.HasExtension(context.Request.Path.Value),
+    pages => pages.UseStatusCodePagesWithReExecute("/Home/Status/{0}"));
 
 app.UseHttpsRedirection();
 app.UsePublicResponseCompression();

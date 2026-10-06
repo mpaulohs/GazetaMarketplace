@@ -1,0 +1,4 @@
+@model PageStateViewModel
+
+@* Página para resposta de erro que saiu sem corpo: 404 amigável (e o mesmo molde para os outros códigos). O status da resposta é o do erro. *@
+@await Html.PartialAsync("_ErrorState", Model)
