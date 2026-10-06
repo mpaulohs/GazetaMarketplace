@@ -175,7 +175,7 @@ public sealed class AccessMatrixTests
             }
 
             string methods = string.Join("/", (endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods ?? ["*"]).OrderBy(m => m, StringComparer.Ordinal));
-            string pattern = endpoint.RoutePattern.RawText!.TrimStart('/');
+            string pattern = endpoint.RoutePattern.RawText.TrimStart('/');
             controllers.Add(new Endpoint($"{methods} {pattern} -> {action.ControllerName}.{action.ActionName}", pattern, methods, action.ControllerName, action.ActionName));
         }
 
@@ -229,7 +229,7 @@ public sealed class AccessMatrixTests
             }
 
             string methods = string.Join("/", (endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods ?? ["*"]).OrderBy(m => m, StringComparer.Ordinal));
-            string key = $"{methods} {endpoint.RoutePattern.RawText!.TrimStart('/')} -> {action.ControllerName}.{action.ActionName}";
+            string key = $"{methods} {endpoint.RoutePattern.RawText.TrimStart('/')} -> {action.ControllerName}.{action.ActionName}";
             string[] policies = [.. endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Select(a => a.Policy ?? "authenticated")];
             bool anonymous = endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null;
             if (!Matrix.TryGetValue(key, out Access expected))

@@ -70,13 +70,13 @@ internal sealed class PageMeter
         }
 
         JsonElement response = json.GetProperty("response");
-        string id = json.GetProperty("requestId").GetString()!;
+        string id = json.GetProperty("requestId").GetString();
         string Header(string name) => response.TryGetProperty("headers", out JsonElement headers)
             ? headers.EnumerateObject().FirstOrDefault(h => string.Equals(h.Name, name, StringComparison.OrdinalIgnoreCase)).Value.ToString()
             : string.Empty;
         lock (_responses)
         {
-            _responses[id] = (response.GetProperty("url").GetString()!, json.GetProperty("type").GetString()!, response.GetProperty("status").GetInt32(), Header("cache-control"), Header("content-encoding"));
+            _responses[id] = (response.GetProperty("url").GetString(), json.GetProperty("type").GetString(), response.GetProperty("status").GetInt32(), Header("cache-control"), Header("content-encoding"));
         }
     }
 

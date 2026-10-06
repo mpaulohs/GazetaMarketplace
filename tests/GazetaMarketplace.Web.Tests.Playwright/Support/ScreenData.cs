@@ -116,21 +116,21 @@ internal static class ScreenData
         // Um anúncio publicado com duas fotos: início, categoria, busca, detalhe, galeria e favoritos
         string title = await PublishingFlow.PublishAsync(page, "Telas livro", 2).ConfigureAwait(false);
         values["searchToken"] = title.Split(' ')[^1];
-        values["adPath"] = await PublishingFlow.PublicPathAsync(page.Context.Browser!, title).ConfigureAwait(false);
+        values["adPath"] = await PublishingFlow.PublicPathAsync(page.Context.Browser, title).ConfigureAwait(false);
         values["publishedId"] = Regex.Match(values["adPath"], @"/anuncio/(\d+)").Groups[1].Value;
         await page.GotoAsync(MainUrl + values["adPath"]).ConfigureAwait(false);
-        string categoryHref = (await page.Locator("nav[data-breadcrumb] a[href^='/categoria/']").Last.GetAttributeAsync("href").ConfigureAwait(false))!;
+        string categoryHref = (await page.Locator("nav[data-breadcrumb] a[href^='/categoria/']").Last.GetAttributeAsync("href").ConfigureAwait(false));
         values["categorySlug"] = categoryHref["/categoria/".Length..];
 
         // Um rascunho completo (com foto) e um anúncio em revisão
         await PublishingFlow.DraftAsync(page, "Telas rascunho").ConfigureAwait(false);
         values["draftId"] = Regex.Match(page.Url, @"/painel/anuncios/(\d+)/editar").Groups[1].Value;
         await page.ReloadAsync().ConfigureAwait(false); // depois do envio a galeria é montada pelo JavaScript, sem o formulário de remover; recarregar traz a página do servidor
-        string removeHref = (await page.Locator("form[action$='/remover']").First.GetAttributeAsync("action").ConfigureAwait(false))!;
+        string removeHref = (await page.Locator("form[action$='/remover']").First.GetAttributeAsync("action").ConfigureAwait(false));
         values["photoId"] = Regex.Match(removeHref, @"/fotos/(\d+)/remover").Groups[1].Value;
         string review = await PublishingFlow.SubmitAsync(page, "Telas em revisão").ConfigureAwait(false);
         await page.GotoAsync(MainUrl + "/painel/anuncios/fila").ConfigureAwait(false);
-        string previewHref = (await page.GetByRole(AriaRole.Row).Filter(new() { HasText = review }).GetByRole(AriaRole.Link, new() { Name = review }).GetAttributeAsync("href").ConfigureAwait(false))!;
+        string previewHref = (await page.GetByRole(AriaRole.Row).Filter(new() { HasText = review }).GetByRole(AriaRole.Link, new() { Name = review }).GetAttributeAsync("href").ConfigureAwait(false));
         values["inReviewId"] = Regex.Match(previewHref, @"/painel/anuncios/(\d+)/").Groups[1].Value;
 
         // Categorias: uma sem anúncios (criada uma vez só, reaproveitada nas rodadas seguintes) e uma protegida (com anúncios)
@@ -146,7 +146,7 @@ internal static class ScreenData
         values["emptyCategoryId"] = await IdOfAsync(page, "Editar " + EmptyCategoryName, @"/categorias/(\d+)/editar").ConfigureAwait(false);
         values["protectedCategoryId"] = await IdOfAsync(page, "Editar " + ProtectedCategoryName, @"/categorias/(\d+)/editar").ConfigureAwait(false);
         await page.GotoAsync(MainUrl + "/").ConfigureAwait(false);
-        string emptyHref = (await page.GetByRole(AriaRole.Link, new() { NameRegex = new Regex(Regex.Escape(EmptyCategoryName)) }).First.GetAttributeAsync("href").ConfigureAwait(false))!;
+        string emptyHref = (await page.GetByRole(AriaRole.Link, new() { NameRegex = new Regex(Regex.Escape(EmptyCategoryName)) }).First.GetAttributeAsync("href").ConfigureAwait(false));
         values["emptyCategorySlug"] = emptyHref["/categoria/".Length..];
 
         // Um Redator: o primeiro que já exista, ou um novo
@@ -164,7 +164,7 @@ internal static class ScreenData
             await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Status)).ToContainTextAsync("criado").ConfigureAwait(false);
         }
 
-        string deactivateHref = (await deactivate.First.GetAttributeAsync("href").ConfigureAwait(false))!;
+        string deactivateHref = (await deactivate.First.GetAttributeAsync("href").ConfigureAwait(false));
         values["writerId"] = Regex.Match(deactivateHref, @"/usuarios/(\d+)/desativar").Groups[1].Value;
 
         string[] missing = [.. Tokens.Where(t => !values.ContainsKey(t))];
@@ -178,7 +178,7 @@ internal static class ScreenData
 
     private static async Task<string> IdOfAsync(IPage page, string linkName, string pattern)
     {
-        string href = (await page.GetByRole(AriaRole.Link, new() { Name = linkName, Exact = true }).First.GetAttributeAsync("href").ConfigureAwait(false))!;
+        string href = (await page.GetByRole(AriaRole.Link, new() { Name = linkName, Exact = true }).First.GetAttributeAsync("href").ConfigureAwait(false));
         return Regex.Match(href, pattern).Groups[1].Value;
     }
 }

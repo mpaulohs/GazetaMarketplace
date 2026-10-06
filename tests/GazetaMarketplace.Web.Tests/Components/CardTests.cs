@@ -52,6 +52,23 @@ public sealed class CardTests
         Assert.IsFalse(html.Contains("data-ad-placeholder", StringComparison.Ordinal));
     }
 
+    /// <summary>NFR-03: a capa reserva o espaço antes de chegar (a lista não pula quando as fotos carregam). Dois lados: o HTML traz <c>width</c> e <c>height</c>, e o CSS fixa a proporção e a largura.</summary>
+    [TestMethod]
+    public async Task ACapa_ReservaOEspaco_ComWidthHeightNoHtmlEProporcaoNoCss()
+    {
+        string html = await CardAsync("title=Honda&group=Cars&price=6200000&cover=true");
+
+        string tag = Regex.Match(html, @"<img [^>]*data-ad-card-image[^>]*>").Value;
+        StringAssert.Matches(tag, new Regex(@"\swidth=""[1-9]\d*"""), "a capa traz width em pixels");
+        StringAssert.Matches(tag, new Regex(@"\sheight=""[1-9]\d*"""), "a capa traz height em pixels");
+
+        string css = File.ReadAllText(RepositoryRoot.Wwwroot("css", "components", "card.css"));
+        string rule = Regex.Match(css, @"\.ad-card__imagem\s*\{[^}]*\}").Value;
+        StringAssert.Contains(rule, "aspect-ratio: var(--app-media-ratio)", "a proporção da capa é reservada pelo CSS");
+        StringAssert.Contains(rule, "width: 100%");
+        StringAssert.Contains(rule, "height: auto");
+    }
+
     [TestMethod]
     public async Task PrimeiraLinha_CarregaAImagemJa()
     {
