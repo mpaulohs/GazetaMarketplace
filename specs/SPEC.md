@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.6 |
+| Version | v1.7 |
 | Coverage | full |
 | Mode | greenfield |
 | Status | **Approved** |
@@ -29,6 +29,8 @@
 | v1.5 | 2026-10-06 | Changed | greenfield | Telefone fixo (10 dígitos): só o botão "Ligar" aparece nos anúncios; o "Chamar no WhatsApp" só aparece com celular (11 dígitos) | US-004, US-015 | Tarefa 5.3 | Product Owner, 2026-10-05 |
 | v1.5 | 2026-10-06 | Changed | greenfield | Exceção documentada à mensagem única de indisponibilidade: o anúncio arquivado também mostra o link da categoria em que estava (US-003-S06 já pedia o link; a regra geral dizia "sem revelar o conteúdo") | US-003-S06, US-003 (regras) | Tarefa 5.2 | Product Owner, 2026-10-05 |
 | v1.6 | 2026-10-06 | Changed | greenfield | US-002-S12 (busca no celular): o painel de filtros **já vem recolhido na página** em tela estreita, sem esperar o JavaScript, para a lista de resultados não pular quando o script chega (NFR-03: o salto, de 0,36, passava do limite de 0,1 em celular lento). Sem JavaScript o painel continua aberto e os botões de abrir e fechar não aparecem. O comportamento visto pela pessoa não muda (abre e fecha, sem rolagem horizontal) | US-002, NFR-03 | Checkpoint 6 (decisão D1: corrigir o salto da busca agora) | Product Owner, 2026-10-06 |
+| v1.7 | 2026-10-06 | Added | greenfield | Nova regra de resiliência (NFR-25): endereço que não existe e resposta de erro que sairia sem corpo mostram uma página em português, com o mesmo status (404 continua 404, para buscadores e testes), uma explicação curta e um link para a página inicial; sem detalhe técnico; a API, as verificações de saúde e os arquivos (.js, .css, .php…) não mudam. Também na busca no celular (US-002-S12): o botão "Filtros" passa a ser um link para o painel, que abre mesmo quando o JavaScript não chega a carregar (rede ruim); nada muda para quem tem JavaScript | NFR-25, US-001-S07, US-002-S12 | Checkpoint 6 (decisão D3 do Product Owner: página 404 amigável antes do `/test`; achado 🟡 5 do `/review`) | Product Owner, 2026-10-06 |
+| v1.7 | 2026-10-06 | Clarified | greenfield | Duas suposições do `/build` aprovadas viram critério: (1) US-009-S04: ao reenviar um anúncio rejeitado, o motivo, o dia e quem rejeitou deixam de aparecer no anúncio (o histórico fica na auditoria), e despublicar um anúncio limpa o dia e quem o publicou; (2) US-006-S09: a nova senha do primeiro acesso não pode ser igual à provisória ("A nova senha precisa ser diferente da provisória") | US-009-S04, US-006-S09 | Suposições registradas no BACKLOG (tarefas 4.1 e 1.4), aprovadas no Checkpoint 6 (decisão D4) | Product Owner, 2026-10-06 |
 
 ## Executive Summary
 
@@ -601,6 +603,7 @@ Scenario: Primeiro acesso exige trocar a senha provisória
   When eu informo e confirmo uma nova senha que cumpre a política de senha
   Then vejo o painel
   And, se eu tentar entrar de novo com a senha provisória, vejo a mensagem "E-mail ou senha inválidos, ou conta desativada"
+  And, se eu informar como nova senha a própria senha provisória, vejo a mensagem "A nova senha precisa ser diferente da provisória" e continuo na tela
 
 @US-006-S10 @negative
 Scenario: Redator tenta abrir uma página exclusiva do administrador
@@ -890,6 +893,7 @@ Scenario: Reenviar um anúncio rejeitado depois de corrigi-lo
   When eu clico em "Enviar para revisão" e confirmo
   Then a situação passa a ser "Em revisão"
   And o anúncio volta a aparecer na "Fila de revisão" do Administrador
+  And o motivo da rejeição, o dia e quem rejeitou deixam de aparecer no anúncio (o histórico continua na auditoria)
 
 @US-009-S05 @edge
 Scenario: Clicar duas vezes em enviar
@@ -1469,6 +1473,7 @@ Scenario: Redator não acessa as configurações
 | NFR-22 | Arquitetura | Alinhamento com a pilha tecnológica aprovada e contratos de API | Segue `rules/tech-stack.md` (ASP.NET Core 10, SQL Server e EF Core, telas Razor com Bootstrap 5.3.8); endpoints JSON, se houver, usam erro no formato ProblemDetails e listas paginadas no envelope PagedResult |
 | NFR-23 | Infraestrutura | Componentes de escala (cache Redis, fila Kafka, réplica de leitura do banco, CDN) | **Ainda não**: escala pequena não justifica. Reavaliar se o LCP p75 passar de 2,5 s por 7 dias seguidos mesmo com imagens reduzidas (avaliar CDN de imagens), ou se as visitas superarem 5.000 por dia ou os anúncios ativos passarem de 1.000 (avaliar cache/Redis). Base: 5 vezes o volume-alvo; fotos de até 20 por anúncio pesam a página e devem ser medidas |
 | NFR-24 | Resiliência | Consulta de CEP (feita pelo servidor, por exemplo no ViaCEP) | Tempo limite de 5 s por tentativa; 1 nova tentativa só em falha do serviço (sem resposta, erro 5xx, sem rede); depois disso, preenchimento manual (US-008-S14). "CEP não encontrado" não conta como falha. CEPs já encontrados ficam em cache no servidor, com validade sugerida de 30 dias (valor final em `/arch`). Espera máxima percebida: cerca de 10 s |
+| NFR-25 | Resiliência | Endereço que não existe e resposta de erro sem corpo (404 e outros códigos de 400 a 599) nas páginas do site | Página em português do Brasil com o título "Página não encontrada" (404) ou "Algo deu errado" (demais), uma frase de explicação e o link "Ir para a página inicial"; o código de referência aparece só nos erros que não são 404; o status HTTP da resposta é preservado; vale para o site público e para o painel; **não** vale para a API (`/api`), para as verificações de saúde (`/health`) nem para endereços com extensão de arquivo, que seguem sem corpo. Prova: `StatusPagesTests` |
 
 ## Boundaries
 
