@@ -76,7 +76,8 @@
 <div class="row g-4">
     <div class="col-12 col-lg-3">
         @* Em telas estreitas o painel nasce recolhido já no HTML (o JavaScript não decide nada ao carregar: recolher depois da primeira pintura fazia a lista pular, NFR-03). Sem JavaScript, o sem-js.css (dentro de noscript) abre o painel e esconde os botões *@
-        <button type="button" class="btn btn-outline-secondary alvo-toque w-100 mb-2 d-lg-none" data-filters-toggle data-bs-toggle="collapse" data-bs-target="#filtros" aria-expanded="@(keepOpen ? "true" : "false")" aria-controls="filtros">@(keepOpen ? "Filtros ▴" : "Filtros ▾")</button>
+        @* Um link para o próprio painel (padrão do Bootstrap): se o JavaScript não carregar (rede ruim no celular), tocar nele ainda leva ao painel, que o CSS abre pelo :target (search.css) *@
+        <a role="button" href="#filtros" class="btn btn-outline-secondary alvo-toque w-100 mb-2 d-lg-none" data-filters-toggle data-bs-toggle="collapse" aria-expanded="@(keepOpen ? "true" : "false")" aria-controls="filtros">@(keepOpen ? "Filtros ▴" : "Filtros ▾")</a>
         <div class="collapse@(keepOpen ? " show" : "") d-lg-block" id="filtros" data-filters-panel data-keep-open="@(keepOpen ? "true" : "false")">
             <form class="card card-body search-filters" method="get" action="@PublicRoutes.Search" novalidate data-search-form data-kind="@form.Kind">
                 <div class="d-flex justify-content-between align-items-center mb-2">

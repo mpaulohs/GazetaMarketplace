@@ -287,7 +287,7 @@ public sealed class SearchTests
         Assert.AreEqual(3, CardCount(html));
         StringAssert.Contains(html, "data-keep-open=\"true\"", "com erro o painel de filtros não recolhe");
         StringAssert.Matches(html, new Regex(@"<div class=""collapse show d-lg-block"" id=""filtros"""), "com erro o painel já vem aberto no HTML");
-        StringAssert.Matches(html, new Regex(@"data-filters-toggle[^>]*aria-expanded=""true""[^>]*>Filtros ▴</button>"));
+        StringAssert.Matches(html, new Regex(@"data-filters-toggle[^>]*aria-expanded=""true""[^>]*>Filtros ▴</a>"));
     }
 
     [TestMethod]
@@ -434,7 +434,7 @@ public sealed class SearchTests
 
         // O painel já nasce recolhido no HTML (sem "show"), e o botão de abrir aparece sem esperar o JavaScript: recolher depois da primeira pintura fazia a lista pular (CLS, NFR-03)
         StringAssert.Matches(html, new Regex(@"<div class=""collapse d-lg-block"" id=""filtros"""));
-        StringAssert.Matches(html, new Regex(@"<button [^>]*d-lg-none[^>]*data-filters-toggle[^>]*aria-expanded=""false""[^>]*aria-controls=""filtros""[^>]*>Filtros ▾</button>"));
+        StringAssert.Matches(html, new Regex(@"<a role=""button"" href=""#filtros"" [^>]*d-lg-none[^>]*data-filters-toggle[^>]*aria-expanded=""false""[^>]*aria-controls=""filtros""[^>]*>Filtros ▾</a>"), "o botão é um link para o painel: sem o JavaScript do Bootstrap o :target o abre");
         StringAssert.Matches(html, new Regex(@"<button [^>]*data-filters-close[^>]*>Fechar ▴</button>"));
         Assert.IsFalse(Regex.IsMatch(html, @"<[^>]*(data-filters-toggle|data-filters-close)[^>]*\shidden[\s>]"), "os botões não dependem do JavaScript para aparecer");
         // Sem JavaScript: o sem-js.css, dentro de noscript, abre o painel e esconde os botões

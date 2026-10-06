@@ -21,3 +21,9 @@
 .search-toolbar [data-order-apply][hidden] {
   display: none;
 }
+
+/* Se o JavaScript não carregar, o Bootstrap não abre o painel recolhido; o botão "Filtros" é um link para #filtros e o :target o mostra.
+   Com o JavaScript funcionando o clique é interceptado (o endereço não ganha o #filtros) e este seletor não entra em ação. */
+#filtros.collapse:not(.show):target {
+  display: block;
+}

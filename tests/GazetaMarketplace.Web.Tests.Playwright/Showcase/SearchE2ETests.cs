@@ -422,6 +422,28 @@ public class SearchE2ETests : SitePage
         await Expect(Select(visitor, "Ordenar")).ToBeVisibleAsync().ConfigureAwait(false);
     }
 
+    /// <summary>US-002-S12 com o JavaScript do Bootstrap que não chega (rede ruim no celular): o painel nasce recolhido, mas o botão "Filtros" é um link para <c>#filtros</c> e o <c>:target</c> o abre; dá para filtrar.</summary>
+    [TestMethod]
+    public async Task US002S12_Celular_SeOJavaScriptDoBootstrapNaoCarrega_OBotaoFiltrosAindaAbreOPainel()
+    {
+        string token = await TokenAsync().ConfigureAwait(false);
+        IBrowserContext context = await Browser.NewContextAsync(new BrowserNewContextOptions { IgnoreHTTPSErrors = true, ViewportSize = new ViewportSize { Width = 360, Height = 800 } }).ConfigureAwait(false);
+        await context.RouteAsync("**/bootstrap.bundle.min.js*", route => route.AbortAsync()).ConfigureAwait(false);
+        IPage visitor = await context.NewPageAsync().ConfigureAwait(false);
+        await visitor.GotoAsync(Url($"/busca?q={token}")).ConfigureAwait(false);
+        ILocator toggle = visitor.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^Filtros") });
+        ILocator panel = visitor.Locator("#filtros");
+
+        await Expect(toggle).ToBeVisibleAsync().ConfigureAwait(false);
+        await Expect(panel).ToBeHiddenAsync().ConfigureAwait(false);
+
+        await toggle.ClickAsync().ConfigureAwait(false);
+
+        await Expect(panel).ToBeVisibleAsync().ConfigureAwait(false);
+        await Expect(Apply(visitor)).ToBeVisibleAsync().ConfigureAwait(false);
+        await context.CloseAsync().ConfigureAwait(false);
+    }
+
     [TestMethod]
     public async Task US002S12_Celular_ComErroNoFiltro_OPainelNaoRecolhe()
     {
