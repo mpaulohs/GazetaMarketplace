@@ -25,9 +25,9 @@ public class VitalsTests : SitePage
     private const string ListPath = "/categoria/livros-e-revistas";
 
     private const string Observers = """
-        window.__v = { lcp: 0, cls: 0, inp: 0, interactions: 0, list: [] };
+        window.__v = { lcp: 0, cls: 0, inp: 0, interactions: 0, list: [], shifts: [] };
         new PerformanceObserver((list) => { for (const e of list.getEntries()) window.__v.lcp = e.startTime; }).observe({ type: 'largest-contentful-paint', buffered: true });
-        new PerformanceObserver((list) => { for (const e of list.getEntries()) if (!e.hadRecentInput) window.__v.cls += e.value; }).observe({ type: 'layout-shift', buffered: true });
+        new PerformanceObserver((list) => { for (const e of list.getEntries()) if (!e.hadRecentInput) { window.__v.cls += e.value; window.__v.shifts.push(e.value.toFixed(4) + ' em ' + Math.round(e.startTime) + ' ms: ' + (e.sources || []).map(s => s.node ? s.node.nodeName.toLowerCase() + (s.node.id ? '#' + s.node.id : '') + (s.node.className && typeof s.node.className === 'string' ? '.' + s.node.className.split(' ')[0] : '') : '?').join(', ')); } }).observe({ type: 'layout-shift', buffered: true });
         new PerformanceObserver((list) => { for (const e of list.getEntries()) if (e.interactionId) { window.__v.interactions++; window.__v.inp = Math.max(window.__v.inp, e.duration); window.__v.list.push(e.name + ' ' + Math.round(e.duration) + ' ms (espera ' + Math.round(e.processingStart - e.startTime) + ', código ' + Math.round(e.processingEnd - e.processingStart) + ') em ' + (e.target ? e.target.tagName.toLowerCase() + (e.target.className && typeof e.target.className === 'string' ? '.' + e.target.className.split(' ')[0] : '') : '?')); } }).observe({ type: 'event', durationThreshold: 16, buffered: true });
         """;
 
@@ -84,6 +84,7 @@ public class VitalsTests : SitePage
         double cls = end.GetProperty("cls").GetDouble();
         double inp = end.GetProperty("inp").GetDouble();
         int interactions = end.GetProperty("interactions").GetInt32();
+        PerfLog.Write("  mudanças de layout: " + string.Join(" | ", end.GetProperty("shifts").EnumerateArray().Select(e => e.GetString())));
         PerfLog.Write("  interações: " + string.Join(" | ", end.GetProperty("list").EnumerateArray().Select(e => e.GetString())));
         PerfLog.Write(string.Create(CultureInfo.InvariantCulture, $"VITAIS {kind} ({path}): LCP {lcp:F0} ms (limite {budgets.LcpMaxMs:F0}) · INP {inp:F0} ms em {interactions} interação(ões) (limite {budgets.InpMaxMs:F0}) · CLS {cls:F4} (limite {budgets.ClsMax})"));
 

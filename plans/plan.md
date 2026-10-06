@@ -2009,20 +2009,22 @@
 **Objective**: Compressão, cache de estáticos e medição de peso das páginas e de tempo de resposta com volume da v1.
 
 **Files to modify**:
-- src/GazetaMarketplace.Web/Program.cs (compressão, cache de estáticos com `asp-append-version`)
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Desempenho/PageWeightTests.cs`
-- `tests/GazetaMarketplace.Web.Tests/Desempenho/VolumeDaV1Tests.cs`
+- `src/GazetaMarketplace.Web/Middleware/PerformanceExtensions.cs` e `Program.cs` (compressão só fora do painel e cache imutável dos estáticos com `?v=`)
+- `tests/GazetaMarketplace.Web.Tests/Performance/budgets.json` e `Budgets.cs` (os limites num arquivo só, compartilhado)
+- `tests/GazetaMarketplace.Web.Tests/Performance/CompressionAndCacheTests.cs` e `PhotoWeightBudgetTests.cs`
+- `tests/GazetaMarketplace.IntegrationTests/Performance/VolumeOfV1Tests.cs` (no projeto de integração: o SQL Server de verdade)
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Performance/PageWeightTests.cs` e `VitalsTests.cs`, `Support/PageMeter.cs`
 
 **Acceptance Criteria**:
-- [ ] Primeira carga da lista de 24 anúncios até 2 MB e do detalhe até 3 MB; capa servida na versão de 480 px
-- [ ] Com ~200 anúncios ativos, busca e detalhe respondem abaixo de 500 ms no p95
-- [ ] LCP abaixo de 2,5 s (perfil de celular, 4G), INP abaixo de 200 ms e CLS abaixo de 0,1 medidos no `/verify`; os limites ficam num arquivo de configuração de teste
+- [x] Primeira carga da lista de 24 anúncios até 2 MB e do detalhe até 3 MB; capa servida na versão de 480 px
+- [x] Com ~200 anúncios ativos, busca e detalhe respondem abaixo de 500 ms no p95
+- [x] LCP abaixo de 2,5 s (perfil de celular, 4G), INP abaixo de 200 ms e CLS abaixo de 0,1 medidos no `/verify`; os limites ficam num arquivo de configuração de teste
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Desempenho/PesoDasPaginasTests.ListaDe24_AteDoisMb (E2E, /test)`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Desempenho/PesoDasPaginasTests.Detalhe_AteTresMb (E2E, /test)`
-- `tests/GazetaMarketplace.Web.Tests/Desempenho/VolumeDaV1Tests.Com200Anuncios_P95AbaixoDe500ms (TestContainers, roda no /test)`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Desempenho/VitaisTests.LcpInpCls_NoPerfilDeCelular (E2E, /verify)`
+- `PageWeightTests.ListOf24_FirstLoad_IsUpTo2Mb_WithTheSmallCoverAndACompressedDocument` e `Detail_FirstLoad_IsUpTo3Mb_ForTheAdsOnTheFirstPageOfTheList` (E2E, /test)
+- `VolumeOfV1Tests.SearchAndDetail_WithAbout200ActiveAds_P95Under500ms` (integração, SQL Server em contêiner, /test)
+- `VitalsTests.LcpInpCls_OnTheMobileProfile_AreWithinTheBudget` (E2E, só com `GAZETA_VITALS=1`; os números que valem são os do /verify)
+- `CompressionAndCacheTests` (5), `PhotoWeightBudgetTests` (2) e `PageWeightTests.VersionedFiles_HaveImmutableCache_OnEveryPublicPage`
 
 **Dependencies**: 5.4, 5.2, 5.1
 
