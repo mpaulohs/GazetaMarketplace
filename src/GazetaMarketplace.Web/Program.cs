@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using GazetaMarketplace.Core;
+using GazetaMarketplace.Core.Configuration;
 using GazetaMarketplace.Core.Interfaces;
 using GazetaMarketplace.Infrastructure;
 using GazetaMarketplace.Infrastructure.Configuration;
@@ -14,6 +15,9 @@ using GazetaMarketplace.Web.HealthChecks;
 using GazetaMarketplace.Web.Middleware;
 using GazetaMarketplace.Web.Security;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -75,6 +79,19 @@ builder.Services.AddSingleton<IModuleVersions>(services =>
 builder.Services.AddSecureForwarding();
 // Nenhuma política CORS: site e endpoints JSON são da mesma origem (ARCHITECTURE.md §7)
 builder.Services.AddAppOptions(builder.Configuration, builder.Environment.IsProduction());
+// Chaves do Data Protection (cookie de login, antiforgery, links de redefinição de senha) numa pasta persistente fora da raiz do site (ADR-011, RC-16).
+// Sem a pasta, na hospedagem compartilhada a reciclagem do pool pode gerar um anel novo e derrubar a sessão da equipe e os links já enviados. A pasta é obrigatória em Production (validada em AddAppOptions).
+// O caminho é lido na hora de montar o anel (não aqui), porque a configuração do host de teste só existe depois que este arquivo rodou
+builder.Services.AddDataProtection().SetApplicationName("GazetaMarketplace");
+builder.Services.AddOptions<KeyManagementOptions>().Configure<IConfiguration, ILoggerFactory>((options, configuration, loggers) =>
+{
+    string keysDirectory = configuration[$"{KeyStorageOptions.SectionName}:{nameof(KeyStorageOptions.KeysDirectory)}"];
+    if (!string.IsNullOrWhiteSpace(keysDirectory))
+    {
+        options.XmlRepository = new FileSystemXmlRepository(new DirectoryInfo(keysDirectory), loggers);
+    }
+});
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTeamIdentity();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();

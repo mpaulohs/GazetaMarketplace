@@ -70,12 +70,12 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
     /// <summary>Relógio do site quando <c>comBanco</c>: avançar o tempo envelhece sessão, bloqueio e cookie.</summary>
     public FakeClock Clock { get; } = new();
 
-    /// <summary>Configuração completa que o site exige em Production (ADR-011).</summary>
+    /// <summary>Configuração completa que o site exige em Production (ADR-011). A pasta de chaves é uma pasta temporária nova por chamada: o site grava nela as chaves do Data Protection.</summary>
     public static Dictionary<string, string> ProductionConfiguration() => new()
     {
         ["ConnectionStrings:DefaultConnection"] = "Server=(local);Database=Teste;Integrated Security=true",
         ["PhotoStorage:BasePath"] = "/dados/fotos",
-        ["DataProtection:KeysDirectory"] = "/dados/chaves",
+        ["DataProtection:KeysDirectory"] = Path.Combine(Path.GetTempPath(), "gazeta-chaves-" + Guid.NewGuid().ToString("N")),
         ["SendGrid:ApiKey"] = "chave-de-teste",
         ["SendGrid:FromEmail"] = "noreply@exemplo.com.br",
         ["Site:BaseUrl"] = "https://gazeta.exemplo.com.br"
