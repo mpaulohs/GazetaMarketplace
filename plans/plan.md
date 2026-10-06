@@ -1932,19 +1932,26 @@
 **Objective**: Matriz automática de acesso: toda rota do painel exige login e o papel certo; textos digitados nunca executam.
 
 **Files to modify**:
-- `tests/GazetaMarketplace.Web.Tests/Security/MatrizDeAcessoTests.cs`
-- `tests/GazetaMarketplace.Web.Tests/Security/XssEmTodasAsTelasTests.cs`
+- `tests/GazetaMarketplace.Web.Tests/Security/AccessMatrixTests.cs` (nomes em inglês, decisão do Product Owner de 2026-10-06)
+- `tests/GazetaMarketplace.Web.Tests/Security/OwnershipMatrixTests.cs`
+- `tests/GazetaMarketplace.Web.Tests/Security/XssInAllScreensTests.cs`
+- `tests/GazetaMarketplace.Web.Tests/Security/RawOutputTests.cs`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Showcase/XssE2ETests.cs`
 
 **Acceptance Criteria**:
-- [ ] Toda rota do painel e todo endpoint JSON de escrita é listado por reflexão e testado sem login, como Redator e como Administrador; acesso indevido responde "Você não tem permissão" sem revelar conteúdo
-- [ ] Um texto com `<script>` digitado em título, descrição, nome, motivo e nome de categoria é exibido como texto em todas as telas
-- [ ] Nenhuma rota nova do painel passa sem entrar na matriz (o teste falha)
+- [x] Toda rota do painel e todo endpoint JSON de escrita é listado por reflexão e testado sem login, como Redator e como Administrador; acesso indevido responde "Você não tem permissão" sem revelar conteúdo
+- [x] Um texto com `<script>` digitado em título, descrição, nome, motivo e nome de categoria é exibido como texto em todas as telas
+- [x] Nenhuma rota nova do painel passa sem entrar na matriz (o teste falha)
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests/Security/MatrizDeAcessoTests.TodaRotaDoPainel_ExigeLogin`
-- `tests/GazetaMarketplace.Web.Tests/Security/MatrizDeAcessoTests.Redator_NaoAcessaRotasDeAdministrador`
-- `tests/GazetaMarketplace.Web.Tests/Security/MatrizDeAcessoTests.RotaNova_SemEntradaNaMatriz_FalhaOTeste`
-- `tests/GazetaMarketplace.Web.Tests/Security/XssEmTodasAsTelasTests.Script_EmCadaCampo_ApareceComoTexto`
+- `AccessMatrixTests.Anonymous_PublicAndPanelAnonymousEndpoints_AreNotBlocked_AndTheRestRequireLogin` (toda rota do painel exige login)
+- `AccessMatrixTests.Writer_ReachesWriterEndpoints_ButIsDeniedEveryAdministratorEndpoint` (o Redator não acessa rotas de Administrador)
+- `AccessMatrixTests.EveryEndpoint_IsInTheMatrix_AndEveryMatrixEntryExists` (rota nova sem entrada na matriz falha o teste)
+- `AccessMatrixTests.EveryUnsafeEndpoint_RejectsARequestWithoutTheAntiforgeryToken`
+- `OwnershipMatrixTests.AnotherWriter_IsDeniedEveryRouteOfAnAdThatIsNotTheirs_WithoutSeeingItOrChangingIt`
+- `XssInAllScreensTests.PublicScreens_ShowHostileTextAsText_AndNeverAsMarkup` e `PanelScreens_ShowHostileTextAsText_AndNeverAsMarkup` (script em cada campo aparece como texto)
+- `RawOutputTests.NoView_WritesTextWithoutEncoding` e `NoSourceFile_BuildsHtmlByHand`
+- `XssE2ETests` (4 testes no navegador)
 
 **Dependencies**: 1.3, 2.6, 4.4, 5.4
 
@@ -2043,13 +2050,13 @@
 | 1.1 | Chaves do Data Protection perdidas derrubam todas as sessões | Critério de aceite da 0.2 sobre a pasta de chaves obrigatória em produção e `OptionsTests.Producao_SemPastaDeFotos_FalhaNaPartida` (mesma validação para a pasta de chaves) |
 | 3.2 | ViaCEP lento ou fora do ar trava o formulário | `CepEndpointTests.ViaCepLento_Devolve503Em5Segundos` e `@US-008-S14` |
 | 5.4 | Consulta Dapper esquecer o somente-publicados e mostrar anúncio não publicado | `SearchQueryTests.SoAnunciosPublicados_EmCadaSituacao` (no `/test`) e `SqlBuilderTests.FragmentoSomentePublicados_E_UnicoEReutilizado` |
-| 4.4 | Consulta Dapper da lista do painel devolver anúncio de outro Redator (IDOR) | `PanelAdListQueryTests.Redator_RecebeSoOsProprios_NaConsulta` (no `/test`) e `MatrizDeAcessoTests.Redator_NaoAcessaRotasDeAdministrador` (tarefa 6.1) |
+| 4.4 | Consulta Dapper da lista do painel devolver anúncio de outro Redator (IDOR) | `PanelAdListQueryTests.Redator_RecebeSoOsProprios_NaConsulta` (no `/test`) e `OwnershipMatrixTests.AnotherWriter_IsDeniedEveryRouteOfAnAdThatIsNotTheirs_WithoutSeeingItOrChangingIt` e `AccessMatrixTests.Writer_ReachesWriterEndpoints_ButIsDeniedEveryAdministratorEndpoint` (tarefa 6.1) |
 | 5.4 | Injeção de SQL pela ordenação ou pelo termo de busca | `SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`, `SearchQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta` e `SecurityTests.Termo_E_Parametro_NaoConcatenado` |
 | 0.6 | Escrita Dapper sem justificativa ou fora da transação do EF | `DapperJustificationTests.TodaEscritaDapper_TemComentarioComOMotivo` e o critério de aceite da 0.6 sobre a conexão e a transação do `DbContext` |
 | 5.4 | Busca lenta com o volume da v1 | `DesempenhoTests.Com200Anuncios_RespondeAbaixoDe500ms` (no `/test`) e `VolumeDaV1Tests.Com200Anuncios_P95AbaixoDe500ms` |
 | 2.5 | Catálogo copiado da API da OLX (A5) e credencial antiga do GazetaOnline | Critério de aceite da 2.5: nenhuma credencial no repositório; `ExportTests.SemVariavelDeConexao_ParaSemGerarArquivo`; bloqueio de lançamento registrado na seção 9 |
 | 2.4 | Listas novas não definidas (PL-01) travam 9 grupos | Critério de aceite da 2.4 (bloqueado até a PL-01); a tarefa não fecha sem a resposta |
-| 0.4 | Acesso indevido por rota nova sem política de papel | `MatrizDeAcessoTests.RotaNova_SemEntradaNaMatriz_FalhaOTeste` (tarefa 6.1) |
+| 0.4 | Acesso indevido por rota nova sem política de papel | `AccessMatrixTests.EveryEndpoint_IsInTheMatrix_AndEveryMatrixEntryExists` (tarefa 6.1) |
 | 3.5 | Arquivo de 10 a 11 MB recebe erro do servidor em vez da mensagem do SPEC | `LimitesTests.ArquivoDe10a11Mb_RecebeMensagemDaAplicacao` |
 
 ## 7. Deferred/Waived scenarios

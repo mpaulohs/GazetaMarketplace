@@ -69,7 +69,7 @@
 - [x] Fase 5 fechada (2026-10-06): jornada sem login, Serviços e Vagas, mapa, revisão de código e cobertura
 
 ## Fase 6 — Verificações transversais
-- [ ] Task 6.1: Verificação transversal de acesso e de texto digitado
+- [x] Task 6.1: Verificação transversal de acesso e de texto digitado
 - [ ] Task 6.2: Base de verificação de acessibilidade e responsividade
 - [ ] Task 6.3: Orçamentos de desempenho
 

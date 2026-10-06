@@ -40,14 +40,26 @@ internal static class PublishingFlow
     }
 
     /// <summary>Cadastra um anúncio de <paramref name="category"/> (uma categoria de Produtos em geral) com <paramref name="photos"/> fotos, envia para revisão e publica; devolve o título. A conta já deve estar entrada.</summary>
-    public static async Task<string> PublishAsync(IPage page, string prefix, int photos, string category = "Livros e revistas", string price = "5000")
+    public static async Task<string> PublishAsync(IPage page, string prefix, int photos, string category = "Livros e revistas", string price = "5000", string description = "Edição 2020, sem anotações")
     {
         string title = Unique(prefix);
         await OpenFormAsync(page, title, category).ConfigureAwait(false);
-        await page.GetByLabel("Descrição").FillAsync("Edição 2020, sem anotações").ConfigureAwait(false);
+        await page.GetByLabel("Descrição").FillAsync(description).ConfigureAwait(false);
         await page.GetByLabel("Condição").SelectOptionAsync(new SelectOptionValue { Index = 1 }).ConfigureAwait(false);
         await page.GetByLabel("Preço").FillAsync(price).ConfigureAwait(false);
         await SaveUploadAndPublishAsync(page, title, photos).ConfigureAwait(false);
+        return title;
+    }
+
+    /// <summary>Como <see cref="PublishAsync"/>, mas para na fila de revisão (com uma foto, sem publicar): o anúncio fica Em revisão, pronto para o Administrador rejeitar. Devolve o título.</summary>
+    public static async Task<string> SubmitAsync(IPage page, string prefix, string description = "Edição 2020, sem anotações")
+    {
+        string title = Unique(prefix);
+        await OpenFormAsync(page, title, "Livros e revistas").ConfigureAwait(false);
+        await page.GetByLabel("Descrição").FillAsync(description).ConfigureAwait(false);
+        await page.GetByLabel("Condição").SelectOptionAsync(new SelectOptionValue { Index = 1 }).ConfigureAwait(false);
+        await page.GetByLabel("Preço").FillAsync("5000").ConfigureAwait(false);
+        await SaveAndSubmitAsync(page, 1).ConfigureAwait(false);
         return title;
     }
 
@@ -84,6 +96,17 @@ internal static class PublishingFlow
 
     private static async Task SaveUploadAndPublishAsync(IPage page, string title, int photos)
     {
+        await SaveAndSubmitAsync(page, photos).ConfigureAwait(false);
+
+        await page.GotoAsync(Url("/painel/anuncios/fila")).ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Row).Filter(new() { HasText = title }).GetByRole(AriaRole.Link, new() { Name = title }).ClickAsync().ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Link, new() { Name = "Publicar" }).ClickAsync().ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Publicar" }).ClickAsync().ConfigureAwait(false);
+        await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Anúncio publicado" })).ToBeVisibleAsync().ConfigureAwait(false);
+    }
+
+    private static async Task SaveAndSubmitAsync(IPage page, int photos)
+    {
         await page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
         await Microsoft.Playwright.Assertions.Expect(page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
         await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
@@ -103,11 +126,5 @@ internal static class PublishingFlow
         await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Enviar para revisão?" })).ToBeVisibleAsync().ConfigureAwait(false);
         await page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);
         await Microsoft.Playwright.Assertions.Expect(page.GetByText("Anúncio enviado para revisão")).ToBeVisibleAsync().ConfigureAwait(false);
-
-        await page.GotoAsync(Url("/painel/anuncios/fila")).ConfigureAwait(false);
-        await page.GetByRole(AriaRole.Row).Filter(new() { HasText = title }).GetByRole(AriaRole.Link, new() { Name = title }).ClickAsync().ConfigureAwait(false);
-        await page.GetByRole(AriaRole.Link, new() { Name = "Publicar" }).ClickAsync().ConfigureAwait(false);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Publicar" }).ClickAsync().ConfigureAwait(false);
-        await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Anúncio publicado" })).ToBeVisibleAsync().ConfigureAwait(false);
     }
 }

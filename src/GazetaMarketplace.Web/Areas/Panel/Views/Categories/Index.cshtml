@@ -32,17 +32,17 @@
     else if (row.Depth > depth)
     {
         depth = row.Depth;
-        @Html.Raw("<ul class=\"list-unstyled ms-3 ms-md-4\"><li>")
+        @:<ul class="list-unstyled ms-3 ms-md-4"><li>
     }
     else
     {
         while (depth > row.Depth)
         {
             depth--;
-            @Html.Raw("</li></ul>")
+            @:</li></ul>
         }
 
-        @Html.Raw("</li><li>")
+        @:</li><li>
     }
 
     <div class="d-flex flex-wrap align-items-center gap-2 py-2 border-bottom" id="categoria-@row.Id">
@@ -84,10 +84,10 @@
     while (depth > 1)
     {
         depth--;
-        @Html.Raw("</li></ul>")
+        @:</li></ul>
     }
 
-    @Html.Raw("</li>")
+    @:</li>
 }
 </ul>
 </div></div>
