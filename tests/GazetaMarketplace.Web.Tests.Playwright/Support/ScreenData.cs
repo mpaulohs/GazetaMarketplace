@@ -18,7 +18,7 @@ internal static class ScreenData
     internal const string ProtectedCategoryName = "Livros e revistas";
 
     private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static Dictionary<string, string> _values;
+    private static Task<Dictionary<string, string>> _build;
 
     public static string MainUrl => RequiresVariablesAttribute.Value("GAZETA_BASE_URL").TrimEnd('/');
 
@@ -36,8 +36,9 @@ internal static class ScreenData
         await Gate.WaitAsync().ConfigureAwait(false);
         try
         {
-            _values ??= await BuildAsync(page).ConfigureAwait(false);
-            return _values;
+            // Guarda a própria tarefa: se o preparo falhar, os demais casos falham na hora com o mesmo erro, em vez de repetir o preparo (minutos) um por um
+            _build ??= BuildAsync(page);
+            return await _build.ConfigureAwait(false);
         }
         finally
         {
@@ -119,7 +120,7 @@ internal static class ScreenData
         // Um rascunho completo (com foto) e um anúncio em revisão
         await PublishingFlow.DraftAsync(page, "Telas rascunho").ConfigureAwait(false);
         values["draftId"] = Regex.Match(page.Url, @"/painel/anuncios/(\d+)/editar").Groups[1].Value;
-        string removeHref = (await page.Locator("a[href$='/remover']").First.GetAttributeAsync("href").ConfigureAwait(false))!;
+        string removeHref = (await page.Locator("form[action$='/remover']").First.GetAttributeAsync("action").ConfigureAwait(false))!;
         values["photoId"] = Regex.Match(removeHref, @"/fotos/(\d+)/remover").Groups[1].Value;
         string review = await PublishingFlow.SubmitAsync(page, "Telas em revisão").ConfigureAwait(false);
         await page.GotoAsync(MainUrl + "/painel/anuncios/fila").ConfigureAwait(false);
