@@ -61,7 +61,7 @@ public sealed class PriceTextTests
     }
 
     /// <summary>
-    /// R-03: <c>\d</c> casa dígitos de outros alfabetos (árabe-índico, devanágari, largura total) e <c>long.Parse</c> com <c>NumberStyles.None</c> não os lê:
+    /// R-04: <c>\d</c> casa dígitos de outros alfabetos (árabe-índico, devanágari, largura total) e <c>long.Parse</c> com <c>NumberStyles.None</c> não os lê:
     /// "1,٥" virava FormatException e a tela dava 500. Só <c>0-9</c> vale; o resto é texto que não é valor em reais.
     /// </summary>
     [TestMethod]

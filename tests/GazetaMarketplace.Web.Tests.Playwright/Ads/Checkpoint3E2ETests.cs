@@ -193,7 +193,7 @@ public class Checkpoint3E2ETests : SitePage
         await Expect(price).ToHaveValueAsync("620.000,01").ConfigureAwait(false);
     }
 
-    // R-04: com a sessão vencida o servidor redireciona o fetch dos campos para a tela de entrada; ela nunca pode ser injetada no formulário
+    // R-09: com a sessão vencida o servidor redireciona o fetch dos campos para a tela de entrada; ela nunca pode ser injetada no formulário
     [TestMethod]
     public async Task TrocaDeCategoria_ComASessaoVencida_MostraOAvisoEMantemOFormulario_SemInjetarATelaDeEntrada()
     {

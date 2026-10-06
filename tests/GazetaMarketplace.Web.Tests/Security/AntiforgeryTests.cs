@@ -67,7 +67,7 @@ public sealed class AntiforgeryTests
         Assert.AreEqual(HttpStatusCode.OK, (await client.SendAsync(valid)).StatusCode);
     }
 
-    // R-06: a recusa de um POST de página sem token vira 400 e o UseStatusCodePagesWithReExecute reexecuta o pedido em /Home/Status/400, ainda como POST: se a reexecução também
+    // R-10: a recusa de um POST de página sem token vira 400 e o UseStatusCodePagesWithReExecute reexecuta o pedido em /Home/Status/400, ainda como POST: se a reexecução também
     // exigisse o token, a pessoa receberia uma página em branco
     [TestMethod]
     public async Task PostDePagina_SemTokenOuComTokenFalso_RespondeAPaginaDeErro400_NuncaEmBranco()

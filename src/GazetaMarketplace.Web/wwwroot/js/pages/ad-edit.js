@@ -91,7 +91,7 @@ function trocaDeCategoria(form) {
     try {
       const resposta = await fetch(endereco, { credentials: "same-origin", headers: { Accept: "text/html" }, signal: controlador.signal });
       if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
-      // Sessão vencida: o servidor redireciona para a tela de entrada e o fetch a segue com 200. Aquela página nunca entra no formulário (R-04)
+      // Sessão vencida: o servidor redireciona para a tela de entrada e o fetch a segue com 200. Aquela página nunca entra no formulário (R-09)
       if (resposta.redirected && new URL(resposta.url).pathname.startsWith("/painel/entrar")) throw new SessaoVencida();
       // O HTML é a parcial do Razor, nunca texto montado no navegador. O DOMParser só lê (não executa script) e os nós passam para a página (RC-17: sem innerHTML)
       const documento = new DOMParser().parseFromString(await resposta.text(), "text/html");

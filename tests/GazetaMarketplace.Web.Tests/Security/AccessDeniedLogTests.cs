@@ -13,7 +13,7 @@ namespace GazetaMarketplace.Web.Tests.Security;
 
 /// <summary>
 /// RC-16 (SECURITY_REQUIREMENTS §6): "permissão negada" deixa uma linha de <c>Warning</c> no log, em toda negação do painel — a política por papel (tela "Acesso negado") e a recusa dentro
-/// de uma tela (anúncio de outro autor). A linha leva o endereço pedido, o usuário e o papel; nunca e-mail, nome nem o conteúdo do anúncio (R-05).
+/// de uma tela (anúncio de outro autor). A linha leva o endereço pedido, o usuário e o papel; nunca e-mail, nome nem o conteúdo do anúncio (R-08).
 /// </summary>
 [TestClass]
 #pragma warning disable CA1515 // Test classes must be public for MSTest

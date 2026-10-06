@@ -129,7 +129,7 @@ public sealed class PublishedEditTests
         Assert.AreEqual(AdStatus.Published, ad.Status);
     }
 
-    // R-03: preço com dígito de outro alfabeto ("1,\u0665") dava FormatException e a tela respondia 500; agora volta o formulário com a mensagem de preço inválido
+    // R-04: preço com dígito de outro alfabeto ("1,\u0665") dava FormatException e a tela respondia 500; agora volta o formulário com a mensagem de preço inválido
     [TestMethod]
     [DataRow("1,\u0665")]
     [DataRow("\u0661\u0662\u0663")]

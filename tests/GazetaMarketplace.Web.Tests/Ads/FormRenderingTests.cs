@@ -157,7 +157,7 @@ public sealed class FormRenderingTests
         }
     }
 
-    // R-04: o ad-edit.js reconhece a sessão vencida porque o fetch dos campos é redirecionado para a entrada; a página traz o aviso (oculto) que ele mostra
+    // R-09: o ad-edit.js reconhece a sessão vencida porque o fetch dos campos é redirecionado para a entrada; a página traz o aviso (oculto) que ele mostra
     [TestMethod]
     public async Task FormularioDoAnuncio_TemOAvisoOcultoDeSessaoVencida_ComLinkParaEntrarEmOutraAba_EOFetchDeCamposSemSessaoVaiParaAEntrada()
     {
