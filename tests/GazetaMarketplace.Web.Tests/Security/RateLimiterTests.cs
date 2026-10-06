@@ -40,7 +40,7 @@ public sealed class RateLimiterTests
     [TestMethod]
     public async Task SextaTentativaDeLogin_Devolve429()
     {
-        using WebFactory factory = new();
+        using WebFactory factory = new(configuration: new System.Collections.Generic.Dictionary<string, string> { ["RateLimiting:AuthPermits"] = "5" });
         using HttpClient client = factory.CreateClient();
 
         for (int i = 1; i <= 5; i++)
@@ -119,7 +119,7 @@ public sealed class RateLimiterTests
     [TestMethod]
     public async Task LimiteDeLoginERecuperacao_NaoMudaComOLimiteGlobalConfigurado()
     {
-        using WebFactory factory = new(configuration: new Dictionary<string, string> { ["RateLimiting:GlobalPerMinute"] = "1000" });
+        using WebFactory factory = new(configuration: new Dictionary<string, string> { ["RateLimiting:GlobalPerMinute"] = "1000", ["RateLimiting:AuthPermits"] = "5" });
         using HttpClient client = factory.CreateClient();
 
         for (int i = 1; i <= 5; i++)

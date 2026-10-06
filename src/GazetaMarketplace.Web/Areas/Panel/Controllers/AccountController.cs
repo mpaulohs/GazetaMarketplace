@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
@@ -57,6 +58,7 @@ public sealed class AccountController(
     }
 
     [HttpPost("entrar")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> SignIn(SignInViewModel model)
     {
         string source = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
@@ -113,6 +115,7 @@ public sealed class AccountController(
 
     // A resposta é a mesma exista a conta ou não, venha o envio a falhar ou não (US-007-S03, RC-13): a conta só é procurada depois, em segundo plano
     [HttpPost("esqueci-minha-senha")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> Forgot(ForgotPasswordViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -135,6 +138,7 @@ public sealed class AccountController(
     }
 
     [HttpPost("redefinir-senha")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> Reset(RecoverPasswordViewModel model, CancellationToken cancellationToken)
     {
         RecoveryLinkState state = await recovery.CheckLinkAsync(model.Id, model.Code, cancellationToken);

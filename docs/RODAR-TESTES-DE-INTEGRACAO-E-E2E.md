@@ -160,6 +160,7 @@ Depois de criar uma migration, rode `db/scripts/gerar-script.sh`. Ele chama `dot
 
 - **Script de banco:** aplicar `db/scripts/gazeta-idempotente.sql` com `sqlcmd -I` (redundância defensiva; o script já liga o `QUOTED_IDENTIFIER`).
 - **Limite de pedidos do E2E:** `RateLimiting__GlobalPerMinute=1000` só no site de teste. Sem isso, a suíte completa recebe 429 em páginas de login e os testes caem por tempo esgotado. Em produção a chave não existe e vale 100.
+- **Limite de login e recuperação do E2E:** `RateLimiting__AuthPermits=100000` só no site de teste (o limite de produção é 5 pedidos por 15 minutos por IP, nas ações de entrar, "esqueci minha senha" e "redefinir senha"; a suíte entra dezenas de vezes do mesmo IP). Sem isso, a suíte recebe 429 nas telas de entrada. Em produção a chave não existe e vale 5.
 - **Limite de entrega de fotos do E2E:** `RateLimiting__PhotosPerMinute=5000` só no site de teste. Sem isso, a galeria do detalhe do anúncio esgota os 300 pedidos por minuto e `PhotosE2ETests` recebe 429. Em produção a chave não existe e vale 300.
 - **Endereço do site:** definir `Site__BaseUrl` (https). Sem ele o site não sobe em Production, por segurança: o link do e-mail de redefinição de senha não pode nascer do cabeçalho Host.
 - **Arquivos estáticos:** em Production, os arquivos estáticos só saem da saída publicada. Rodar os testes de CSS contra a pasta publicada, nunca contra o código-fonte.

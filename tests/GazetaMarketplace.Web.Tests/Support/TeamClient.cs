@@ -81,6 +81,20 @@ internal static class TeamClient
         return await client.PostAsync(action, form);
     }
 
+    /// <summary>Como <see cref="PostFormAsync"/>, mas diz de qual IP o pedido vem (o limite de pedidos é por IP).</summary>
+    public static async Task<HttpResponseMessage> PostFormWithIpAsync(
+        this HttpClient client, string formPage, string action, IDictionary<string, string> fields, string ip)
+    {
+        string page = await client.GetStringAsync(formPage);
+        string token = Regex.Match(page, @"name=""__RequestVerificationToken""[^>]*value=""([^""]+)""").Groups[1].Value;
+
+        Dictionary<string, string> body = new(fields) { ["__RequestVerificationToken"] = token };
+        using FormUrlEncodedContent form = new(body);
+        using HttpRequestMessage request = new(HttpMethod.Post, action) { Content = form };
+        request.Headers.Add(WebFactory.RemoteIpHeader, ip);
+        return await client.SendAsync(request);
+    }
+
     /// <summary>Caminho e consulta do redirecionamento; o cookie manda endereço absoluto, o controller manda relativo.</summary>
     public static string Destination(this HttpResponseMessage response) =>
         response.Headers.Location.IsAbsoluteUri ? response.Headers.Location.PathAndQuery : response.Headers.Location.OriginalString;

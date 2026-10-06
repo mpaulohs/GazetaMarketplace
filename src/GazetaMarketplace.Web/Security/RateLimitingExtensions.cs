@@ -20,6 +20,12 @@ public static class RateLimitingExtensions
     /// <summary>Política para as ações de login e de recuperação de senha: <c>[EnableRateLimiting("auth")]</c>.</summary>
     public const string AuthPolicy = "auth";
 
+    /// <summary>Pedidos aceitos na janela de 15 minutos, por IP, nas ações de login, "esqueci minha senha" e "redefinir senha" (rules/security.md): 5.</summary>
+    public const int DefaultAuthPermits = 5;
+
+    /// <summary>Chave de configuração do limite de login e recuperação. Como a do limite global, existe para a suíte E2E (que entra dezenas de vezes do mesmo IP); em produção a chave não existe e vale 5.</summary>
+    public const string AuthPermitsKey = "RateLimiting:AuthPermits";
+
     /// <summary>Política da consulta de CEP: <c>[EnableRateLimiting("cep")]</c>. 30 por minuto <b>por usuário</b> (a primeira política por usuário do site), para a equipe não esgotar a cota do ViaCEP.</summary>
     public const string CepPolicy = "cep";
 
@@ -64,7 +70,7 @@ public static class RateLimitingExtensions
                     : RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(GlobalPerMinute(context), TimeSpan.FromMinutes(1))));
 
             options.AddPolicy(AuthPolicy, context =>
-                RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(5, TimeSpan.FromMinutes(15))));
+                RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(Configured(context, AuthPermitsKey, DefaultAuthPermits), TimeSpan.FromMinutes(15))));
 
             // Por usuário logado; sem identidade (não deveria chegar aqui, a ação exige login) cai no IP
             options.AddPolicy(CepPolicy, context =>
@@ -87,7 +93,7 @@ public static class RateLimitingExtensions
     }
 
     // Lido quando a janela de um IP é criada (não na partida): a configuração do host de teste só existe depois que o Program.cs rodou.
-    // Ausente, zero, negativa ou ilegível vale o padrão. O limite de login e de recuperação de senha (5 por 15 min) não é configurável.
+    // Ausente, zero, negativa ou ilegível vale o padrão.
     private static int GlobalPerMinute(HttpContext context) => Configured(context, GlobalPerMinuteKey, DefaultGlobalPerMinute);
 
     private static int Configured(HttpContext context, string key, int fallback) =>

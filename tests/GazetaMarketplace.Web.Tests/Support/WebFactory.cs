@@ -86,6 +86,9 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
         builder.UseEnvironment(_environment);
         builder.ConfigureAppConfiguration((_, configuration) =>
         {
+            // O limite de pedidos de login/recuperação (5 por 15 min, por IP) vale em produção; os testes entram várias vezes do mesmo IP, então o padrão do host de teste é alto.
+            // Quem prova o limite (AuthRateLimitTests, RateLimiterTests) passa o valor na configuração
+            configuration.AddInMemoryCollection(new Dictionary<string, string> { ["RateLimiting:AuthPermits"] = "1000" });
             configuration.AddInMemoryCollection(_configuration);
             configuration.AddInMemoryCollection(new Dictionary<string, string> { ["Logging:FileDirectory"] = _logsFolder });
         });
