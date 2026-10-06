@@ -12,6 +12,7 @@ namespace GazetaMarketplace.Web.Tests.Playwright.Accessibility;
 /// abrem como Administrador; as do site público, como visitante. Variáveis: GAZETA_BASE_URL, GAZETA_E2E_EMAIL, GAZETA_E2E_PASSWORD, GAZETA_E2E_VIACEP_PORT (e GAZETA_DEV_BASE_URL para o catálogo de componentes).
 /// </summary>
 [TestClass]
+[DoNotParallelize] // o preparo dos dados usa o ViaCEP de mentira, que escuta numa porta só: os testes de CEP e de publicação não podem rodar ao mesmo tempo
 [RequiresVariables("GAZETA_BASE_URL", "GAZETA_E2E_EMAIL", "GAZETA_E2E_PASSWORD", "GAZETA_E2E_VIACEP_PORT")]
 #pragma warning disable CA1515 // Test classes must be public for MSTest
 public class AllScreensTests : SitePage

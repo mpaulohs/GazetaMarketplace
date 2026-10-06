@@ -9,6 +9,7 @@ namespace GazetaMarketplace.Web.Tests.Playwright.Responsiveness;
 /// NFR-17: cada tela da lista única (<c>Screens/screens.json</c>) não rola na horizontal em 320, 768, 1024 e 1280 px (a tela é aberta de novo em cada largura). Mesmas variáveis e mesma lista dos testes de acessibilidade.
 /// </summary>
 [TestClass]
+[DoNotParallelize] // o preparo dos dados usa o ViaCEP de mentira, que escuta numa porta só: os testes de CEP e de publicação não podem rodar ao mesmo tempo
 [RequiresVariables("GAZETA_BASE_URL", "GAZETA_E2E_EMAIL", "GAZETA_E2E_PASSWORD", "GAZETA_E2E_VIACEP_PORT")]
 #pragma warning disable CA1515 // Test classes must be public for MSTest
 public class AllScreensTests : SitePage
