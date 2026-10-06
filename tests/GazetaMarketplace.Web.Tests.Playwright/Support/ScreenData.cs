@@ -52,6 +52,11 @@ internal static class ScreenData
     public static async Task SignInAdminAsync(IPage page, string baseUrl)
     {
         await page.GotoAsync(baseUrl + "/painel/entrar").ConfigureAwait(false);
+        if (!page.Url.Contains("/entrar", StringComparison.Ordinal))
+        {
+            return; // esta página já entrou (foi ela que preparou os dados): a entrada manda quem já está dentro para o painel
+        }
+
         await page.GetByLabel("E-mail").FillAsync(RequiresVariablesAttribute.Value("GAZETA_E2E_EMAIL")).ConfigureAwait(false);
         await page.GetByLabel("Senha").FillAsync(RequiresVariablesAttribute.Value("GAZETA_E2E_PASSWORD")).ConfigureAwait(false);
         await page.GetByRole(AriaRole.Button, new() { Name = "Entrar" }).ClickAsync().ConfigureAwait(false);
