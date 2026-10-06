@@ -1218,3 +1218,50 @@ Referências e pacotes: `Directory.Build.props` com `net10.0`, `Nullable=disable
 | Fronteira deste review | Nenhum arquivo de `src/`, `tests/`, `db/` ou `tools/` foi alterado; nenhum build, teste nem navegador foi executado; nada foi commitado por este review |
 
 **Re-pontuação esperada após a correção do R-01:** Segurança de 2 para no máximo 4; Arquitetura continua em 3 até R-07 e R-12 serem fechados; Correção continua em 3 até os 🟡 de comportamento (R-02 a R-06, R-09, R-10, R-14 a R-18) serem fechados. Quando o R-01 for corrigido, acrescentar aqui a subseção "Resolution" com (a) o que mudou, (b) os números da nova rodada de teste e (c) as notas recalculadas.
+
+### Resolution — após o `/fix-issue` de 2026-10-06 (R-01 e os 6 avisos de P1)
+
+> **Em resumo:** o 🔴 **R-01 foi corrigido e provado**, então o Gate 7 deixa de estar bloqueado por ele. Seis dos avisos aprovados também foram corrigidos, cada um com teste que falha sem a correção. Dois avisos (R-03 e R-06) foram investigados e **provados como defeito real**; a correção espera aprovação. O veredito continua **APPROVE com condições**, agora sem condição bloqueante de segurança.
+
+**(a) O que mudou** (um commit por correção; ids certos do review na primeira coluna):
+
+| Achado | O que mudou | Commit |
+|---|---|---|
+| R-01 🔴 | `AddDataProtection` com `XmlRepository` na pasta `DataProtection:KeysDirectory` (leitura tardia da configuração); ARCHITECTURE §7 | 3494a9e |
+| R-07 | `[EnableRateLimiting("auth")]` em entrar, esqueci-minha-senha e redefinir-senha; `RateLimiting:AuthPermits` (padrão 5 por 15 min por IP) | 2a8e1a5 |
+| R-02 (salvar) | `AdDraftService.UpdateAsync` aplica `AdSubmissionRules.Pending` a um Publicado; SPEC v1.8, cenário `@US-008-S15` | f12300b |
+| R-04 | `PriceText` só lê `0-9` | 7b15f3d |
+| R-09 | `ad-edit.js` reconhece o redirecionamento para a entrada, mostra aviso visível e não toca no formulário | b76e7f0 |
+| R-08 | `Warning` "Permissão negada…" no evento do cookie e em `AccessDeniedLoggingMiddleware` | 677bd7e |
+| R-10 | `[IgnoreAntiforgeryToken]` em `HomeController.Status` e `Error`; **a resposta saía mesmo em branco** | 190539f |
+
+Quatro mensagens de commit citam o achado com número trocado (R-03, R-05, R-04, R-06 em vez de R-04, R-08, R-09, R-10); o histórico já enviado não foi reescrito e os comentários do código foram corrigidos (6410425). O host de teste da integração ganhou `RateLimiting:AuthPermits=1000` (a primeira rodada completa falhou em `UserFlowTests` por causa do limite novo).
+
+**Investigações (sem correção, aguardando aprovação):**
+
+- **R-03 — PROVADO.** Com um interceptor que grava o mesmo CEP entre o `SELECT` e o `INSERT` do cache, a edição de um rascunho com CEP novo responde 302 de sucesso, **não grava o título** e **grava a auditoria `ad.update`**; sem a corrida o título é gravado (controle).
+- **R-06 — PROVADO** para Imóveis, Roupas, Eletro e Telefonia: uma categoria **filha** de uma categoria com grupo próprio herda o grupo, mas o campo obrigatório de lista (`propertyTypeId`, `sizeId`, `typeId`) fica com 0 opções e o envio pede "Informe o tipo…" sempre; somem também campos do pai (quartos, banheiros, vagas, capacidade, marcas compatíveis). Uma irmã (mesmo pai, sem grupo próprio) cai em Produtos em geral e não tem o problema.
+- **Novo, fora do pedido:** apagar a **última foto** de um Publicado continua permitido (metade do R-02); registrado como R-02b.
+
+**(b) Números da nova rodada** (commit `a487e20` + o ajuste do host de integração):
+
+| Suíte | Total | Falhas | Ignorados | Observação |
+|---|---|---|---|---|
+| Unidade (`Web.Tests`) | 1.751 | 0 | 0 | 2 min 39 s |
+| `CitiesImport.Tests` + `VehicleCatalogExport.Tests` | 27 + 43 | 0 | 0 | |
+| Integração (SQL Server em Docker) | 162 | 0 | 0 | 1 min 42 s (a primeira rodada deu 1 falha, ver acima; corrigida e rodada de novo inteira) |
+| E2E (site publicado) | 258 | 0 | 4 | 12 min 39 s; 258 = `--list-tests`; os 4 ignorados são o `VitalsTests` (OPEN-004, só com `GAZETA_VITALS=1`) |
+
+**Mutações** (cada ponto de correção tirado e o teste correspondente falhou; fonte restaurada): R-01 (sem `XmlRepository`: 1 falha) · R-07 (sem `[EnableRateLimiting]`: 3) · R-02 (sem a checagem: 4) · R-04 (volta `\d`: 2) · R-09 (sem a detecção no JS: E2E falha) · R-08 (sem log no cookie: 1; sem o middleware: 2) · R-10 (sem `[IgnoreAntiforgeryToken]`: 3).
+
+**(c) Notas recalculadas** (regra de honestidade: 🟡 aberto limita a 4):
+
+| Eixo | Antes | Depois | Por quê |
+|---|---|---|---|
+| Correctness | 3 | **3** | R-03 e R-06 provados e abertos, mais R-05, R-14 a R-18 e R-02b |
+| Readability | 4 | **4** | R-13 (operador `!`) segue aberto |
+| Architecture | 3 | **4** | R-01 e R-07 fechados (documento e código voltaram a dizer o mesmo); resta R-12 (desvio documentado) |
+| Security | 2 | **4** | sem 🔴; resta R-11 (proxy, `/infra`) |
+| Performance | 4 | **4** | sem mudança |
+
+**Veredito:** **APPROVE com condições** (sem condição bloqueante). Condições abertas: decidir a correção do R-03 e do R-06 (P1), o R-02b, e o R-11/SEC-01 antes do `/deploy`. Os 7 OPEN seguem as disposições da seção 5; a única mudança é o OPEN-004, cuja variável `GAZETA_VITALS` agora está no roteiro (`docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md`), e a correção de "44 telas" para 45 em `plans/plan.md`.

@@ -37,7 +37,9 @@ internal sealed class IntegrationWebFactory : WebApplicationFactory<Program>
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string>
         {
             ["ConnectionStrings:DefaultConnection"] = _connectionString,
-            ["Logging:FileDirectory"] = _logsFolder
+            ["Logging:FileDirectory"] = _logsFolder,
+            // O limite de login (5 por 15 min por IP) vale em produção; os fluxos daqui entram várias vezes do mesmo IP
+            ["RateLimiting:AuthPermits"] = "1000"
         }));
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(_extraConfiguration));
         builder.ConfigureTestServices(services => _services?.Invoke(services));
