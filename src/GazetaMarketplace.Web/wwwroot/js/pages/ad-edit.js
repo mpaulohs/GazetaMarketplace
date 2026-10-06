@@ -66,6 +66,9 @@ function restaurar(regiao, valores) {
   }
 }
 
+/** A resposta de um fetch de HTML foi a tela de entrada: a sessão da pessoa venceu. */
+class SessaoVencida extends Error {}
+
 /** Troca a categoria sem recarregar: o servidor devolve o trecho do formulário do novo grupo; o que é comum continua preenchido. */
 function trocaDeCategoria(form) {
   const selecao = form.querySelector("[data-category-select]");
@@ -88,6 +91,8 @@ function trocaDeCategoria(form) {
     try {
       const resposta = await fetch(endereco, { credentials: "same-origin", headers: { Accept: "text/html" }, signal: controlador.signal });
       if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      // Sessão vencida: o servidor redireciona para a tela de entrada e o fetch a segue com 200. Aquela página nunca entra no formulário (R-04)
+      if (resposta.redirected && new URL(resposta.url).pathname.startsWith("/painel/entrar")) throw new SessaoVencida();
       // O HTML é a parcial do Razor, nunca texto montado no navegador. O DOMParser só lê (não executa script) e os nós passam para a página (RC-17: sem innerHTML)
       const documento = new DOMParser().parseFromString(await resposta.text(), "text/html");
       // Os valores são lidos só agora, com a resposta já na mão: o que a pessoa digitou enquanto o servidor respondia não se perde
@@ -100,6 +105,17 @@ function trocaDeCategoria(form) {
       (continuaDigitando ?? selecao).focus();
     } catch (erro) {
       if (erro?.name === "AbortError") return;
+      if (erro instanceof SessaoVencida) {
+        // O botão "Atualizar campos" cairia no mesmo redirecionamento: a saída é entrar de novo (em outra aba), e o que foi digitado fica na tela até lá
+        const alerta = document.querySelector("[data-session-expired]");
+        if (alerta) {
+          alerta.hidden = false;
+          alerta.focus();
+        } else if (aviso) {
+          aviso.textContent = "Sua sessão expirou. Entre de novo para continuar; o que você digitou neste formulário ainda não foi salvo.";
+        }
+        return;
+      }
       if (aviso) aviso.textContent = "Não foi possível atualizar os campos. Use o botão Atualizar campos.";
       document.getElementById("atualizar-campos")?.classList.remove("somente-sem-js");
     } finally {

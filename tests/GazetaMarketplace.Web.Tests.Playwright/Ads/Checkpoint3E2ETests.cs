@@ -193,6 +193,27 @@ public class Checkpoint3E2ETests : SitePage
         await Expect(price).ToHaveValueAsync("620.000,01").ConfigureAwait(false);
     }
 
+    // R-04: com a sessão vencida o servidor redireciona o fetch dos campos para a tela de entrada; ela nunca pode ser injetada no formulário
+    [TestMethod]
+    public async Task TrocaDeCategoria_ComASessaoVencida_MostraOAvisoEMantemOFormulario_SemInjetarATelaDeEntrada()
+    {
+        await SignInAsync().ConfigureAwait(false);
+        string title = Unique("Sessão vencida");
+        await OpenNewAsync(title).ConfigureAwait(false);
+        await Page.Context.ClearCookiesAsync().ConfigureAwait(false);
+
+        await Page.GetByLabel("Categoria").SelectOptionAsync(new SelectOptionValue { Label = "Carros, vans e utilitários" }).ConfigureAwait(false);
+
+        ILocator notice = Page.Locator("[data-session-expired]");
+        await Expect(notice).ToBeVisibleAsync().ConfigureAwait(false);
+        await Expect(notice).ToContainTextAsync("Sua sessão expirou").ConfigureAwait(false);
+        await Expect(notice.GetByRole(AriaRole.Link, new() { Name = "entre de novo em outra aba" })).ToHaveAttributeAsync("target", "_blank").ConfigureAwait(false);
+        await Expect(Page.GetByLabel("Título")).ToHaveValueAsync(title).ConfigureAwait(false);
+        await Expect(Page.Locator("#anuncio-form input[type=password]")).ToHaveCountAsync(0).ConfigureAwait(false);
+        await Expect(Page.Locator("#anuncio-form").GetByText("Esqueci minha senha")).ToHaveCountAsync(0).ConfigureAwait(false);
+        await Expect(Page.GetByLabel("Marca")).ToHaveCountAsync(0).ConfigureAwait(false);
+    }
+
     [TestMethod]
     public async Task Fotos_JpegComGpsEHeic_ChegamComoWebpSemGps_EOsOriginaisNaoTemRota()
     {

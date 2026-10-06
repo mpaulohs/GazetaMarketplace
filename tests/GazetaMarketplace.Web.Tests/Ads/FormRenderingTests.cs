@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Categories;
 using GazetaMarketplace.Core.Fields;
+using GazetaMarketplace.Web.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -153,6 +155,27 @@ public sealed class FormRenderingTests
         {
             CollectionAssert.Contains(typesChecked.ToList(), type, $"o tipo {type} foi conferido com erro");
         }
+    }
+
+    // R-04: o ad-edit.js reconhece a sessão vencida porque o fetch dos campos é redirecionado para a entrada; a página traz o aviso (oculto) que ele mostra
+    [TestMethod]
+    public async Task FormularioDoAnuncio_TemOAvisoOcultoDeSessaoVencida_ComLinkParaEntrarEmOutraAba_EOFetchDeCamposSemSessaoVaiParaAEntrada()
+    {
+        using DraftSite site = await DraftSite.StartAsync(requestsPerMinute: 5000);
+
+        string page = await DraftSite.BodyAsync(await site.Writer.GetAsync("/painel/anuncios/novo"));
+        Match alert = Regex.Match(page, @"<div[^>]*data-session-expired[^>]*>.*?</div>", RegexOptions.Singleline);
+
+        Assert.IsTrue(alert.Success, "o aviso existe na página");
+        StringAssert.Contains(alert.Value, "hidden", "e fica oculto até o JavaScript precisar dele");
+        StringAssert.Contains(alert.Value, "role=\"alert\"");
+        StringAssert.Contains(alert.Value, "href=\"/painel/entrar\"");
+        StringAssert.Contains(alert.Value, "target=\"_blank\"");
+
+        using HttpClient anonymous = site.Harness.Anonymous();
+        HttpResponseMessage fragment = await anonymous.GetAsync("/painel/anuncios/campos?categoryId=33");
+        Assert.AreEqual(HttpStatusCode.Redirect, fragment.StatusCode, "sem sessão o fetch é redirecionado (e o navegador o segue até a tela de entrada, 200 em HTML)");
+        StringAssert.Contains(fragment.Destination(), "/painel/entrar");
     }
 
     [TestMethod]
