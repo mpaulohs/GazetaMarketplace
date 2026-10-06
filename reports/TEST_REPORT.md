@@ -1433,7 +1433,7 @@ As quatro mutações de JavaScript usaram o método do runbook reescrito (a list
 | Ferramenta de catálogo | 43 | 43 | 0 |
 | Ferramenta de municípios | 27 | 27 | 0 |
 | Integração (SQL Server 2022 em contêiner) | 161 | 161 | 0 |
-| E2E (Playwright, site publicado Production e Development) | 153 (primeira rodada; segunda em andamento) | 151 | 2 (`US005S01_S02` e `US002S09`: tempo de 5 s esgotado com 4 navegadores em paralelo; passam 3 de 3 rodadas isoladas) |
+| E2E (Playwright, site publicado Production e Development) | 153 | 153 | 0 |
 
 **Testes novos (19 unitários + 4 E2E):**
 
@@ -1448,6 +1448,8 @@ As quatro mutações de JavaScript usaram o método do runbook reescrito (a list
 **O que foi corrigido no produto:** `Categories/Index.cshtml` usava `@Html.Raw` cinco vezes para abrir e fechar `<ul>`/`<li>` com texto fixo (não era brecha); passou para linhas `@:` do Razor, com a mesma marcação (os 112 testes de categorias passam), para a lista de exceções ficar vazia. No E2E, `PublishingFlow` ganhou o parâmetro `description` e o método `SubmitAsync` (envia para revisão sem publicar), usados pelos testes novos.
 
 **Descobertas (registradas no BACKLOG, nenhuma é brecha):** o site não tem política padrão de entrada (rota nova sem atributo nasce pública; a matriz pega); o JSON da API usa o escape relaxado do MVC (seguro com `application/json` + `nosniff`); a negação por posse é 403 e não 404; o envio de foto valida o arquivo antes da autoria.
+
+**Rodadas do E2E completo:** a 1ª deu 151 de 153 e a 2ª, 152 de 153; as falhas eram de tempo com 4 navegadores em paralelo (`US005S01_S02`, uma vez; `US002S09`, duas vezes) e todas passam isoladas (3 de 3). `US002S09` era uma corrida do teste: escolhia a ordem antes de o `search.js` ligar o envio automático; agora espera o botão "Ordenar" sumir. Com a correção, a 3ª rodada completa deu **153 de 153**.
 
 **Mutações (8 planejadas; 8 mortas)**
 
