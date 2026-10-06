@@ -192,6 +192,7 @@ public class SearchE2ETests : SitePage
         await visitor.GetByLabel("Preço máximo").FillAsync("8000").ConfigureAwait(false);
         await Apply(visitor).ClickAsync().ConfigureAwait(false);
         await Expect(visitor).ToHaveURLAsync(new Regex(@"precoMax=8000")).ConfigureAwait(false); // espera a página nova antes de mexer na ordem: senão a escolha cai na página que está saindo
+        await Expect(visitor.Locator("[data-order-apply]")).ToBeHiddenAsync().ConfigureAwait(false); // o botão só some quando o search.js já ligou o "escolher a ordem envia"; sob carga o select mudava antes disso e nada era enviado
         await Select(visitor, "Ordenar").SelectOptionAsync("menor-preco").ConfigureAwait(false);
         await Expect(visitor).ToHaveURLAsync(new Regex(@"ordem=menor-preco")).ConfigureAwait(false);
         string[] expected = await CardPricesAsync(visitor).ConfigureAwait(false);
