@@ -19,7 +19,7 @@ public sealed class RawOutputTests
 
     private static readonly Regex RawOutput = new(@"Html\.Raw|\bHtmlString\b|\bMarkupString\b|\.AppendHtml\s*\(|\.SetHtmlContent\s*\(|\bHtmlContentBuilder\b|\bHtmlHelper\.Raw", RegexOptions.CultureInvariant);
 
-    private static readonly Regex InlineScript = new(@"<script(?![^>]*\bsrc=)(?![^>]*type=""(?:application/json|application/ld\+json)"")[^>]*>", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex InlineScript = new(@"<script(?![^>]*\b(?:src|asp-module-version)=)(?![^>]*type=""(?:application/json|application/ld\+json)"")[^>]*>", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private static readonly Regex InlineHandler = new(@"<[a-zA-Z][^>]*\s(?:on[a-z]+)\s*=", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 

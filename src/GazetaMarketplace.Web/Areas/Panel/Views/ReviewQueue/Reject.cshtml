@@ -4,7 +4,7 @@
     bool invalid = ViewData.ModelState[nameof(RejectViewModel.Reason)]?.Errors.Count > 0;
 }
 @section Scripts {
-    <script type="module" src="~/js/pages/ad-confirm.js" asp-append-version="true"></script>
+    <script type="module" asp-module-version="~/js/pages/ad-confirm.js"></script>
 }
 <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-6">

@@ -8,12 +8,14 @@ using GazetaMarketplace.Infrastructure;
 using GazetaMarketplace.Infrastructure.Configuration;
 using GazetaMarketplace.Infrastructure.Identity;
 using GazetaMarketplace.Infrastructure.Logging;
+using GazetaMarketplace.Web.Assets;
 using GazetaMarketplace.Web.Filters;
 using GazetaMarketplace.Web.HealthChecks;
 using GazetaMarketplace.Web.Middleware;
 using GazetaMarketplace.Web.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Localization;
@@ -64,6 +66,12 @@ builder.Services.AddHealthChecks()
     .AddCheck<DatabaseAndMigrationHealthCheck>("banco", tags: ["ready"]);
 builder.Services.AddRateLimiters();
 builder.Services.AddPublicResponseCompression();
+// Versão (?v=) dos scripts de página: hash da página e dos módulos que ela importa; em Development recalcula a cada pedido
+builder.Services.AddSingleton<IModuleVersions>(services =>
+{
+    IWebHostEnvironment environment = services.GetRequiredService<IWebHostEnvironment>();
+    return new ModuleVersions(environment.WebRootFileProvider, cache: !environment.IsDevelopment());
+});
 builder.Services.AddSecureForwarding();
 // Nenhuma política CORS: site e endpoints JSON são da mesma origem (ARCHITECTURE.md §7)
 builder.Services.AddAppOptions(builder.Configuration, builder.Environment.IsProduction());
