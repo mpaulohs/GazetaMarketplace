@@ -140,13 +140,18 @@ public class AdDetailE2ETests : SitePage
         IPage visitor = await VisitorAsync(path).ConfigureAwait(false);
         await Thumb(visitor, 5).ClickAsync().ConfigureAwait(false);
         await Expect(Counter(visitor)).ToHaveTextAsync("5 de 20").ConfigureAwait(false);
+        await visitor.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false); // imagens carregadas: sem deslocamento de layout no meio da medida
         await visitor.EvaluateAsync("window.scrollTo(0, 60)").ConfigureAwait(false);
 
+        // O ponto em que o visitante estava no instante do clique (o Playwright pode rolar até o botão antes de clicar, então a medida é feita dentro do clique, ainda antes de abrir o diálogo)
+        await visitor.EvaluateAsync("() => document.addEventListener('click', () => { window.__scrollNoClique = window.scrollY; }, { capture: true, once: true })").ConfigureAwait(false);
         await visitor.Locator("[data-gallery-open]").ClickAsync().ConfigureAwait(false);
 
         ILocator dialog = visitor.GetByRole(AriaRole.Dialog);
         await Expect(dialog).ToBeVisibleAsync().ConfigureAwait(false);
-        double before = await visitor.EvaluateAsync<double>("window.scrollY").ConfigureAwait(false); // o ponto em que o visitante estava ao abrir
+        double before = await visitor.EvaluateAsync<double>("window.__scrollNoClique").ConfigureAwait(false);
+        double afterOpen = await visitor.EvaluateAsync<double>("window.scrollY").ConfigureAwait(false);
+        Assert.IsTrue(before > 0, "a página estava rolada ao abrir: " + before);
         await Expect(dialog.GetByRole(AriaRole.Button, new() { Name = "Fechar" })).ToBeVisibleAsync().ConfigureAwait(false);
         await Expect(dialog.GetByRole(AriaRole.Heading, new() { Name = "Foto 5 de 20" })).ToBeVisibleAsync().ConfigureAwait(false);
         await Expect(dialog.Locator("img")).ToHaveAttributeAsync("alt", new Regex(@"^Foto 5 de 20: ")).ConfigureAwait(false);
@@ -160,7 +165,10 @@ public class AdDetailE2ETests : SitePage
         await visitor.Keyboard.PressAsync("Escape").ConfigureAwait(false);
 
         await Expect(dialog).Not.ToBeVisibleAsync().ConfigureAwait(false);
-        Assert.AreEqual(before, await visitor.EvaluateAsync<double>("window.scrollY").ConfigureAwait(false), 1, "a página volta ao mesmo ponto");
+        // O navegador rola até o botão ao devolver o foco e só depois dispara o evento "close", em que a página restaura o ponto de antes: a medida espera esse evento (até 2 s) em vez de ler no instante em que o diálogo some
+        await visitor.WaitForFunctionAsync("antes => Math.abs(window.scrollY - antes) <= 1", before, new() { Timeout = 2000 }).ConfigureAwait(false);
+        double afterClose = await visitor.EvaluateAsync<double>("window.scrollY").ConfigureAwait(false);
+        Assert.AreEqual(before, afterClose, 1, $"a página volta ao mesmo ponto (no clique {before}, com o diálogo aberto {afterOpen}, depois de fechar {afterClose})");
         bool focusBack = await visitor.EvaluateAsync<bool>("document.activeElement === document.querySelector('[data-gallery-open]')").ConfigureAwait(false);
         Assert.IsTrue(focusBack, "o foco volta à foto de onde a janela abriu");
         await Expect(Counter(visitor)).ToHaveTextAsync("5 de 20").ConfigureAwait(false);
