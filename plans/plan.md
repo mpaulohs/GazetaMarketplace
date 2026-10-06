@@ -2059,7 +2059,7 @@
 | 4.4 | Consulta Dapper da lista do painel devolver anúncio de outro Redator (IDOR) | `PanelAdListQueryTests.Redator_RecebeSoOsProprios_NaConsulta` (no `/test`) e `OwnershipMatrixTests.AnotherWriter_IsDeniedEveryRouteOfAnAdThatIsNotTheirs_WithoutSeeingItOrChangingIt` e `AccessMatrixTests.Writer_ReachesWriterEndpoints_ButIsDeniedEveryAdministratorEndpoint` (tarefa 6.1) |
 | 5.4 | Injeção de SQL pela ordenação ou pelo termo de busca | `SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`, `SearchQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta` e `SecurityTests.Termo_E_Parametro_NaoConcatenado` |
 | 0.6 | Escrita Dapper sem justificativa ou fora da transação do EF | `DapperJustificationTests.TodaEscritaDapper_TemComentarioComOMotivo` e o critério de aceite da 0.6 sobre a conexão e a transação do `DbContext` |
-| 5.4 | Busca lenta com o volume da v1 | `DesempenhoTests.Com200Anuncios_RespondeAbaixoDe500ms` (no `/test`) e `VolumeDaV1Tests.Com200Anuncios_P95AbaixoDe500ms` |
+| 5.4 | Busca lenta com o volume da v1 | `VolumeOfV1Tests.SearchAndDetail_WithAbout200ActiveAds_P95Under500ms` (projeto de integração; roda no `/test`) |
 | 2.5 | Catálogo copiado da API da OLX (A5) e credencial antiga do GazetaOnline | Critério de aceite da 2.5: nenhuma credencial no repositório; `ExportTests.SemVariavelDeConexao_ParaSemGerarArquivo`; bloqueio de lançamento registrado na seção 9 |
 | 2.4 | Listas novas não definidas (PL-01) travam 9 grupos | Critério de aceite da 2.4 (bloqueado até a PL-01); a tarefa não fecha sem a resposta |
 | 0.4 | Acesso indevido por rota nova sem política de papel | `AccessMatrixTests.EveryEndpoint_IsInTheMatrix_AndEveryMatrixEntryExists` (tarefa 6.1) |
