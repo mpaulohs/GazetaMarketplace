@@ -1975,7 +1975,7 @@
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Support/AxeHelper.cs`
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Support/WidthHelper.cs` (320, 768, 1024, 1280)
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Support/ScreenCatalog.cs` e `ScreenData.cs` (a lista única e os dados das telas)
-- `tests/GazetaMarketplace.Web.Tests/Screens/screens.json` (a lista única de 44 telas, compartilhada)
+- `tests/GazetaMarketplace.Web.Tests/Screens/screens.json` (a lista única de 45 telas, compartilhada)
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Accessibility/AllScreensTests.cs` e `Accessibility/ScreenListTests.cs`
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Responsiveness/AllScreensTests.cs`
 - `tests/GazetaMarketplace.Web.Tests/Security/ScreenCoverageTests.cs` (compara a lista com as rotas reais; roda sem navegador)
@@ -1985,8 +1985,8 @@
 - [x] O teste falha se uma tela nova não estiver na lista
 
 **Tests to add**:
-- `Accessibility/AllScreensTests.Screen_HasNoAxeViolations_LevelsAAndAA` (E2E, 44 casos)
-- `Responsiveness/AllScreensTests.Screen_DoesNotScrollHorizontally_AtFourWidths` (E2E, 44 casos)
+- `Accessibility/AllScreensTests.Screen_HasNoAxeViolations_LevelsAAndAA` (E2E, 45 casos)
+- `Responsiveness/AllScreensTests.Screen_DoesNotScrollHorizontally_AtFourWidths` (E2E, 45 casos)
 - `Security/ScreenCoverageTests.EveryPageRoute_IsInTheScreenList_OrExplainedAsNotAScreen_AndNothingIsStale` (rota nova de página sem tela falha o teste)
 - `Accessibility/ScreenListTests` (fichas, ids, regras do axe e larguras)
 

@@ -92,6 +92,7 @@ export GAZETA_E2E_EMAIL=e2e.admin@exemplo.com.br GAZETA_E2E_PASSWORD='<senha-do-
 export GAZETA_E2E_SESSION_MINUTES=1            # igual a Authentication__SessionMinutes do site
 export GAZETA_E2E_SENDGRID_PORT=5990           # igual à porta de SendGrid__BaseUrl; o teste de recuperação de senha escuta nela e lê o link do e-mail
 export GAZETA_E2E_VIACEP_PORT=5991             # igual à porta de ViaCep__BaseUrl; o teste de CEP escuta nela, responde por CEP e conta as consultas
+# export GAZETA_VITALS=1                       # só para os 4 testes de métricas (LCP, INP, CLS em celular lento); rodam SOZINHOS, nunca junto da suíte (ver "Orçamentos de desempenho"). Sem ela ficam ignorados: o /verify precisa ligar esta variável
 dotnet run --project tests/GazetaMarketplace.Web.Tests.Playwright
 ```
 

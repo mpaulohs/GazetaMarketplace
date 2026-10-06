@@ -259,3 +259,23 @@ Cada decisão traz uma recomendação. Nenhuma delas bloqueia a correção do F7
 7. **F7-59 / R-69 (P2).** SQLite (só nos testes) e Font Awesome 4.7 entraram sem decisão registrada. Aprova os dois como exceções? **Recomendação:** **Aprovar ambos:** SQLite só para testes unitários; Font Awesome fixada em 4.7 (fonte sob SIL OFL e CSS sob MIT), registrados em `tech-stack.md` e `architecture/design-system.md`.
 8. **F6-20 / R-42 (P1, já na triagem).** O site já deve nascer "seguro por padrão" (`FallbackPolicy` exigindo login, com `[AllowAnonymous]` nos controllers públicos)? **Recomendação:** **Adotar antes do lançamento**, num commit pequeno, como o F6-20 já recomendava: hoje só o `AccessMatrixTests`, e só depois de rodar, impede uma rota nova de nascer pública.
 
+### 4.4 Situação em 2026-10-06, depois do `/fix-issue` (R-01 e os 6 avisos de P1)
+
+> **Em resumo:** das 12 primeiras linhas (`F7-01` a `F7-12`), **7 estão corrigidas e provadas**, 2 foram investigadas e **provadas como defeito real, aguardando aprovação** para corrigir, 2 foram **diferidas a `/infra`** e 1 ficou como **desvio documentado**. Nenhuma linha mudou de prioridade; os donos continuam os da tabela 4.1.
+
+| Linha | Achado | Situação | Commit |
+|---|---|---|---|
+| F7-01 | R-01 chaves do Data Protection | **Corrigido** | 3494a9e |
+| F7-02 | R-11 / SEC-01 proxy | **Diferido a /infra** (P0 segue aberto; o limite `auth` ativo o torna mais urgente) | |
+| F7-03 | R-02 Publicado incompleto | **Corrigido ao salvar** (SPEC v1.8, `@US-008-S15`); **falta apagar a última foto** (novo item R-02b no BACKLOG) | f12300b |
+| F7-04 | R-03 `CepService` e `ChangeTracker` | **Investigado, PROVADO, aguarda aprovação** (a edição é perdida com resposta de sucesso e auditoria gravada) | |
+| F7-05 | R-04 dígito Unicode no preço | **Corrigido** | 7b15f3d |
+| F7-06 | R-05 fuso IANA | **Diferido a /infra** (confirmar na hospedagem) | |
+| F7-07 | R-06 categoria nova sem lista | **Investigado, PROVADO, aguarda aprovação** (4 grupos: Imóveis, Roupas, Eletro, Telefonia) | |
+| F7-08 | R-07 política `auth` | **Corrigido** | 2a8e1a5 |
+| F7-09 | R-08 permissão negada sem log | **Corrigido** | 677bd7e |
+| F7-10 | R-09 sessão vencida injeta o login | **Corrigido** | b76e7f0 |
+| F7-11 | R-10 antiforgery em branco | **Corrigido** (era real) | 190539f |
+| F7-12 | R-12 FluentValidation | **Desvio documentado** (corrigir SECURITY_REQUIREMENTS §3 e AR-06 numa passada de documentos) | |
+
+Os commits de F7-05, F7-09, F7-10 e F7-11 citam o achado com número trocado na mensagem (R-03, R-05, R-04 e R-06); os ids certos são os da primeira coluna. Os comentários no código já foram corrigidos (6410425). Pedido de 2026-10-06: itens de front-end (R-14, R-15, R-18) seguem para `/simplify`.
