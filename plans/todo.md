@@ -70,7 +70,7 @@
 
 ## Fase 6 — Verificações transversais
 - [x] Task 6.1: Verificação transversal de acesso e de texto digitado
-- [ ] Task 6.2: Base de verificação de acessibilidade e responsividade
+- [x] Task 6.2: Base de verificação de acessibilidade e responsividade
 - [ ] Task 6.3: Orçamentos de desempenho
 
 ## Checkpoint 6 — Verificações transversais completas

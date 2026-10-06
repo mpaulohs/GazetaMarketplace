@@ -1973,18 +1973,22 @@
 
 **Files to modify**:
 - `tests/GazetaMarketplace.Web.Tests.Playwright/Support/AxeHelper.cs`
-- tests/GazetaMarketplace.Web.Tests.Playwright/Support/LarguraHelper.cs (320, 768, 1024, 1280)
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Acessibilidade/TodasAsTelasTests.cs`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Responsividade/TodasAsTelasTests.cs`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Support/WidthHelper.cs` (320, 768, 1024, 1280)
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Support/ScreenCatalog.cs` e `ScreenData.cs` (a lista única e os dados das telas)
+- `tests/GazetaMarketplace.Web.Tests/Screens/screens.json` (a lista única de 44 telas, compartilhada)
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Accessibility/AllScreensTests.cs` e `Accessibility/ScreenListTests.cs`
+- `tests/GazetaMarketplace.Web.Tests.Playwright/Responsiveness/AllScreensTests.cs`
+- `tests/GazetaMarketplace.Web.Tests/Security/ScreenCoverageTests.cs` (compara a lista com as rotas reais; roda sem navegador)
 
 **Acceptance Criteria**:
-- [ ] Uma lista única de telas alimenta os testes de acessibilidade (0 falhas nível A e AA) e de largura (sem rolagem horizontal em 320, 768, 1024 e 1280 px)
-- [ ] O teste falha se uma tela nova não estiver na lista
+- [x] Uma lista única de telas alimenta os testes de acessibilidade (0 falhas nível A e AA) e de largura (sem rolagem horizontal em 320, 768, 1024 e 1280 px)
+- [x] O teste falha se uma tela nova não estiver na lista
 
 **Tests to add**:
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Acessibilidade/TodasAsTelasTests.Tela_NaoTemFalhasAxeAA (E2E, /test)`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Responsividade/TodasAsTelasTests.Tela_NaoRolaNaHorizontal (E2E, /test)`
-- `tests/GazetaMarketplace.Web.Tests.Playwright/Acessibilidade/ScreenListTests.TelaNova_SemEntradaNaLista_FalhaOTeste`
+- `Accessibility/AllScreensTests.Screen_HasNoAxeViolations_LevelsAAndAA` (E2E, 44 casos)
+- `Responsiveness/AllScreensTests.Screen_DoesNotScrollHorizontally_AtFourWidths` (E2E, 44 casos)
+- `Security/ScreenCoverageTests.EveryPageRoute_IsInTheScreenList_OrExplainedAsNotAScreen_AndNothingIsStale` (rota nova de página sem tela falha o teste)
+- `Accessibility/ScreenListTests` (fichas, ids, regras do axe e larguras)
 
 **Dependencies**: 5.1, 4.4
 

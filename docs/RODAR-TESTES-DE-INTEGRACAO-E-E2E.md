@@ -113,6 +113,10 @@ docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '
 
 O limite global de 100 pedidos por minuto por IP também conta tudo que a suíte faz, e a suíte já passa disso: o site do E2E sobe com `RateLimiting__GlobalPerMinute=1000` (ver a lista de variáveis acima). O limite de login e de recuperação de senha (5 por 15 minutos) não é configurável.
 
+### Acessibilidade e larguras de todas as telas
+
+`AllScreensTests` (em `Accessibility/` e em `Responsiveness/`) mede cada tela de `tests/GazetaMarketplace.Web.Tests/Screens/screens.json` com o axe-core e nas quatro larguras. Usa as mesmas variáveis do E2E (`GAZETA_DEV_BASE_URL` inclusive, para o catálogo de componentes) e prepara os dados pelas telas do painel na primeira tela medida (um anúncio publicado com duas fotos, um rascunho com foto, um em revisão, a categoria "Telas sem anúncios" e um Redator). Para medir só algumas telas, ou repetir uma mutação: `GAZETA_SCREENS=home,panel-settings`. Uma tela nova do site precisa entrar na lista (o teste unitário `ScreenCoverageTests` falha enquanto não entrar). Para mutar o site, edite o código-fonte (a página, o CSS) e rode `dotnet publish` de novo: o estilo escrito direto no HTML (`style=`) é bloqueado pela política de segurança do site e não muda nada.
+
 ### Mutar um arquivo de `wwwroot` no site publicado
 
 O site do E2E serve cada script e folha de estilo pela **lista de arquivos publicados** (`GazetaMarketplace.Web.staticwebassets.endpoints.json`): para cada arquivo há três entradas (o original, a cópia `.gz` e a cópia `.br`), cada uma com o tamanho (`Content-Length`) já escrito. O navegador pede o arquivo comprimido; por isso mexer só no arquivo original **não** muta nada, e **apagar** as cópias comprimidas faz o site responder `200` com o corpo vazio (o script não carrega e todo teste que usa JavaScript falha, o que parece "mutação morta" mas não é).
