@@ -25,4 +25,9 @@
     <ProjectReference Include="..\..\tools\CitiesImport\CitiesImport.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\GazetaMarketplace.Web.Tests\Performance\Budgets.cs" Link="Performance\Budgets.cs" />
+    <None Include="..\GazetaMarketplace.Web.Tests\Performance\budgets.json" Link="Performance\budgets.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

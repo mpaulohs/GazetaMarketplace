@@ -18,6 +18,7 @@
     <None Include="Photos\Fixtures\sample.heic" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Favorites\favorite-ids-parity.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Screens\screens.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Performance\budgets.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

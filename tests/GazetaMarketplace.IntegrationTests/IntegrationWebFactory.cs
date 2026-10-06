@@ -20,12 +20,14 @@ internal sealed class IntegrationWebFactory : WebApplicationFactory<Program>
 {
     private readonly string _connectionString;
     private readonly Action<IServiceCollection> _services;
+    private readonly IReadOnlyDictionary<string, string> _extraConfiguration;
     private readonly string _logsFolder = Path.Combine(Path.GetTempPath(), "gazeta-int-" + Guid.NewGuid().ToString("N"));
 
-    public IntegrationWebFactory(string connectionString, Action<IServiceCollection> services = null)
+    public IntegrationWebFactory(string connectionString, Action<IServiceCollection> services = null, IReadOnlyDictionary<string, string> extraConfiguration = null)
     {
         _connectionString = connectionString;
         _services = services;
+        _extraConfiguration = extraConfiguration ?? new Dictionary<string, string>();
         ClientOptions.BaseAddress = new Uri("https://localhost");
     }
 
@@ -37,6 +39,7 @@ internal sealed class IntegrationWebFactory : WebApplicationFactory<Program>
             ["ConnectionStrings:DefaultConnection"] = _connectionString,
             ["Logging:FileDirectory"] = _logsFolder
         }));
+        builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(_extraConfiguration));
         builder.ConfigureTestServices(services => _services?.Invoke(services));
     }
 

@@ -1,0 +1,13 @@
+{
+  "_comment": "Os limites de desempenho (NFR-01 a NFR-05) num arquivo só, lido pelos testes de peso das páginas, de volume (p95 do servidor) e de métricas de navegador. Mudar um limite aqui muda os três.",
+  "listPageWeightMaxBytes": 2097152,
+  "detailPageWeightMaxBytes": 3145728,
+  "listCardCount": 24,
+  "volumeActiveAds": 200,
+  "serverP95MaxMs": 500,
+  "warmupRequests": 20,
+  "measuredRequests": 200,
+  "lcpMaxMs": 2500,
+  "inpMaxMs": 200,
+  "clsMax": 0.1
+}
