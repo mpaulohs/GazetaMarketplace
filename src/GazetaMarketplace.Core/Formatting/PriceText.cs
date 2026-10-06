@@ -25,7 +25,8 @@ public static partial class PriceText
 {
     private static readonly CultureInfo PtBr = new("pt-BR");
 
-    [GeneratedRegex(@"^(?<whole>\d{1,3}(\.\d{3})+|\d+)(,(?<cents>\d{1,2}))?$", RegexOptions.CultureInvariant)]
+    // [0-9] e não \d: \d casa dígitos de outros alfabetos, que o long.Parse não lê (viraria FormatException e erro 500)
+    [GeneratedRegex(@"^(?<whole>[0-9]{1,3}(\.[0-9]{3})+|[0-9]+)(,(?<cents>[0-9]{1,2}))?$", RegexOptions.CultureInvariant)]
     private static partial Regex Shape();
 
     /// <summary>Lê o texto; <paramref name="cents"/> só vale quando o resultado é <see cref="PriceParse.Ok"/>. Valor acima do limite do <c>long</c> vira <c>long.MaxValue</c> (a faixa é conferida por quem chama).</summary>

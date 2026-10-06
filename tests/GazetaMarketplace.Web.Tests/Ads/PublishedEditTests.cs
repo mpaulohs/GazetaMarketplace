@@ -129,6 +129,22 @@ public sealed class PublishedEditTests
         Assert.AreEqual(AdStatus.Published, ad.Status);
     }
 
+    // R-03: preço com dígito de outro alfabeto ("1,\u0665") dava FormatException e a tela respondia 500; agora volta o formulário com a mensagem de preço inválido
+    [TestMethod]
+    [DataRow("1,\u0665")]
+    [DataRow("\u0661\u0662\u0663")]
+    public async Task APriceWithADigitFromAnotherAlphabet_ComesBackAsAFormMessage_NotAServerError(string price)
+    {
+        using DraftSite site = await DraftSite.StartAsync();
+        int id = await PublishedCompleteAsync(site);
+
+        HttpResponseMessage saved = await SaveAsync(site, id, ("Title", "Bicicleta"), ("Description", "Pouco usada"), ("CategoryId", "86"), ("Price", price), ("Cep", "13015-100"), ("Fields[conditionId]", "2"));
+
+        Assert.AreEqual(HttpStatusCode.OK, saved.StatusCode);
+        StringAssert.Contains(await DraftSite.BodyAsync(saved), AdMessages.PriceInvalid);
+        Assert.AreEqual(150_000L, (await site.LoadAsync(id)).PriceCents, "nada foi gravado");
+    }
+
     [TestMethod]
     public async Task TheWriterSavingADraft_StillSavesIncomplete()
     {

@@ -60,6 +60,22 @@ public sealed class PriceTextTests
         Assert.AreEqual(PriceParse.Invalid, PriceText.TryParse(text, out _), "'12.5' não vira R$ 125,00 em silêncio");
     }
 
+    /// <summary>
+    /// R-03: <c>\d</c> casa dígitos de outros alfabetos (árabe-índico, devanágari, largura total) e <c>long.Parse</c> com <c>NumberStyles.None</c> não os lê:
+    /// "1,٥" virava FormatException e a tela dava 500. Só <c>0-9</c> vale; o resto é texto que não é valor em reais.
+    /// </summary>
+    [TestMethod]
+    [DataRow("1,\u0665")]
+    [DataRow("\u0661\u0662\u0663")]
+    [DataRow("\u0967\u0968,50")]
+    [DataRow("\uFF11\uFF12\uFF13")]
+    [DataRow("1.\u0660\u0660\u0660")]
+    [DataRow("R$ 5\u0665")]
+    public void DigitoDeOutroAlfabeto_ERecusado_SemLancarExcecao(string text)
+    {
+        Assert.AreEqual(PriceParse.Invalid, PriceText.TryParse(text, out _));
+    }
+
     [TestMethod]
     public void NumeroGigante_NaoEstouraEFicaAcimaDoTeto()
     {
