@@ -2036,9 +2036,10 @@
 ## Checkpoint 6 — Verificações transversais completas
 
 **Verify before proceeding**:
-- [ ] Matriz de acesso cobre todas as rotas e falha com rota nova
-- [ ] Base de acessibilidade e de larguras pronta para o `/test`
-- [ ] Orçamentos de desempenho definidos em arquivo de configuração de teste
+- [x] Matriz de acesso cobre todas as rotas e falha com rota nova (78 rotas; `AccessMatrixTests`, mutação U1 morta)
+- [x] Base de acessibilidade e de larguras pronta para o `/test` (45 telas em `screens.json`; axe e quatro larguras; mutação E1 morta)
+- [x] Orçamentos de desempenho definidos em arquivo de configuração de teste (`budgets.json`)
+- [x] Fim do `/build` (2026-10-06): 1.707 unitários, 70 das ferramentas, 162 de integração e 250 de navegador sem falha; cobertura 97,9% de linhas e 91,7% de ramos; `/review` APPROVE com condições; BACKLOG triado (`plans/BACKLOG-TRIAGEM-FASE-6.md`). Próximo: `/test`, depois da confirmação do Product Owner
 
 ---
 

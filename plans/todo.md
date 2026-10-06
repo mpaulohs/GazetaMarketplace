@@ -74,4 +74,4 @@
 - [x] Task 6.3: Orçamentos de desempenho
 
 ## Checkpoint 6 — Verificações transversais completas
-
+- [x] Checkpoint 6: matriz de acesso, base de telas e orçamentos prontos; 3 suítes verdes; cobertura 97,9% / 91,7%; `/review` APPROVE com condições; BACKLOG triado. Fim do `/build`; o `/test` espera a confirmação do Product Owner

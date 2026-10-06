@@ -1439,7 +1439,7 @@ As quatro mutações de JavaScript usaram o método do runbook reescrito (a list
 
 | Arquivo | O que prova |
 |---|---|
-| `Security/AccessMatrixTests` (7) | A matriz escrita à mão (77 linhas: método, endereço, ação → Público, Entrada do painel, Redator ou Administrador) bate com as rotas descobertas no site (`EndpointDataSource`) nos dois sentidos; o papel declarado no código (`[Authorize]`) bate com a matriz; sem login o painel vai para `/painel/entrar` e a API responde 401, sem corpo; o Redator é negado em toda rota de Administrador (página → `/painel/acesso-negado`; API → 403 "Você não tem permissão para esta operação.") e não é negado nas dele; o Administrador não é negado em lugar nenhum; toda escrita sem token antiforgery responde 400; só as rotas de controller existem, fora elas só arquivos estáticos, saúde e a página padrão |
+| `Security/AccessMatrixTests` (7) | A matriz escrita à mão (77 linhas na 6.1; 78 desde o Checkpoint 6, com `Home.Status`: método, endereço, ação → Público, Entrada do painel, Redator ou Administrador) bate com as rotas descobertas no site (`EndpointDataSource`) nos dois sentidos; o papel declarado no código (`[Authorize]`) bate com a matriz; sem login o painel vai para `/painel/entrar` e a API responde 401, sem corpo; o Redator é negado em toda rota de Administrador (página → `/painel/acesso-negado`; API → 403 "Você não tem permissão para esta operação.") e não é negado nas dele; o Administrador não é negado em lugar nenhum; toda escrita sem token antiforgery responde 400; só as rotas de controller existem, fora elas só arquivos estáticos, saúde e a página padrão |
 | `Security/OwnershipMatrixTests` (2) | O Redator B chama as 13 rotas do anúncio da Redatora A (editar, salvar, atualizar, enviar, confirmar, fotos da página e da API): todas negadas (403 ou 404), sem o título nem a descrição na resposta, e o banco fica igual (situação, título, descrição, foto); a autora e o Administrador abrem o mesmo anúncio |
 | `Security/XssInAllScreensTests` (6) | Texto hostil de 109 caracteres em título, descrição, cidade, nome de pessoa, motivo de rejeição, nome de categoria e busca (seis ataques isolados mais o combinado): 21 endereços públicos (início, categoria, busca, anúncio com endereço torto, favoritos, fragmento) e 19 do painel (lista, fila, pré-visualização, editar, as seis páginas de confirmação, usuários, categorias, configurações), mais as devoluções de formulário com erro (entrada, usuário, categoria repetida, anúncio novo); nada vira marcação (leitor de marcação procura `<script>` com código, atributo `on…=`, endereço `javascript:`, segundo `</title>`) e o texto **aparece** como texto; a API devolve o título como dado JSON (`application/json`, `nosniff`); o mapa do site continua XML válido |
 | `Security/RawOutputTests` (4) | Varredura de todas as views e do código do site: nenhuma saída crua (`Html.Raw`, `HtmlString`, `AppendHtml`, `SetHtmlContent`…), nenhum `<script>` com código, nenhum `on…=`, nenhum `javascript:` fixo; lista de exceções **vazia**; um teste prova que as expressões reconhecem cada forma de risco |
@@ -1466,7 +1466,7 @@ As quatro mutações de JavaScript usaram o método do runbook reescrito (a list
 
 ## Tarefa 6.2 — acessibilidade e larguras de todas as telas (NFR-16 e NFR-17, 2026-10-06)
 
-> **Em resumo:** existe agora **uma lista única de 44 telas e estados** (`tests/GazetaMarketplace.Web.Tests/Screens/screens.json`) e dois testes de navegador que a percorrem: o axe-core (WCAG 2.1 níveis A e AA, em 1280 e em 320 px) e a conferência de rolagem horizontal (320, 768, 1024 e 1280 px). **Nenhuma das 44 telas tem violação do axe, e nenhuma rola na horizontal.** Uma rota de página nova sem entrada na lista falha um teste unitário. A prova de que os testes enxergam é a mutação: rótulo de campo removido, largura fixa e contraste baixo foram pegos, com a mensagem apontando o elemento.
+> **Em resumo:** existe agora **uma lista única de 44 telas e estados** (45 desde o Checkpoint 6, com a página de erro de status) (`tests/GazetaMarketplace.Web.Tests/Screens/screens.json`) e dois testes de navegador que a percorrem: o axe-core (WCAG 2.1 níveis A e AA, em 1280 e em 320 px) e a conferência de rolagem horizontal (320, 768, 1024 e 1280 px). **Nenhuma das 44 telas tem violação do axe, e nenhuma rola na horizontal.** Uma rota de página nova sem entrada na lista falha um teste unitário. A prova de que os testes enxergam é a mutação: rótulo de campo removido, largura fixa e contraste baixo foram pegos, com a mensagem apontando o elemento.
 
 | Camada | Total | Passaram | Falharam |
 |---|---|---|---|
@@ -1519,7 +1519,7 @@ Observação do método: o estilo escrito direto no HTML (`style="…"`) é bloq
 | Ferramenta de catálogo | 43 | 43 | 0 |
 | Ferramenta de municípios | 27 | 27 | 0 |
 | Integração (SQL Server 2022 em contêiner) | 162 | 162 | 0 |
-| E2E (Playwright, site publicado Production e Development) | 253 | 253 | 0 (4 puladas: as de métricas, que exigem `GAZETA_VITALS=1`) |
+| E2E (Playwright, site publicado Production e Development) | 253 | 249 | 0 (4 puladas: as de métricas, que exigem `GAZETA_VITALS=1`) |
 
 **Mudança no produto (pequena e na lista de arquivos do plano):** `Middleware/PerformanceExtensions.cs`, ligada em `Program.cs`. (1) Compressão Brotli e gzip em tudo fora de `/painel`. Os estáticos já saíam pré-comprimidos. Motivo da exceção: o HTML do painel leva o token antiforgery, e comprimir segredo por HTTPS permite o BREACH (decisão do Product Owner, registrada no ARCHITECTURE §7). (2) `Cache-Control: public, max-age=31536000, immutable` para arquivo estático pedido com `?v=` (o `asp-append-version`); antes saía `no-cache` e o navegador revalidava cada CSS e JS a cada visita.
 
@@ -1550,7 +1550,7 @@ Observação do método: o estilo escrito direto no HTML (`style="…"`) é bloq
 
 **Limites do que foi provado:** (1) as fotos do E2E são minúsculas (as 24 capas somam 7 KB), então o peso real com fotos de celular não foi medido; o que está provado é a soma "o que não é foto ≈ 170 KB + 24 miniaturas + a foto grande" com o teto de cada termo (`PhotoWeightBudgetTests` e a folga do E2E). A miniatura sintética pesou 1 KB, mais leve que uma foto de verdade (um caso em `BACKLOG`: medir com 24 fotos reais no `/verify`). (2) O cache do navegador (guardar por um ano e não perguntar de novo) não pôde ser provado: o site de teste usa certificado de desenvolvimento e o Chrome não guarda em cache resposta de HTTPS com erro de certificado; provou-se o cabeçalho em todo arquivo versionado. (3) LCP, INP e CLS são uma **amostra**: rede e processador simulados, site de teste na mesma máquina. Valem os números do `/verify` contra o artefato.
 
-**Achado real (BACKLOG, decisão do Product Owner):** na busca, em celular lento, o painel de filtros nasce aberto no HTML e o `search.js` o recolhe depois da primeira pintura. Com o processador 4 vezes mais lento e a máquina ocupada, a pintura vem antes e a lista de resultados sobe de uma vez (CLS 0,3561; fonte: `div.col-12 › section › article.card`). Não corrigi porque a correção (nascer recolhido por CSS e aberto sem JavaScript por `<noscript>`) muda uma decisão testada da US-002-S12. Outras medições: INP de 224 ms no início numa primeira rodada com a máquina compilando ao lado (as 6 seguintes ficaram em 64 a 112 ms).
+**Achado real (BACKLOG, decisão do Product Owner):** na busca, em celular lento, o painel de filtros nasce aberto no HTML e o `search.js` o recolhe depois da primeira pintura. Com o processador 4 vezes mais lento e a máquina ocupada, a pintura vem antes e a lista de resultados sobe de uma vez (CLS 0,3561; fonte: `div.col-12 › section › article.card`). Não corrigi na 6.3, porque a correção (nascer recolhido por CSS e aberto sem JavaScript por `<noscript>`) muda uma decisão testada da US-002-S12; **foi corrigida no Checkpoint 6** (seção abaixo) com o aval do Product Owner. Outras medições: INP de 224 ms no início numa primeira rodada com a máquina compilando ao lado (as 6 seguintes ficaram em 64 a 112 ms).
 
 **Mutações (7; 7 mortas)**
 
@@ -1563,3 +1563,83 @@ Observação do método: o estilo escrito direto no HTML (`style="…"`) é bloq
 | M5 um bloco entra 800 ms depois da carga, empurrando o conteúdo | morta (`VitalsTests`: CLS 0,2903 na busca). A primeira forma da mutação (tirar `width`, `height` e `aspect-ratio` das capas) **não** foi pega: as miniaturas minúsculas chegam antes da primeira pintura e não deslocam nada; foi trocada |
 | M6 o limite da lista no `budgets.json` mudado para 1000 bytes | morta (`ListOf24…`: "limite 0 KB"; prova que o teste lê o arquivo) |
 | M7 o painel também comprimido (BREACH) | morta (`PanelPages_AreNeverCompressed_…`) |
+
+## Checkpoint 6 — Verificações transversais completas (fechamento da Fase 6, 2026-10-06)
+
+> **Em resumo:** a Fase 6 fecha com as três suítes verdes depois das duas correções de produto do checkpoint (o salto da lista na busca do celular e a página amigável para respostas de erro em branco): **1.707 unitários, 70 das duas ferramentas, 162 de integração e 250 de navegador passam, com 0 falhas** (4 de navegador ficam de fora: as de métricas, que só rodam com `GAZETA_VITALS=1`). A cobertura passa das duas metas (**97,9% de linhas, 91,7% de ramos**). Seis mutações, **seis mortas**. A revisão de código deu **APPROVE com condições** (0 🔴, 7 🟡, 14 🟢). Uma instabilidade não explicada: na primeira rodada completa do navegador, 39 testes de larguras falharam logo no início; as duas rodadas seguintes não repetiram (ver "Achados da rodada").
+
+### Resultado das suítes (última rodada completa, site republicado e `CepCache` limpo)
+
+| Camada | Total | Passaram | Falharam | Puladas |
+|---|---|---|---|---|
+| Unitários do site (SQLite) | 1.707 | 1.707 | 0 | 0 |
+| Ferramenta de catálogo de veículos | 43 | 43 | 0 | 0 |
+| Ferramenta de municípios | 27 | 27 | 0 | 0 |
+| Integração (SQL Server real, Docker) | 162 | 162 | 0 | 0 |
+| E2E (Playwright, site publicado Production e Development) | 254 | 250 | 0 | 4 (métricas, `GAZETA_VITALS=1`) |
+
+**Números corrigidos em relação à revisão:** o total de navegador é **254** (a soma da revisão dava 256 e era só uma conta); a tabela da 6.3 dizia 253 "passaram" e o certo é 249 (253 era o total); o disco tem **45 telas** (`screens.json`) e **78 rotas** na matriz de acesso (`AccessMatrixTests`, com `Home.Status`).
+
+### Cobertura (Gate 6)
+
+Medida como na seção "Correções pós-Checkpoint 4" (`Microsoft.Testing.Extensions.CodeCoverage`, escopo em `coverage.settings.xml`), unitários e integração unidos por linha. Modo greenfield: o gate é o número do repositório inteiro.
+
+| Medida | Unitários | Integração | **União (o gate)** | Meta | Resultado |
+|---|---|---|---|---|---|
+| Linhas | 96,3% (5.416 de 5.623) | 81,6% (4.588 de 5.623) | **97,9% (5.507 de 5.623)** | ≥ 80% | atendida |
+| Ramos | 89,1% (1.562 de 1.754) | 59,5% (1.043 de 1.754) | **91,7% (1.609 de 1.754)** | ≥ 75% | atendida |
+
+| Projeto | Linhas | Ramos |
+|---|---|---|
+| `GazetaMarketplace.Core` | 98,9% (2.811 de 2.842) | 94,8% (902 de 951) |
+| `GazetaMarketplace.Infrastructure` | 96,9% (1.854 de 1.914) | 88,6% (367 de 414) |
+| `GazetaMarketplace.Web` | 97,1% (842 de 867) | 87,4% (340 de 389) |
+
+O ramo de uma linha vale o maior número de ramos cobertos entre os dois projetos, então o número de ramos é um piso. Os E2E não entram na conta. Só os unitários já passam das duas metas.
+
+**Métodos a 0% (13 de 773):** nenhum é regra de negócio sem teste *que o produto já chama*. Os mesmos 13 do Checkpoint 5: fábrica de tempo de projeto (`AppDbContextFactory.CreateDbContext`, chamada só pelo `dotnet ef`), construtores estáticos (`FieldLimits`, `AdFormFactory`), `AppRole..ctor` e `RecoveryTokenProvider.CanGenerateTwoFactorTokenAsync` (contrato do Identity), três propriedades de uma linha do `SystemUser` e uma de `AdFieldViewModel.HelpId`, e três métodos de uma linha (`FieldValueParser.Invalid`, `PasswordResetResult.BadLink`, `UserManagement.NotFound`) que o produto chama e que os testes provam pelos caminhos que os usam. **Sem referência em nenhum código:** `PublicRoutes.Ad(int, string)` (atalho sem uso; as telas usam `AdRoutes.Detail`), já no BACKLOG para remover ou usar. Arquivos de menor cobertura: `AppDbContextFactory.cs` 0% (só `dotnet ef`), `AdRoutes.cs` 76,9%, `AdSubmission.cs` 80,0%, `PasswordRecoveryQueue.cs` 83,3%, `FileSystemPhotoStorage.cs` 84,7%; os demais passam de 85%.
+
+### Duas correções de produto do checkpoint
+
+| Correção | Commit | Prova |
+|---|---|---|
+| **Busca no celular: lista que pulava (CLS 0,36 em celular lento).** O painel de filtros nasce recolhido por CSS no HTML; sem JavaScript, um `<noscript>` com `sem-js.css` o mantém aberto e esconde os botões. SPEC v1.6 (US-002-S12). | `79798a0` | `SearchLayoutShiftTests` (celular lento, CLS medido: 0,0043, limite 0,1); `SearchTests` S12 atualizado; mutação E2 abaixo |
+| **Página amigável para respostas de erro em branco (404 e outras).** `UseStatusCodePagesWithReExecute("/Home/Status/{0}")` só para páginas (não `/api`, não `/health`, não arquivos); o status continua o mesmo. | `c7c32b2` | `StatusPagesTests` (404 e 500 na página; API, saúde e arquivo ficam como estavam; status preservado); a tela entrou em `screens.json` (axe e larguras) e na matriz de acesso (`Home.Status`, Público); mutação U4 abaixo |
+
+### Mutações (6; 6 mortas)
+
+| Mutação | Resultado |
+|---|---|
+| U1 tirar `[Authorize(Policy = Administrator)]` do `UsersController` | morta (`AccessMatrixTests`: `ThePolicyDeclaredInTheCode_MatchesTheMatrix_ForEveryAction` e `Writer_ReachesWriterEndpoints_ButIsDeniedEveryAdministratorEndpoint`) |
+| U2 `@Html.Raw(Model.Title)` em `_NoResultsState.cshtml` | morta (`RawOutputTests.NoView_WritesTextWithoutEncoding`) |
+| U3 compressão desligada (`UsePublicResponseCompression` comentada) | morta (`CompressionAndCacheTests.PublicPagesAndApi_AreCompressed…`) |
+| U4 sem a página de status (`UseStatusCodePagesWithReExecute` trocada) | morta (`StatusPagesTests`, 2 falhas). A primeira forma (comentar a linha) quebrou a compilação e não valeu; refeita trocando a chamada |
+| E1 `main { min-width: 700px }` no `base.css` | morta (`AllScreensTests.Screen_DoesNotScrollHorizontally_AtFourWidths`, 3 de 3 telas medidas; o axe das mesmas telas continuou verde, como esperado) |
+| E2 painel de filtros de novo aberto no HTML (`class="collapse show …"`) | morta (`SearchLayoutShiftTests`) |
+
+Depois de cada mutação o código voltou ao original (`git checkout`) e o site foi republicado; o teste do salto da busca passou de novo no código restaurado.
+
+### Achados da rodada
+
+1. **Instabilidade não explicada, a acompanhar:** na primeira rodada completa do navegador depois da republicação, 39 testes `Screen_DoesNotScrollHorizontally_AtFourWidths` falharam em cerca de 200 ms cada (parece falha de preparação dos dados, e não de layout); o log dessa rodada foi cortado por um filtro meu e a mensagem se perdeu. A segunda rodada completa (254 testes) deu 2 falhas nos `CepJs_*` (a primeira rodada deixou o `CepCache` sujo, armadilha já documentada) e **0** nas larguras; a terceira, limpa (site republicado, `CepCache` zerado), deu **0 falhas**. O teste de larguras também passou nas mutações E1. Não consegui reproduzir. No `/test`, rodar o E2E sempre com o log inteiro salvo em arquivo.
+2. **Pontos da revisão que ficam abertos para decisão** (🟡 do `reports/CODE_REVIEW.md`, seção Checkpoint 6): cache imutável de um ano para módulos de página sem versão nos módulos que eles importam; capas sem prova de `width`/`height`; peso da "foto granulada" sem prova do limite de 74 KB; página de status sem critério na SPEC nem linha no ARCHITECTURE §7; uso de `!` em 12 pontos dos testes. A linha v1.6 da SPEC e os números deste relatório já foram corrigidos (🟡 4 e 6).
+
+### Entrega para o `/test` e o `/verify`
+
+**O `/test` roda** (Docker ligado; se o daemon parar: `dockerd` e `docker start gazeta-e2e-sql`):
+
+| Suíte | Comando | Observação |
+|---|---|---|
+| Unitários do site | `dotnet run --project tests/GazetaMarketplace.Web.Tests` | 1.707 esperados, sem Docker |
+| Ferramentas | `dotnet run --project tests/CitiesImport.Tests` e `tests/VehicleCatalogExport.Tests` | 27 e 43 |
+| Integração | `dotnet run --project tests/GazetaMarketplace.IntegrationTests` | 162, usa Docker; contém `VolumeOfV1Tests` (p95 abaixo de 500 ms) |
+| Cobertura | comando do runbook (seção "Cobertura de código") | metas 80% e 75%; a lista de métodos a 0% acima |
+| E2E | republicar o site de teste (limpa `PasswordRecoveryAttempts` e `CepCache`) e rodar `tests/GazetaMarketplace.Web.Tests.Playwright` com as variáveis do runbook | 254 esperados (250 passam, 4 puladas); salvar o log inteiro em arquivo |
+| Métricas de celular | `GAZETA_VITALS=1`, **sozinho**, sem compilação ao lado | LCP, INP e CLS; os 4 testes pulados |
+| Telas | `GAZETA_SCREENS=<ids>` para repetir só algumas | 45 telas, axe e quatro larguras |
+
+**Armadilhas conhecidas:** o `CepCache` sujo derruba os `CepJs_*` (limpar ao republicar); a porta única do ViaCEP de mentira obriga `[DoNotParallelize]` nas classes que a usam; sem `RateLimiting__GlobalPerMinute=1000` e `RateLimiting__PhotosPerMinute=5000` o E2E recebe 429; o estilo escrito direto no HTML (`style=`) é bloqueado pela política de segurança, então mutação de visual é por CSS; mutar `wwwroot` exige republicar.
+
+**Fica para o `/verify` (manual ou fora deste ambiente):** celular de verdade e abertura do WhatsApp; Firefox e Safari; teclado e leitor de tela (NVDA); peso com fotos reais de celular; cache do navegador com certificado real (o Chrome não guarda cache de HTTPS com erro de certificado); compressão no IIS; LCP, INP e CLS medidos no site publicado; carga real dos municípios do IBGE, componente nativo do Magick.NET (HEIC e WebP) e script do banco com `sqlcmd -I` na hospedagem; catálogo real de veículos.
+
+**Testes que o verde não mostra:** os 4 de métricas (`GAZETA_VITALS`), o do peso da lista quando faltam 24 anúncios na categoria "Livros e revistas" (fica inconclusivo) e as 2 telas do catálogo de componentes sem `GAZETA_DEV_BASE_URL`: listar como pendência no `/test` se não rodarem.
