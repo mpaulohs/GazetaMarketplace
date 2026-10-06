@@ -289,6 +289,29 @@ public sealed class SearchTests
     }
 
     [TestMethod]
+    [DataRow("precoMin", "7000000000000000000000000000")]
+    [DataRow("precoMax", "7000000000000000000000000000")]
+    [DataRow("precoMin", "79228162514264337593543950335")]
+    [DataRow("precoMax", "9999999999999999999999999999")]
+    public async Task PrecoEnormeNoFiltro_MostraOErroJuntoDoCampo_EAListaSaiSemAFaixa_SemDar503(string field, string typed)
+    {
+        // Um número de 27 a 29 dígitos cabe em decimal mas estourava na multiplicação por 100 (OverflowException): a busca respondia 503
+        using DraftSite site = await DraftSite.StartAsync();
+        Stub(site).Rows.AddRange(Enumerable.Range(1, 3).Select(i => Row(i)));
+
+        (HttpStatusCode status, string html) = await GetAsync(site, $"/busca?{field}={typed}");
+
+        Assert.AreEqual(HttpStatusCode.OK, status);
+        Assert.IsFalse(html.Contains("Não foi possível buscar agora", StringComparison.Ordinal));
+        StringAssert.Contains(WebUtility.HtmlDecode(html), SearchService.PriceFormatMessage);
+        StringAssert.Matches(Field(html, field), new Regex(@"class=""form-control is-invalid"""));
+        StringAssert.Contains(Field(html, field), $"value=\"{typed}\"", "o que a pessoa digitou continua no campo");
+        Assert.IsNull(Stub(site).Last.PriceMinCents);
+        Assert.IsNull(Stub(site).Last.PriceMaxCents, "a lista sai sem a faixa de preço");
+        Assert.AreEqual(3, CardCount(html));
+    }
+
+    [TestMethod]
     public async Task US002S08_SemErro_AMensagemFicaEscondidaParaOJavaScriptPreencher()
     {
         using DraftSite site = await DraftSite.StartAsync();

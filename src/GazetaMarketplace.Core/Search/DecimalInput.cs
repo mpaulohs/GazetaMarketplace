@@ -60,6 +60,12 @@ public static partial class DecimalInput
             return false;
         }
 
+        // Compara antes de multiplicar: um número de 27 a 29 dígitos cabe em decimal, mas "reais * 100m" estouraria (OverflowException) e a busca daria 503
+        if (reais > maxCents / 100m)
+        {
+            return false;
+        }
+
         decimal total = reais * 100m;
         if (total > maxCents)
         {

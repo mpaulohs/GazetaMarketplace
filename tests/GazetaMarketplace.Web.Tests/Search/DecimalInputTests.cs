@@ -84,4 +84,27 @@ public sealed class DecimalInputTests
     {
         Assert.IsFalse(DecimalInput.TryParseCents(typed, 9_999_999_999L, out _));
     }
+
+    [TestMethod]
+    [DataRow("1000000000000000000000000000")]
+    [DataRow("7000000000000000000000000000")]
+    [DataRow("9999999999999999999999999999")]
+    [DataRow("79228162514264337593543950335")]
+    [DataRow("792281625142643375935439503,35")]
+    [DataRow("99999999999999999999999999999999999999")]
+    public void Centavos_NumeroEnormeQueCabeEmDecimalMasEstouraNaMultiplicacao_RecusaSemLancar(string typed)
+    {
+        // Antes: reais * 100m lançava OverflowException para 27 a 29 dígitos, e a busca respondia 503
+        Assert.IsFalse(DecimalInput.TryParseCents(typed, 9_999_999_999L, out long cents));
+        Assert.AreEqual(0, cents);
+    }
+
+    [TestMethod]
+    public void Centavos_NoTeto_Passa_EUmCentavoAcima_Recusa()
+    {
+        Assert.IsTrue(DecimalInput.TryParseCents("99999999,99", 9_999_999_999L, out long cents));
+        Assert.AreEqual(9_999_999_999L, cents);
+        Assert.IsFalse(DecimalInput.TryParseCents("100000000", 9_999_999_999L, out _));
+        Assert.IsFalse(DecimalInput.TryParseCents("99999999,991", 9_999_999_999L, out _));
+    }
 }

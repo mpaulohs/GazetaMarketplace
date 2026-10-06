@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <None Include="Photos\Fixtures\sample.heic" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Favorites\favorite-ids-parity.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

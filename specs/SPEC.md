@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.3 |
+| Version | v1.5 |
 | Coverage | full |
 | Mode | greenfield |
 | Status | **Approved** |
@@ -24,6 +24,10 @@
 | v1.2 | 2026-09-30 | Added | greenfield | O Administrador pode redefinir a senha de alguém da equipe com uma senha provisória, como alternativa quando o e-mail de recuperação não chega (AR-11 de `/arch`) | US-014-S10 | `architecture/adr/ADR-009-email-sendgrid.md` | Product Owner, 2026-09-30 |
 | v1.3 | 2026-10-04 | Changed | greenfield | Em "Terrenos, sítios e fazendas" a Área (m²) passa a ser obrigatória para enviar o anúncio à revisão; nas demais categorias de Imóveis continua opcional (Apêndice B) | US-009 (pendências), US-008-S09 | Decisão do Product Owner, tarefa 3.8 | Product Owner, 2026-10-04 |
 | v1.4 | 2026-10-05 | Changed | greenfield | Confirmada a suposição S7: o site deve ser encontrado em buscadores (SEO básico, NFR-21): título e descrição próprios no início, nas categorias e em cada anúncio publicado, endereço canônico, mapa do site com só os anúncios publicados e `robots.txt`; busca e favoritos ficam fora do índice | NFR-21 | Tarefa 5.6 | Product Owner, 2026-10-05 |
+| v1.5 | 2026-10-06 | Changed | greenfield | US-002-S08 (faixa de preço invertida): a lista de resultados sai **sem a faixa de preço**, em vez de "continua igual à anterior" (a busca é uma consulta pelo endereço, sem memória da lista anterior; com JavaScript o envio é bloqueado e a lista nem muda) | US-002-S08 | Tarefa 5.4 | Product Owner, 2026-10-05 |
+| v1.5 | 2026-10-06 | Changed | greenfield | O filtro de área da busca vale nos quatro tipos de Imóveis (Apartamentos, Casas, Terrenos, sítios e fazendas e Comércio e indústria), não só em Terrenos; a área continua obrigatória só em Terrenos | US-002 (regra de filtros específicos), US-002-S04, Apêndice B | Tarefa 5.4 (decisão de manter o grupo de campos, ADR-006) | Product Owner, 2026-10-05 |
+| v1.5 | 2026-10-06 | Changed | greenfield | Telefone fixo (10 dígitos): só o botão "Ligar" aparece nos anúncios; o "Chamar no WhatsApp" só aparece com celular (11 dígitos) | US-004, US-015 | Tarefa 5.3 | Product Owner, 2026-10-05 |
+| v1.5 | 2026-10-06 | Changed | greenfield | Exceção documentada à mensagem única de indisponibilidade: o anúncio arquivado também mostra o link da categoria em que estava (US-003-S06 já pedia o link; a regra geral dizia "sem revelar o conteúdo") | US-003-S06, US-003 (regras) | Tarefa 5.2 | Product Owner, 2026-10-05 |
 
 ## Executive Summary
 
@@ -234,7 +238,7 @@ Scenario: Faixa de preço invertida
   Given estou na página de busca
   When eu informo preço mínimo "5000" e preço máximo "1000" e clico em "Aplicar filtros"
   Then vejo, junto ao campo de preço, a mensagem "O preço mínimo não pode ser maior que o máximo"
-  And a lista de resultados continua igual à anterior
+  And a lista de resultados sai sem a faixa de preço
 
 @US-002-S09 @edge
 Scenario: Compartilhar uma busca pelo endereço da página
@@ -270,7 +274,7 @@ Scenario: Busca em tela de celular estreita
 - A busca por texto considera título e descrição e ignora diferença entre maiúsculas/minúsculas e acentos.
 - Os filtros se combinam (todos precisam ser atendidos). Escolher uma categoria principal inclui suas subcategorias.
 - A cidade só pode ser escolhida depois da UF, e sempre pertence à UF escolhida (ver S15).
-- Filtros de atributos específicos aparecem só para categorias de Automóveis, Peças e Acessórios (marca, modelo, ano, quilometragem) e de Terrenos, sítios e fazendas (área em m²) (ver S4).
+- Filtros de atributos específicos aparecem só para categorias de Automóveis, Peças e Acessórios (marca, modelo, ano, quilometragem) e de Imóveis (Apartamentos, Casas, Terrenos, sítios e fazendas e Comércio e indústria: área em m²) (ver S4).
 - Ordenações: **Mais recentes** (padrão), Menor preço, Maior preço.
 - Anúncios de Serviços não têm preço. O comportamento dos filtros de preço para Serviços está em aberto (A6).
 - **24 resultados por página**, porque 24 divide em linhas completas de 2, 3 e 4 colunas (ver S11).
@@ -360,7 +364,7 @@ Scenario: Anúncio em tela de celular estreita
 ##### Business Rules
 - Um anúncio mostra **até 20 fotos** (Serviços: até 6; Vagas de emprego não tem fotos); a primeira é a capa.
 - **Vagas de emprego:** o valor do campo Preço é exibido com o rótulo **"Salário"** no card do anúncio e na página de detalhe; nas demais categorias o rótulo é "Preço". O formato do valor segue a S29 (centavos só quando não são zero).
-- Só anúncios *Publicados* podem ser vistos pelo público. Qualquer outra situação (rascunho, em revisão, rejeitado, arquivado) ou endereço inexistente mostra a mesma mensagem de indisponibilidade, sem revelar o conteúdo.
+- Só anúncios *Publicados* podem ser vistos pelo público. Qualquer outra situação (rascunho, em revisão, rejeitado, arquivado) ou endereço inexistente mostra a mesma mensagem de indisponibilidade, sem revelar o conteúdo. **Única exceção:** o anúncio **arquivado** também mostra o link da categoria em que estava (S06); rascunho, em revisão, rejeitado e endereço inexistente não revelam nada.
 - O anúncio **não mostra nome nem telefone do vendedor**; o contato exibido é sempre o do intermediário (US-004).
 - O texto do anúncio é exibido como texto puro; não interpreta código nem formatação especial.
 
@@ -421,6 +425,7 @@ Scenario: WhatsApp em computador sem o aplicativo instalado
 ##### Business Rules
 - O número exibido é **sempre o do intermediário**, configurado pelo administrador (US-015). Vale o mesmo número para ligação e WhatsApp (ver S2).
 - O número aparece formatado com DDD, por exemplo (11) 91234-5678.
+- **Telefone fixo (10 dígitos):** só o botão "Ligar" aparece, porque o WhatsApp só abre conversa com número de celular (11 dígitos). Com celular, os dois botões aparecem.
 - O sistema **não registra** quem clicou nem quem entrou em contato.
 - Mensagem pré-preenchida (texto fixo): cumprimento, título do anúncio e endereço da página do anúncio.
 
@@ -1419,7 +1424,7 @@ Scenario: Redator não acessa as configurações
 ```
 
 ##### Business Rules
-- Existe **um único número** para todo o site, usado para ligação e WhatsApp (ver S2). Aceita números brasileiros com DDD, de 10 ou 11 dígitos.
+- Existe **um único número** para todo o site, usado para ligação e WhatsApp (ver S2). Aceita números brasileiros com DDD, de 10 (telefone fixo) ou 11 dígitos (celular); com telefone fixo só o botão "Ligar" aparece nos anúncios (US-004).
 - O número é sempre exibido formatado, e vale para todos os anúncios ao mesmo tempo.
 - Enquanto não houver número configurado, o Administrador não consegue publicar anúncios (US-010).
 - Somente o Administrador altera.
@@ -1634,7 +1639,7 @@ Não serão feitos na v1 (decisões do Product Owner):
 | Caminhões, Ônibus | 34, 35 | Ano do modelo ✅ · Quilometragem ✅ · Câmbio · Combustível · Direção · Tipo · Opcionais · Informações adicionais do veículo |
 | Barcos e aeronaves | 37 | Ano do modelo ✅ · Horas de uso ✅ · Tipo ✅ · Combustível · Comprimento, Largura e Altura (m) · Informações adicionais |
 | Peças | 38–42 | Condição ✅ · Tipo de peça · Cor |
-| Imóveis | 26, 27, 30, 31 | Tipo ✅ · Vender ou alugar ✅ · Quartos ✅ (26, 27) · Banheiros (26, 27) · Área m² (✅ só em 30) · Vagas (26, 27, 31) · Condomínio · IPTU · Características · Características do condomínio (26, 27) |
+| Imóveis | 26, 27, 30, 31 | Tipo ✅ · Vender ou alugar ✅ · Quartos ✅ (26, 27) · Banheiros (26, 27) · Área m² (✅ só em 30; o filtro de área da busca vale nos quatro tipos) · Vagas (26, 27, 31) · Condomínio · IPTU · Características · Características do condomínio (26, 27) |
 | Aluguel de quartos | 28 | Características |
 | Temporada | 29 | Tipo ✅ · Quartos ✅ · Acomoda quantas pessoas ✅ · Banheiros · Vagas · Forma de pagamento · Características |
 | Celulares | 43 | Marca ✅ · Modelo ✅ · Condição ✅ · Armazenamento · Cor · Saúde da bateria |

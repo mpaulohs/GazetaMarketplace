@@ -405,4 +405,133 @@ public class FavoritesE2ETests : SitePage
             await visitor.Context.CloseAsync().ConfigureAwait(false);
         }
     }
+
+    [TestMethod]
+    public async Task Paridade_OJavaScriptDaOMesmoResultadoQueATabela_EOServidorConcorda()
+    {
+        // A mesma tabela do FavoriteIdsParityTests (lado C#): aqui o favorites.js roda no navegador e o servidor responde de verdade
+        string json = await System.IO.File.ReadAllTextAsync(System.IO.Path.Combine(AppContext.BaseDirectory, "Favorites", "favorite-ids-parity.json")).ConfigureAwait(false);
+        System.Text.Json.JsonElement table = System.Text.Json.JsonDocument.Parse(json).RootElement;
+        IPage visitor = await (await Browser.NewContextAsync(new BrowserNewContextOptions { IgnoreHTTPSErrors = true }).ConfigureAwait(false)).NewPageAsync().ConfigureAwait(false);
+        await visitor.GotoAsync(Url("/")).ConfigureAwait(false);
+
+        System.Text.Json.JsonElement result = await visitor.EvaluateAsync<System.Text.Json.JsonElement>(@"async (texto) => {
+            const tabela = JSON.parse(texto);
+            const modulo = await import('/js/modules/favorites.js');
+            const ler = (texto) => { try { return JSON.parse(texto); } catch { return undefined; } };
+            const status = async (texto) => (await fetch('/favoritos/lista?ids=' + encodeURIComponent(texto), { headers: { Accept: 'text/html' } })).status;
+            const valores = [];
+            for (const v of tabela.values) {
+                valores.push({ nome: v.name, js: modulo.limpar([ler(v.stored)]).length === 1, servidor: v.token === null ? null : (await status(v.token)) === 200 });
+            }
+            const listas = [];
+            for (const l of tabela.lists) {
+                let ids;
+                try { ids = modulo.limpar(JSON.parse(l.stored)); } catch { ids = []; }
+                listas.push({ nome: l.name, js: ids, servidor: l.query === null ? null : (await status(l.query)) === 200 });
+            }
+            return { valores, listas };
+        }", json).ConfigureAwait(false);
+
+        int compared = 0;
+        System.Text.Json.JsonElement[] values = [.. table.GetProperty("values").EnumerateArray()];
+        System.Text.Json.JsonElement[] valueResults = [.. result.GetProperty("valores").EnumerateArray()];
+        for (int i = 0; i < values.Length; i++)
+        {
+            string name = values[i].GetProperty("name").GetString()!;
+            bool expected = values[i].GetProperty("valid").GetBoolean();
+            Assert.AreEqual(expected, valueResults[i].GetProperty("js").GetBoolean(), "JavaScript: " + name);
+            if (valueResults[i].GetProperty("servidor").ValueKind != System.Text.Json.JsonValueKind.Null)
+            {
+                Assert.AreEqual(expected, valueResults[i].GetProperty("servidor").GetBoolean(), "servidor (200 = aceito): " + name);
+            }
+
+            compared++;
+        }
+
+        System.Text.Json.JsonElement[] lists = [.. table.GetProperty("lists").EnumerateArray()];
+        System.Text.Json.JsonElement[] listResults = [.. result.GetProperty("listas").EnumerateArray()];
+        for (int i = 0; i < lists.Length; i++)
+        {
+            string name = lists[i].GetProperty("name").GetString()!;
+            int[] expected = [.. lists[i].GetProperty("ids").EnumerateArray().Select(x => x.GetInt32())];
+            int[] js = [.. listResults[i].GetProperty("js").EnumerateArray().Select(x => x.GetInt32())];
+            CollectionAssert.AreEqual(expected, js, "JavaScript: " + name);
+            if (listResults[i].GetProperty("servidor").ValueKind != System.Text.Json.JsonValueKind.Null)
+            {
+                Assert.AreEqual(expected.Length > 0, listResults[i].GetProperty("servidor").GetBoolean(), "servidor: " + name);
+            }
+
+            compared++;
+        }
+
+        Assert.IsTrue(compared >= 40, "entradas conferidas: " + compared);
+        await visitor.Context.CloseAsync().ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task MaisDe100Favoritos_BuscamEmLotesDe100Mais50_NaOrdem_ETiramOsAusentesComAviso()
+    {
+        string[] titles = await TitlesAsync().ConfigureAwait(false);
+        IPage seed = await VisitorAsync($"/busca?q={_token}").ConfigureAwait(false);
+        int a = await IdOfAsync(seed, titles[0]).ConfigureAwait(false);
+        int b = await IdOfAsync(seed, titles[1]).ConfigureAwait(false);
+
+        // 150 favoritos: 148 anúncios que não existem e dois reais, um em cada lote (posição 75 e posição 120)
+        List<int> ids = [.. Enumerable.Range(900_001, 148)];
+        ids.Insert(74, a);
+        ids.Insert(119, b);
+        Assert.AreEqual(150, ids.Count);
+        await seed.EvaluateAsync($"() => localStorage.setItem('{StorageKey}', JSON.stringify([{string.Join(',', ids)}]))").ConfigureAwait(false);
+        List<int> sizes = [];
+        List<string> firstIds = [];
+        seed.Request += (_, request) =>
+        {
+            if (request.Url.Contains("/favoritos/lista?ids=", StringComparison.Ordinal))
+            {
+                string[] sent = Uri.UnescapeDataString(request.Url[(request.Url.IndexOf("ids=", StringComparison.Ordinal) + 4)..]).Split(',');
+                sizes.Add(sent.Length);
+                firstIds.Add(sent[0]);
+            }
+        };
+
+        await seed.GotoAsync(Url("/favoritos")).ConfigureAwait(false);
+
+        await Expect(seed.Locator("[data-favorites-count]")).ToHaveTextAsync("2 anúncios").ConfigureAwait(false);
+        CollectionAssert.AreEqual(new[] { 100, 50 }, sizes, "duas chamadas, de 100 e de 50 ids");
+        CollectionAssert.AreEqual(new[] { "900001", ids[100].ToString(System.Globalization.CultureInfo.InvariantCulture) }, firstIds, "o segundo lote começa onde o primeiro parou");
+        string[] names = [.. (await FavoriteCards(seed).AllInnerTextsAsync().ConfigureAwait(false))];
+        StringAssert.Contains(names[0], titles[0]);
+        StringAssert.Contains(names[1], titles[1]);
+        await Expect(seed.Locator("[data-favorites-unavailable]")).ToHaveTextAsync("148 anúncios favoritados deixaram de estar disponíveis e foram removidos da sua lista.").ConfigureAwait(false);
+        CollectionAssert.AreEqual(new[] { a, b }, await StoredAsync(seed).ConfigureAwait(false), "só os dois reais ficam no armazenamento, na ordem");
+        await Expect(Counter(seed)).ToHaveTextAsync("2").ConfigureAwait(false);
+        await seed.Context.CloseAsync().ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task Exatamente101Favoritos_UmLoteDe100EOutroDe1()
+    {
+        string[] titles = await TitlesAsync().ConfigureAwait(false);
+        IPage seed = await VisitorAsync($"/busca?q={_token}").ConfigureAwait(false);
+        int real = await IdOfAsync(seed, titles[2]).ConfigureAwait(false);
+        List<int> ids = [.. Enumerable.Range(910_001, 100), real];
+        await seed.EvaluateAsync($"() => localStorage.setItem('{StorageKey}', JSON.stringify([{string.Join(',', ids)}]))").ConfigureAwait(false);
+        List<int> sizes = [];
+        seed.Request += (_, request) =>
+        {
+            if (request.Url.Contains("/favoritos/lista?ids=", StringComparison.Ordinal))
+            {
+                sizes.Add(Uri.UnescapeDataString(request.Url[(request.Url.IndexOf("ids=", StringComparison.Ordinal) + 4)..]).Split(',').Length);
+            }
+        };
+
+        await seed.GotoAsync(Url("/favoritos")).ConfigureAwait(false);
+
+        await Expect(seed.Locator("[data-favorites-count]")).ToHaveTextAsync("1 anúncio").ConfigureAwait(false);
+        CollectionAssert.AreEqual(new[] { 100, 1 }, sizes);
+        await Expect(FavoriteCards(seed)).ToHaveCountAsync(1).ConfigureAwait(false);
+        await Expect(seed.Locator("[data-favorites-unavailable]")).ToHaveTextAsync("100 anúncios favoritados deixaram de estar disponíveis e foram removidos da sua lista.").ConfigureAwait(false);
+        await seed.Context.CloseAsync().ConfigureAwait(false);
+    }
 }

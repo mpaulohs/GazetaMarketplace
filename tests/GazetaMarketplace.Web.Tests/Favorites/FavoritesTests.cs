@@ -52,8 +52,7 @@ public sealed class FavoritesTests
     [DataRow("12,57,104", new[] { 12, 57, 104 })]
     [DataRow("104,12,57", new[] { 104, 12, 57 })]
     [DataRow("5,5,7,5", new[] { 5, 7 })]
-    [DataRow("0", new[] { 0 })]
-    [DataRow("007", new[] { 7 })]
+    [DataRow("1", new[] { 1 })]
     [DataRow("2147483647", new[] { int.MaxValue })]
     public void Ids_Validos_MantemAOrdemPedida_RepetidoContaUmaVez(string text, int[] expected)
     {
@@ -71,6 +70,10 @@ public sealed class FavoritesTests
     [DataRow("1,,2")]
     [DataRow("1, 2")]
     [DataRow(" 1")]
+    [DataRow("0")]
+    [DataRow("007")]
+    [DataRow("01")]
+    [DataRow("1,0")]
     [DataRow("-1")]
     [DataRow("+1")]
     [DataRow("1.5")]
@@ -208,6 +211,43 @@ public sealed class FavoritesTests
 
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
         Assert.AreEqual(0, Stub(site).IdRequests.Count);
+    }
+
+    [TestMethod]
+    public async Task Api_150Ids_EmDuasChamadas100Mais50_CadaUmaNaOrdemPedida_ENenhumaPassaDoLimite()
+    {
+        // O que a página faz com mais de 100 favoritos (favorites.js, lotes de 100): duas chamadas, de 100 e de 50 ids; o servidor atende cada uma e recusa a que passa de 100
+        using DraftSite site = await DraftSite.StartAsync();
+        Stub(site).Rows.AddRange(Enumerable.Range(1, 150).Select(i => Row(i)));
+        int[] all = [.. Enumerable.Range(1, 150).Reverse()];
+
+        (HttpStatusCode firstStatus, string firstBody, _) = await GetAsync(site, "/api/v1/ads?ids=" + string.Join(',', all.Take(100)));
+        (HttpStatusCode secondStatus, string secondBody, _) = await GetAsync(site, "/api/v1/ads?ids=" + string.Join(',', all.Skip(100)));
+        (HttpStatusCode wholeStatus, _, _) = await GetAsync(site, "/api/v1/ads?ids=" + string.Join(',', all));
+
+        Assert.AreEqual(HttpStatusCode.OK, firstStatus);
+        Assert.AreEqual(HttpStatusCode.OK, secondStatus);
+        Assert.AreEqual(HttpStatusCode.BadRequest, wholeStatus, "150 ids numa chamada só passam do limite");
+        CollectionAssert.AreEqual(all.Take(100).ToArray(), Items(firstBody).Select(i => i.GetProperty("id").GetInt32()).ToArray(), "o primeiro lote, na ordem pedida");
+        CollectionAssert.AreEqual(all.Skip(100).ToArray(), Items(secondBody).Select(i => i.GetProperty("id").GetInt32()).ToArray(), "o segundo lote, na ordem pedida");
+        CollectionAssert.AreEqual(new[] { 100, 50 }, Stub(site).IdRequests.Select(r => r.Length).ToArray(), "o repositório recebeu um pedido de 100 e outro de 50");
+    }
+
+    [TestMethod]
+    public async Task Fragmento_150Ids_EmDuasChamadas100Mais50_TrazOsCardsDeCadaLote()
+    {
+        using DraftSite site = await DraftSite.StartAsync();
+        Stub(site).Rows.AddRange(Enumerable.Range(1, 150).Select(i => Row(i)));
+
+        (HttpStatusCode first, string firstHtml, _) = await GetAsync(site, "/favoritos/lista?ids=" + string.Join(',', Enumerable.Range(1, 100)));
+        (HttpStatusCode second, string secondHtml, _) = await GetAsync(site, "/favoritos/lista?ids=" + string.Join(',', Enumerable.Range(101, 50)));
+        (HttpStatusCode whole, _, _) = await GetAsync(site, "/favoritos/lista?ids=" + string.Join(',', Enumerable.Range(1, 150)));
+
+        Assert.AreEqual(HttpStatusCode.OK, first);
+        Assert.AreEqual(HttpStatusCode.OK, second);
+        Assert.AreEqual(HttpStatusCode.BadRequest, whole);
+        Assert.AreEqual(100, Regex.Matches(firstHtml, @"<li [^>]*data-ad-id=""").Count);
+        Assert.AreEqual(50, Regex.Matches(secondHtml, @"<li [^>]*data-ad-id=""").Count);
     }
 
     [TestMethod]

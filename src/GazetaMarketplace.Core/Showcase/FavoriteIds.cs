@@ -5,7 +5,7 @@ using System.Globalization;
 namespace GazetaMarketplace.Core.Showcase;
 
 /// <summary>
-/// Os ids que a página "Meus favoritos" e a API <c>GET /api/v1/ads?ids=</c> recebem (US-005): de 1 a 100 números separados por vírgula, sem espaço nem sinal (o padrão do contrato é
+/// Os ids que a página "Meus favoritos" e a API <c>GET /api/v1/ads?ids=</c> recebem (US-005): de 1 a 100 números inteiros de 1 em diante, separados por vírgula, sem espaço, sinal nem zero à esquerda (o padrão do contrato é
 /// <c>^[0-9]+(,[0-9]+){0,99}$</c>). Um id repetido conta uma vez; a ordem pedida é mantida. Nunca lança.
 /// </summary>
 public static class FavoriteIds
@@ -33,7 +33,8 @@ public static class FavoriteIds
         HashSet<int> seen = [];
         foreach (string part in parts)
         {
-            if (!IsDigits(part) || !int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out int id))
+            // Id de anúncio é um inteiro de 1 em diante, escrito sem zero à esquerda: a mesma regra do favorites.js (limpar), provada na tabela de paridade
+            if (!IsDigits(part) || part[0] == '0' || !int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out int id))
             {
                 return false;
             }
