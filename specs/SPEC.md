@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.7 |
+| Version | v1.8 |
 | Coverage | full |
 | Mode | greenfield |
 | Status | **Approved** |
@@ -31,6 +31,7 @@
 | v1.6 | 2026-10-06 | Changed | greenfield | US-002-S12 (busca no celular): o painel de filtros **já vem recolhido na página** em tela estreita, sem esperar o JavaScript, para a lista de resultados não pular quando o script chega (NFR-03: o salto, de 0,36, passava do limite de 0,1 em celular lento). Sem JavaScript o painel continua aberto e os botões de abrir e fechar não aparecem. O comportamento visto pela pessoa não muda (abre e fecha, sem rolagem horizontal) | US-002, NFR-03 | Checkpoint 6 (decisão D1: corrigir o salto da busca agora) | Product Owner, 2026-10-06 |
 | v1.7 | 2026-10-06 | Added | greenfield | Nova regra de resiliência (NFR-25): endereço que não existe e resposta de erro que sairia sem corpo mostram uma página em português, com o mesmo status (404 continua 404, para buscadores e testes), uma explicação curta e um link para a página inicial; sem detalhe técnico; a API, as verificações de saúde e os arquivos (.js, .css, .php…) não mudam. Também na busca no celular (US-002-S12): o botão "Filtros" passa a ser um link para o painel, que abre mesmo quando o JavaScript não chega a carregar (rede ruim); nada muda para quem tem JavaScript | NFR-25, US-001-S07, US-002-S12 | Checkpoint 6 (decisão D3 do Product Owner: página 404 amigável antes do `/test`; achado 🟡 5 do `/review`) | Product Owner, 2026-10-06 |
 | v1.7 | 2026-10-06 | Clarified | greenfield | Duas suposições do `/build` aprovadas viram critério: (1) US-009-S04: ao reenviar um anúncio rejeitado, o motivo, o dia e quem rejeitou deixam de aparecer no anúncio (o histórico fica na auditoria), e despublicar um anúncio limpa o dia e quem o publicou; (2) US-006-S09: a nova senha do primeiro acesso não pode ser igual à provisória ("A nova senha precisa ser diferente da provisória") | US-009-S04, US-006-S09 | Suposições registradas no BACKLOG (tarefas 4.1 e 1.4), aprovadas no Checkpoint 6 (decisão D4) | Product Owner, 2026-10-06 |
+| v1.8 | 2026-10-06 | Added | greenfield | Novo cenário US-008-S15: o Administrador não consegue salvar a edição de um anúncio publicado que o envio à revisão recusaria (sem categoria, descrição, preço, CEP com cidade, foto ou campo obrigatório); as mensagens são as da lista de pendências e nada é gravado. Antes, só o envio à revisão e a publicação faziam essa conferência, e a edição de um anúncio publicado podia apagar o que a revisão exigiu | US-008-S15, US-009 | Revisão formal do código (achado R-02), correção aprovada pelo Product Owner no /review | Product Owner, 2026-10-06 |
 
 ## Executive Summary
 
@@ -818,6 +819,14 @@ Scenario: Administrador corrige o preço de um anúncio publicado
   Then a situação continua "Publicado"
   When um visitante abre a página desse anúncio
   Then ele vê o preço R$ 59.000
+
+@US-008-S15 @negative
+Scenario: Administrador não salva um anúncio publicado que ficaria incompleto
+  Given estou logado como Administrador e o anúncio "Honda Civic 2018" está publicado
+  When eu apago a descrição, tiro a categoria ou o CEP, ou esvazio um campo obrigatório e clico em "Salvar"
+  Then vejo as mesmas mensagens da lista de pendências do envio para revisão, no campo de cada uma
+  And nada é gravado e o anúncio continua publicado, como estava
+  And, se o anúncio não tiver nenhuma foto, vejo "Adicione ao menos 1 foto" no aviso geral do formulário
 
 @US-008-S14 @negative
 Scenario: Serviço de CEP fora do ar

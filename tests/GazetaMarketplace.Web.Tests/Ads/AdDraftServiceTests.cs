@@ -497,11 +497,22 @@ public sealed class AdDraftServiceTests
     {
         using DraftDb db = new();
         int author = await db.SignInAsync();
-        int id = await SeedAsync(db, author, AdStatus.Published, price: 6_200_000);
+        // Um Publicado completo (o que a revisão exigiu): salvar a edição do Administrador exige o mesmo (ver PublishedEditTests)
+        int id = await SeedAsync(db, author, AdStatus.Published, Books, 6_200_000);
+        await db.WithContextAsync(async context =>
+        {
+            Ad published = await context.Ads.SingleAsync(a => a.Id == id);
+            published.SetText("Honda Civic 2018", "Único dono");
+            published.SetLocation("13015100", "Campinas", "SP", false);
+            published.SetAttributes(new AdAttributes().Set("conditionId", 2));
+            context.AdPhotos.Add(new AdPhoto { AdId = id, SortOrder = 0, StorageKey = $"{id}/foto", Width = 100, Height = 80, SizeBytes = 3 });
+            await context.SaveChangesAsync();
+            return 0;
+        });
         await db.SignInAsync(administrator: true);
         Ad before = await db.LoadAdAsync(id);
 
-        await db.UpdateAsync(id, before.RowVersion, DraftDb.Input("Honda Civic 2018", Cars, price: "R$ 59.000,00"));
+        await db.UpdateAsync(id, before.RowVersion, DraftDb.Input("Honda Civic 2018", Books, description: "Único dono", price: "R$ 59.000,00", cep: "13015-100", city: "Campinas", uf: "SP", manual: true, fields: DraftDb.Fields(("conditionId", "2"))));
 
         Ad ad = await db.LoadAdAsync(id);
         Assert.AreEqual(AdStatus.Published, ad.Status);

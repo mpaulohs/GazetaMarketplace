@@ -318,19 +318,19 @@ public sealed class DraftTests
     public async Task US008S13_AdministradorEditaPublicado_BotaoSalvar_ESituacaoContinuaPublicado()
     {
         using DraftSite site = await DraftSite.StartAsync();
-        int id = await site.AddAdAsync(Writer, AdStatus.Published, categoryId: 33, price: 6_200_000);
+        int id = await PublishedEditTests.PublishedCompleteAsync(site);
 
         string page = await DraftSite.BodyAsync(await site.Admin.GetAsync($"/painel/anuncios/{id}/editar"));
         StringAssert.Contains(page, "Salvar</button>");
         Assert.IsFalse(page.Contains("Salvar rascunho", StringComparison.Ordinal));
 
         HttpResponseMessage saved = await DraftSite.PostAsync(site.Admin, $"/painel/anuncios/{id}/editar", $"/painel/anuncios/{id}/editar",
-            ("Title", "Honda Civic 2018"), ("CategoryId", "33"), ("Price", "R$ 59.000,00"));
+            ("Title", "Bicicleta aro 29"), ("Description", "Pouco usada"), ("CategoryId", "86"), ("Price", "R$ 1.400,00"), ("Cep", "13015-100"), ("Fields[conditionId]", "2"));
 
         Assert.AreEqual(HttpStatusCode.Redirect, saved.StatusCode);
         Ad ad = await site.LoadAsync(id);
         Assert.AreEqual(AdStatus.Published, ad.Status);
-        Assert.AreEqual(5_900_000L, ad.PriceCents);
+        Assert.AreEqual(140_000L, ad.PriceCents);
         Assert.AreEqual(await site.UserIdAsync(Writer), ad.AuthorId);
     }
 

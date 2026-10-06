@@ -88,6 +88,7 @@ public sealed class AdDraftService(
         Ad ad = await ads.GetForEditAsync(id, cancellationToken);
         int photoCount = await context.AdPhotos.CountAsync(p => p.AdId == id, cancellationToken);
         Prepared prepared = await PrepareAsync(input, photoCount, cancellationToken);
+        await EnsurePublishedStaysCompleteAsync(ad, prepared, photoCount, cancellationToken);
 
         // A versão que o formulário trazia: se a linha mudou desde então, a gravação falha com ConflictException
         if (ad.RowVersion is { Length: > 0 })
@@ -122,6 +123,50 @@ public sealed class AdDraftService(
 
         return new AdDraftResult(ad.Id, ad.RowVersion, prepared.Location);
     }
+
+    // Um anúncio Publicado está no ar: a edição do Administrador não pode deixá-lo sem o que o envio à revisão exige (as mesmas pendências e mensagens de AdSubmissionRules).
+    // Rascunho e Rejeitado continuam salvando incompletos. A conferência roda num anúncio descartável com os valores novos, então nada do que está rastreado muda quando ela recusa
+    private async Task EnsurePublishedStaysCompleteAsync(Ad ad, Prepared prepared, int photoCount, CancellationToken cancellationToken)
+    {
+        if (ad.Status != AdStatus.Published)
+        {
+            return;
+        }
+
+        Ad probe = Ad.CreateDraft(prepared.Title, ad.AuthorId);
+        Apply(probe, prepared);
+        FieldGroup group = FieldGroupRegistry.Default;
+        if (prepared.CategoryId is { } categoryId)
+        {
+            group = FieldGroupRegistry.Resolve(await categories.GetAsync(cancellationToken), categoryId) ?? group;
+        }
+
+        IReadOnlyList<AdPending> pending = AdSubmissionRules.Pending(probe, group, photoCount);
+        if (pending.Count == 0)
+        {
+            return;
+        }
+
+        Dictionary<string, string[]> errors = [];
+        foreach (AdPending item in pending)
+        {
+            Check(errors, ErrorKeyOf(item.Target), item.Message);
+        }
+
+        throw new ValidationException(errors);
+    }
+
+    // O campo do formulário de cada pendência; a das fotos não tem campo próprio e vai para o aviso geral (chave vazia)
+    private static string ErrorKeyOf(string target) => target switch
+    {
+        AdSubmissionRules.Targets.Title => "Title",
+        AdSubmissionRules.Targets.Category => "CategoryId",
+        AdSubmissionRules.Targets.Description => "Description",
+        AdSubmissionRules.Targets.Price => "Price",
+        AdSubmissionRules.Targets.Cep => "Cep",
+        AdSubmissionRules.Targets.Photos => string.Empty,
+        _ => FieldKey(target.StartsWith("campo-", StringComparison.Ordinal) ? target["campo-".Length..] : target)
+    };
 
     private static void Apply(Ad ad, Prepared prepared)
     {
