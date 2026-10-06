@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.5 |
+| Version | v1.6 |
 | Coverage | full |
 | Mode | greenfield |
 | Status | **Approved** |
@@ -28,6 +28,7 @@
 | v1.5 | 2026-10-06 | Changed | greenfield | O filtro de área da busca vale nos quatro tipos de Imóveis (Apartamentos, Casas, Terrenos, sítios e fazendas e Comércio e indústria), não só em Terrenos; a área continua obrigatória só em Terrenos | US-002 (regra de filtros específicos), US-002-S04, Apêndice B | Tarefa 5.4 (decisão de manter o grupo de campos, ADR-006) | Product Owner, 2026-10-05 |
 | v1.5 | 2026-10-06 | Changed | greenfield | Telefone fixo (10 dígitos): só o botão "Ligar" aparece nos anúncios; o "Chamar no WhatsApp" só aparece com celular (11 dígitos) | US-004, US-015 | Tarefa 5.3 | Product Owner, 2026-10-05 |
 | v1.5 | 2026-10-06 | Changed | greenfield | Exceção documentada à mensagem única de indisponibilidade: o anúncio arquivado também mostra o link da categoria em que estava (US-003-S06 já pedia o link; a regra geral dizia "sem revelar o conteúdo") | US-003-S06, US-003 (regras) | Tarefa 5.2 | Product Owner, 2026-10-05 |
+| v1.6 | 2026-10-06 | Changed | greenfield | US-002-S12 (busca no celular): o painel de filtros **já vem recolhido na página** em tela estreita, sem esperar o JavaScript, para a lista de resultados não pular quando o script chega (NFR-03: o salto, de 0,36, passava do limite de 0,1 em celular lento). Sem JavaScript o painel continua aberto e os botões de abrir e fechar não aparecem. O comportamento visto pela pessoa não muda (abre e fecha, sem rolagem horizontal) | US-002, NFR-03 |
 
 ## Executive Summary
 
@@ -272,6 +273,7 @@ Scenario: Busca em tela de celular estreita
 
 ##### Business Rules
 - A busca por texto considera título e descrição e ignora diferença entre maiúsculas/minúsculas e acentos.
+- No celular o painel de filtros já vem recolhido junto com a página (não depende do JavaScript para recolher, para a lista não pular); sem JavaScript ele fica aberto e os botões de abrir e fechar não aparecem.
 - Os filtros se combinam (todos precisam ser atendidos). Escolher uma categoria principal inclui suas subcategorias.
 - A cidade só pode ser escolhida depois da UF, e sempre pertence à UF escolhida (ver S15).
 - Filtros de atributos específicos aparecem só para categorias de Automóveis, Peças e Acessórios (marca, modelo, ano, quilometragem) e de Imóveis (Apartamentos, Casas, Terrenos, sítios e fazendas e Comércio e indústria: área em m²) (ver S4).

@@ -11,3 +11,14 @@
 .somente-sem-js {
   display: inline-block;
 }
+
+/* Busca (US-002-S12): com JavaScript o painel de filtros nasce recolhido no celular, direto do HTML, para a lista não pular
+   quando o script carrega (NFR-03). Sem JavaScript os botões de abrir e fechar não funcionam; o painel fica aberto e eles somem. */
+#filtros.collapse:not(.show) {
+  display: block;
+}
+
+[data-filters-toggle],
+[data-filters-close] {
+  display: none !important;
+}

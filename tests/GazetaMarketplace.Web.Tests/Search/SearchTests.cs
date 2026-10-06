@@ -286,6 +286,8 @@ public sealed class SearchTests
         Assert.IsNull(Stub(site).Last.PriceMaxCents, "a lista sai sem a faixa de preço");
         Assert.AreEqual(3, CardCount(html));
         StringAssert.Contains(html, "data-keep-open=\"true\"", "com erro o painel de filtros não recolhe");
+        StringAssert.Matches(html, new Regex(@"<div class=""collapse show d-lg-block"" id=""filtros"""), "com erro o painel já vem aberto no HTML");
+        StringAssert.Matches(html, new Regex(@"data-filters-toggle[^>]*aria-expanded=""true""[^>]*>Filtros ▴</button>"));
     }
 
     [TestMethod]
@@ -423,17 +425,20 @@ public sealed class SearchTests
     }
 
     [TestMethod]
-    public async Task US002S12_Celular320px_OPainelDeFiltrosVemAbertoNoServidor_ComBotaoParaRecolher_SemLarguraFixa()
+    public async Task US002S12_Celular320px_OPainelDeFiltrosJaVemRecolhidoNoServidor_ComBotaoParaAbrir_SemLarguraFixa()
     {
         using DraftSite site = await DraftSite.StartAsync();
         Stub(site).Rows.AddRange(Enumerable.Range(1, 6).Select(i => Row(i)));
 
         (_, string html) = await GetAsync(site, "/busca");
 
-        // Sem JavaScript o painel está aberto (classe "show") e os botões de abrir/fechar nem aparecem ("hidden"); o search.js recolhe em tela estreita
-        StringAssert.Matches(html, new Regex(@"<div class=""collapse show d-lg-block"" id=""filtros"""));
-        StringAssert.Matches(html, new Regex(@"<button [^>]*d-lg-d?none[^>]*hidden[^>]*data-filters-toggle[^>]*aria-expanded=""true""[^>]*aria-controls=""filtros""[^>]*>Filtros ▾</button>".Replace("d-lg-d?none", "d-lg-none")));
-        StringAssert.Matches(html, new Regex(@"<button [^>]*hidden[^>]*data-filters-close[^>]*>Fechar ▴</button>"));
+        // O painel já nasce recolhido no HTML (sem "show"), e o botão de abrir aparece sem esperar o JavaScript: recolher depois da primeira pintura fazia a lista pular (CLS, NFR-03)
+        StringAssert.Matches(html, new Regex(@"<div class=""collapse d-lg-block"" id=""filtros"""));
+        StringAssert.Matches(html, new Regex(@"<button [^>]*d-lg-none[^>]*data-filters-toggle[^>]*aria-expanded=""false""[^>]*aria-controls=""filtros""[^>]*>Filtros ▾</button>"));
+        StringAssert.Matches(html, new Regex(@"<button [^>]*data-filters-close[^>]*>Fechar ▴</button>"));
+        Assert.IsFalse(Regex.IsMatch(html, @"<[^>]*(data-filters-toggle|data-filters-close)[^>]*\shidden[\s>]"), "os botões não dependem do JavaScript para aparecer");
+        // Sem JavaScript: o sem-js.css, dentro de noscript, abre o painel e esconde os botões
+        StringAssert.Matches(html, new Regex(@"<noscript><link rel=""stylesheet"" href=""/css/sem-js\.css\?v="));
         Assert.IsFalse(Regex.IsMatch(html, @"<(div|input|select|form)[^>]*style=""[^""]*width\s*:\s*\d+px"), "nada com largura fixa");
         // A ordem na tela estreita: busca, filtros, total e cards (só rolagem para baixo)
         int search = html.IndexOf("id=\"busca-q\"", StringComparison.Ordinal);

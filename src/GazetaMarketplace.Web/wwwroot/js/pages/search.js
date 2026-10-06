@@ -1,10 +1,8 @@
 // Página de busca (US-002). O formulário já funciona sem JavaScript (GET comum); aqui só enriquecemos:
-// recolher o painel em tela estreita (S12), trocar a UF limpa a cidade (S10), marca → modelo, mostrar os filtros da categoria,
+// manter o botão dos filtros em dia com o painel recolhível (S12), trocar a UF limpa a cidade (S10), marca → modelo, mostrar os filtros da categoria,
 // conferir a faixa invertida antes de enviar (S08) e dar retorno ao enviar.
 
 import { apiFetch } from "../modules/api.js";
-
-const TELA_ESTREITA = window.matchMedia("(max-width: 991.98px)");
 
 const MENSAGEM_DA_FAIXA = {
   preco: "O preço mínimo não pode ser maior que o máximo",
@@ -36,15 +34,10 @@ function preencher(select, itens) {
 function configurarPainel() {
   const painel = document.getElementById("filtros");
   const alternar = document.querySelector("[data-filters-toggle]");
-  const fechar = document.querySelector("[data-filters-close]");
   if (!painel || !alternar) return;
 
-  alternar.hidden = false;
-  if (fechar) fechar.hidden = false;
-
-  // Painel aberto no servidor; em tela estreita recolhe, a não ser que haja erro a mostrar
-  if (TELA_ESTREITA.matches && painel.dataset.keepOpen !== "true") painel.classList.remove("show");
-
+  // O painel já nasce recolhido (ou aberto, se há erro a mostrar) no HTML do servidor: recolher aqui, depois da primeira pintura, fazia a lista pular (CLS).
+  // O que o script faz é só manter o rótulo do botão e devolver o foco quando o painel fecha.
   const sincronizar = () => {
     const aberto = painel.classList.contains("show");
     alternar.setAttribute("aria-expanded", String(aberto));

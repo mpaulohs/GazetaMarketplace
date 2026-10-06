@@ -75,13 +75,13 @@
 
 <div class="row g-4">
     <div class="col-12 col-lg-3">
-        @* Em telas estreitas o painel recolhe (o search.js decide ao carregar); sem JavaScript ele fica aberto e o botão nem aparece *@
-        <button type="button" class="btn btn-outline-secondary alvo-toque w-100 mb-2 d-lg-none" hidden data-filters-toggle data-bs-toggle="collapse" data-bs-target="#filtros" aria-expanded="true" aria-controls="filtros">Filtros ▾</button>
-        <div class="collapse show d-lg-block" id="filtros" data-filters-panel data-keep-open="@(keepOpen ? "true" : "false")">
+        @* Em telas estreitas o painel nasce recolhido já no HTML (o JavaScript não decide nada ao carregar: recolher depois da primeira pintura fazia a lista pular, NFR-03). Sem JavaScript, o sem-js.css (dentro de noscript) abre o painel e esconde os botões *@
+        <button type="button" class="btn btn-outline-secondary alvo-toque w-100 mb-2 d-lg-none" data-filters-toggle data-bs-toggle="collapse" data-bs-target="#filtros" aria-expanded="@(keepOpen ? "true" : "false")" aria-controls="filtros">@(keepOpen ? "Filtros ▴" : "Filtros ▾")</button>
+        <div class="collapse@(keepOpen ? " show" : "") d-lg-block" id="filtros" data-filters-panel data-keep-open="@(keepOpen ? "true" : "false")">
             <form class="card card-body search-filters" method="get" action="@PublicRoutes.Search" novalidate data-search-form data-kind="@form.Kind">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h2 class="fs-5 mb-0">Filtros</h2>
-                    <button type="button" class="btn btn-outline-secondary btn-sm alvo-toque d-lg-none" hidden data-filters-close data-bs-toggle="collapse" data-bs-target="#filtros" aria-controls="filtros">Fechar ▴</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm alvo-toque d-lg-none" data-filters-close data-bs-toggle="collapse" data-bs-target="#filtros" aria-controls="filtros">Fechar ▴</button>
                 </div>
                 <input type="hidden" name="q" value="@(form.Errors.ContainsKey("q") ? string.Empty : form.Text)" />
                 @if (form.Order != SearchOrder.Recent)
