@@ -1705,3 +1705,113 @@ O teste "Filtros" do E2E agora acha o botão pelo papel `button` (o link tem `ro
 | Totais esperados | unitários 1.722 · municípios 27 · catálogo 43 · integração 162 · E2E 257 (253 passam, 4 puladas: métricas) |
 | Comandos | `dotnet run --project tests/GazetaMarketplace.Web.Tests`, `tests/CitiesImport.Tests`, `tests/VehicleCatalogExport.Tests`, `tests/GazetaMarketplace.IntegrationTests` e `tests/GazetaMarketplace.Web.Tests.Playwright` (E2E, com as variáveis acima); cobertura pelo comando do runbook. Todos rodaram hoje, sem falha |
 | Ao republicar | limpar `CepCache`; salvar o log inteiro do E2E em arquivo; conferir que o total executado bate com `--list-tests` (257) |
+
+## /test — Gate 6 da Fase 6 (2026-10-06)
+
+> **Em resumo:** a suíte completa rodou contra o código do commit `7f3d3d1` e contra o artefato publicado (Release, Production em `:5443` e Development em `:5444`, SQL Server real em contêiner). **Nenhuma falha.** 1.722 unitários, 70 das ferramentas, 162 de integração, 253 de navegador e 4 de métricas (rodadas sozinhas com `GAZETA_VITALS=1`) passam; nada ficou pulado no conjunto. Cobertura **98,0% de linhas e 91,8% de ramos** (metas 80% e 75%). A investigação pedida sobre a contagem de testes de navegador terminou assim: **os 257 testes listados foram todos executados**; os 254 das rodadas anteriores não se repetiram (causa mais provável abaixo, não provada). **Veredito: PASS.**
+
+### 1. Resumo
+
+| Suíte | Total | Passaram | Falharam | Puladas | Tempo | Log |
+|---|---|---|---|---|---|---|
+| Unitários do site (SQLite) | 1.722 | 1.722 | 0 | 0 | 3 min 56 s | `reports/test-artifacts/report/test-GazetaMarketplace.Web.Tests.log` |
+| Ferramenta de municípios | 27 | 27 | 0 | 0 | 2 s | `test-CitiesImport.Tests.log` |
+| Ferramenta de catálogo de veículos | 43 | 43 | 0 | 0 | 2 s | `test-VehicleCatalogExport.Tests.log` |
+| Integração (SQL Server real, TestContainers) | 162 | 162 | 0 | 0 | 2 min 37 s | `test-GazetaMarketplace.IntegrationTests.log` |
+| E2E de navegador (site publicado) | 257 | 253 | 0 | 4 | 16 min 24 s | `test-e2e.log` |
+| Métricas de celular (`GAZETA_VITALS=1`, sozinhas) | 4 | 4 | 0 | 0 | 26 s | `test-vitals.log` |
+| **Conjunto** | **2.211 testes distintos** (os 4 das métricas são os 4 pulados do E2E) | **2.211** | **0** | **0** | **24 min 29 s** (1.469 s do primeiro ao último comando, com a compilação do E2E) | |
+
+Todos os comandos saíram com código 0. Pontuação dos testes de métricas (LCP, INP, CLS; celular, 4G, processador 4 vezes mais lento): início LCP 1.120 ms · INP 88 ms · CLS 0,0000; categoria 1.236 · 48 · 0,0000; busca 1.164 · 112 · 0,0000; detalhe 436 · 80 · 0,0000 (limites 2.500 ms, 200 ms, 0,1). **O CLS da busca, que era 0,36 no Checkpoint 6, agora é 0,0000.**
+
+### 2. Unitários e em memória (reexecução)
+1.722 de 1.722. Sem dependência externa; os que usam o servidor de teste rodam com SQLite em memória ou com fakes escritos à mão.
+
+### 3. TestContainers
+162 de 162 contra o SQL Server 2022 real em contêiner (uma instância por conjunto de testes), incluindo `VolumeOfV1Tests` (p95 abaixo de 500 ms com cerca de 200 anúncios) e o teste diferencial das colunas calculadas.
+
+### 4. Playwright (reexecução no código atual)
+Faz parte do item 5: os testes de navegador rodam contra o site publicado; não há uma segunda rodada em processo.
+
+### 5. E2E contra o artefato
+253 passaram e 4 foram puladas por falta de `GAZETA_VITALS=1`; as 4 rodaram à parte e passaram (item 1). **Total executado = total listado** (`--list-tests`): 257 listados, 257 com estado final no log de diagnóstico (253 passou, 4 pulou; 0 falhou). Os dois sites (`:5443` Production, `:5444` Development, só para o catálogo de componentes) foram republicados do código atual antes da rodada, com `CepCache` e `PasswordRecoveryAttempts` zerados.
+
+**Investigação da contagem (pedida pelo Product Owner).** Fatos: a listagem dava 256 testes no commit do Checkpoint 6 e 257 agora (+1: o teste do painel de filtros sem o JavaScript do Bootstrap); as duas rodadas completas do fechamento do Checkpoint 6 tinham relatado total 254.
+- *(a) `[Ignore]` sem documentação:* não há nenhum `[Ignore]` no projeto de navegador.
+- *(b) filtro de `TestCategory` excluindo em silêncio:* não há `[TestCategory]` no projeto, e nenhuma rodada usou `--filter` (exceto a das métricas, de propósito).
+- *(c) `RequiresVariables` ignorando sem avisar:* um teste que falta variável aparece como **pulado** (e as 4 puladas são só as de métricas, com a mensagem "Defina GAZETA_BASE_URL, GAZETA_VITALS"); os `Assert.Inconclusive` (peso da lista, telas do catálogo de componentes) também contam como pulado. Nenhum apareceu.
+- *(d) contagem dupla:* a listagem tem 257 nomes únicos; não há duplicata.
+- *Prova por reexecução:* o código do Checkpoint 6 (`5f48725`), compilado do zero numa cópia limpa e rodado inteiro, executou **256 de 256** (251 passaram, 4 puladas, 1 falha por instabilidade, descrita abaixo); a rodada de hoje executou **257 de 257**. Ou seja, no mesmo código, uma compilação nova executa tudo. **As duas rodadas de 254 foram feitas com `dotnet run --no-build` sobre um binário de teste que eu não recompilei** (o script do ambiente de teste não compila); a hipótese mais provável, **não provada**, é que o binário tinha a lista de telas (`screens.json`) sem a tela `not-found-page` (dois testes por tela: axe e larguras, 44 telas em vez de 45); os contadores de progresso das rodadas batem com dois testes de tela a menos antes do fim. Não consegui recuperar o binário antigo para confirmar.
+- *Conclusão e medida:* **é problema de ambiente, não de produto nem de teste.** O runbook ganhou a regra: compilar o projeto de navegador antes de qualquer `--no-build`, e conferir que o total executado bate com `--list-tests`. Nesta rodada o `dotnet build` do projeto de navegador rodou antes (`build-e2e.log`, 0 erros).
+- *Instabilidade vista na reexecução do Checkpoint 6 (fora desta rodada):* `FavoritesE2ETests.US005S06_US011S04_…` falhou uma vez ("Enviar para revisão?" não apareceu em 15 s), a mesma família do título da página de confirmação que já tinha causado instabilidade na 5.6. Nas outras três rodadas completas do mesmo código (e na de hoje) passou. Registrada no BACKLOG.
+
+### 6. Cobertura (Gate 6, modo greenfield: número do repositório inteiro)
+Medida pelo comando do runbook (`Microsoft.Testing.Extensions.CodeCoverage`, escopo em `coverage.settings.xml`), unitários e integração unidos por linha.
+
+| Medida | Unitários | Integração | **União (o gate)** | Meta | Resultado |
+|---|---|---|---|---|---|
+| Linhas | 96,4% (5.490 de 5.697) | 81,7% (4.654 de 5.697) | **98,0% (5.581 de 5.697)** | ≥ 80% | atendida |
+| Ramos | 89,2% (1.595 de 1.788) | 59,8% (1.070 de 1.788) | **91,8% (1.642 de 1.788)** | ≥ 75% | atendida |
+
+| Projeto | Linhas | Ramos |
+|---|---|---|
+| `GazetaMarketplace.Core` | 98,9% (2.811 de 2.842) | 94,8% (902 de 951) |
+| `GazetaMarketplace.Infrastructure` | 96,9% (1.854 de 1.914) | 88,6% (367 de 414) |
+| `GazetaMarketplace.Web` | 97,3% (916 de 941) | 88,2% (373 de 423) |
+
+A parte nova da fase (`ModuleVersions`, `ModuleScriptTagHelper`, a regra de compressão do painel) entrou na conta e subiu o total em relação ao Checkpoint 6 (97,9% e 91,7%). O ramo é um piso (maior número de ramos cobertos entre os dois projetos por linha). **Métodos a 0% (13 de 783), os mesmos do Checkpoint 6:** `FieldLimits..cctor`, `AdFormFactory..cctor` (construtores estáticos), `AppDbContextFactory.CreateDbContext` (chamada só pelo `dotnet ef`), `AppRole..ctor` e `RecoveryTokenProvider.CanGenerateTwoFactorTokenAsync` (contrato do Identity), as três propriedades de uma linha do `SystemUser`, `AdFieldViewModel.get_HelpId`, três métodos de uma linha que o produto chama e que os testes provam pelos caminhos que os usam (`FieldValueParser.Invalid`, `PasswordResetResult.BadLink`, `UserManagement.NotFound`) e `PublicRoutes.Ad(int, string)`, **sem nenhuma referência em código** (atalho sem uso, no BACKLOG). Nenhum é regra de negócio sem teste que o produto já chame. Menores arquivos: `AppDbContextFactory.cs` 0% (só o `dotnet ef`), `AdRoutes.cs` 76,9%, `AdSubmission.cs` 80,0%, `PasswordRecoveryQueue.cs` 83,3%, `FileSystemPhotoStorage.cs` 84,7%.
+
+### 7. Checklist do Gate 6
+
+| Item | Resultado |
+|---|---|
+| Todos os testes passam, confirmado pelos comandos (código de saída 0) | **sim**, 6 comandos com saída 0 |
+| Os projetos de navegador não quebram o `dotnet run` dos unitários | sim (projetos separados; o `dotnet run` dos unitários saiu com código 0) |
+| Nenhuma configuração de produção alterada para isolar os testes | **sim**: `git status` limpo antes e depois da rodada; nada em `src/`, `appsettings*.json`, `Program.cs` nem `docker-compose*` mudou; a troca é em memória (fábrica do servidor de teste e variáveis de ambiente) |
+| Schema do banco tocado nesta rodada | não; `db/schema-snapshot/` não se aplica |
+| Tripwire de conexões (lista de hosts permitidos) | **passou, com 3 itens explicados** (abaixo) |
+| Cada `@US-XXX-Snn` tem teste que cita o cenário | **128 de 128** (conferido por script: nome do teste ou texto). A auditoria de que o teste afirma o efeito (e não só a presença) foi feita no `/review` do Checkpoint 5 e do 6 |
+| Contrato entre quem chama a API e a API | os pedidos do JavaScript (`apiFetch`) e do servidor são exercitados pelos E2E, e qualquer resposta de erro do próprio site durante uma jornada derruba o teste; não há verificação automática contra um arquivo OpenAPI (a API pública tem poucos endpoints; no BACKLOG) |
+| Regra em duas representações (paridade) | sim: tabela de 48 ids dos favoritos (JavaScript × C#), tabela do leitor de número (`Paridade_*` no E2E), teste diferencial das colunas calculadas (integração) |
+| Cobertura por modo | greenfield: 98,0% / 91,8% (item 6) |
+| Sem testes pulados ou desabilitados | **sim no conjunto** (os 4 pulados do E2E rodaram à parte e passaram) |
+| Correções têm teste de reprodução | sim (cache de módulos, BREACH em página de erro, botão de filtros sem JavaScript, peso da foto, capas) |
+| E2E dos caminhos críticos | sim (publicação, revisão, favoritos, busca, contato, painel) |
+| Artefatos no caminho canônico | **em parte:** `reports/test-artifacts/report/` guarda os logs de cada suíte e os tempos; o executor de testes (MSTest sobre a plataforma de testes da Microsoft) não gera `results.json` nem `.trx` (precisaria de um pacote novo, pelo processo de decisão de tecnologia). Nenhuma falha, então `runner/` ficou vazio. O diretório inteiro é ignorado pelo git; as saídas estão neste relatório |
+| Nenhum código de `src/` alterado durante o `/test` | sim |
+
+**Tripwire.** Hosts achados nos logs: `viacep.com.br` (4 linhas; um teste unitário cria o cliente HTTP do ViaCEP com um **manipulador falso** e a resposta chega em 0,85 ms; o teste `CepEndpointTests` confere o endereço pedido no próprio manipulador, então nenhuma conexão sai da máquina; o endereço é o padrão do `appsettings.json`, e por isso a regra pede para tratar como "achado", mas aqui é falso positivo provado), `db.interno` e `prod` (texto dentro de mensagens de exceção inventadas pelos testes que provam que a página de erro não vaza segredo) e endereços `10.x` (dados dos testes de cabeçalhos de proxy). Nenhum host real de banco, cache ou mensageria apareceu; o SQL Server do E2E é `localhost,14330` e os contêineres da integração são de localhost.
+
+### 8. Bugs
+**Nenhum BUG novo.** Nenhuma falha nesta rodada. Uma instabilidade, fora da rodada, está no BACKLOG (item 5 acima).
+
+### 9. Lacunas adiadas (cada uma com o próximo responsável)
+
+| Lacuna | Dono |
+|---|---|
+| Celular de verdade e abertura do WhatsApp; Firefox e Safari; teclado e leitor de tela (NVDA) | `/verify` |
+| Peso com fotos reais (HEIC de iPhone, JPEG grande de Android, 24 fotos) e orientação, cor e GPS retirado; os testes de peso usam foto sintética | `/verify`, com amostras do Product Owner |
+| LCP, INP e CLS no site publicado com certificado válido; cache do navegador com HTTPS real; compressão duplicada no IIS | `/verify` |
+| Componente nativo do Magick.NET (HEIC e WebP) e checklist de implantação (`Site__BaseUrl`, `sqlcmd -I`, `ARITHABORT` e `QUOTED_IDENTIFIER`) | `/infra` |
+| Carga real dos municípios (IBGE) e catálogo real de veículos | Product Owner |
+| CEP e municípios contra a rede real (o ambiente bloqueia `viacep.com.br`) | `/verify` |
+| Cenários só de interface com prova no navegador de teste (Chromium); outros navegadores | `/verify` |
+| Rodar com `GAZETA_VITALS=1` na máquina de produção, sem outra carga ao lado | `/verify` |
+
+### 10. Arquivos acrescentados
+Nenhum arquivo de teste novo nesta rodada; só os logs em `reports/test-artifacts/report/` (ignorados pelo git) e este relatório. **Fronteira:** nenhum arquivo de `src/` foi alterado durante o `/test`.
+
+### 11. Veredito do Gate 6
+**PASS.** Tudo passa pelos comandos canônicos, a cobertura passa das duas metas, não há BUG aberto e o conjunto não tem teste pulado. Pontos para o `/review` e o `/verify` abaixo.
+
+### 12. Itens abertos para o `/review`
+
+| Id | Item | Origem |
+|---|---|---|
+| OPEN-001 | Instabilidade de `FavoritesE2ETests.US005S06_…` ("Enviar para revisão?" não aparece em 15 s), 1 vez em 5 rodadas completas do mesmo código | Investigação da contagem |
+| OPEN-002 | Dois testes de tela (axe e larguras de `not-found-page`) e a regra "compilar antes de `--no-build`": confirmar que o runbook basta | Investigação da contagem |
+| OPEN-003 | Tripwire: confirmar o falso positivo do `viacep.com.br` (manipulador falso) | Item 7 |
+| OPEN-004 | Os 4 testes de métricas só rodam com `GAZETA_VITALS=1`; incluir no roteiro do `/verify` | Item 1 |
+| OPEN-005 | Cerca de 60 usos antigos do operador `!` nos testes, sem efeito (nullable desligado) | BACKLOG |
+| OPEN-006 | As 14 sugestões 🟢 do `/review` do Checkpoint 6 que continuam abertas | BACKLOG |
+| OPEN-007 | Sem `results.json`/`.trx` do executor: decidir se vale o pacote de relatório | Item 7 |

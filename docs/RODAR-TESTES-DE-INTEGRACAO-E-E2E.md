@@ -135,6 +135,10 @@ O jeito certo, para cada mutação:
 
 Uma mutação **só conta como morta** se os testes que falharam são os que deveriam falhar por aquela mudança; se quase todos os testes de JavaScript falham, desconfie do passo 2 ou 3.
 
+### Conferir que todos os testes de navegador rodaram
+
+Antes de `dotnet run --no-build` no projeto de navegador, rode `dotnet build tests/GazetaMarketplace.Web.Tests.Playwright`: o binário velho pode ter uma lista de telas (`Screens/screens.json`) desatualizada, e a rodada executa dois testes a menos por tela que falta sem avisar. No fim, compare o total executado com `dotnet run --no-build --project tests/GazetaMarketplace.Web.Tests.Playwright -- --list-tests` (257 no momento): um teste que falta variável aparece como **pulado**, nunca some. Para ver quais testes foram executados, rode com `--diagnostic --diagnostic-verbosity Trace --diagnostic-output-directory <pasta>`: o arquivo `.diag` lista cada teste com o estado final.
+
 ## Cobertura de código (unitários e integração)
 
 Os dois projetos de teste trazem a extensão `Microsoft.Testing.Extensions.CodeCoverage`; o escopo (o que entra na conta e o que fica de fora) está em `coverage.settings.xml`, na raiz. Rode cada projeto uma vez com cobertura (a de integração precisa do Docker) e junte os dois relatórios:

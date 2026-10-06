@@ -352,3 +352,11 @@ Veredito APPROVE com condições: 0 🔴 · 5 🟡 · 23 🟢. Todos abertos, se
 - [ ] **Instabilidade não explicada:** na primeira rodada completa do navegador do fechamento do Checkpoint 6, 39 testes `Screen_DoesNotScrollHorizontally_AtFourWidths` falharam em cerca de 200 ms cada (parece falha de preparação), e não se repetiu em duas rodadas seguintes; o log da primeira se perdeu. No `/test`, salvar o log inteiro; se voltar, olhar `ScreenData` (preparação cacheada que falha uma vez e derruba todas as telas do teste) — found by Checkpoint 6, 2026-10-06, tests/GazetaMarketplace.Web.Tests.Playwright/Support/ScreenData.cs
 
 - [x] **Suposição aprovada (Checkpoint 6, D4):** a nova senha do primeiro acesso não pode ser igual à provisória; a tela recusa com "A nova senha precisa ser diferente da provisória". Vira critério em US-006-S09 (SPEC v1.7) — found by decisão do Product Owner, 2026-10-06, plans/plan.md (tarefa 1.4)
+
+## /test da Fase 6 (2026-10-06)
+
+- [ ] **Instabilidade `FavoritesE2ETests.US005S06_US011S04_…`:** falhou uma vez em 5 rodadas completas do mesmo código ("Enviar para revisão?" não apareceu em 15 s); mesma família da instabilidade corrigida na 5.6 (segundo clique em "Enviar para revisão"). Ver se o roteiro desse teste usa o trecho de publicação já corrigido — found by /test, 2026-10-06, tests/GazetaMarketplace.Web.Tests.Playwright/Showcase/FavoritesE2ETests.cs
+- [ ] **Executor de testes sem `results.json`/`.trx`:** o `/test` guarda logs de texto em `reports/test-artifacts/report/`; um relatório estruturado pede o pacote de relatório da plataforma de testes (decisão de tecnologia) — found by /test, 2026-10-06
+- [ ] **Contrato entre o JavaScript e a API sem verificação automática contra um arquivo OpenAPI:** hoje só os E2E (qualquer erro do próprio site derruba a jornada). Avaliar um teste que compare método, caminho e status dos `apiFetch` com os controllers — found by /test, 2026-10-06
+- [x] **Contagem de testes de navegador (254 contra 256 listados):** investigada; uma compilação nova executa todos (256 e 257); o script de rodada passou a compilar antes (regra no runbook) — found by Product Owner, 2026-10-06
+
