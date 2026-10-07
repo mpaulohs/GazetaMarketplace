@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -47,7 +48,13 @@ public sealed class FieldGroup
 
     public string DescriptionHelp { get; init; }
 
-    public IReadOnlyList<FieldDefinition> Fields { get; init; } = [];
+    private IReadOnlyList<FieldDefinition> _fields = [];
+
+    // Cópias deste grupo para categorias que herdam os dados por categoria de um ancestral (id da categoria → grupo), e os ids que o grupo trata de forma própria
+    private readonly ConcurrentDictionary<(int Category, int Ancestor), FieldGroup> _derived = new();
+    private HashSet<int> _ownCategories;
+
+    public IReadOnlyList<FieldDefinition> Fields { get => _fields; init => _fields = value; }
 
     /// <summary>Os campos que existem nesta categoria, na ordem do grupo.</summary>
     public IReadOnlyList<FieldDefinition> FieldsFor(int categoryId) => [.. Fields.Where(f => f.AppliesTo(categoryId))];
@@ -59,4 +66,32 @@ public sealed class FieldGroup
     public IReadOnlyList<FieldDefinition> FilterableFieldsFor(int categoryId) => [.. FieldsFor(categoryId).Where(f => f.Filter != FieldFilter.None)];
 
     public FieldDefinition Field(string key) => Fields.SingleOrDefault(f => f.Key == key);
+
+    /// <summary>
+    /// O grupo como vale para uma categoria que não tem dados próprios (lista, campos e obrigatórios por categoria): ela usa os do ancestral mais próximo que os tem (A7 a).
+    /// Categoria que o grupo já trata de forma própria, ou sem nenhum ancestral nessa situação, usa o próprio grupo.
+    /// </summary>
+    internal FieldGroup ForCategory(Categories.CategoryTreeSnapshot tree, int categoryId)
+    {
+        _ownCategories ??= [.. Fields.SelectMany(f => f.CategoriesWithOwnData())];
+        if (_ownCategories.Contains(categoryId))
+        {
+            return this;
+        }
+
+        foreach (Categories.CategoryNode ancestor in tree.AncestorsOf(categoryId).Reverse())
+        {
+            if (_ownCategories.Contains(ancestor.Id))
+            {
+                return _derived.GetOrAdd((categoryId, ancestor.Id), key =>
+                {
+                    FieldGroup copy = (FieldGroup)MemberwiseClone();
+                    copy._fields = [.. Fields.Select(f => f.InheritingFrom(key.Category, key.Ancestor))];
+                    return copy;
+                });
+            }
+        }
+
+        return this;
+    }
 }

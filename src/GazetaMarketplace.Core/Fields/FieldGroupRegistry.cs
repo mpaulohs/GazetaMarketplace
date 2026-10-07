@@ -8,7 +8,8 @@ namespace GazetaMarketplace.Core.Fields;
 
 /// <summary>
 /// Todos os grupos de campos, em código. Uma categoria usa o grupo gravado nela ou o do ancestral mais próximo que tenha um (A7 a); se
-/// nenhum da cadeia tem, usa <see cref="Default"/> (Produtos em geral). Categoria nova herda do pai sem nenhum trabalho.
+/// nenhum da cadeia tem, usa <see cref="Default"/> (Produtos em geral). Categoria nova herda do pai sem nenhum trabalho, e herda também as listas, os campos e os
+/// obrigatórios por categoria do ancestral mais próximo que os define (Imóveis, Roupas, Eletro, Telefonia).
 /// </summary>
 public static class FieldGroupRegistry
 {
@@ -60,6 +61,8 @@ public static class FieldGroupRegistry
             return Default;
         }
 
-        return Get(key) ?? throw new InvalidOperationException($"A categoria {categoryId} usa o grupo de campos '{key}', que não existe no registro.");
+        FieldGroup group = Get(key) ?? throw new InvalidOperationException($"A categoria {categoryId} usa o grupo de campos '{key}', que não existe no registro.");
+        // Herda do ancestral mais próximo o grupo e também as listas, os campos e os obrigatórios por categoria (A7 a, SPEC v1.9)
+        return group.ForCategory(tree, categoryId);
     }
 }

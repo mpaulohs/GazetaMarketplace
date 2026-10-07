@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GazetaMarketplace.Core.Fields;
 
@@ -147,12 +148,31 @@ public sealed class FieldDefinition
     /// <summary>Só em campos <see cref="FieldType.CatalogItem"/>.</summary>
     public CatalogReference Catalog { get; init; }
 
-    /// <summary>Se o campo é obrigatório para enviar à revisão nesta categoria (e só vale onde <see cref="AppliesTo"/> é verdadeiro).</summary>
-    public bool IsRequiredFor(int categoryId) => Required || (RequiredForCategories is not null && RequiredForCategories.Contains(categoryId));
+    // Categoria nova → ancestral cujos dados por categoria ela usa (A7 a, SPEC v1.9). Só existe nas cópias que o FieldGroup faz para uma categoria sem entrada própria
+    private IReadOnlyDictionary<int, int> _inherited;
 
-    public bool AppliesTo(int categoryId) => AppliesToCategories is null || AppliesToCategories.Contains(categoryId);
+    private int Source(int categoryId) => _inherited is not null && _inherited.TryGetValue(categoryId, out int ancestor) ? ancestor : categoryId;
+
+    /// <summary>Se o campo é obrigatório para enviar à revisão nesta categoria (e só vale onde <see cref="AppliesTo"/> é verdadeiro).</summary>
+    public bool IsRequiredFor(int categoryId) => Required || (RequiredForCategories is not null && RequiredForCategories.Contains(Source(categoryId)));
+
+    public bool AppliesTo(int categoryId) => AppliesToCategories is null || AppliesToCategories.Contains(Source(categoryId));
 
     /// <summary>A lista de opções do campo para esta categoria; nula se o campo não tem lista.</summary>
     public FieldList OptionsFor(int categoryId) =>
-        OptionsByCategory is not null && OptionsByCategory.TryGetValue(categoryId, out FieldList own) ? own : Options;
+        OptionsByCategory is not null && OptionsByCategory.TryGetValue(Source(categoryId), out FieldList own) ? own : Options;
+
+    /// <summary>Os ids de categoria que este campo trata de forma própria (lista, existência ou obrigatoriedade).</summary>
+    internal IEnumerable<int> CategoriesWithOwnData() =>
+        (OptionsByCategory?.Keys ?? Enumerable.Empty<int>()).Concat(AppliesToCategories ?? Enumerable.Empty<int>()).Concat(RequiredForCategories ?? Enumerable.Empty<int>());
+
+    /// <summary>Uma cópia que responde para <paramref name="category"/> com os dados de <paramref name="ancestor"/>.</summary>
+    internal FieldDefinition InheritingFrom(int category, int ancestor)
+    {
+        FieldDefinition copy = (FieldDefinition)MemberwiseClone();
+        Dictionary<int, int> map = _inherited is null ? [] : new Dictionary<int, int>(_inherited);
+        map[category] = ancestor;
+        copy._inherited = map;
+        return copy;
+    }
 }
