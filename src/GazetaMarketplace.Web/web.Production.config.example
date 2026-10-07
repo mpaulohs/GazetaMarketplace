@@ -4,6 +4,8 @@
   O arquivo real (web.Production.config) NUNCA vai para o git: ele fica no cofre de senhas
   e na máquina de quem publica. Copie este arquivo para web.Production.config e troque cada
   valor entre parênteses. Veja ADR-011 e ARCHITECTURE.md seção 9.
+  Os caminhos das três pastas (fotos, chaves, logs) já são os reais da conta no SmarterASP (resposta do provedor, AR-01) e não são segredo.
+  As três pastas precisam existir antes da primeira publicação (docs/DEPLOY-RUNBOOK.md, passo "Pastas").
 -->
 <configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
   <location>
@@ -13,9 +15,9 @@
           <!-- Production, ou Staging para o site de homologação: os dois sobem com as mesmas proteções (HSTS, SendGrid de verdade, configuração validada na partida) -->
           <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="ConnectionStrings__DefaultConnection" value="(cadeia de conexão do banco)" xdt:Transform="InsertIfMissing" />
-          <environmentVariable name="PhotoStorage__BasePath" value="(pasta de fotos fora da raiz do site)" xdt:Transform="InsertIfMissing" />
-          <environmentVariable name="Logging__FileDirectory" value="(pasta de logs fora da raiz do site)" xdt:Transform="InsertIfMissing" />
-          <environmentVariable name="DataProtection__KeysDirectory" value="(pasta das chaves fora da raiz do site)" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="PhotoStorage__BasePath" value="h:\root\home\mpaulohs-001\www\gazeta-fotos" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="Logging__FileDirectory" value="h:\root\home\mpaulohs-001\www\gazeta-logs" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="DataProtection__KeysDirectory" value="h:\root\home\mpaulohs-001\www\gazeta-chaves" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="SendGrid__ApiKey" value="(chave do SendGrid)" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="SendGrid__FromEmail" value="(e-mail remetente validado no SendGrid)" xdt:Transform="InsertIfMissing" />
           <!-- Endereço público do site, com https (ex.: https://www.seudominio.com.br). Vai nos links enviados por e-mail;
@@ -26,10 +28,12 @@
                e entrar, "esqueci" e "redefinir" aceitam 20 tentativas por 15 minutos para o site inteiro (com o IP certo, 5 por IP). Um Warning na partida lembra disso.
                Quando o provedor responder, acrescente UMA variável por proxy, no mesmo formato das outras linhas deste arquivo:
                nome ForwardedHeaders__KnownProxies__0 (depois __1, __2...) e, como valor, o IP exato do proxy, sem faixa e sem texto. -->
-          <!-- Cifra as chaves do Data Protection com o DPAPI do Windows (identidade do pool). Ligue só no servidor Windows;
-               em outro sistema o site recusa subir com esta opção ligada. Se a identidade do pool mudar, as chaves antigas não abrem
-               e a equipe precisa entrar de novo (os links de redefinição já enviados deixam de valer). -->
-          <environmentVariable name="DataProtection__ProtectWithDpapi" value="true" xdt:Transform="InsertIfMissing" />
+          <!-- Cifra as chaves do Data Protection com o DPAPI do Windows (identidade do pool). COMEÇA DESLIGADO: o DPAPI por usuário exige que o pool
+               do SmarterASP tenha o perfil do usuário carregado, o que só se descobre testando. Depois da primeira publicação funcionando (login, sessão e
+               link de redefinição), troque para true, reinicie o site e confira que o login continua funcionando e que o arquivo novo em gazeta-chaves
+               tem "dpapi" no texto. Se der erro, volte a false: as chaves cifradas deixam de abrir e a equipe entra de novo, nada mais se perde.
+               Em outro sistema que não o Windows, o site recusa subir com true. -->
+          <environmentVariable name="DataProtection__ProtectWithDpapi" value="false" xdt:Transform="InsertIfMissing" />
           <!-- NUNCA defina em produção: RateLimiting__*, SendGrid__BaseUrl, ViaCep__BaseUrl, Authentication__SessionMinutes com valor de teste.
                Existem só para a suíte de testes e afrouxam os limites de proteção ou desviam a chave de API (R-39). -->
           <!-- Só na primeira publicação; remova as duas linhas em seguida (ADR-003, RC-19) -->

@@ -481,3 +481,15 @@ Veredito APPROVE com condições: 0 🔴 · 5 🟡 · 23 🟢. Todos abertos, se
 - 240 dos 241 *medium* do scanner são `axe-core` minificado dentro do `bin` dos testes (falso positivo; não é enviado) e 1 é texto de teste (`PhotosEndpointsTests.cs:354`). O `frontend-xss-grep.txt` (3,7 MB) ficou fora do repositório.
 - `npm audit` só rodou no ferramental `.claude*/hooks` (sem lockfile); o produto não usa npm.
 - Os 12 candidatos do semgrep local (redirects, `FileSystemPhotoStorage`, `TrustServerCertificate` da fábrica de design-time) foram triados: todos falso positivo ou código de tempo de projeto.
+
+## /infra com os dados do SmarterASP (2026-10-07)
+
+- [x] **AR-01 Pastas** — `h:\root\home\mpaulohs-001\www\gazeta-fotos`, `gazeta-chaves` e `gazeta-logs`, irmãs do site; o pool tem leitura e escrita. Valores gravados no `web.Production.config.example`, em `ARCHITECTURE.md` §9, no ADR-011 e no `docs/DEPLOY-RUNBOOK.md` §3. **Falta criar as três pastas no painel antes da primeira publicação (Product Owner)**
+- [x] **AR-02 .NET 10** instalado; publicação *framework-dependent* `win-x64` (perfil `IIS-win-x64`)
+- [x] **AR-03 SQL Server** — escolhida a 2022 (o provedor oferece 2022 e 2025)
+- [x] **AR-04 Disco** — 30 GB com limite flexível: cabe; o alerta de uso segue como SC-05
+- [ ] **AR-09 HTTPS** — certificado grátis: **solicitar na aba SSL do painel** antes de divulgar o site (Product Owner)
+- [x] **SEC-03 Conta do banco** — o provedor não respondeu: **risco aceito RR-9** (conta única com permissão total), registrado em `security/SECURITY_REQUIREMENTS.md` §5
+- [ ] **SEC-01 IP do proxy** — o provedor indicou um artigo sobre **IISNode**, que não vale para ASP.NET Core. Decisão do Product Owner: manter o site fail-closed (lista vazia) e documentar; o Product Owner lê o artigo e configura `ForwardedHeaders__KnownProxies__n`. Teste prático sem esperar o provedor: errar uma senha na primeira publicação e ver o IP no log (`docs/INFRA.md` §5). Em hospedagem **em processo** o IIS costuma entregar o IP real, e então não há proxy a configurar
+- [ ] **DPAPI** — `DataProtection__ProtectWithDpapi` começa **`false`** no exemplo: só ligar depois da primeira publicação funcionando, se o pool tiver o perfil do usuário carregado (`docs/INFRA.md` §6)
+- [ ] **AR-05** — falta provar o ImageMagick/HEIC no Windows do provedor (primeiro envio de foto real: `docs/VERIFY-CHECKLIST.md` M6)

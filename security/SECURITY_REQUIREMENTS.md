@@ -23,7 +23,7 @@
 - [x] Autoria dentro da consulta Dapper da lista do painel — `WHERE AuthorId = @authorId` para o Redator (Task 4.4)
 - [x] Matriz de acesso por reflexão — `MatrizDeAcessoTests` lista toda rota do painel e todo endpoint JSON de escrita; rota nova fora da matriz faz o teste falhar (Task 6.1)
 - [x] IDOR — os ids de anúncio são inteiros e aparecem em endereços públicos de anúncios publicados; **a proteção é a checagem de autoria e de situação no servidor, não o segredo do id**. Decisão: GUID não é necessário (Task 3.1, 3.4, 5.2)
-- [x] Menor privilégio no banco — conta do site sem `db_owner` quando o provedor oferecer conta separada; migrations aplicadas por script por outra conta (Task 0.2). **SEC-03 (PO, 2026-09-30): assumido o pior caso, com uma conta de permissão total; risco residual RR-9; reavaliar no `/infra`**
+- [x] Menor privilégio no banco — conta do site sem `db_owner` quando o provedor oferecer conta separada; migrations aplicadas por script por outra conta (Task 0.2). **SEC-03 fechada como risco aceito (PO, 2026-10-07): o SmarterASP não respondeu; vale a conta única do banco com permissão total (RR-9). Compensações: todo acesso é por consulta parametrizada, o SQL é montado só com fragmentos fixos e a identidade do site não escreve fora das três pastas**
 - [x] Processo do site com a identidade de menor privilégio do IIS, sem acesso fora das pastas do site (Task 0.2)
 
 ### 3. Input Validation
@@ -63,6 +63,7 @@
 | Id | Achado | Decisão | Quem · quando | Condição de revisão |
 |----|--------|---------|---------------|---------------------|
 | SC-28 | `gitleaks` acusa 30 ocorrências de `gcp-api-key` no **histórico** do git: uma única chave de API do Google Maps, em HTML de templates dos commits `a3521ae0` e `2ee43b89`; nenhuma no código atual | **Exceção concedida.** A chave já foi **revogada no Google Cloud Console**, então não dá acesso a nada; o histórico **não é reescrito** (reescrever mudaria todos os hashes sem ganho de segurança). O `/scan` seguinte ignora só esses dois commits (`.gitleaksignore`) e continua acusando qualquer segredo novo | Product Owner (Security Lead da v1), decisão registrada em 2026-10-07 | Se aparecer qualquer segredo **diferente** no histórico ou no código; ou se for descoberto que a chave não está de fato revogada (verificar no console antes da publicação) |
+| SEC-03 / RR-9 | O SmarterASP não respondeu se o banco tem conta separada de leitura e escrita para o site: o site usa uma **conta única com permissão total** sobre o banco | **Risco aceito (RR-9).** Compensações já no código: SQL só com parâmetros nomeados e listas permitidas (T2), sem `Database.Migrate()` na partida, usuário do pool sem acesso fora das três pastas | Product Owner, 2026-10-07 | Se o provedor oferecer conta separada (então o site passa a usar uma conta sem `db_owner`, e as migrations rodam por outra conta); ou depois de qualquer SQL injection comprovado |
 
 ### 6. Monitoring & Audit
 - [x] Registro de eventos de segurança — Serilog `Warning` para falha, bloqueio e recusa de login, permissão negada e limite excedido; `Information` para entrada e saída (RC-16) (Task 1.1, 0.4)

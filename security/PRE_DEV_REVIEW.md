@@ -66,7 +66,7 @@ Reconciliação de `architecture/ARCHITECTURE.md` §13 (cada linha aparece aqui)
 
 | Id | Disposição | Detalhe |
 |----|------------|---------|
-| AR-01 | Deferred — ack recebido (PO, 2026-09-30) | Requisitos de segurança da pasta definidos (fora da raiz, só a identidade do site escreve, fora do git e do pacote: S3, I1, I7); o **caminho exato e a permissão** continuam com o Product Owner e o SmarterASP **Não bloqueia o `/build`** (PO, 2026-09-30). |
+| AR-01 | **Resolvida em 2026-10-07** (caminhos reais do SmarterASP; ver ARCHITECTURE §9). Antes: Deferred — ack recebido (PO, 2026-09-30) | Requisitos de segurança da pasta definidos (fora da raiz, só a identidade do site escreve, fora do git e do pacote: S3, I1, I7); o **caminho exato e a permissão** continuam com o Product Owner e o SmarterASP **Não bloqueia o `/build`** (PO, 2026-09-30). |
 | AR-02 | Deferred — ack recebido (PO, 2026-09-30) | Não é de segurança em si, mas a versão candidata do runtime tem risco (RR-10): trocar pela estável antes do lançamento **Não bloqueia o `/build`**; a versão candidata é condição de lançamento no RR-10. |
 | AR-03 | Deferred — ack recebido (PO, 2026-09-30) | Versão do SQL Server (correções de segurança), conta do banco com permissão mínima (SEC-03, RR-9) e backup (S19) Reconhecida; o Product Owner não classificou o bloqueio (o plano assume SQL Server 2016 ou mais novo). |
 | AR-04 | Resolvida pelo /secure | Espaço em disco é disponibilidade (D5): controles RC-6, RC-2 e RC-21 limitam o consumo; monitorar o espaço fica no `/infra` |
@@ -93,7 +93,7 @@ Reconciliação de `architecture/ARCHITECTURE.md` §13 (cada linha aparece aqui)
 | S1, S2, S5, S7–S15, S20–S25, S27, S29 | Não é de segurança | Assumidas pelo SPEC; o cookie de sessão é essencial, então a S8 (aviso de cookies) não muda |
 | SEC-01 | Assumido; pendência de lançamento | **Decidido pelo PO (2026-09-30):** o IP do cliente vem em `X-Forwarded-For`; `UseForwardedHeaders` com `ForwardedHeaders.XForwardedFor` e `XForwardedProto`; `KnownProxies` a definir depois da resposta do SmarterASP (ticket aberto). **Cuidado para o `/build`:** sem `KnownProxies` ou `KnownNetworks`, o ASP.NET confia só em loopback e o limitador veria o IP do proxy; limpar essas listas para confiar em qualquer origem deixaria qualquer cliente forjar o cabeçalho e escapar do limite. Até a resposta, usar `ForwardLimit = 1` e manter o teste `RateLimiterTests.CabecalhoEncaminhado_DeOrigemNaoConfiavel_E_Ignorado`. **Bloqueia o lançamento** |
 | SEC-02 | **Decidida pelo PO (2026-09-30): NÃO exigir** | A senha atual do Administrador **não** será pedida ao redefinir a senha de outra pessoa, mudar papel ou trocar o telefone. Motivo do PO: exigiria mudar cenários do SPEC (v1.3) e o ganho é marginal num MVP com poucos usuários. O risco residual **RR-1 fica aceito** |
-| SEC-03 | Assumido o pior caso | **Decidido pelo PO (2026-09-30):** assumir uma conta única do banco com permissão total; ticket aberto ao SmarterASP; **RR-9 aceito**; se o provedor oferecer conta separada, reavaliar no `/infra` |
+| SEC-03 | **Fechada como risco aceito (2026-10-07)** | O SmarterASP não respondeu; vale a conta única, RR-9 aceito (`SECURITY_REQUIREMENTS.md` §5). **Decidido pelo PO (2026-09-30):** assumir uma conta única do banco com permissão total; ticket aberto ao SmarterASP; **RR-9 aceito**; se o provedor oferecer conta separada, reavaliar no `/infra` |
 
 ## Itens de operação (não de código)
 

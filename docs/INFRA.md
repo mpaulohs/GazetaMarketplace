@@ -4,9 +4,9 @@
 
 | O que | Valor |
 |---|---|
-| Destino | SmarterASP, IIS, Windows, ASP.NET Core 10 em processo (`hostingModel="inprocess"`) |
+| Destino | SmarterASP, IIS, Windows, ASP.NET Core 10 em processo (`hostingModel="inprocess"`). Conta `mpaulohs-001`; raiz de arquivos `h:\root\home\mpaulohs-001\www\` |
 | Pasta publicada | `src/GazetaMarketplace.Web/bin/publish/win-x64/`, cerca de **62 MB** (eram 233 MB com os componentes de todas as plataformas) |
-| Banco | SQL Server 2022 (ou Azure SQL), criado só pelo script `db/scripts/gazeta-idempotente.sql` |
+| Banco | **SQL Server 2022** (o provedor oferece 2022 e 2025; escolhido o 2022, o mesmo dos testes), criado só pelo script `db/scripts/gazeta-idempotente.sql`. Conta única com permissão total (SEC-03, risco aceito RR-9) |
 | Contêiner | **Não há.** O destino é o IIS compartilhado; o `trivy` e o `hadolint` do `/scan` não se aplicam (nenhum Dockerfile) |
 
 ## 1. Gerar a pasta publicada
@@ -29,17 +29,17 @@ O que o pacote **não tem** (V-06): `.pdb` (símbolos de depuração), `.xml` de
 3. Publicar → **IIS-WebDeploy**. O Visual Studio pede a senha e a guarda em `IIS-WebDeploy.pubxml.user`, que o git ignora.
 4. O Web Deploy envia **só o que mudou** e **não apaga** o que está no servidor e não veio no pacote (`SkipExtraFilesOnServer`): as pastas de fotos, logs e chaves ficam fora da raiz do site e não são afetadas.
 
-## 2. Pré-requisitos no servidor
+## 2. Pré-requisitos no servidor (respostas do SmarterASP, 2026-10-07)
 
-| Item | Como confirmar | Quem |
+| Item | Situação | O que fazer |
 |---|---|---|
-| **ASP.NET Core Hosting Bundle 10** (runtime e módulo do IIS) | Pergunte ao SmarterASP; sem ele o site não sobe (erro 500.19 ou 502.5). Se só houver a 9, o provedor precisa instalar a 10 ou o pacote vira autocontido (mais ~70 MB) | Product Owner (ticket) |
-| HTTPS com certificado válido no domínio | Abrir `https://seudominio` sem aviso; o site redireciona `http` para `https` (308) e envia HSTS | Product Owner |
-| Pastas **fora da raiz do site**, com escrita só para a identidade do pool: `fotos`, `logs`, `chaves` | Caminhos absolutos (ex.: `D:\dados\fotos`); a `fotos` terá `_originals` por baixo | Product Owner |
-| Caminho **absoluto** nas três pastas | Se for relativo, `_originals/` (que tem GPS) pode cair dentro da pasta publicada (SC-10, P1) | Product Owner |
-| SQL Server com usuário próprio do site (sem `sa`, sem `db_owner` em runtime) | O script cria o esquema; o usuário do site precisa de leitura, escrita e `EXECUTE` | Product Owner |
-| Conta SendGrid com **remetente validado**, SPF e DKIM do domínio | Sem isso o e-mail de redefinição cai no spam | Product Owner |
-| **Monitoramento de espaço em disco** (SC-05) | O envio de fotos não tem cota por usuário: configure aviso de uso de disco no painel do provedor ou olhe a pasta `fotos` toda semana | Product Owner |
+| **.NET 10** (runtime e módulo do IIS) | **Instalado** (AR-02). Publicação *framework-dependent*, `win-x64` | Nada. Se o site der erro 500.19 ou 502.5 na primeira publicação, abra chamado citando o runtime 10 |
+| **HTTPS** | Certificado **grátis** do provedor (AR-09) | **Solicitar no painel, aba SSL**, antes de divulgar o site. O site redireciona `http` para `https` (308) e envia HSTS; sem o certificado válido o HSTS trava o navegador |
+| **Pastas fora da raiz do site** | Caminho base: `h:\root\home\mpaulohs-001\www\`. O pool do IIS tem **leitura e escrita por padrão** (AR-01) | Criar **três subpastas irmãs do site** (não dentro dele): `gazeta-fotos`, `gazeta-chaves`, `gazeta-logs`. Passo a passo no `docs/DEPLOY-RUNBOOK.md`. Dentro da pasta do site o Web Deploy poderia apagá-las numa publicação |
+| **SQL Server** | 2022 e 2025 disponíveis; **escolher a 2022** (AR-03) | Criar o banco na 2022 pelo painel; rodar o script (§3) |
+| **Disco** | **30 GB**, limite flexível (AR-04) | Cabe com folga (estimativa de ~2 GB de fotos). O envio de fotos não tem cota por usuário (SC-05): olhe o uso da pasta `gazeta-fotos` toda semana |
+| **Usuário do banco** | O provedor não respondeu (SEC-03) | Vale a conta única com permissão total, **risco aceito RR-9** (`security/SECURITY_REQUIREMENTS.md` §5). Reavaliar se o provedor oferecer conta separada |
+| Conta SendGrid com **remetente validado**, SPF e DKIM do domínio (AR-12) | Pendente, com o Product Owner | Sem isso o e-mail de redefinição cai no spam |
 
 ## 3. Banco de dados: o script idempotente
 
@@ -68,41 +68,46 @@ O arquivo real **não vai para o git**: ele fica no cofre de senhas e na máquin
 |---|---|---|
 | `ASPNETCORE_ENVIRONMENT` | sim | `Production`. Para um site de homologação, `Staging`: sobe com as **mesmas** proteções (ver §7) |
 | `ConnectionStrings__DefaultConnection` | sim | Cadeia do SQL Server, com `Encrypt=True`. Nunca no git |
-| `PhotoStorage__BasePath` | sim | Pasta das fotos, **absoluta e fora da raiz do site** |
-| `Logging__FileDirectory` | sim | Pasta dos logs (arquivo diário, 14 arquivos, cada um de até 100 MB) |
-| `DataProtection__KeysDirectory` | sim | Pasta das chaves de sessão e antiforgery. **Sem ela a reciclagem do pool derruba a sessão da equipe e invalida links de redefinição** (R-01) |
+| `PhotoStorage__BasePath` | sim | `h:\root\home\mpaulohs-001\www\gazeta-fotos` |
+| `Logging__FileDirectory` | sim | `h:\root\home\mpaulohs-001\www\gazeta-logs` (arquivo diário, 14 arquivos, cada um de até 100 MB) |
+| `DataProtection__KeysDirectory` | sim | `h:\root\home\mpaulohs-001\www\gazeta-chaves`: chaves de sessão e antiforgery. **Sem ela a reciclagem do pool derruba a sessão da equipe e invalida links de redefinição** (R-01) |
 | `SendGrid__ApiKey`, `SendGrid__FromEmail` | sim | Chave de API do SendGrid (permissão só de envio) e remetente validado |
 | `Site__BaseUrl` | sim | Endereço público **com `https`**, sem barra no fim. Vai nos links dos e-mails; sem ele o link nasceria do cabeçalho `Host`, que um atacante forja |
-| `DataProtection__ProtectWithDpapi` | recomendada | `true`: cifra as chaves com o DPAPI do Windows. Só no servidor Windows; em outro sistema o site **recusa subir** com a opção ligada |
+| `DataProtection__ProtectWithDpapi` | opcional | **Começa `false`.** `true` cifra as chaves com o DPAPI do Windows, mas exige que o pool do provedor tenha o perfil do usuário carregado, o que só se descobre testando (§6). Só no servidor Windows; em outro sistema o site **recusa subir** com a opção ligada |
 | `ForwardedHeaders__KnownProxies__0` | **pendente (SEC-01)** | IP do proxy do SmarterASP. Veja §5 |
 | `Bootstrap__AdminEmail`, `Bootstrap__AdminPassword` | só na 1.ª vez | Primeiro Administrador, com troca de senha obrigatória no primeiro acesso. **Remover depois** |
 | `HttpsRedirection__HttpsPort` | não | Padrão 443 em produção |
 
 **Nunca defina em produção** `RateLimiting__*`, `SendGrid__BaseUrl`, `ViaCep__BaseUrl` nem `Authentication__SessionMinutes` com valor de teste: existem para a suíte de testes e afrouxam os limites de proteção ou desviam a chave de API (R-39). Se faltar qualquer variável obrigatória, o site **não sobe** e diz qual faltou (validação na partida).
 
-## 5. IP do proxy (SEC-01, R-11): o que fazer enquanto o provedor não responde
+## 5. IP do proxy (SEC-01, R-11): decisão pendente do Product Owner
 
-**O que acontece sem o valor:** o site ignora o cabeçalho `X-Forwarded-For` (seguro por padrão, "fail-closed"). Atrás do proxy do provedor, todo visitante chega com o mesmo IP, então os limites por IP valem para o **site inteiro** e não para cada visitante.
+**Resposta do SmarterASP (2026-10-07):** o provedor indicou o artigo <https://www.smarterasp.net/support/kb/a2314/how-to-get-remote-ip-address-with-iisnode.aspx>.
+**O KB do SmarterASP é para IISNode (Node.js atrás do IIS). Para ASP.NET Core, o padrão é `X-Forwarded-For` com `KnownProxies`.** O Product Owner vai ler o artigo e, com o que ele disser sobre como as requisições chegam ao site, configura a lista (`ForwardedHeaders__KnownProxies__0`, `__1`...). **Decisão mantida: o site continua fail-closed (lista vazia) até lá.**
+
+**O que acontece sem o valor:** o site ignora o cabeçalho `X-Forwarded-For` (seguro por padrão, "fail-closed"). Se existir um proxy na frente do IIS, todo visitante chega com o mesmo IP e os limites por IP valem para o **site inteiro**. Se **não** existir proxy (o ASP.NET Core roda **em processo** dentro do IIS, e nesse modo o IIS costuma entregar o IP do cliente direto), o site já enxerga o IP certo e a lista nem é necessária.
+
+**Como descobrir sem esperar ninguém (depois da primeira publicação):** erre a senha de propósito uma vez no painel e abra o log do dia em `gazeta-logs`. A linha `Falha de entrada de ... a partir de <IP>` mostra o IP que o site vê. Se for o **seu IP**, não há proxy a configurar: o aviso de partida pode ser ignorado e o limite temporário de 20 passa a ser folga. Se for **sempre o mesmo IP do provedor** (outro que não o seu), é o proxy: grave esse IP em `ForwardedHeaders__KnownProxies__0`. Esta é uma forma prática de decidir; a confirmação do provedor continua valendo.
 
 **O que foi feito para isso não travar a redação (SC-01, SC-02, decisão do Product Owner de 2026-10-07):**
 
-| Ação | Com `KnownProxies` | Sem `KnownProxies` (hoje) |
+| Ação | Com `KnownProxies` (ou com IP real visto direto) | Sem `KnownProxies` atrás de um proxy (pior caso) |
 |---|---|---|
 | Entrar | só **falhas** contam: 5 por 15 min por IP | só falhas: **20** por 15 min por IP |
 | "Esqueci minha senha" | balde próprio: 5 por 15 min por IP | balde próprio: **20** |
 | "Redefinir senha" | balde próprio: 5 por 15 min por IP | balde próprio: **20** |
 | Bloqueio de conta | 5 falhas **do mesmo IP contra a mesma conta**; outro IP segue entrando (SC-03) | igual no código, **mas sem o IP real todos os visitantes parecem o mesmo IP**: o bloqueio de uma conta vale para todo mundo, como antes do SC-03. O atraso progressivo e o aviso por e-mail continuam valendo |
-| Aviso na partida | nenhum | `Warning` nos logs: "ForwardedHeaders:KnownProxies não está configurado..." |
+| Aviso na partida | nenhum quando a lista tem valor | `Warning` nos logs: "ForwardedHeaders:KnownProxies não está configurado..." (também aparece se não houver proxy nenhum; nesse caso é só um lembrete) |
 
-**Atenção:** a proteção do SC-03 (5 senhas erradas de qualquer rede não travam o Administrador) **só funciona de verdade depois que o IP real do visitante é conhecido**. Esta é mais uma razão para fechar o SEC-01 antes de divulgar o site.
+**Atenção:** a proteção do SC-03 (5 senhas erradas de qualquer rede não travam o Administrador) **só funciona de verdade com o IP real do visitante**. Por isso o SEC-01 se fecha antes de divulgar o site.
 
-**O que fazer:** abra um chamado no SmarterASP perguntando **quais endereços de proxy ou balanceador entregam as requisições ao IIS e se enviam `X-Forwarded-For`**. Com a resposta, grave uma variável por endereço (`ForwardedHeaders__KnownProxies__0`, `__1`...) com o IP exato, sem faixa e sem texto (um valor que não é IP derruba a partida). Reinicie o site. O aviso some e o limite volta a 5 por IP.
-**Como conferir:** depois de configurado, `X-Forwarded-For` de um IP qualquer só vale se a conexão vier de um dos proxies listados; faça 6 senhas erradas de um IP e confira que o 6.º recebe 429 e que outro IP segue entrando.
+**Quando houver o IP do proxy:** grave uma variável por endereço (`ForwardedHeaders__KnownProxies__0`, `__1`...) com o IP exato, sem faixa e sem texto (um valor que não é IP derruba a partida) e reinicie o site. O aviso some e o limite volta a 5.
+**Como conferir:** faça 6 senhas erradas de um IP e confira que o 6.º recebe 429 e que outro IP segue entrando.
 
 ## 6. Chaves do Data Protection
 
 - As chaves ficam em `DataProtection__KeysDirectory` (XML). Sem criptografia em repouso quem lê a pasta pelo FTP as lê (RR-2).
-- Com `DataProtection__ProtectWithDpapi=true` elas são cifradas com o DPAPI **no escopo do usuário do pool**: copiadas para outra máquina, não abrem. Custo: se a identidade do pool mudar, as chaves antigas deixam de abrir e a equipe precisa entrar de novo (links de redefinição já enviados também deixam de valer). Por isso é **recomendada, mas opcional**.
+- **Começa desligado** (`false`). Com `DataProtection__ProtectWithDpapi=true` elas são cifradas com o DPAPI **no escopo do usuário do pool**: copiadas para outra máquina, não abrem. Custo: se a identidade do pool mudar, as chaves antigas deixam de abrir e a equipe precisa entrar de novo (links de redefinição já enviados também deixam de valer). Por isso é **opcional**: ligue só depois que a primeira publicação estiver funcionando (login, sessão, link de redefinição) e confira o resultado: reinicie o site, entre de novo e abra o arquivo novo em `gazeta-chaves` (deve citar `dpapi`). Se der erro por falta de perfil de usuário no pool, volte a `false`: nada se perde além de a equipe entrar de novo.
 - Permissão da pasta: escrita **só** para a identidade do pool.
 
 ## 7. Staging (V-05)

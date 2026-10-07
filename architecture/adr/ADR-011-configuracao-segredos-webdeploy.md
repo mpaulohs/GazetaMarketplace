@@ -51,7 +51,7 @@ Revisit this decision when **any** of the following becomes true:
         <environmentVariables xdt:Transform="InsertIfMissing">
           <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="ConnectionStrings__DefaultConnection" value="(valor real)" xdt:Transform="InsertIfMissing" />
-          <environmentVariable name="PhotoStorage__BasePath" value="h:\root\home\(conta)\www\gazeta-fotos" xdt:Transform="InsertIfMissing" />
+          <environmentVariable name="PhotoStorage__BasePath" value="h:\root\home\mpaulohs-001\www\gazeta-fotos" xdt:Transform="InsertIfMissing" />
           <!-- demais variáveis de ARCHITECTURE.md §9 -->
         </environmentVariables>
       </aspNetCore>
@@ -81,7 +81,7 @@ Revisit this decision when **any** of the following becomes true:
 </ItemGroup>
 ```
 
-- **Pastas persistentes fora da raiz** (caminho a confirmar, AR-01): `PhotoStorage__BasePath`, `Logging__FileDirectory`, `DataProtection__KeysDirectory`. As chaves do Data Protection usam `PersistKeysToFileSystem`; se a proteção por DPAPI não estiver disponível sem perfil de usuário carregado, as chaves ficam sem criptografia adicional, protegidas pela permissão da pasta (registrado em AR-01).
+- **Pastas persistentes fora da raiz** (caminhos reais confirmados pelo SmarterASP em 2026-10-07, AR-01): `PhotoStorage__BasePath` = `h:\root\home\mpaulohs-001\www\gazeta-fotos`, `Logging__FileDirectory` = `h:\root\home\mpaulohs-001\www\gazeta-logs`, `DataProtection__KeysDirectory` = `h:\root\home\mpaulohs-001\www\gazeta-chaves`; as três irmãs do site, com leitura e escrita para o pool. As chaves do Data Protection usam o repositório de arquivos nessa pasta. A cifra por DPAPI (`DataProtection__ProtectWithDpapi`) é opcional e **começa desligada**: depende de o pool do provedor ter o perfil do usuário carregado, o que só se sabe testando; sem ela as chaves ficam sem criptografia adicional, protegidas pela permissão da pasta.
 - **Validação na inicialização:** opções tipadas com `ValidateDataAnnotations().ValidateOnStart()` para conexão, pastas e SendGrid em produção.
 - **Primeiro Administrador:** variáveis `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword` só na primeira publicação; retirar do `web.Production.config` em seguida (ADR-003).
 - **Banco:** script idempotente de migrations executado antes de publicar o site novo (ADR-004).

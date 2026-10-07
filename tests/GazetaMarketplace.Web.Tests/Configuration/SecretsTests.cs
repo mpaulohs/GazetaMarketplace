@@ -13,6 +13,9 @@ namespace GazetaMarketplace.Web.Tests.Configuration;
 public sealed class SecretsTests
 #pragma warning restore CA1515
 {
+    // As três pastas do plano do SmarterASP (AR-01): caminho de pasta não é segredo
+    private static readonly Regex FolderPath = new(@"^h:\\root\\home\\[A-Za-z0-9-]+\\www\\gazeta-(fotos|logs|chaves)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+
     private static readonly string[] Extensions = [".json", ".config", ".example", ".xml", ".props", ".cs", ".cshtml", ".yml", ".yaml"];
     private static readonly string[] IgnoredFolders = ["bin", "obj", "lib", "node_modules", ".git"];
 
@@ -62,8 +65,8 @@ public sealed class SecretsTests
         foreach (Match m in values)
         {
             string value = m.Groups[1].Value;
-            // "true" é o valor do interruptor do DPAPI (DataProtection__ProtectWithDpapi): não é segredo
-            bool placeholder = value.StartsWith('(') || value is "Production" or "true";
+            // "true"/"false" é o valor do interruptor do DPAPI (DataProtection__ProtectWithDpapi) e h:\root\home\... é o caminho das pastas do plano: nenhum dos dois é segredo
+            bool placeholder = value.StartsWith('(') || value is "Production" or "true" or "false" || FolderPath.IsMatch(value);
             Assert.IsTrue(placeholder, "Valor que não é placeholder no arquivo de exemplo: " + value);
         }
     }
