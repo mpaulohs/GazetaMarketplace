@@ -62,7 +62,8 @@ public sealed class SecretsTests
         foreach (Match m in values)
         {
             string value = m.Groups[1].Value;
-            bool placeholder = value.StartsWith('(') || value == "Production";
+            // "true" é o valor do interruptor do DPAPI (DataProtection__ProtectWithDpapi): não é segredo
+            bool placeholder = value.StartsWith('(') || value is "Production" or "true";
             Assert.IsTrue(placeholder, "Valor que não é placeholder no arquivo de exemplo: " + value);
         }
     }

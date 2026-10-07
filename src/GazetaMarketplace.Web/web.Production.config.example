@@ -24,8 +24,8 @@
           <!-- IP do proxy do SmarterASP (SEC-01, PENDENTE: a resposta vem do ticket aberto no provedor).
                Enquanto não houver o valor real, NÃO crie esta variável: o site ignora X-Forwarded-For (fail-closed), todos os visitantes dividem o IP do proxy,
                e entrar, "esqueci" e "redefinir" aceitam 20 tentativas por 15 minutos para o site inteiro (com o IP certo, 5 por IP). Um Warning na partida lembra disso.
-               Quando o provedor responder, acrescente UMA variável por proxy (0, 1, 2...) com o IP exato, sem faixa e sem texto:
-               <environmentVariable name="ForwardedHeaders__KnownProxies__0" value="203.0.113.10" xdt:Transform="InsertIfMissing" /> -->
+               Quando o provedor responder, acrescente UMA variável por proxy, no mesmo formato das outras linhas deste arquivo:
+               nome ForwardedHeaders__KnownProxies__0 (depois __1, __2...) e, como valor, o IP exato do proxy, sem faixa e sem texto. -->
           <!-- Cifra as chaves do Data Protection com o DPAPI do Windows (identidade do pool). Ligue só no servidor Windows;
                em outro sistema o site recusa subir com esta opção ligada. Se a identidade do pool mudar, as chaves antigas não abrem
                e a equipe precisa entrar de novo (os links de redefinição já enviados deixam de valer). -->

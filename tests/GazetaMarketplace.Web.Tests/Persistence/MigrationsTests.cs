@@ -42,7 +42,15 @@ public sealed class MigrationsTests
         string[] code = [.. Script().TrimStart('\uFEFF').Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0 && !l.StartsWith("--", StringComparison.Ordinal))];
 
         Assert.AreEqual("SET QUOTED_IDENTIFIER ON;", code[0]);
-        Assert.AreEqual("GO", code[1]);
+
+        // Os demais SET que índice sobre coluna calculada exige (ARITHABORT etc.) vêm junto, e só então o primeiro GO: nenhum comando de esquema antes dele
+        int firstGo = Array.IndexOf(code, "GO");
+        Assert.IsGreaterThan(0, firstGo, "o script tem um GO depois dos SET");
+        Assert.IsTrue(code.Take(firstGo).All(l => l.StartsWith("SET ", StringComparison.Ordinal)), "antes do primeiro GO só há SET");
+        foreach (string option in new[] { "SET ARITHABORT ON;", "SET ANSI_NULLS ON;", "SET ANSI_PADDING ON;", "SET ANSI_WARNINGS ON;", "SET CONCAT_NULL_YIELDS_NULL ON;", "SET NUMERIC_ROUNDABORT OFF;" })
+        {
+            CollectionAssert.Contains(code.Take(firstGo).ToArray(), option);
+        }
     }
 
     [TestMethod]
