@@ -129,6 +129,16 @@ cat tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/performance-n
 
 ## Parte 2 — Verificação manual
 
+> **Decisão do Product Owner (2026-10-07):** só **M6 (fotos reais e GPS), M7 (HTTPS) e M10 (nunca página branca)** bloqueiam o go-live (divulgar o site ao público). Os outros 8 itens (**M1 a M5, M8, M9 e M11**) ficam **para depois do deploy** e não seguram a publicação; eles viram correções se falharem. Como M7 só dá para conferir com o site já publicado em HTTPS válido, faça M6, M7 e M10 **logo depois de publicar e antes de divulgar o endereço**. A preparação P1 a P3 é pré-requisito dos três.
+>
+> | Item | Quando | Bloqueia? |
+> |---|---|---|
+> | P1–P3 (preparação) | logo depois da publicação | pré-requisito |
+> | **M6** fotos reais, orientação, cor e **GPS retirado** | antes de divulgar | **sim** |
+> | **M7** HTTPS, cabeçalhos, compressão, cache das fotos | antes de divulgar | **sim** |
+> | **M10** página 404 e erro sem página branca | antes de divulgar | **sim** |
+> | M1 celular · M2 WhatsApp · M3 NVDA · M4 Firefox · M5 Safari · M8 CEP real · M9 og:image · M11 outros | depois do deploy | não |
+>
 > **Como usar:** faça na ordem. Marque `[x]` ao passar. Onde o item diz "**na hospedagem**", precisa do site publicado em HTTPS com certificado válido; os demais podem ser feitos em `https://localhost:5443` (aceite o aviso do certificado). Se um item falhar, **anote o número do item, o que apareceu e uma captura de tela**, e siga para o próximo; não tente corrigir.
 
 ### Preparação (uma vez)
@@ -137,7 +147,7 @@ cat tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/performance-n
 - [ ] **P2.** Em `/painel/configuracoes`, informe o **telefone do site** (um celular real seu, com DDD). O WhatsApp e o "Ligar" dos anúncios usam este número.
 - [ ] **P3.** Como Redator, cadastre **3 anúncios reais** (carro, imóvel e um produto qualquer) com fotos de verdade (ver M6), envie para revisão; como Administrador, **publique** os três. Sem anúncios publicados, vários itens abaixo não têm o que mostrar.
 
-### M1. Celular de verdade (Android e iPhone) — na hospedagem
+### M1. Celular de verdade (Android e iPhone) — na hospedagem — **[PÓS-DEPLOY]**
 
 | Passo | O que esperar | Se falhar |
 |---|---|---|
@@ -147,7 +157,7 @@ cat tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/performance-n
 | Toque no coração (favoritos), feche o navegador e abra de novo `/favoritos` | O anúncio continua favoritado | Informe se o navegador estava em aba anônima (favoritos ficam só no navegador) |
 | Gire o celular para horizontal | Nada fica cortado | Captura de tela |
 
-### M2. WhatsApp e ligação — celular, na hospedagem
+### M2. WhatsApp e ligação — celular, na hospedagem — **[PÓS-DEPLOY]**
 
 | Passo | O que esperar | Se falhar |
 |---|---|---|
@@ -155,7 +165,7 @@ cat tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/performance-n
 | Toque **Ligar** | O celular mostra a discagem para `+55` e o número do site | Idem |
 | No computador, abra o mesmo anúncio | Os dois botões existem; o do WhatsApp abre o WhatsApp Web | Captura de tela |
 
-### M3. Leitor de tela NVDA e teclado (Windows) — local ou hospedagem
+### M3. Leitor de tela NVDA e teclado (Windows) — local ou hospedagem — **[PÓS-DEPLOY]**
 
 Instale o NVDA (gratuito, nvaccess.org). Use só o teclado: `Tab`, `Shift+Tab`, `Enter`, `Espaço`, setas.
 
@@ -167,7 +177,7 @@ Instale o NVDA (gratuito, nvaccess.org). Use só o teclado: `Tab`, `Shift+Tab`, 
 | Troque a categoria | O NVDA diz "Campos atualizados para a categoria …" | Idem |
 | Janelas de confirmação (remover foto, despublicar) | O foco vai para a janela e volta ao botão ao fechar; `Esc` fecha | Anote o passo |
 
-### M4. Firefox (computador) — local ou hospedagem
+### M4. Firefox (computador) — local ou hospedagem — **[PÓS-DEPLOY]**
 
 | Passo | O que esperar | Se falhar |
 |---|---|---|
@@ -175,7 +185,7 @@ Instale o NVDA (gratuito, nvaccess.org). Use só o teclado: `Tab`, `Shift+Tab`, 
 | Formulário do anúncio: escolha a categoria Carros e a cadeia Marca → Modelo → Ano → Versão | Cada lista libera a seguinte | Idem |
 | Galeria e envio de fotos | Envio por arrastar ou botão; miniaturas aparecem | Idem |
 
-### M5. Safari (Mac e iPhone) — local ou hospedagem
+### M5. Safari (Mac e iPhone) — local ou hospedagem — **[PÓS-DEPLOY]**
 
 | Passo | O que esperar | Se falhar |
 |---|---|---|
@@ -183,7 +193,7 @@ Instale o NVDA (gratuito, nvaccess.org). Use só o teclado: `Tab`, `Shift+Tab`, 
 | No iPhone, **envie uma foto direto da câmera** (HEIC) no formulário | Aparece a miniatura; o anúncio mostra a foto **na orientação certa** | Se a foto vier deitada, anote (é o item de orientação de M6) |
 | Preço e CEP digitados no iPhone | Máscaras funcionam; teclado numérico abre | Capture |
 
-### M6. Fotos reais — local ou hospedagem
+### M6. Fotos reais — local ou hospedagem — **[BLOQUEIA O GO-LIVE]**
 
 Use **de 3 a 5 fotos suas**: uma HEIC de iPhone, um JPEG grande de Android (4 MB ou mais), uma com a câmera na vertical. Depois uma carga de 24 anúncios com foto (ou 24 fotos num só, no limite de 20) para a lista.
 
@@ -195,7 +205,7 @@ Use **de 3 a 5 fotos suas**: uma HEIC de iPhone, um JPEG grande de Android (4 MB
 | Peso da lista (24 anúncios) e do detalhe | Lista até 2 MB, detalhe até 3 MB na primeira carga (DevTools → Rede → "Transferido"); no detalhe, as fotos além da primeira só carregam depois do deslize | Anote os números |
 | Limite: tente o 21.º foto | Mensagem "Cada anúncio pode ter no máximo 20 fotos" | Anote |
 
-### M7. HTTPS — na hospedagem
+### M7. HTTPS — na hospedagem — **[BLOQUEIA O GO-LIVE]**
 
 | Passo | O que esperar | Se falhar |
 |---|---|---|
@@ -206,7 +216,7 @@ Use **de 3 a 5 fotos suas**: uma HEIC de iPhone, um JPEG grande de Android (4 MB
 | Fotos | `cache-control: public, max-age=31536000, immutable` | Anote |
 | Opcional: cole o endereço em securityheaders.com | Nota A ou melhor | Anote a nota |
 
-### M8. CEP real — na hospedagem (o ambiente de teste não alcança o ViaCEP)
+### M8. CEP real — na hospedagem (o ambiente de teste não alcança o ViaCEP) — **[PÓS-DEPLOY]**
 
 | Passo | O que esperar | Se falhar |
 |---|---|---|
@@ -216,7 +226,7 @@ Use **de 3 a 5 fotos suas**: uma HEIC de iPhone, um JPEG grande de Android (4 MB
 | Repita `13015-100` | Resposta instantânea (veio do cache de 30 dias) | Anote se demorou |
 | Simule falha: desligue a internet do servidor (ou bloqueie `viacep.com.br`) e digite um CEP novo | "Buscando… (tentativa 2 de 2)", depois mensagem e **Cidade/UF manuais**; consegue enviar o anúncio | Anote |
 
-### M9. Pré-visualização do link (og:image) — na hospedagem
+### M9. Pré-visualização do link (og:image) — na hospedagem — **[PÓS-DEPLOY]**
 
 | Passo | O que esperar | Se falhar |
 |---|---|---|
@@ -225,7 +235,7 @@ Use **de 3 a 5 fotos suas**: uma HEIC de iPhone, um JPEG grande de Android (4 MB
 | Opcional: Facebook Sharing Debugger com o mesmo endereço | Mesma prévia | Anote o erro que o depurador mostrar |
 | Anúncio **arquivado** (arquive um de teste) | O endereço mostra "Este anúncio não está mais disponível" e o código-fonte tem `<meta name="robots" content="noindex">` | Anote |
 
-### M10. Página 404 e erros — local ou hospedagem
+### M10. Página 404 e erros — local ou hospedagem — **[BLOQUEIA O GO-LIVE]**
 
 | Passo | O que esperar | Se falhar |
 |---|---|---|
@@ -233,7 +243,7 @@ Use **de 3 a 5 fotos suas**: uma HEIC de iPhone, um JPEG grande de Android (4 MB
 | Abra um anúncio inexistente `/anuncio/999999/x` | "Este anúncio não está mais disponível" (a mesma de um anúncio arquivado) | Idem |
 | Envie um formulário com a aba velha (deixe a página aberta 1 hora, volte e clique Salvar) | Página "Algo deu errado" com status 400, **nunca branca** | Anote (se branca, é defeito grave) |
 
-### M11. Outros itens que só você confere (vindos do `/test`)
+### M11. Outros itens que só você confere (vindos do `/test`) — **[PÓS-DEPLOY]**
 
 - [ ] **M11.1** E-mail real de recuperação de senha (SendGrid, na hospedagem): peça a redefinição para o seu e-mail; o e-mail chega em minutos, o link abre `https://seu-dominio/painel/redefinir-senha?...` e **vale 1 vez**. Se não chegar, veja a caixa de spam e o painel do SendGrid.
 - [ ] **M11.2** Sessão da equipe: entre, deixe 30 minutos parado e clique em qualquer coisa → volta ao login com o aviso de sessão expirada.
@@ -247,4 +257,4 @@ Use **de 3 a 5 fotos suas**: uma HEIC de iPhone, um JPEG grande de Android (4 MB
 
 Está em `reports/VERIFY_REPORT.md`: liveness, cabeçalhos de segurança, erros em formato padrão, CORS fechado, rotas de desenvolvimento ausentes em Production, limite de login com 429, 258 testes de navegador no artefato publicado, acessibilidade (axe, nível A e AA) e larguras (320, 768, 1024, 1280) em 45 telas, e a matriz cenário → teste. Os itens acima são o que **não dá** para provar sem um aparelho, uma pessoa ou a rede de produção.
 
-**Resumo de como decidir:** todos os itens P1–P3 e M1–M10 passando = pode seguir para publicar (`/deploy`). Qualquer falha em M6 (GPS), M7 (HTTPS) ou M10 (página branca) **bloqueia** a publicação; as demais viram itens de correção e você decide.
+**Resumo de como decidir:** P1–P3, M6, M7 e M10 passando = pode divulgar o site (go-live). Qualquer falha em M6 (GPS), M7 (HTTPS) ou M10 (página branca) **bloqueia** a divulgação; as demais (M1–M5, M8, M9, M11) viram itens de correção depois do deploy e você decide.

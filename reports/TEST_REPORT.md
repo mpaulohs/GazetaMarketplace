@@ -1818,7 +1818,7 @@ Nenhum arquivo de teste novo nesta rodada; só os logs em `reports/test-artifact
 
 ## /verify — verificação do artefato (2026-10-07)
 
-> **Em resumo:** o artefato publicado (`6bb592c8…83ec`, commit `6953fa3`) **passou em tudo que a máquina consegue provar**: 254 de 254 testes de navegador executados, 4 de 4 métricas de velocidade rodadas à parte, contrato HTTP com 52 verificações sem falha. O veredito é **PASS WITH CONDITIONS** (ver `reports/VERIFY_REPORT.md`): 64 de 130 cenários ainda sem teste de navegador marcado, itens manuais no `docs/VERIFY-CHECKLIST.md` e ausência de perfil Staging.
+> **Em resumo:** o artefato publicado (`6bb592c8…83ec`, commit `6953fa3`) **passou em tudo que a máquina consegue provar**: 254 de 254 testes de navegador executados, 4 de 4 métricas de velocidade rodadas à parte, contrato HTTP com 52 verificações sem falha. O veredito é **PASS WITH CONDITIONS** (ver `reports/VERIFY_REPORT.md`): itens manuais bloqueadores M6, M7 e M10 do `docs/VERIFY-CHECKLIST.md`, o V-01 (P0, `/infra`) e a ausência de perfil Staging; a rastreabilidade fechou com 87 provados e 43 dispensados.
 
 | Item | Resultado |
 |---|---|
@@ -1829,7 +1829,7 @@ Nenhum arquivo de teste novo nesta rodada; só os logs em `reports/test-artifact
 | Métricas de velocidade (`GAZETA_VITALS=1`, sozinhas) | 4 / 4: LCP 916 · 1.068 · 1.100 · 440 ms; INP 56 · 56 · 80 · 64 ms; CLS 0,0000 (busca com script atrasado: 0,0043) |
 | Peso (fotos sintéticas) | lista 171 KB, detalhe 168 KB (limites 2 MB e 3 MB) |
 | Limite de login no artefato (limites padrão) | 5 passam, o 6.º recebe 429 com `Retry-After: 900` |
-| Rastreabilidade | 66 / 130 provados no artefato; 23 prováveis; 41 só em processo (`reports/VERIFY_MATRIX.md`; item V-04 do BACKLOG) |
+| Rastreabilidade | **87 / 130** provados no navegador no artefato; **43 dispensados** com prova em processo (waiver do Product Owner, 2026-10-07; 2 deles aguardam o "de acordo"); 0 sem teste. 3 E2E renomeados (rodaram: 3/3; total segue 258). `reports/VERIFY_MATRIX.md`; V-04 agora P2 |
 | Fronteira | Nenhum arquivo de `src/` nem de `tests/` foi alterado pelo `/verify` |
 
 **OPEN do `/review` fechados ou movidos por este `/verify`:** OPEN-004 (`GAZETA_VITALS`) **fechado**: os 4 testes de métricas rodaram sozinhos e passaram; falta repeti-los na hospedagem (V-08). OPEN-001 (instabilidade de `US005S06`) **sem recorrência** em 3 rodadas completas hoje (258 testes cada). OPEN-005 e OPEN-007 seguem diferidos (`/simplify`, `/infra`).

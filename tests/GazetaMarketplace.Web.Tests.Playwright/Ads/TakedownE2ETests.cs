@@ -126,7 +126,7 @@ public class TakedownE2ETests : SitePage
     }
 
     [TestMethod]
-    public async Task US011S03_S02_Arquivar_CancelarNaoMudaNada_ConfirmarArquivaEDeixaSoLeitura()
+    public async Task US011S03_S02_S06_Arquivar_CancelarNaoMudaNada_ConfirmarArquivaEDeixaSoLeitura()
     {
         using FakeViaCep viaCep = new();
         await SignInAdminAsync().ConfigureAwait(false);

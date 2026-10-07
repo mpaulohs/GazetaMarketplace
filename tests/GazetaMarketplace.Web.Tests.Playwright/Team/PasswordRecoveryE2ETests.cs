@@ -66,7 +66,7 @@ public class PasswordRecoveryE2ETests : SitePage
     }
 
     [TestMethod]
-    public async Task US007_EsqueciMinhaSenha_PedirOLink_DefinirANovaSenha_ELinkNaoValeDeNovo()
+    public async Task US007S01_S02_S05_S06_S07_EsqueciMinhaSenha_PedirOLink_DefinirANovaSenha_ELinkNaoValeDeNovo()
     {
         string email = await CreateWriterAsync().ConfigureAwait(false);
         int port = int.Parse(RequiresVariablesAttribute.Value("GAZETA_E2E_SENDGRID_PORT"), System.Globalization.CultureInfo.InvariantCulture);

@@ -118,7 +118,7 @@ public class ContactE2ETests : SitePage
     }
 
     [TestMethod]
-    public async Task US004S01_S03_SemLogin_VeONumeroEOsDoisBotoes_ComALigacaoEOWhatsAppProntos()
+    public async Task US004S01_S02_S03_SemLogin_VeONumeroEOsDoisBotoes_ComALigacaoEOWhatsAppProntos()
     {
         string path = await PlainAsync().ConfigureAwait(false);
         IPage visitor = await VisitorAsync(path).ConfigureAwait(false);

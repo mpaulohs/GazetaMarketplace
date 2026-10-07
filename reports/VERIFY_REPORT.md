@@ -4,7 +4,7 @@
 - **Environment:** `ASPNETCORE_ENVIRONMENT=Production`, HTTPS (certificado autoassinado, `https://localhost:5443`), SQL Server 2022 em contêiner. **Não existe perfil Staging** no projeto: a verificação roda com a configuração de Production, e isso fica registrado como dispensa (dono: `/infra`). Não houve rede de produção real, domínio nem certificado válido: esses itens estão no `docs/VERIFY-CHECKLIST.md`.
 - **Date:** 2026-10-07
 
-> **Em resumo:** o artefato publicado **responde, serve o que promete e passou em todos os testes automáticos de navegador (254 de 254 executados; 0 falhas)**, com cabeçalhos de segurança, erros em formato padrão, CORS fechado, limite de login funcionando e as métricas de velocidade muito abaixo dos limites. O **veredito é PASS WITH CONDITIONS**, por três razões: (1) 64 dos 130 cenários da SPEC não têm teste de navegador **marcado** com o id do cenário no artefato (a regra da matriz exige 100%; 41 só têm prova em processo e 23 têm um E2E provável, sem marca); (2) o que só uma pessoa, um aparelho ou a rede de produção prova (celular, WhatsApp, leitor de tela, Firefox, Safari, fotos reais, HTTPS válido, CEP real, pré-visualização de link) está no checklist e **ainda não foi feito**; (3) não há perfil Staging. Nenhuma falha de produto foi encontrada.
+> **Em resumo:** o artefato publicado **responde, serve o que promete e passou em todos os testes automáticos de navegador (254 de 254 executados; 0 falhas)**, com cabeçalhos de segurança, erros em formato padrão, CORS fechado, limite de login funcionando e as métricas de velocidade muito abaixo dos limites. O **veredito continua PASS WITH CONDITIONS** (atualizado em 2026-10-07 com as decisões do Product Owner): a rastreabilidade fechou (87 de 130 cenários provados no navegador; 43 dispensados com prova em processo); restam como condições os **três itens manuais bloqueadores** (M6 fotos e GPS, M7 HTTPS, M10 página 404 e erro), o **V-01 (balde de limite compartilhado, P0 do `/infra`)** e a dispensa de ambiente (sem perfil Staging). Nenhuma falha de produto foi encontrada.
 
 ## 1. Summary
 
@@ -15,7 +15,7 @@
 | 2 | Contrato HTTP no artefato (cabeçalhos, erros, CORS, rotas de desenvolvimento, limites, fotos, compressão, SEO) | 52 / 52 verificações · 3 observações para o BACKLOG | PASS |
 | 3 | E2E de navegador no artefato | 254 / 254 executados; 4 ignorados (métricas) rodados à parte: 4 / 4 | PASS |
 | 4 | NFR (25 linhas) | 20 medidas (9 com complemento manual) · 4 verificadas em outro portão · 1 gatilho pós-lançamento · 0 fora do limite | PASS WITH CONDITIONS (ver §4) |
-| 5 | Rastreabilidade cenário → teste | 66 / 130 provados no artefato; 23 prováveis; 41 só em processo | **Abaixo de 100%** |
+| 5 | Rastreabilidade cenário → teste | 87 / 130 provados no artefato + 43 dispensados com prova em processo (waiver do Product Owner, 2026-10-07) | PASS (com dispensas; 2 aguardam "de acordo") |
 
 **Gate verdict: PASS WITH CONDITIONS.** Não é `SUCCEEDED` porque a Fase 5 não chegou a 100% e porque os itens manuais ainda não foram feitos. Não é `FAILED`: nada falhou. Promover para produção fica **bloqueado até as condições da §5 serem fechadas ou dispensadas por você**.
 
@@ -23,7 +23,7 @@ Evidências de texto: `reports/verify-artifacts/evidence/` (`phase1-liveness.txt
 
 ## 2. Traceability matrix
 
-Veja `reports/VERIFY_MATRIX.md`. **Cobertura: 66 de 130 cenários (50%) com teste de navegador marcado no artefato**; 23 com E2E provável (um arquivo de E2E cita a história e o cenário, mas nenhum teste leva o id); 41 só com prova em processo (SQLite ou SQL Server real, host dentro do `dotnet test`, que passou). Nenhuma dispensa foi dada: **o `/verify` não pode se dispensar sozinho**; as 64 lacunas precisam de marca/teste (`/test`) ou da sua assinatura de dispensa. Observação sobre a leitura do número: a busca é por menção explícita do id, então **subestima** a cobertura real (por exemplo, `US-001-S01` aparece coberto pela jornada de ponta a ponta sem login, mas o teste não leva o id).
+Veja `reports/VERIFY_MATRIX.md`. **Cobertura: 87 de 130 cenários (67%) provados por teste de navegador marcado no artefato; 43 dispensados com prova em processo (SQLite ou SQL Server real, host dentro do `dotnet test`, que passou); 0 sem nenhum teste.** Histórico do número no mesmo dia: o primeiro relatório contou 66 provados, porque o leitor não entendia nomes como `US002S01_S02_S05`; corrigido o leitor, subiu para 80; 3 testes de navegador foram renomeados para levar os ids que já provam (`US007S01_S02_S05_S06_S07_…`, `US011S03_S02_S06_…`, `US004S01_S02_S03_…`; rodaram de novo, 3/3) e chegou a 87. **Waiver (reason + approver):** Product Owner, 2026-10-07, "a cobertura real é alta; o número subestima porque a busca é por menção explícita; não vale escrever testes novos agora". Dos 43, **41 foram aprovados na lista dele; 2 foram acrescentados por este relatório** (`US-011-S07`, o Redator não vê as ações de retirada, que o E2E não cobre porque a conta de teste é Administrador; e `US-013-S08`, excluir categoria com anúncios) e **aguardam o seu "de acordo"**. As dispensas caem quando o `/test` marcar ou escrever os E2E (BACKLOG V-04, agora P2).
 
 ## 3. Failures & evidence
 
@@ -31,9 +31,9 @@ Nenhuma falha de teste. Observações do contrato HTTP, todas **sem risco de seg
 
 | # | Observação | Evidência | Prioridade |
 |---|---|---|---|
-| V-01 | Entrar, "esqueci minha senha" e "redefinir senha" **dividem o mesmo balde de 5 pedidos por 15 minutos por IP**: depois de 5 tentativas de login, os outros dois também respondem 429 | `phase2-rate-limits.txt` | P2 |
-| V-02 | O 429 de uma página responde **texto simples** ("Muitas tentativas. Tente novamente em alguns instantes."), sem a moldura do site | `phase2-rate-limits.txt` | P2 |
-| V-03 | `/Home/Error` abre direto com 200 (a página de erro genérica é alcançável por URL); mesmo caso do `/Home/Status` já em R-47 | `phase2-contract.txt` | P2 |
+| V-01 | Entrar, "esqueci minha senha" e "redefinir senha" **dividem o mesmo balde de 5 pedidos por 15 minutos por IP**: depois de 5 tentativas de login, os outros dois também respondem 429 | `phase2-rate-limits.txt` | **P0 do `/infra`** (decisão do Product Owner: bloqueia o deploy) |
+| V-02 | O 429 de uma página responde **texto simples** ("Muitas tentativas. Tente novamente em alguns instantes."), sem a moldura do site | `phase2-rate-limits.txt` | P2 (`/simplify`) |
+| V-03 | `/Home/Error` abre direto com 200 (a página de erro genérica é alcançável por URL); mesmo caso do `/Home/Status` já em R-47 | `phase2-contract.txt` | P2 (`/fix-issue`) |
 
 Aviso importante que **este `/verify` confirmou**: sem a lista de proxies (R-11), a equipe inteira divide o balde de IP; com V-01, quem errou o login 5 vezes também não consegue pedir a redefinição de senha por 15 minutos. Vai no runbook do `/deploy`.
 
@@ -73,10 +73,11 @@ Resumo: 25 linhas, nenhuma omitida; 20 medidas neste `/verify` (as NFR-01, 05, 0
 
 **PASS WITH CONDITIONS** — promoção bloqueada até que:
 
-1. **Fase 5.** Os 64 cenários sem teste de navegador marcado sejam (a) marcados/escritos no `/test` (item V-04 do BACKLOG) **ou** (b) dispensados por você, por escrito, com o motivo (sugestão: dispensar os 41 que já têm prova em processo na mesma regra de negócio, e exigir marca para os 23 prováveis, que é só trocar o nome do teste).
-2. **Itens manuais.** Você faça o `docs/VERIFY-CHECKLIST.md`; bloqueiam a publicação se falharem: **M6 (GPS retirado das fotos)**, **M7 (HTTPS e cabeçalhos na hospedagem)** e **M10 (nunca página branca)**. Os demais viram correções.
-3. **Staging.** Dispensa de ambiente registrada: sem perfil Staging, a verificação usou Production (dono: `/infra`).
+1. **Itens manuais bloqueadores** (você faz no site publicado, antes de divulgar; `docs/VERIFY-CHECKLIST.md`): **M6** (fotos reais, orientação, cor, **GPS retirado**), **M7** (HTTPS, cabeçalhos, compressão, cache) e **M10** (404 e erro, nunca página branca). Os outros 8 itens (M1 a M5, M8, M9, M11) ficam **pós-deploy** e não seguram a publicação (decisão do Product Owner, 2026-10-07).
+2. **V-01 (P0, `/infra`).** Separar os baldes de entrar, esqueci-senha e redefinir-senha; se o R-11 (proxy) não for resolvido, subir o limite de login para 20 por 15 minutos até a lista de proxies chegar. Bloqueia o deploy.
+3. **Dispensa de ambiente.** Sem perfil Staging, a verificação usou Production (dono: `/infra`, V-05, P1).
+4. **Dois "de acordo" pendentes** sobre dispensas acrescentadas (`US-011-S07`, `US-013-S08`).
 
-Recomendação: seguir para o `/scan` (a próxima etapa do seu plano) enquanto você faz o checklist; o `/deploy` só depois do passo 1 e do passo 2.
+Fase 5: **fechada** com as dispensas do Product Owner (87 provados + 43 dispensados). O artefato verificado é o de `reports/verify-artifact.lock`; a renomeação dos 3 testes não mudou a pasta publicada (testes não fazem parte dela), mas **qualquer mudança em `src/` (V-01, R-11, R-05) exige refazer a Fase 0 e as fases automáticas** com o novo digest.
 
-**Fronteira:** `/verify` não alterou nenhum arquivo de `src/` nem de `tests/`.
+**Fronteira:** `/verify` não alterou nenhum arquivo de `src/`; em `tests/` só renomeou 3 métodos de E2E (sem mudar o que afirmam).
