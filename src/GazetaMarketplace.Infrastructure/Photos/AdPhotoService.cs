@@ -88,12 +88,19 @@ public sealed class AdPhotoService(
 
     public async Task DeleteAsync(int adId, int photoId, CancellationToken cancellationToken)
     {
-        await ads.GetForEditAsync(adId, cancellationToken);
+        Ad ad = await ads.GetForEditAsync(adId, cancellationToken);
+        int minimum = await MinPhotosToStayPublishedAsync(ad, cancellationToken);
         AdPhoto removed = null;
         await InTransactionAsync(adId, async () =>
         {
             List<AdPhoto> photos = await LoadAsync(adId, cancellationToken);
             removed = photos.SingleOrDefault(p => p.Id == photoId) ?? throw new NotFoundException(PhotoMessages.NotFound);
+            // US-008-S16: um anúncio no ar não fica sem a foto que o envio à revisão exigiu (conferido já dentro da transação, com a contagem que vale)
+            if (ad.Status == AdStatus.Published && photos.Count - 1 < minimum)
+            {
+                throw new ConflictException(PhotoMessages.LastPhotoOfPublished);
+            }
+
             photos.Remove(removed);
             context.AdPhotos.Remove(removed);
             Renumber(photos);
@@ -176,6 +183,17 @@ public sealed class AdPhotoService(
 
         CategoryTreeSnapshot snapshot = await categories.GetAsync(cancellationToken);
         return (FieldGroupRegistry.Resolve(snapshot, categoryId) ?? FieldGroupRegistry.Default).MaxPhotos;
+    }
+
+    private async Task<int> MinPhotosToStayPublishedAsync(Ad ad, CancellationToken cancellationToken)
+    {
+        if (ad.Status != AdStatus.Published || ad.CategoryId is not { } categoryId)
+        {
+            return ad.Status == AdStatus.Published ? FieldGroupRegistry.Default.MinPhotosToSubmit : 0;
+        }
+
+        CategoryTreeSnapshot snapshot = await categories.GetAsync(cancellationToken);
+        return (FieldGroupRegistry.Resolve(snapshot, categoryId) ?? FieldGroupRegistry.Default).MinPhotosToSubmit;
     }
 
     private static void EnsureRoom(int max, int current)

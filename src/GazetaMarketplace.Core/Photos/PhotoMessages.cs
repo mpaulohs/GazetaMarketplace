@@ -23,6 +23,9 @@ public static class PhotoMessages
     /// <summary>Vagas de emprego (limite 0): a frase "no máximo 0 fotos" confundiria.</summary>
     public const string CategoryHasNoPhotos = "Este tipo de anúncio não tem fotos";
 
+    /// <summary>US-008-S16: um anúncio no ar não pode ficar sem a foto que o envio à revisão exigiu.</summary>
+    public const string LastPhotoOfPublished = "Não é possível remover a última foto de um anúncio publicado. Despublique antes.";
+
     public const string NotFound = "A foto não foi encontrada neste anúncio";
 
     /// <summary>Reprocessar sem original (já apagado pela limpeza de 30 dias, ou arquivo ausente).</summary>

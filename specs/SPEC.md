@@ -33,6 +33,7 @@
 | v1.7 | 2026-10-06 | Clarified | greenfield | Duas suposições do `/build` aprovadas viram critério: (1) US-009-S04: ao reenviar um anúncio rejeitado, o motivo, o dia e quem rejeitou deixam de aparecer no anúncio (o histórico fica na auditoria), e despublicar um anúncio limpa o dia e quem o publicou; (2) US-006-S09: a nova senha do primeiro acesso não pode ser igual à provisória ("A nova senha precisa ser diferente da provisória") | US-009-S04, US-006-S09 | Suposições registradas no BACKLOG (tarefas 4.1 e 1.4), aprovadas no Checkpoint 6 (decisão D4) | Product Owner, 2026-10-06 |
 | v1.8 | 2026-10-06 | Added | greenfield | Novo cenário US-008-S15: o Administrador não consegue salvar a edição de um anúncio publicado que o envio à revisão recusaria (sem categoria, descrição, preço, CEP com cidade, foto ou campo obrigatório); as mensagens são as da lista de pendências e nada é gravado. Antes, só o envio à revisão e a publicação faziam essa conferência, e a edição de um anúncio publicado podia apagar o que a revisão exigiu | US-008-S15, US-009 | Revisão formal do código (achado R-02), correção aprovada pelo Product Owner no /review | Product Owner, 2026-10-06 |
 | v1.9 | 2026-10-07 | Clarified | greenfield | A7 (a): a categoria herda do ancestral mais próximo o grupo de campos **e** as listas de opções, os campos que existem e os obrigatórios por categoria. Antes, uma categoria nova sob Imóveis, Roupas, Eletro ou Telefonia ficava com o campo obrigatório de lista sem nenhuma opção e o anúncio nunca podia ser enviado à revisão | A7, US-008 | Revisão formal do código (achado R-06), correção aprovada pelo Product Owner no /review | Product Owner, 2026-10-07 |
+| v1.9 | 2026-10-07 | Added | greenfield | Novo cenário US-008-S16: o Administrador não remove a última foto de um anúncio publicado (a mesma proteção do S15: um anúncio no ar não fica sem a foto que o envio à revisão exigiu); é preciso despublicar antes. Rascunho e Rejeitado continuam podendo ficar sem foto | US-008-S16, US-008-S03 | Revisão formal do código (achado R-02b), correção aprovada pelo Product Owner no /review | Product Owner, 2026-10-07 |
 
 ## Executive Summary
 
@@ -820,6 +821,14 @@ Scenario: Administrador corrige o preço de um anúncio publicado
   Then a situação continua "Publicado"
   When um visitante abre a página desse anúncio
   Then ele vê o preço R$ 59.000
+
+@US-008-S16 @negative
+Scenario: Administrador não remove a última foto de um anúncio publicado
+  Given estou logado como Administrador e o anúncio "Honda Civic 2018" está publicado e tem uma só foto
+  When eu clico em "Remover" nessa foto e confirmo
+  Then vejo "Não é possível remover a última foto de um anúncio publicado. Despublique antes."
+  And a foto continua no anúncio, que continua publicado
+  And, se o anúncio tiver duas ou mais fotos, a remoção de uma delas funciona normalmente
 
 @US-008-S15 @negative
 Scenario: Administrador não salva um anúncio publicado que ficaria incompleto
