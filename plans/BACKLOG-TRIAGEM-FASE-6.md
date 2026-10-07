@@ -261,17 +261,17 @@ Cada decisão traz uma recomendação. Nenhuma delas bloqueia a correção do F7
 
 ### 4.4 Situação em 2026-10-06, depois do `/fix-issue` (R-01 e os 6 avisos de P1)
 
-> **Em resumo:** das 12 primeiras linhas (`F7-01` a `F7-12`), **7 estão corrigidas e provadas**, 2 foram investigadas e **provadas como defeito real, aguardando aprovação** para corrigir, 2 foram **diferidas a `/infra`** e 1 ficou como **desvio documentado**. Nenhuma linha mudou de prioridade; os donos continuam os da tabela 4.1.
+> **Em resumo:** das 12 primeiras linhas (`F7-01` a `F7-12`), **9 estão corrigidas e provadas** (as duas investigadas, F7-04 e F7-07, foram aprovadas e corrigidas em 2026-10-07), 2 foram **diferidas a `/infra`** e 1 ficou como **desvio documentado**. Nenhuma linha mudou de prioridade; os donos continuam os da tabela 4.1.
 
 | Linha | Achado | Situação | Commit |
 |---|---|---|---|
 | F7-01 | R-01 chaves do Data Protection | **Corrigido** | 3494a9e |
 | F7-02 | R-11 / SEC-01 proxy | **Diferido a /infra** (P0 segue aberto; o limite `auth` ativo o torna mais urgente) | |
-| F7-03 | R-02 Publicado incompleto | **Corrigido ao salvar** (SPEC v1.8, `@US-008-S15`); **falta apagar a última foto** (novo item R-02b no BACKLOG) | f12300b |
-| F7-04 | R-03 `CepService` e `ChangeTracker` | **Investigado, PROVADO, aguarda aprovação** (a edição é perdida com resposta de sucesso e auditoria gravada) | |
+| F7-03 | R-02 Publicado incompleto | **Corrigido**: ao salvar (SPEC v1.8, `@US-008-S15`, f12300b) e ao apagar a última foto (R-02b, SPEC v1.9, `@US-008-S16`, f4bc8bd) | f12300b, f4bc8bd |
+| F7-04 | R-03 `CepService` e `ChangeTracker` | **Corrigido** em 2026-10-07 (provado antes: a edição se perdia com resposta de sucesso e auditoria gravada) | 523978b |
 | F7-05 | R-04 dígito Unicode no preço | **Corrigido** | 7b15f3d |
 | F7-06 | R-05 fuso IANA | **Diferido a /infra** (confirmar na hospedagem) | |
-| F7-07 | R-06 categoria nova sem lista | **Investigado, PROVADO, aguarda aprovação** (4 grupos: Imóveis, Roupas, Eletro, Telefonia) | |
+| F7-07 | R-06 categoria nova sem lista | **Corrigido** em 2026-10-07 (herança das listas, campos e obrigatórios do ancestral mais próximo; SPEC v1.9, A7 a) | 3867cd7 |
 | F7-08 | R-07 política `auth` | **Corrigido** | 2a8e1a5 |
 | F7-09 | R-08 permissão negada sem log | **Corrigido** | 677bd7e |
 | F7-10 | R-09 sessão vencida injeta o login | **Corrigido** | b76e7f0 |
