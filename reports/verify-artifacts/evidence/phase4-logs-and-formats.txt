@@ -1,0 +1,14 @@
+# NFR-18: logs do artefato (pasta de logs do site de E2E)
+gazeta-20261005.json
+gazeta-20261006.json
+gazeta-20261007.json
+arquivo: gazeta-20261007.json linhas: 278
+linhas com e-mail completo (exceto o mascarado a***@): 0
+linhas com 'Password' ou 'senha=' ou 'code=': 0
+linhas sem CorrelationId: 33 de 278 (linhas de partida/parada do host não têm requisição)
+
+# NFR-20: formatos (preço e data na página de um anúncio)
+06/10/2026
+<html lang="pt-BR"
+R$ 50
+linhas de requisição (RequestPath) sem CorrelationId: 0

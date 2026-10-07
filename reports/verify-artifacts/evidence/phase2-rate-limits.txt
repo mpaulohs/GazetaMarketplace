@@ -1,0 +1,25 @@
+# NFR-06 / R-07 no artefato real, limites padrão (:5445, RateLimiting__AuthPermits não definido)
+login POST 1 -> 400
+login POST 2 -> 400
+login POST 3 -> 400
+login POST 4 -> 400
+login POST 5 -> 400
+login POST 6 -> 429
+login POST 7 -> 429
+/painel/esqueci-minha-senha POST 1 -> 429
+/painel/esqueci-minha-senha POST 2 -> 429
+/painel/esqueci-minha-senha POST 3 -> 429
+/painel/esqueci-minha-senha POST 4 -> 429
+/painel/esqueci-minha-senha POST 5 -> 429
+/painel/esqueci-minha-senha POST 6 -> 429
+/painel/redefinir-senha POST 1 -> 429
+/painel/redefinir-senha POST 2 -> 429
+/painel/redefinir-senha POST 3 -> 429
+/painel/redefinir-senha POST 4 -> 429
+/painel/redefinir-senha POST 5 -> 429
+/painel/redefinir-senha POST 6 -> 429
+## cabeçalhos do 429
+HTTP/2 429 
+content-type: text/plain; charset=utf-8
+retry-after: 900
+x-content-type-options: nosniff

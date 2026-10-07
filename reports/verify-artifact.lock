@@ -1,0 +1,5 @@
+6953fa3 6bb592c8aa261c08c2572b2bbe1e87a0a5bb1c69e625e548c59f2630eb9b83ec
+# publish dir sha256 (sorted file hashes), Release, framework-dependent, all runtimes
+# environment: ASPNETCORE_ENVIRONMENT=Production (no Staging profile exists; waiver owner=/infra)
+# host: https://localhost:5443 (self-signed), SQL Server 2022 in Docker (gazeta_e2e)
+# verified-at: 2026-10-07

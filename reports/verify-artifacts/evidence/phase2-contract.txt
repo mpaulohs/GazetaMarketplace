@@ -1,0 +1,110 @@
+# Fase 2 — contrato HTTP no artefato (Production, HTTPS real)
+## categoria real
+200 /categoria/livros-e-revistas
+
+## NFR-10 cabeçalhos em respostas 200, 404, 302 e 401
+--- GET /
+HTTP/2 200 
+server: Kestrel
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(), microphone=(), camera=()
+content-security-policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'
+strict-transport-security: max-age=31536000; includeSubDomains
+x-correlation-id: 3e961ae5fd9149bb81825decdb86808b
+--- GET /categoria/livros-e-revistas
+HTTP/2 200 
+server: Kestrel
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(), microphone=(), camera=()
+content-security-policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'
+strict-transport-security: max-age=31536000; includeSubDomains
+x-correlation-id: 5aaff6e6d0134d3b95c7e4e952d7369a
+--- GET /nao-existe
+HTTP/2 404 
+server: Kestrel
+cache-control: no-store,no-cache
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(), microphone=(), camera=()
+content-security-policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'
+strict-transport-security: max-age=31536000; includeSubDomains
+x-correlation-id: 244ca81a5cfa470c9a16acd06a10b5a5
+--- GET /painel/anuncios
+HTTP/2 302 
+server: Kestrel
+location: https://localhost:5443/painel/entrar?ReturnUrl=%2Fpainel%2Fanuncios
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(), microphone=(), camera=()
+content-security-policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'
+strict-transport-security: max-age=31536000; includeSubDomains
+x-correlation-id: e626b6b613144ea5ac454e56c73b4161
+--- GET /api/v1/cep/13015100
+HTTP/2 401 
+server: Kestrel
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(), microphone=(), camera=()
+content-security-policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'
+strict-transport-security: max-age=31536000; includeSubDomains
+x-correlation-id: 741cacd7e07248a2a1a16f915467f073
+
+## API: 401 sem sessão (ProblemDetails)
+HTTP/2 401 
+content-type: application/problem+json
+x-content-type-options: nosniff
+{"title":"Unauthorized","status":401,"detail":"Entre para continuar.","instance":"/api/v1/cep/13015100","code":"UNAUTHORIZED","traceId":"0ce4702b1af3405f974d307263f729c9"}
+## escrita /api sem token antiforgery (400 VALIDATION_ERROR)
+
+415
+
+## CORS: preflight com Origin de outro site (sem política: nenhum Access-Control-Allow-*)
+HTTP/2 405 
+(fim do preflight)
+(fim do GET com Origin)
+
+## env-gating: rotas só de desenvolvimento e documentação
+404 /painel/componentes
+404 /swagger
+404 /swagger/index.html
+404 /openapi/v1.json
+404 /error
+200 /Home/Error
+404 /.env
+404 /appsettings.json
+404 /web.config
+404 /bin/GazetaMarketplace.Web.dll
+
+## NFR-25 página 404 (corpo)
+<title>P&#xE1;gina n&#xE3;o encontrada &#xB7; GazetaMarketplace</title>
+<h1 class="fs-3" tabindex="-1" data-foco-inicial>P&#xE1;gina n&#xE3;o encontrada</h1>
+
+## HTTP -> HTTPS (redirecionamento)
+000 
+
+## og:image e SEO de um anúncio
+/anuncio/15201/livro-disputado-39f2200b
+<meta name="description" content="Edi&#xE7;&#xE3;o 2020, sem anota&#xE7;&#xF5;es"
+<link rel="canonical" href="https://localhost:5443/anuncio/15201/livro-disputado-39f2200b" />
+<meta property="og:title" content="Livro disputado 39f2200b"
+<meta property="og:description" content="Edi&#xE7;&#xE3;o 2020, sem anota&#xE7;&#xF5;es"
+<meta property="og:image" content="https://localhost:5443/fotos/15201/15387-480.webp"
+
+## fotos: cache longo e tipo
+/fotos/15201/15387-480.webp
+HTTP/2 200 
+content-type: image/webp
+cache-control: public, max-age=31536000, immutable
+x-content-type-options: nosniff
+
+## compressão (Brotli/gzip) na vitrine e não no painel
+content-encoding: br
+vary: Accept-Encoding
+(painel: sem content-encoding acima = ok)

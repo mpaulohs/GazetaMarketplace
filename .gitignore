@@ -343,3 +343,11 @@ web.Production.config
 
 # Relatórios brutos de cobertura (o resumo vai para reports/TEST_REPORT.md)
 reports/test-artifacts/
+
+# /verify: a saída das execuções fica fora do git; só o texto durável (resultados e evidências) entra
+reports/verify-artifacts/**
+!reports/verify-artifacts/
+!reports/verify-artifacts/report/
+!reports/verify-artifacts/report/results.json
+!reports/verify-artifacts/evidence/
+!reports/verify-artifacts/evidence/**
