@@ -55,7 +55,8 @@ public sealed class CepService(AppDbContext context, ICepLookup lookup, ICityDir
         CepCacheEntry entry = await context.CepCache.SingleOrDefaultAsync(e => e.Cep == cep, cancellationToken);
         if (entry is null)
         {
-            context.CepCache.Add(new CepCacheEntry { Cep = cep, City = city, Uf = uf, IbgeCode = ibgeCode, FetchedAt = now });
+            entry = new CepCacheEntry { Cep = cep, City = city, Uf = uf, IbgeCode = ibgeCode, FetchedAt = now };
+            context.CepCache.Add(entry);
         }
         else
         {
@@ -71,8 +72,9 @@ public sealed class CepService(AppDbContext context, ICepLookup lookup, ICityDir
         }
         catch (DbUpdateException)
         {
-            // Outra pessoa gravou o mesmo CEP ao mesmo tempo: o cache já tem o dado, e a resposta desta chamada continua valendo
-            context.ChangeTracker.Clear();
+            // Outra pessoa gravou o mesmo CEP ao mesmo tempo: o cache já tem o dado, e a resposta desta chamada continua valendo.
+            // Solta só a entrada do cache: o contexto é o da requisição inteira e pode estar rastreando o anúncio que a pessoa está editando (R-03)
+            context.Entry(entry).State = EntityState.Detached;
         }
     }
 }
