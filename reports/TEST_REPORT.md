@@ -1833,3 +1833,21 @@ Nenhum arquivo de teste novo nesta rodada; só os logs em `reports/test-artifact
 | Fronteira | Nenhum arquivo de `src/` nem de `tests/` foi alterado pelo `/verify` |
 
 **OPEN do `/review` fechados ou movidos por este `/verify`:** OPEN-004 (`GAZETA_VITALS`) **fechado**: os 4 testes de métricas rodaram sozinhos e passaram; falta repeti-los na hospedagem (V-08). OPEN-001 (instabilidade de `US005S06`) **sem recorrência** em 3 rodadas completas hoje (258 testes cada). OPEN-005 e OPEN-007 seguem diferidos (`/simplify`, `/infra`).
+
+## /scan — varredura de segurança (2026-10-07)
+
+> **Em resumo:** a varredura **não achou nenhuma falha Crítica nem explorável de imediato**. Rodaram análise estática (automática e manual por três auditores), busca de segredos no código e no histórico, verificação de dependências e ataques reais contra o artefato publicado. Veredito: **PASS WITH CONDITIONS, aguardando a decisão do Product Owner/Security Lead** (a tabela de aprovação do relatório não foi preenchida por mim). Relatório: `security/SCAN_REPORT.md`; achados em `plans/BACKLOG.md` (seção "/scan (2026-10-07)").
+
+| Item | Resultado |
+|---|---|
+| Alvo | commit `ebaec49`; `src/` igual ao do artefato do `/verify` (trava `6953fa3 6bb592c8…83ec`) |
+| Secrets (gitleaks, histórico de 216 commits) | 30 hits = **1 segredo**: chave do Google Maps **já revogada** em 2 commits de templates; **0 no working tree**. Exceção a assinar (SC-28) |
+| Dependências | `dotnet list package --vulnerable --include-transitive`: **0** vulneráveis nos 8 projetos; `npm audit` só no ferramental do kit (sem lockfile); o produto não usa npm |
+| SAST automático | Roslyn limpo; semgrep local (23 regras offline, registro bloqueado): 12 candidatos, todos falso positivo ou código de design-time; grep de XSS: 240 falsos positivos (axe-core no `bin` de testes) |
+| SAST manual (3 auditores, código inteiro) | 0 Crítico; achados novos agrupados em SC-01 a SC-28 |
+| STRIDE | **24 Verified, 4 Partial, 0 Not implemented, 1 Deferred** de 29; **RC-1 a RC-21: 20 Verified, 1 Partial (RC-10)** |
+| DAST no artefato publicado | cabeçalhos, painel sem login (9/9 → 302), POST sem token (400), Redator contra Administrador (18/18 negados), `returnUrl` externo (3/3 local), upload hostil (10/10 como esperado; 400 MP recusado em 26 ms), traversal e originais (404), sem CORS, sem pilha, sem XSS refletido. Scripts e saídas em `security/dast-results/` |
+| Resultado por severidade | Crítico 0 · Alto 1 condicional (SC-01) · Médio 4 · Baixo 10 · Info 12 · exceção SC-28 |
+| Fronteira | **Nenhum arquivo de `src/` nem de `tests/` foi alterado** (regra do pedido: só registrar). O banco de E2E recebeu a senha do Administrador copiada para 2 Redatores e a autoria do anúncio 16206 foi trocada, só para o DAST |
+
+**Bloqueiam o `/deploy` (P0):** SC-01 (`KnownProxies`, R-11/SEC-01) e SC-02 (balde único do limite de entrar + limite que conta entradas com sucesso, V-01). Ambos já iam ao `/infra`; o SC-02 ganhou uma nuance nova (a 6ª pessoa da redação recebe 429 com a senha certa) que só aparece com o limite de produção. **Decisões suas:** SC-03 (bloqueio de conta como negação de serviço ao Administrador), SC-07 (guardar ou não o original com GPS) e a exceção SC-28.

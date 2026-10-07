@@ -1306,3 +1306,17 @@ Observação sobre o R-06: o pedido falava em buscar só a lista no ancestral. I
 ### Addendum — `/verify` (2026-10-07)
 
 O `/verify` do artefato `6bb592c8…83ec` (commit `6953fa3`) **não achou defeito novo de segurança nem de dados** e confirmou na prática duas correções do review: o limite `auth` (R-07: 5 pedidos passam, o 6.º recebe 429) e o aviso de erro no lugar da página branca (R-10). Trouxe três observações de P2 (V-01 a V-03 no BACKLOG: balde de limite compartilhado entre entrar, esqueci e redefinir; 429 em texto simples; `/Home/Error` abrindo direto) e a dispensa de rastreabilidade (V-04, agora P2: 43 de 130 cenários dispensados pelo Product Owner com prova em processo; 87 provados no navegador). O V-01 passou a **P0 do `/infra`** por decisão do Product Owner. As notas dos cinco eixos **não mudam**; o veredito do review continua **APPROVE sem condição bloqueante**, e as condições de promoção passam a ser as do `reports/VERIFY_REPORT.md` §5.
+
+### Addendum — `/scan` (2026-10-07)
+
+O `/scan` (relatório `security/SCAN_REPORT.md`, achados SC-01 a SC-28 no `plans/BACKLOG.md`) **não achou defeito Crítico nem bypass de autenticação, IDOR, escalada de papel, open redirect ou CSRF**, e confirmou no artefato as correções do review (R-01 chaves do Data Protection, R-07 política `auth`, R-08 log de negação, R-10 antiforgery). Reconfirmou como ainda abertos o R-11/SEC-01 (proxy) e o V-01 (balde do limite de entrar), e **acrescentou** o que a leitura do review não cobria:
+
+| Novo no scan | Relação com o review | Prioridade |
+|---|---|---|
+| SC-02 o limite de entrar conta também entradas com sucesso | amplia o R-07/V-01 | P0 |
+| SC-03 bloqueio de conta como negação de serviço ao Administrador | amplia o D1 do modelo de ameaças | P1 (decisão do PO) |
+| SC-04 log saturável por tráfego anônimo; SC-06 senha com `@` no log | amplia o R-08 (logs) | P1 |
+| SC-05 sem cota nem alerta de disco; SC-07 original com GPS retido | amplia o D5 e o RC-5 | P1 |
+| SC-09 a SC-13 proteções que dependem do nome "Production", pastas relativas, limite por prefixo, CEP no log, memória das fotos | amplia R-39, R-46, V-05 | P1 |
+
+**Notas dos eixos (sem alteração do veredito APPROVE):** Security continua em 4 — nenhum 🔴, mas o eixo segue limitado por R-11/SEC-01 e SC-02 até o `/infra`. Os Compliance Check de `security.md` e `monitoring.md` passam a citar também SC-04 e SC-06 como ressalvas de log.

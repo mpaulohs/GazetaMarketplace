@@ -1,0 +1,195 @@
+rules:
+- id: cs-sql-concat-fromsqlraw
+  languages: [csharp]
+  severity: ERROR
+  message: FromSqlRaw/ExecuteSqlRaw com texto montado (SQL injection)
+  pattern-either:
+    - pattern: $X.FromSqlRaw($S + ...)
+    - pattern: $X.FromSqlRaw($"...")
+    - pattern: $X.ExecuteSqlRaw($S + ...)
+    - pattern: $X.ExecuteSqlRaw($"...")
+    - pattern: $X.ExecuteSqlRawAsync($S + ...)
+    - pattern: $X.ExecuteSqlRawAsync($"...")
+- id: cs-sqlcommand-concat
+  languages: [csharp]
+  severity: ERROR
+  message: Comando SQL montado por concatenação ou interpolação
+  pattern-either:
+    - pattern: new SqlCommand($S + ..., ...)
+    - pattern: new SqlCommand($"...", ...)
+    - pattern: $C.CommandText = $S + ...
+    - pattern: $C.CommandText = $"..."
+- id: cs-dapper-interpolated
+  languages: [csharp]
+  severity: WARNING
+  message: Dapper com SQL interpolado ou concatenado
+  pattern-either:
+    - pattern: $C.QueryAsync<$T>($"...", ...)
+    - pattern: $C.QueryAsync<$T>($S + ..., ...)
+    - pattern: $C.QueryFirstOrDefaultAsync<$T>($"...", ...)
+    - pattern: $C.ExecuteAsync($"...", ...)
+    - pattern: $C.ExecuteScalarAsync<$T>($"...", ...)
+- id: cs-process-start
+  languages: [csharp]
+  severity: ERROR
+  message: Execução de processo externo
+  pattern-either:
+    - pattern: Process.Start(...)
+    - pattern: new ProcessStartInfo(...)
+- id: cs-insecure-deserialization
+  languages: [csharp]
+  severity: ERROR
+  message: Desserialização insegura
+  pattern-either:
+    - pattern: new BinaryFormatter(...)
+    - pattern: new SoapFormatter(...)
+    - pattern: new NetDataContractSerializer(...)
+    - pattern: new LosFormatter(...)
+    - pattern: TypeNameHandling.All
+    - pattern: TypeNameHandling.Auto
+    - pattern: TypeNameHandling.Objects
+- id: cs-weak-crypto
+  languages: [csharp]
+  severity: WARNING
+  message: Hash/criptografia fraca
+  pattern-either:
+    - pattern: MD5.Create(...)
+    - pattern: SHA1.Create(...)
+    - pattern: new MD5CryptoServiceProvider(...)
+    - pattern: new SHA1CryptoServiceProvider(...)
+    - pattern: DES.Create(...)
+    - pattern: TripleDES.Create(...)
+    - pattern: new RijndaelManaged(...)
+- id: cs-insecure-random
+  languages: [csharp]
+  severity: INFO
+  message: System.Random (não criptográfico); conferir se gera token/segredo
+  pattern-either:
+    - pattern: new Random(...)
+    - pattern: Random.Shared.$M(...)
+- id: cs-html-raw
+  languages: [csharp]
+  severity: WARNING
+  message: Saída HTML sem codificação
+  pattern-either:
+    - pattern: new HtmlString($X)
+    - pattern: Html.Raw($X)
+    - pattern: Content($X, "text/html")
+- id: cs-open-redirect
+  languages: [csharp]
+  severity: WARNING
+  message: Redirect com destino vindo do pedido (conferir IsLocalUrl/LocalRedirect)
+  pattern-either:
+    - pattern: Redirect($X)
+    - pattern: RedirectPermanent($X)
+- id: cs-ssl-validation-off
+  languages: [csharp]
+  severity: ERROR
+  message: Validação de certificado desligada
+  pattern-either:
+    - pattern: ServerCertificateCustomValidationCallback = ...
+    - pattern: DangerousAcceptAnyServerCertificateValidator
+    - pattern: ServicePointManager.ServerCertificateValidationCallback = ...
+- id: cs-cors-any
+  languages: [csharp]
+  severity: WARNING
+  message: CORS aberto
+  pattern-either:
+    - pattern: $B.AllowAnyOrigin()
+    - pattern: $B.SetIsOriginAllowed(...)
+- id: cs-path-from-input
+  languages: [csharp]
+  severity: WARNING
+  message: Acesso a arquivo com caminho montado (conferir traversal)
+  pattern-either:
+    - pattern: File.ReadAllBytes($X)
+    - pattern: File.OpenRead($X)
+    - pattern: File.Delete($X)
+    - pattern: File.WriteAllBytes($X, ...)
+    - pattern: new FileStream($X, ...)
+    - pattern: PhysicalFile($X, ...)
+- id: cs-xml-xxe
+  languages: [csharp]
+  severity: WARNING
+  message: XML sem proibir DTD
+  pattern-either:
+    - pattern: new XmlDocument(...)
+    - pattern: XmlReader.Create(...)
+    - pattern: XDocument.Parse(...)
+- id: cs-allow-anonymous
+  languages: [csharp]
+  severity: INFO
+  message: Endpoint anônimo explícito (conferir se é público de propósito)
+  pattern: "[AllowAnonymous]"
+- id: cs-ignore-antiforgery
+  languages: [csharp]
+  severity: WARNING
+  message: Antiforgery desligado em ação
+  pattern: "[IgnoreAntiforgeryToken]"
+- id: cs-hardcoded-secret
+  languages: [csharp]
+  severity: ERROR
+  message: Possível segredo literal
+  patterns:
+    - pattern-either:
+        - pattern: $V = "..."
+    - metavariable-regex:
+        metavariable: $V
+        regex: (?i).*(password|passwd|secret|apikey|api_key|token|connectionstring).*
+    - pattern-not: $V = ""
+- id: cs-trust-server-cert
+  languages: [generic]
+  severity: WARNING
+  message: TrustServerCertificate=True
+  pattern: TrustServerCertificate=True
+- id: js-innerhtml
+  languages: [javascript]
+  severity: ERROR
+  message: Inserção de HTML em string (XSS)
+  pattern-either:
+    - pattern: $E.innerHTML = $X
+    - pattern: $E.outerHTML = $X
+    - pattern: $E.insertAdjacentHTML(...)
+    - pattern: document.write(...)
+    - pattern: document.writeln(...)
+- id: js-eval
+  languages: [javascript]
+  severity: ERROR
+  message: Execução dinâmica de código
+  pattern-either:
+    - pattern: eval(...)
+    - pattern: new Function(...)
+    - pattern: setTimeout("...", ...)
+    - pattern: setInterval("...", ...)
+- id: js-location-assign
+  languages: [javascript]
+  severity: WARNING
+  message: Navegação com destino variável (open redirect client-side)
+  pattern-either:
+    - pattern: location.href = $X
+    - pattern: window.location = $X
+    - pattern: location.assign($X)
+    - pattern: location.replace($X)
+- id: js-postmessage
+  languages: [javascript]
+  severity: WARNING
+  message: postMessage / listener de mensagem
+  pattern-either:
+    - pattern: $W.postMessage($M, "*")
+    - pattern: window.addEventListener("message", ...)
+- id: js-storage-sensitive
+  languages: [javascript]
+  severity: WARNING
+  message: Dado possivelmente sensível em storage do navegador
+  patterns:
+    - pattern-either:
+        - pattern: localStorage.setItem($K, $V)
+        - pattern: sessionStorage.setItem($K, $V)
+    - metavariable-regex:
+        metavariable: $K
+        regex: (?i).*(token|senha|password|secret|cookie|session).*
+- id: js-target-blank
+  languages: [javascript]
+  severity: INFO
+  message: window.open sem noopener
+  pattern: window.open($U, "_blank")

@@ -2800,5 +2800,15 @@
       "details": "const value = eval(`(${expr})`);",
       "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
     }
-  ]
+  ],
+  "triage": {
+    "date": "2026-10-07",
+    "note": "totals acima são os números brutos dos scanners; a triagem manual está em security/SCAN_REPORT.md",
+    "high_30": "30 achados gitleaks de um único segredo (chave de API do Google Maps, já revogada) em 2 commits de templates do histórico (a3521ae0, 2ee43b89); 0 no working tree. Exceção solicitada ao Security Lead (SC-28).",
+    "medium_241": "240 do grep de XSS dentro de axe-core minificado no bin de testes (falso positivo; não é enviado) e 1 do grep de segredos em PhotosEndpointsTests.cs:354 (falso positivo).",
+    "dependencies": "dotnet list package --vulnerable --include-transitive: 0 vulneráveis em 8 projetos. npm audit só rodou no ferramental .claude*/hooks (sem lockfile, ENOLOCK; não é enviado); o produto não usa npm.",
+    "semgrep": "registro bloqueado (403); rodadas 23 regras locais offline sobre src e tools: 12 candidatos, todos falso positivo ou design-time.",
+    "manual_sast": "3 auditores (A autenticação/sessão/acesso, B entradas/fotos/SQL/XSS/JS/cabeçalhos, C STRIDE+RC) sobre o código inteiro; 28 achados consolidados SC-01..SC-28.",
+    "dast": "security/dast-results (artefato publicado, Production, :5443)"
+  }
 }
