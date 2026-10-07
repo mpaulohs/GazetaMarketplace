@@ -10,6 +10,7 @@
     <system.webServer>
       <aspNetCore>
         <environmentVariables xdt:Transform="InsertIfMissing">
+          <!-- Production, ou Staging para o site de homologação: os dois sobem com as mesmas proteções (HSTS, SendGrid de verdade, configuração validada na partida) -->
           <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="ConnectionStrings__DefaultConnection" value="(cadeia de conexão do banco)" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="PhotoStorage__BasePath" value="(pasta de fotos fora da raiz do site)" xdt:Transform="InsertIfMissing" />
@@ -20,9 +21,17 @@
           <!-- Endereço público do site, com https (ex.: https://www.seudominio.com.br). Vai nos links enviados por e-mail;
                sem ele o link nasceria do cabeçalho Host da requisição, que um atacante pode forjar (US-007). -->
           <environmentVariable name="Site__BaseUrl" value="(endereço público do site, com https)" xdt:Transform="InsertIfMissing" />
-          <!-- IP do proxy do SmarterASP (SEC-01, pendente). Sem este valor o site ignora X-Forwarded-For
-               e todos os visitantes dividem o mesmo limite de requisições. Exemplo de nome:
-               ForwardedHeaders__KnownProxies__0 -->
+          <!-- IP do proxy do SmarterASP (SEC-01, PENDENTE: a resposta vem do ticket aberto no provedor).
+               Enquanto não houver o valor real, NÃO crie esta variável: o site ignora X-Forwarded-For (fail-closed), todos os visitantes dividem o IP do proxy,
+               e entrar, "esqueci" e "redefinir" aceitam 20 tentativas por 15 minutos para o site inteiro (com o IP certo, 5 por IP). Um Warning na partida lembra disso.
+               Quando o provedor responder, acrescente UMA variável por proxy (0, 1, 2...) com o IP exato, sem faixa e sem texto:
+               <environmentVariable name="ForwardedHeaders__KnownProxies__0" value="203.0.113.10" xdt:Transform="InsertIfMissing" /> -->
+          <!-- Cifra as chaves do Data Protection com o DPAPI do Windows (identidade do pool). Ligue só no servidor Windows;
+               em outro sistema o site recusa subir com esta opção ligada. Se a identidade do pool mudar, as chaves antigas não abrem
+               e a equipe precisa entrar de novo (os links de redefinição já enviados deixam de valer). -->
+          <environmentVariable name="DataProtection__ProtectWithDpapi" value="true" xdt:Transform="InsertIfMissing" />
+          <!-- NUNCA defina em produção: RateLimiting__*, SendGrid__BaseUrl, ViaCep__BaseUrl, Authentication__SessionMinutes com valor de teste.
+               Existem só para a suíte de testes e afrouxam os limites de proteção ou desviam a chave de API (R-39). -->
           <!-- Só na primeira publicação; remova as duas linhas em seguida (ADR-003, RC-19) -->
           <environmentVariable name="Bootstrap__AdminEmail" value="(e-mail do primeiro Administrador)" xdt:Transform="InsertIfMissing" />
           <environmentVariable name="Bootstrap__AdminPassword" value="(senha provisória do primeiro Administrador)" xdt:Transform="InsertIfMissing" />

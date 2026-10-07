@@ -1,5 +1,11 @@
 -- Script idempotente das migrations do GazetaMarketplace (gerado por db/scripts/gerar-script.sh; não edite à mão).
 SET QUOTED_IDENTIFIER ON;
+SET ARITHABORT ON;
+SET ANSI_NULLS ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
 GO
 
 IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL

@@ -44,7 +44,7 @@ builder.Host.UseSerilog(
     (context, services, configuration) => SerilogConfiguration.Configure(
         configuration,
         context.Configuration["Logging:FileDirectory"],
-        context.HostingEnvironment.IsProduction(),
+        context.HostingEnvironment.IsHardened(),
         services.GetServices<ILogEventSink>()),
     preserveStaticLogger: true);
 
@@ -65,7 +65,7 @@ builder.Services.AddAntiforgery(options =>
 builder.Services.AddHttpsRedirection(options => options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect);
 // Porta HTTPS: em Production o padrão é 443; em desenvolvimento, a do launchSettings (detecção automática)
 builder.Services.AddOptions<HttpsRedirectionOptions>().Configure<IConfiguration, IHostEnvironment>((options, configuration, environment) =>
-    options.HttpsPort = configuration.GetValue<int?>("HttpsRedirection:HttpsPort") ?? (environment.IsProduction() ? 443 : null));
+    options.HttpsPort = configuration.GetValue<int?>("HttpsRedirection:HttpsPort") ?? (environment.IsHardened() ? 443 : null));
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseAndMigrationHealthCheck>("banco", tags: ["ready"]);
 builder.Services.AddRateLimiters();
@@ -78,7 +78,7 @@ builder.Services.AddSingleton<IModuleVersions>(services =>
 });
 builder.Services.AddSecureForwarding();
 // Nenhuma política CORS: site e endpoints JSON são da mesma origem (ARCHITECTURE.md §7)
-builder.Services.AddAppOptions(builder.Configuration, builder.Environment.IsProduction());
+builder.Services.AddAppOptions(builder.Configuration, builder.Environment.IsHardened());
 // Chaves do Data Protection (cookie de login, antiforgery, links de redefinição de senha) numa pasta persistente fora da raiz do site (ADR-011, RC-16).
 // Sem a pasta, na hospedagem compartilhada a reciclagem do pool pode gerar um anel novo e derrubar a sessão da equipe e os links já enviados. A pasta é obrigatória em Production (validada em AddAppOptions).
 // O caminho é lido na hora de montar o anel (não aqui), porque a configuração do host de teste só existe depois que este arquivo rodou
@@ -90,6 +90,13 @@ builder.Services.AddOptions<KeyManagementOptions>().Configure<IConfiguration, IL
     {
         options.XmlRepository = new FileSystemXmlRepository(new DirectoryInfo(keysDirectory), loggers);
     }
+
+    // Chaves cifradas com o DPAPI do Windows (identidade do pool do site): quem lê a pasta de chaves pelo FTP não as usa em outra máquina (RR-2).
+    // Opcional e só no Windows (a hospedagem); ligado em Production pelo web.Production.config. Falha na partida se pedido onde não existe, em vez de gravar as chaves em claro
+    if (configuration.GetValue<bool>(KeyStorageOptions.ProtectWithDpapiKey))
+    {
+        options.XmlEncryptor = DpapiKeyEncryption.Create(loggers);
+    }
 });
 
 builder.Services.AddHttpContextAccessor();
@@ -99,14 +106,20 @@ builder.Services.AddCore();
 builder.Services.AddScoped<GazetaMarketplace.Web.Areas.Panel.Models.AdFormFactory>();
 builder.Services.AddScoped<GazetaMarketplace.Web.Models.AdDetailFactory>();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddEmailSender(builder.Environment.IsProduction());
+builder.Services.AddEmailSender(builder.Environment.IsHardened());
 
 var app = builder.Build();
+
+// SC-01: sem o IP do proxy do provedor o site segue fail-closed e avisa, para ninguém descobrir só quando a redação inteira travar no login
+if (app.Environment.IsHardened())
+{
+    app.WarnIfProxiesAreUnknown();
+}
 
 // Configure the HTTP request pipeline.
 app.UseSecureForwarding(app.Configuration);
 app.UseMiddleware<CorrelationIdMiddleware>();
-app.UseMiddleware<SecurityHeadersMiddleware>(app.Environment.IsProduction());
+app.UseMiddleware<SecurityHeadersMiddleware>(app.Environment.IsHardened());
 app.UseWhen(
     context => context.Request.Path.StartsWithSegments("/api"),
     api => api.UseMiddleware<ExceptionHandlingMiddleware>());

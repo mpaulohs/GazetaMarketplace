@@ -11,8 +11,8 @@ public static class CurrencyAndDateFormatter
 {
     private static readonly CultureInfo PtBr = new("pt-BR");
 
-    // Datas são gravadas em UTC e exibidas neste fuso
-    public static TimeZoneInfo DisplayTimeZone { get; } = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+    // Datas são gravadas em UTC e exibidas neste fuso. Nunca lança: sem o fuso no servidor, vale UTC−03:00 fixo (R-05, SaoPauloTimeZone)
+    public static TimeZoneInfo DisplayTimeZone { get; } = SaoPauloTimeZone.Resolve();
 
     /// <summary>"R$ 1.234" sem centavos; "R$ 1.234,50" quando os centavos são diferentes de zero (S29). O espaço é U+00A0.</summary>
     public static string FormatCurrency(long cents)

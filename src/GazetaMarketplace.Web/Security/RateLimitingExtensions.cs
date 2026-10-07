@@ -14,16 +14,22 @@ using Microsoft.Extensions.Logging;
 
 namespace GazetaMarketplace.Web.Security;
 
-/// <summary>Limites de requisição por IP (NFR-06, rules/security.md): login e "esqueci minha senha" 5 por 15 min; global 100 por minuto.</summary>
+/// <summary>Limites de requisição por IP (NFR-06, rules/security.md): "esqueci" e "redefinir" 5 por 15 min cada (20 enquanto o IP do proxy não é conhecido); entrar conta só falhas; global 100 por minuto.</summary>
 public static class RateLimitingExtensions
 {
-    /// <summary>Política para as ações de login e de recuperação de senha: <c>[EnableRateLimiting("auth")]</c>.</summary>
-    public const string AuthPolicy = "auth";
+    /// <summary>
+    /// "Esqueci minha senha": <c>[EnableRateLimiting("auth-esqueci")]</c>. Balde próprio por IP (SC-02): antes entrar, "esqueci" e "redefinir" dividiam um só,
+    /// e quem errava a senha 5 vezes não conseguia sequer pedir a redefinição. Entrar não tem política: só as <b>falhas</b> contam, no <see cref="LoginFailureCounter"/>.
+    /// </summary>
+    public const string ForgotPolicy = "auth-esqueci";
 
-    /// <summary>Pedidos aceitos na janela de 15 minutos, por IP, nas ações de login, "esqueci minha senha" e "redefinir senha" (rules/security.md): 5.</summary>
-    public const int DefaultAuthPermits = 5;
+    /// <summary>"Redefinir senha" (o formulário aberto pelo link do e-mail): <c>[EnableRateLimiting("auth-redefinir")]</c>, com balde próprio por IP.</summary>
+    public const string ResetPolicy = "auth-redefinir";
 
-    /// <summary>Chave de configuração do limite de login e recuperação. Como a do limite global, existe para a suíte E2E (que entra dezenas de vezes do mesmo IP); em produção a chave não existe e vale 5.</summary>
+    /// <summary>
+    /// Chave de configuração do limite de "esqueci" e "redefinir" (cada um com o seu balde de 15 minutos por IP). Existe para a suíte E2E, que entra dezenas de
+    /// vezes do mesmo IP; ausente, vale <see cref="AuthLimits.ForOrigin"/>: 5 com proxies conhecidos e 20 enquanto a lista não vem do provedor (SC-01).
+    /// </summary>
     public const string AuthPermitsKey = "RateLimiting:AuthPermits";
 
     /// <summary>Política da consulta de CEP: <c>[EnableRateLimiting("cep")]</c>. 30 por minuto <b>por usuário</b> (a primeira política por usuário do site), para a equipe não esgotar a cota do ViaCEP.</summary>
@@ -69,8 +75,11 @@ public static class RateLimitingExtensions
                     ? RateLimitPartition.GetNoLimiter("estaticos")
                     : RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(GlobalPerMinute(context), TimeSpan.FromMinutes(1))));
 
-            options.AddPolicy(AuthPolicy, context =>
-                RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(Configured(context, AuthPermitsKey, DefaultAuthPermits), TimeSpan.FromMinutes(15))));
+            options.AddPolicy(ForgotPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(AuthPermits(context), TimeSpan.FromMinutes(15))));
+
+            options.AddPolicy(ResetPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(ClientIp(context), _ => Window(AuthPermits(context), TimeSpan.FromMinutes(15))));
 
             // Por usuário logado; sem identidade (não deveria chegar aqui, a ação exige login) cai no IP
             options.AddPolicy(CepPolicy, context =>
@@ -95,6 +104,12 @@ public static class RateLimitingExtensions
     // Lido quando a janela de um IP é criada (não na partida): a configuração do host de teste só existe depois que o Program.cs rodou.
     // Ausente, zero, negativa ou ilegível vale o padrão.
     private static int GlobalPerMinute(HttpContext context) => Configured(context, GlobalPerMinuteKey, DefaultGlobalPerMinute);
+
+    private static int AuthPermits(HttpContext context)
+    {
+        IConfiguration configuration = context.RequestServices.GetRequiredService<IConfiguration>();
+        return AuthLimits.Configured(configuration, AuthPermitsKey) ?? AuthLimits.ForOrigin(configuration);
+    }
 
     private static int Configured(HttpContext context, string key, int fallback) =>
         int.TryParse(context.RequestServices.GetRequiredService<IConfiguration>()[key], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int configured) && configured > 0

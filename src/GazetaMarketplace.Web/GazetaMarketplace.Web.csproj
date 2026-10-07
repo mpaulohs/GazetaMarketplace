@@ -4,6 +4,25 @@
     <UserSecretsId>84ac4215-7eba-4894-a153-6736fb6d7da4</UserSecretsId>
   </PropertyGroup>
 
+  <!-- V-06: o que não precisa ir para a hospedagem. Os .pdb e os .xml de documentação ficam só no build; o appsettings.Development.json só vale em Development -->
+  <PropertyGroup>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+    <PublishDocumentationFile>false</PublishDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+    <None Update="web.Production.config.example" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <!-- As propriedades acima só valem para este projeto; os .pdb e os .xml de Core e Infrastructure chegam à publicação como referências de projeto -->
+  <Target Name="DropOwnSymbolsAndDocsFromPublish" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+                             Condition="$([System.String]::Copy('%(Filename)').StartsWith('GazetaMarketplace.')) And ('%(Extension)' == '.pdb' Or '%(Extension)' == '.xml')" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="Serilog.AspNetCore" />
   </ItemGroup>

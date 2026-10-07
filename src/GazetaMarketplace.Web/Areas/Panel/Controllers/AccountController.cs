@@ -61,8 +61,8 @@ public sealed class AccountController(
         return View(new SignInViewModel { ReturnUrl = returnUrl, SessionExpired = expired == "1", PasswordChanged = changed == "1" });
     }
 
+    // Sem política de limite de pedidos: entrar só conta as falhas (LoginFailureCounter, SC-02). Uma redação inteira atrás do mesmo IP entra de manhã
     [HttpPost("entrar")]
-    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> SignIn(SignInViewModel model)
     {
         string source = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
@@ -136,7 +136,7 @@ public sealed class AccountController(
 
     // A resposta é a mesma exista a conta ou não, venha o envio a falhar ou não (US-007-S03, RC-13): a conta só é procurada depois, em segundo plano
     [HttpPost("esqueci-minha-senha")]
-    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
+    [EnableRateLimiting(RateLimitingExtensions.ForgotPolicy)]
     public async Task<IActionResult> Forgot(ForgotPasswordViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -159,7 +159,7 @@ public sealed class AccountController(
     }
 
     [HttpPost("redefinir-senha")]
-    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
+    [EnableRateLimiting(RateLimitingExtensions.ResetPolicy)]
     public async Task<IActionResult> Reset(RecoverPasswordViewModel model, CancellationToken cancellationToken)
     {
         RecoveryLinkState state = await recovery.CheckLinkAsync(model.Id, model.Code, cancellationToken);

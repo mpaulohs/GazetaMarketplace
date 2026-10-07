@@ -36,7 +36,7 @@ public sealed class TestApiController(ILogger<TestApiController> logger) : Contr
     public IActionResult AdministratorOnly() => Ok();
 
     [HttpGet("auth")]
-    [EnableRateLimiting("auth")]
+    [EnableRateLimiting("auth-esqueci")]
     public IActionResult Authentication() => Ok();
 
     [HttpGet("cultura")]

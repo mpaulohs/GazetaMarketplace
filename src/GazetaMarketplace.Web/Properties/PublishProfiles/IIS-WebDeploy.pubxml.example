@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  EXEMPLO de perfil Web Deploy (Visual Studio 2026 > Publicar > Web Deploy). Copie este arquivo para IIS-WebDeploy.pubxml
+  e troque cada valor entre parênteses pelo que o painel do SmarterASP mostra em "Web Deploy / Publish settings".
+  O usuário e a senha NÃO ficam aqui: o Visual Studio guarda a senha em IIS-WebDeploy.pubxml.user (fora do git).
+  Mesma pasta de saída do IIS-win-x64: só win-x64, sem .pdb, sem .xml e sem appsettings.Development.json.
+-->
+<Project>
+  <PropertyGroup>
+    <WebPublishMethod>MSDeploy</WebPublishMethod>
+    <Configuration>Release</Configuration>
+    <Platform>Any CPU</Platform>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <SiteUrlToLaunchAfterPublish>(endereço público do site, com https)</SiteUrlToLaunchAfterPublish>
+    <LaunchSiteAfterPublish>false</LaunchSiteAfterPublish>
+    <MSDeployServiceURL>(servidor de Web Deploy do provedor, ex.: https://winXXXX.site4now.net:8172/msdeploy.axd)</MSDeployServiceURL>
+    <DeployIisAppPath>(nome do site no provedor)</DeployIisAppPath>
+    <RemoteSitePhysicalPath />
+    <SkipExtraFilesOnServer>true</SkipExtraFilesOnServer>
+    <MSDeployPublishMethod>WMSVC</MSDeployPublishMethod>
+    <EnableMSDeployBackup>false</EnableMSDeployBackup>
+    <EnableMSDeployAppOffline>true</EnableMSDeployAppOffline>
+    <UserName>(usuário do Web Deploy)</UserName>
+    <_SavePWD>false</_SavePWD>
+  </PropertyGroup>
+</Project>

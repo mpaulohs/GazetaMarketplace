@@ -41,7 +41,7 @@
 
 ### 4. Data Protection
 - [x] HTTPS obrigatório — `UseHttpsRedirection()` e `UseHsts()` (1 ano) só em produção; certificado do provedor (AR-09). TLS 1.2 ou superior definido pelo IIS do provedor (Task 0.4)
-- [x] Dados em repouso — o único dado pessoal é o e-mail da equipe (NFR-19); senha só como hash; chaves do Data Protection em pasta fora da raiz (risco residual RR-2, RR-8) (Task 0.2)
+- [x] Dados em repouso — o único dado pessoal é o e-mail da equipe (NFR-19); senha só como hash; chaves do Data Protection em pasta fora da raiz, **cifradas com o DPAPI do Windows quando `DataProtection__ProtectWithDpapi=true`** (opcional, só no servidor Windows; reduz o risco residual RR-2, RR-8) (Task 0.2)
 - [x] Nada sensível em log — Serilog com mascaramento de senha, token, link e e-mail (`m***@dominio`); `AuditEntries` guarda ids e valores de negócio, nunca senha (Task 0.3)
 - [x] Segredos fora do repositório — variáveis de ambiente em `<aspNetCore><environmentVariables>` do `web.config` publicado; `web.Production.config` e `appsettings.Development.json` no `.gitignore`; `OptionsBuilder.ValidateOnStart()` em produção (RC-20) (Task 0.2)
 - [x] Originais de foto com GPS — `_originals/` sem rota; **o original é apagado na hora quando a foto é removida** (SC-07, decisão do Product Owner de 2026-10-07) e, se ficou órfão de um envio que falhou, pela limpeza diária; o que sobra de fotos ativas sai em 30 dias (RC-5) (Task 3.4, 3.6)
@@ -50,7 +50,7 @@
 
 ### 5. Rate Limiting & Abuse Prevention
 - [x] Limite global — `AddRateLimiter` + `GlobalLimiter`: 100 pedidos por minuto por IP no site público (Task 0.4)
-- [x] Limite de autenticação — política `auth`: 5 por 15 min por IP em login e em "Esqueci minha senha" (Task 0.4)
+- [x] Limite de autenticação (SC-02, 2026-10-07) — **entrar:** só as **falhas** contam, por IP (`LoginFailureCounter`); **"esqueci minha senha" e "redefinir senha":** um balde por IP **para cada** (`auth-esqueci`, `auth-redefinir`). 5 por 15 min com o IP do visitante identificado; **20 por 15 min enquanto `ForwardedHeaders:KnownProxies` não tem valor** (SEC-01), com `Warning` na partida (Task 0.4)
 - [x] IP do cliente correto — `UseForwardedHeaders` com `ForwardedHeaders.XForwardedFor | XForwardedProto` e `KnownProxies` do provedor (RC-10). **SEC-01 (PO, 2026-09-30):** assumir `X-Forwarded-For`; `KnownProxies` só depois da resposta do SmarterASP; até lá `ForwardLimit = 1` e **não limpar `KnownProxies`/`KnownNetworks`** (senão qualquer cliente forja o IP e escapa do limite); pendência de lançamento (Task 0.4)
 - [x] Limite de pedidos de redefinição por e-mail — 3 por hora; Warning aos 80 e-mails por dia (RC-11) (Task 1.4)
 - [x] Limite do corpo de requisição — 1 MB global, 11 MB só no envio de foto: `RequestSizeLimit` e `MaxRequestBodySize` (RC-21) (Task 0.4, 3.5)

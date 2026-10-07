@@ -8,6 +8,7 @@
 ## Context
 - US-008 (envio, capa, remoção), US-003 (galeria e ampliação), NFR-05 (peso das páginas), NFR-12 (formatos pelo conteúdo, 10 MB, 20/6/0 fotos, HEIC convertido), S18 (remover GPS).
 - Publicação por WebDeploy: arquivos dentro da raiz do site podem ser apagados ou sobrescritos a cada publicação (`ARCHITECTURE.md` §9).
+- **Atualização (2026-10-07, SC-07):** remover uma foto **apaga o original na mesma hora** (ele guarda o GPS do vendedor e nada o usa na v1); a retenção de 30 dias vale para o que sobra de fotos ativas e a limpeza diária segue apagando originais órfãos.
 - Decisão do Product Owner (2026-09-30): guardar as versões WebP para sempre e o original por 30 dias, para reprocessar (novo tamanho, novo formato, correção de erro) sem ocupar disco indefinidamente.
 - `rules/tech-stack.md` prefere armazenamento em nuvem (Blob/S3) a disco local; a hospedagem escolhida não inclui um.
 

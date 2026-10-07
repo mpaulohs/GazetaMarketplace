@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.9 |
+| Version | v1.10 |
 | Coverage | full |
 | Mode | greenfield |
 | Status | **Approved** |
@@ -34,6 +34,8 @@
 | v1.8 | 2026-10-06 | Added | greenfield | Novo cenário US-008-S15: o Administrador não consegue salvar a edição de um anúncio publicado que o envio à revisão recusaria (sem categoria, descrição, preço, CEP com cidade, foto ou campo obrigatório); as mensagens são as da lista de pendências e nada é gravado. Antes, só o envio à revisão e a publicação faziam essa conferência, e a edição de um anúncio publicado podia apagar o que a revisão exigiu | US-008-S15, US-009 | Revisão formal do código (achado R-02), correção aprovada pelo Product Owner no /review | Product Owner, 2026-10-06 |
 | v1.9 | 2026-10-07 | Clarified | greenfield | A7 (a): a categoria herda do ancestral mais próximo o grupo de campos **e** as listas de opções, os campos que existem e os obrigatórios por categoria. Antes, uma categoria nova sob Imóveis, Roupas, Eletro ou Telefonia ficava com o campo obrigatório de lista sem nenhuma opção e o anúncio nunca podia ser enviado à revisão | A7, US-008 | Revisão formal do código (achado R-06), correção aprovada pelo Product Owner no /review | Product Owner, 2026-10-07 |
 | v1.9 | 2026-10-07 | Added | greenfield | Novo cenário US-008-S16: o Administrador não remove a última foto de um anúncio publicado (a mesma proteção do S15: um anúncio no ar não fica sem a foto que o envio à revisão exigiu); é preciso despublicar antes. Rascunho e Rejeitado continuam podendo ficar sem foto | US-008-S16, US-008-S03 | Revisão formal do código (achado R-02b), correção aprovada pelo Product Owner no /review | Product Owner, 2026-10-07 |
+| v1.10 | 2026-10-07 | Changed | greenfield | Entrada da equipe (US-006): o bloqueio por tentativas passa a ser **por conta e por origem**: 5 senhas erradas de um mesmo IP contra uma mesma conta bloqueiam só aquele IP naquela conta, e quem erra a senha do Administrador de outra rede não o impede de entrar da própria. Depois de 3 bloqueios seguidos da mesma conta cada tentativa espera 1, 2, 4, 8 e 16 segundos, e a partir do 2.º bloqueio o dono da conta recebe um e-mail de aviso (no máximo um por hora). O limite por origem conta só **falhas** (nunca entradas com sucesso): 5 por 15 minutos com o IP do visitante identificado e 20 enquanto o IP do proxy do provedor não é conhecido (SEC-01). "Esqueci minha senha" e "redefinir senha" têm balde de tentativas próprio, separado do de entrar | US-006-S06; US-007; NFR-06 | `security/SCAN_REPORT.md` SC-01, SC-02, SC-03; decisão do Product Owner de 2026-10-07 | Product Owner, 2026-10-07 |
+| v1.10 | 2026-10-07 | Changed | greenfield | Fotos (US-008-S03): remover uma foto apaga também o **arquivo original** enviado (que guarda a localização GPS de quem fotografou), na mesma hora; antes o original ficava até 30 dias no servidor. O original de um envio que falhou segue sendo apagado pela limpeza diária | US-008-S03 | `security/SCAN_REPORT.md` SC-07; decisão do Product Owner de 2026-10-07 | Product Owner, 2026-10-07 |
 
 ## Executive Summary
 
@@ -619,7 +621,8 @@ Scenario: Redator tenta abrir uma página exclusiva do administrador
 ##### Business Rules
 - Só a equipe tem conta. O visitante do site público **não cria conta nem entra**.
 - **Política de senha:** mínimo de 8 caracteres, com maiúscula, minúscula, número e símbolo.
-- **Limite de tentativas:** 5 falhas em 15 minutos por origem bloqueiam novas tentativas até o fim do período. Valor adotado de `rules/security.md`.
+- **Limite de tentativas:** 5 falhas em 15 minutos por origem bloqueiam novas tentativas até o fim do período (valor de `rules/security.md`); só as **falhas** contam, então uma redação inteira atrás do mesmo IP entra de manhã. Enquanto o IP do proxy do provedor não é conhecido (SEC-01), o limite temporário é de 20 falhas em 15 minutos.
+- **Bloqueio por conta e origem:** 5 senhas erradas de um mesmo IP contra uma mesma conta bloqueiam **aquele IP naquela conta** por 15 minutos; de outro IP a conta continua entrando, para ninguém conseguir travar o Administrador de fora. Depois de 3 bloqueios seguidos da mesma conta cada tentativa espera 1, 2, 4, 8 e 16 segundos (teto), e a partir do 2.º bloqueio o dono recebe um e-mail de aviso, no máximo um por hora. Redefinir a senha pelo link, ou o Administrador reativar ou redefinir a conta, zera os bloqueios.
 - **Sessão:** expira após 30 minutos sem uso (ver S16). A mensagem de erro do login **não revela** se o e-mail existe, para não ajudar quem tenta adivinhar contas.
 - Após entrar, o Redator vai para "Meus anúncios" e o Administrador vai para a "Fila de revisão".
 - O primeiro Administrador é criado na implantação, fora da interface (ver S17).
@@ -743,6 +746,7 @@ Scenario: Trocar a capa e remover uma foto
   Then ela passa para a primeira posição e recebe a marca "Capa"
   When eu clico em "Remover" na 2ª foto e confirmo
   Then o rascunho passa a ter 2 fotos
+  And o arquivo original dessa foto, com a localização embutida pela câmera, é apagado do servidor na mesma hora
 
 @US-008-S04 @negative
 Scenario: Passar do limite de 20 fotos
@@ -1473,7 +1477,7 @@ Scenario: Redator não acessa as configurações
 | NFR-03 | Desempenho | Estabilidade visual (CLS): elementos não pulam enquanto as fotos carregam | Menor que 0,1. Base: faixa "boa" das Core Web Vitals |
 | NFR-04 | Escalabilidade | Volume da v1 e tempo de resposta do servidor nas páginas de busca e detalhe | Suportar ~200 anúncios ativos e ~1.000 visitas por dia com tempo de resposta do servidor abaixo de 500 ms em 95% das requisições. Base: deixa folga para o LCP de 2,5 s |
 | NFR-05 | Desempenho | Peso das imagens: a lista mostra versões reduzidas; no detalhe, as fotos além da primeira só são carregadas quando o visitante as pede | Primeira carga da lista de 24 anúncios até 2 MB e do detalhe até 3 MB, antes de qualquer interação. Meta inicial, a calibrar após medição (ver NFR-23) |
-| NFR-06 | Segurança | Limite de tentativas no login da equipe | Máximo de 5 falhas em 15 minutos por origem; a partir daí, bloqueio até o fim do período |
+| NFR-06 | Segurança | Limite de tentativas no login da equipe | Máximo de 5 falhas em 15 minutos por origem (20 enquanto o IP do proxy não é conhecido); a partir daí, bloqueio até o fim do período. Só falhas contam; bloqueio da conta é por conta e origem, com atraso progressivo e aviso por e-mail ao dono |
 | NFR-07 | Segurança | Política de senha da equipe e guarda da senha | Mínimo 8 caracteres com maiúscula, minúscula, número e símbolo; senha guardada só de forma irreversível (hash), nunca em texto |
 | NFR-08 | Segurança | Duração da sessão da equipe | Encerra após 30 minutos sem uso. Base: protege computadores compartilhados sem atrapalhar o cadastro; valor proposto (S16) |
 | NFR-09 | Segurança | Link de redefinição de senha | Vale 1 hora e pode ser usado 1 vez |
