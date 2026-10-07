@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/src/GazetaMarketplace.Infrastructure/GazetaMarketplace.Infrastructure.csproj"
+    }
+  ]
+}
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/src/GazetaMarketplace.Web/GazetaMarketplace.Web.csproj"
+    }
+  ]
+}
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/src/GazetaMarketplace.Core/GazetaMarketplace.Core.csproj"
+    }
+  ]
+}
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/tests/GazetaMarketplace.IntegrationTests/GazetaMarketplace.IntegrationTests.csproj"
+    }
+  ]
+}
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/tests/GazetaMarketplace.Web.Tests.Playwright/GazetaMarketplace.Web.Tests.Playwright.csproj"
+    }
+  ]
+}
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/tests/CitiesImport.Tests/CitiesImport.Tests.csproj"
+    }
+  ]
+}
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/tests/VehicleCatalogExport.Tests/VehicleCatalogExport.Tests.csproj"
+    }
+  ]
+}
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/tests/GazetaMarketplace.Web.Tests/GazetaMarketplace.Web.Tests.csproj"
+    }
+  ]
+}
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/tools/CitiesImport/CitiesImport.csproj"
+    }
+  ]
+}
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "/home/user/GazetaMarketplace/tools/VehicleCatalogExport/VehicleCatalogExport.csproj"
+    }
+  ]
+}

@@ -1,0 +1,2804 @@
+{
+  "scan_date": "2026-10-07 01:48:55",
+  "totals": {
+    "critical": 0,
+    "high": 30,
+    "medium": 241,
+    "low": 0,
+    "unknown": 0
+  },
+  "tools_installed": [
+    "dotnet",
+    "npm",
+    "node",
+    "pip",
+    "mvn",
+    "gradle",
+    "composer",
+    "jq",
+    "python3",
+    "docker"
+  ],
+  "tools_missing": [
+    "gitleaks",
+    "semgrep",
+    "trufflehog",
+    "snyk",
+    "trivy",
+    "hadolint",
+    "pip-audit",
+    "safety",
+    "bandit",
+    "govulncheck",
+    "staticcheck",
+    "gosec",
+    "bundler-audit",
+    "brakeman"
+  ],
+  "stacks_scanned": [
+    "dotnet",
+    "nodejs"
+  ],
+  "stacks_unscanned": [],
+  "sast_scope": "whole-repo",
+  "compensating_controls": [
+    {
+      "missing_tool": "gitleaks",
+      "fallback_used": "Manual regex grep over *.cs/*.ts/*.py/*.go/*.json/*.yml (see secrets-grep.txt)",
+      "must_add_to_pipeline": true
+    },
+    {
+      "missing_tool": "semgrep",
+      "fallback_used": "Native analyzers per stack: Roslyn (.NET), eslint-plugin-security (Node), bandit (Python), gosec (Go), PHP dangerous-pattern grep + project-local PHPStan (php.sh)",
+      "must_add_to_pipeline": true
+    },
+    {
+      "missing_tool": "trufflehog",
+      "fallback_used": "Same as gitleaks fallback",
+      "must_add_to_pipeline": false
+    },
+    {
+      "missing_tool": "snyk",
+      "fallback_used": "Stack-native: dotnet list package --vulnerable, npm audit, pip-audit, govulncheck, composer audit",
+      "must_add_to_pipeline": false
+    },
+    {
+      "missing_tool": "trivy",
+      "fallback_used": "Defer to /infra when image is built",
+      "must_add_to_pipeline": true
+    },
+    {
+      "missing_tool": "hadolint",
+      "fallback_used": "Manual review against .claude/references/docker-patterns.md",
+      "must_add_to_pipeline": false
+    },
+    {
+      "missing_tool": "pip-audit",
+      "fallback_used": "Use safety as alternative; or pip list --outdated + manual CVE check",
+      "must_add_to_pipeline": true
+    },
+    {
+      "missing_tool": "bandit",
+      "fallback_used": "Use ruff --select S (bandit-like rules) or semgrep p/python",
+      "must_add_to_pipeline": true
+    },
+    {
+      "missing_tool": "govulncheck",
+      "fallback_used": "Use staticcheck + manual review of go.sum vs CVE database",
+      "must_add_to_pipeline": true
+    }
+  ],
+  "findings_count": 271,
+  "findings": [
+    {
+      "id": "F-001",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html-Admin/maps.html:871",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-002",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/ad-details-right.html:1621",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-003",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/ad-details.html:1624",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-004",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/car-details3.html:1809",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-005",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/cars-list-map.html:2572",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-006",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/cars-auction-detail.html:1814",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-007",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/cars-map.html:2074",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-008",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/cars-rental-detial.html:1947",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-009",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/cars-list-map2.html:2852",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-010",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/cars-right.html:1800",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-011",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/cars-parts-detail.html:1996",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-012",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/contact.html:837",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-013",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/cars-list-map3.html:2815",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-014",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/cars.html:1800",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-015",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "docs/templates/autolist/Html/widgets.html:4162",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-016",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html-Admin/maps.html:871",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-017",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/ad-details-right.html:1621",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-018",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/ad-details.html:1624",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-019",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/cars-auction-detail.html:1814",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-020",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/car-details3.html:1809",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-021",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/cars-right.html:1800",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-022",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/cars-map.html:2074",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-023",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/contact.html:837",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-024",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/cars-rental-detial.html:1947",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-025",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/cars-parts-detail.html:1996",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-026",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/cars.html:1800",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-027",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/cars-list-map2.html:2852",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-028",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/cars-list-map.html:2572",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-029",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/cars-list-map3.html:2815",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-030",
+      "source": "gitleaks",
+      "severity": "High",
+      "category": "secret",
+      "title": "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
+      "file": "src/GazetaMarketplace.Web/docs/templates/autolist/Html/widgets.html:4162",
+      "details": "REDACTED\"",
+      "fix": "Remove from code; rotate secret; use User Secrets / Key Vault"
+    },
+    {
+      "id": "F-031",
+      "source": "grep (gitleaks fallback)",
+      "severity": "Medium",
+      "category": "secret",
+      "title": "Possible hardcoded secret",
+      "file": "./tests/GazetaMarketplace.Web.Tests/Photos/PhotosEndpointsTests.cs:354",
+      "details": "using HttpResponseMessage anonymousUpload = await PhotoApi.UploadAsync(anonymous, adId, PhotoApi.Jpeg(), token: \"qualque",
+      "fix": "Manually verify; if real secret: rotate + move to env/vault"
+    },
+    {
+      "id": "F-032",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/traceViewer/assets/codeMirrorModule-BbkfBe3n.js:31",
+      "details": "`),v=d+g.length,y=g[g.length-1].length;return{from:t(v,y),to:t(v+_.length-1,_.length==1?y+_[0].length:_[_.length-1].length),match:h}}}}var u,d;String.prototype.normalize?(u=function(e){return e.normal",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-033",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:9",
+      "details": "`+e.stack}}var Ee=Object.prototype.hasOwnProperty,De=t.unstable_scheduleCallback,Oe=t.unstable_cancelCallback,ke=t.unstable_shouldYield,Ae=t.unstable_requestPaint,N=t.unstable_now,je=t.unstable_getCur",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-034",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:10",
+      "details": "`).replace(Ad,``)}function Md(e,t){return t=jd(t),jd(e)===t}function $(e,t,n,r,a,o){switch(n){case`children`:typeof r==`string`?t===`body`||t===`textarea`&&r===``||Xt(e,r):(typeof r==`number`||typeof ",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-035",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:12",
+      "details": "`,`\\\\n`)}function Xt(e,t,n){if(e)for(let r of t.split(`|`)){if(r===`url`)try{let t=new URL(e[r]);return t.protocol===`data:`?t.protocol:[`about:`,`chrome:`,`edge:`].includes(t.protocol)?e[r]:t.host+t.",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-036",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:19",
+      "details": "rgb(0 0 0 / 25%) 0px 6px 12px`},sr=({diff:e,noTargetBlank:t,hideDetails:n})=>{let[r,i]=T.useState(e.diff?`diff`:`actual`),[a,o]=T.useState(!1),[s,c]=T.useState(null),[l,u]=T.useState(`Expected`),[d,f]",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-037",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:25",
+      "details": "`+i.gitDiff+\"\\n```\"),t},[a,i],void 0);return e.errors.size?(0,P.jsxs)(`div`,{className:`fill`,style:{overflow:`auto`},children:[(0,P.jsx)(`span`,{style:{position:`absolute`,right:`5px`,top:`5px`,zInde",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-038",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:54",
+      "details": "`).replace(/[\\u200b\\u00ad]/g,``).replace(/\\s\\s*/g,` `)).join(`\\xA0`).trim()}function _o(e,t){let n=[...e.querySelectorAll(t)];for(let r of go(e,e.getAttribute(`aria-owns`)))r.matches(t)&&n.push(r),n.p",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-039",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/htmlReport/report.js:8",
+      "details": "`+e.stack}}var xe=Object.prototype.hasOwnProperty,Se=t.unstable_scheduleCallback,Ce=t.unstable_cancelCallback,we=t.unstable_shouldYield,Te=t.unstable_requestPaint,Ee=t.unstable_now,De=t.unstable_getCu",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-040",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/htmlReport/report.js:9",
+      "details": "`).replace(Ad,``)}function Md(e,t){return t=jd(t),jd(e)===t}function $(e,t,n,r,a,o){switch(n){case`children`:typeof r==`string`?t===`body`||t===`textarea`&&r===``||Kt(e,r):(typeof r==`number`||typeof ",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-041",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/htmlReport/report.js:16",
+      "details": "rgb(0 0 0 / 25%) 0px 6px 12px`},Io=({diff:e,noTargetBlank:t,hideDetails:n})=>{let[r,i]=B.useState(e.diff?`diff`:`actual`),[a,o]=B.useState(!1),[s,c]=B.useState(null),[l,u]=B.useState(`Expected`),[d,f]",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-042",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/recorder/assets/codeMirrorModule-CVQWJZAA.js:31",
+      "details": "`),v=d+g.length,y=g[g.length-1].length;return{from:t(v,y),to:t(v+_.length-1,_.length==1?y+_[0].length:_[_.length-1].length),match:h}}}}var u,d;String.prototype.normalize?(u=function(e){return e.normal",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-043",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/recorder/assets/index-hrlLqLtq.js:9",
+      "details": "`+e.stack}}var Ae=Object.prototype.hasOwnProperty,je=t.unstable_scheduleCallback,Me=t.unstable_cancelCallback,Ne=t.unstable_shouldYield,Pe=t.unstable_requestPaint,Fe=t.unstable_now,Ie=t.unstable_getCu",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-044",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/recorder/assets/index-hrlLqLtq.js:10",
+      "details": "`).replace(Ad,``)}function Md(e,t){return t=jd(t),jd(e)===t}function $(e,t,n,r,a,o){switch(n){case`children`:typeof r==`string`?t===`body`||t===`textarea`&&r===``||$t(e,r):(typeof r==`number`||typeof ",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-045",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/dashboard/assets/index-hRvO4yU2.js:9",
+      "details": "`+e.stack}}var _e=Object.prototype.hasOwnProperty,ve=t.unstable_scheduleCallback,ye=t.unstable_cancelCallback,be=t.unstable_shouldYield,xe=t.unstable_requestPaint,Se=t.unstable_now,Ce=t.unstable_getCu",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-046",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/dashboard/assets/index-hRvO4yU2.js:10",
+      "details": "`).replace(kd,``)}function jd(e,t){return t=Ad(t),Ad(e)===t}function Md(e,t,n,r,a,o){switch(n){case`children`:typeof r==`string`?t===`body`||t===`textarea`&&r===``||Ht(e,r):(typeof r==`number`||typeof",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-047",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/dashboard/assets/codeMirrorModule-CQ8RZGBm.js:31",
+      "details": "`),v=d+g.length,y=g[g.length-1].length;return{from:t(v,y),to:t(v+_.length-1,_.length==1?y+_[0].length:_[_.length-1].length),match:h}}}}var u,d;String.prototype.normalize?(u=function(e){return e.normal",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-048",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:19837",
+      "details": "source4 = '\\nvar __commonJS = obj => {\\n  let required = false;\\n  let result;\\n  return function __require() {\\n    if (!required) {\\n      required = true;\\n      let fn;\\n      for (const name in o",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-049",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/traceViewer/assets/codeMirrorModule-BbkfBe3n.js:31",
+      "details": "`),v=d+g.length,y=g[g.length-1].length;return{from:t(v,y),to:t(v+_.length-1,_.length==1?y+_[0].length:_[_.length-1].length),match:h}}}}var u,d;String.prototype.normalize?(u=function(e){return e.normal",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-050",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:9",
+      "details": "`+e.stack}}var Ee=Object.prototype.hasOwnProperty,De=t.unstable_scheduleCallback,Oe=t.unstable_cancelCallback,ke=t.unstable_shouldYield,Ae=t.unstable_requestPaint,N=t.unstable_now,je=t.unstable_getCur",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-051",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:10",
+      "details": "`).replace(Ad,``)}function Md(e,t){return t=jd(t),jd(e)===t}function $(e,t,n,r,a,o){switch(n){case`children`:typeof r==`string`?t===`body`||t===`textarea`&&r===``||Xt(e,r):(typeof r==`number`||typeof ",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-052",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:12",
+      "details": "`,`\\\\n`)}function Xt(e,t,n){if(e)for(let r of t.split(`|`)){if(r===`url`)try{let t=new URL(e[r]);return t.protocol===`data:`?t.protocol:[`about:`,`chrome:`,`edge:`].includes(t.protocol)?e[r]:t.host+t.",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-053",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:19",
+      "details": "rgb(0 0 0 / 25%) 0px 6px 12px`},sr=({diff:e,noTargetBlank:t,hideDetails:n})=>{let[r,i]=T.useState(e.diff?`diff`:`actual`),[a,o]=T.useState(!1),[s,c]=T.useState(null),[l,u]=T.useState(`Expected`),[d,f]",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-054",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:25",
+      "details": "`+i.gitDiff+\"\\n```\"),t},[a,i],void 0);return e.errors.size?(0,P.jsxs)(`div`,{className:`fill`,style:{overflow:`auto`},children:[(0,P.jsx)(`span`,{style:{position:`absolute`,right:`5px`,top:`5px`,zInde",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-055",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:54",
+      "details": "`).replace(/[\\u200b\\u00ad]/g,``).replace(/\\s\\s*/g,` `)).join(`\\xA0`).trim()}function _o(e,t){let n=[...e.querySelectorAll(t)];for(let r of go(e,e.getAttribute(`aria-owns`)))r.matches(t)&&n.push(r),n.p",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-056",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/htmlReport/report.js:8",
+      "details": "`+e.stack}}var xe=Object.prototype.hasOwnProperty,Se=t.unstable_scheduleCallback,Ce=t.unstable_cancelCallback,we=t.unstable_shouldYield,Te=t.unstable_requestPaint,Ee=t.unstable_now,De=t.unstable_getCu",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-057",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/htmlReport/report.js:9",
+      "details": "`).replace(Ad,``)}function Md(e,t){return t=jd(t),jd(e)===t}function $(e,t,n,r,a,o){switch(n){case`children`:typeof r==`string`?t===`body`||t===`textarea`&&r===``||Kt(e,r):(typeof r==`number`||typeof ",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-058",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/htmlReport/report.js:16",
+      "details": "rgb(0 0 0 / 25%) 0px 6px 12px`},Io=({diff:e,noTargetBlank:t,hideDetails:n})=>{let[r,i]=B.useState(e.diff?`diff`:`actual`),[a,o]=B.useState(!1),[s,c]=B.useState(null),[l,u]=B.useState(`Expected`),[d,f]",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-059",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/recorder/assets/codeMirrorModule-CVQWJZAA.js:31",
+      "details": "`),v=d+g.length,y=g[g.length-1].length;return{from:t(v,y),to:t(v+_.length-1,_.length==1?y+_[0].length:_[_.length-1].length),match:h}}}}var u,d;String.prototype.normalize?(u=function(e){return e.normal",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-060",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/recorder/assets/index-hrlLqLtq.js:9",
+      "details": "`+e.stack}}var Ae=Object.prototype.hasOwnProperty,je=t.unstable_scheduleCallback,Me=t.unstable_cancelCallback,Ne=t.unstable_shouldYield,Pe=t.unstable_requestPaint,Fe=t.unstable_now,Ie=t.unstable_getCu",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-061",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/recorder/assets/index-hrlLqLtq.js:10",
+      "details": "`).replace(Ad,``)}function Md(e,t){return t=jd(t),jd(e)===t}function $(e,t,n,r,a,o){switch(n){case`children`:typeof r==`string`?t===`body`||t===`textarea`&&r===``||$t(e,r):(typeof r==`number`||typeof ",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-062",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/dashboard/assets/index-hRvO4yU2.js:9",
+      "details": "`+e.stack}}var _e=Object.prototype.hasOwnProperty,ve=t.unstable_scheduleCallback,ye=t.unstable_cancelCallback,be=t.unstable_shouldYield,xe=t.unstable_requestPaint,Se=t.unstable_now,Ce=t.unstable_getCu",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-063",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/dashboard/assets/index-hRvO4yU2.js:10",
+      "details": "`).replace(kd,``)}function jd(e,t){return t=Ad(t),Ad(e)===t}function Md(e,t,n,r,a,o){switch(n){case`children`:typeof r==`string`?t===`body`||t===`textarea`&&r===``||Ht(e,r):(typeof r==`number`||typeof",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-064",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/dashboard/assets/codeMirrorModule-CQ8RZGBm.js:31",
+      "details": "`),v=d+g.length,y=g[g.length-1].length;return{from:t(v,y),to:t(v+_.length-1,_.length==1?y+_[0].length:_[_.length-1].length),match:h}}}}var u,d;String.prototype.normalize?(u=function(e){return e.normal",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-065",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: dangerouslySetInnerHTML / .innerHTML",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:19837",
+      "details": "source4 = '\\nvar __commonJS = obj => {\\n  let required = false;\\n  let result;\\n  return function __require() {\\n    if (!required) {\\n      required = true;\\n      let fn;\\n      for (const name in o",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-066",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: scattered localStorage token writes (should be in central module)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:5826",
+      "details": "* await page.localStorage.setItem('token', 'abc');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-067",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: scattered localStorage token writes (should be in central module)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:23739",
+      "details": "* await page.localStorage.setItem('token', 'abc');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-068",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: scattered localStorage token writes (should be in central module)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:5826",
+      "details": "* await page.localStorage.setItem('token', 'abc');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-069",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: scattered localStorage token writes (should be in central module)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:23739",
+      "details": "* await page.localStorage.setItem('token', 'abc');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-070",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:384",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-071",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:390",
+      "details": "* const searchValue = await page.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-072",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:391",
+      "details": "* const preloadHref = await page.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-073",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:392",
+      "details": "* const html = await page.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-074",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:394",
+      "details": "* const preloadHrefTS = await page.$eval('link[rel=preload]', (el: HTMLLinkElement) => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-075",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:417",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-076",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:423",
+      "details": "* const searchValue = await page.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-077",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:424",
+      "details": "* const preloadHref = await page.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-078",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:425",
+      "details": "* const html = await page.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-079",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:427",
+      "details": "* const preloadHrefTS = await page.$eval('link[rel=preload]', (el: HTMLLinkElement) => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-080",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:450",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-081",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:456",
+      "details": "* const searchValue = await page.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-082",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:457",
+      "details": "* const preloadHref = await page.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-083",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:458",
+      "details": "* const html = await page.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-084",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:460",
+      "details": "* const preloadHrefTS = await page.$eval('link[rel=preload]', (el: HTMLLinkElement) => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-085",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:483",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-086",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:489",
+      "details": "* const searchValue = await page.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-087",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:490",
+      "details": "* const preloadHref = await page.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-088",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:491",
+      "details": "* const html = await page.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-089",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:493",
+      "details": "* const preloadHrefTS = await page.$eval('link[rel=preload]', (el: HTMLLinkElement) => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-090",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:519",
+      "details": "* [page.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-page#page-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-091",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:525",
+      "details": "* const divCounts = await page.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-092",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:549",
+      "details": "* [page.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-page#page-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-093",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:555",
+      "details": "* const divCounts = await page.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-094",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:579",
+      "details": "* [page.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-page#page-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-095",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:585",
+      "details": "* const divCounts = await page.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-096",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:609",
+      "details": "* [page.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-page#page-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-097",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:615",
+      "details": "* const divCounts = await page.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-098",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6187",
+      "details": "* [frame.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-099",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6193",
+      "details": "* const searchValue = await frame.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-100",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6194",
+      "details": "* const preloadHref = await frame.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-101",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6195",
+      "details": "* const html = await frame.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-102",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6220",
+      "details": "* [frame.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-103",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6226",
+      "details": "* const searchValue = await frame.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-104",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6227",
+      "details": "* const preloadHref = await frame.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-105",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6228",
+      "details": "* const html = await frame.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-106",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6253",
+      "details": "* [frame.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-107",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6259",
+      "details": "* const searchValue = await frame.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-108",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6260",
+      "details": "* const preloadHref = await frame.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-109",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6261",
+      "details": "* const html = await frame.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-110",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6286",
+      "details": "* [frame.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-111",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6292",
+      "details": "* const searchValue = await frame.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-112",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6293",
+      "details": "* const preloadHref = await frame.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-113",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6294",
+      "details": "* const html = await frame.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-114",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6320",
+      "details": "* [frame.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-115",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6326",
+      "details": "* const divsCounts = await frame.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-116",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6350",
+      "details": "* [frame.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-117",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6356",
+      "details": "* const divsCounts = await frame.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-118",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6380",
+      "details": "* [frame.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-119",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6386",
+      "details": "* const divsCounts = await frame.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-120",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6410",
+      "details": "* [frame.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-121",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:6416",
+      "details": "* const divsCounts = await frame.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-122",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:11989",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector),",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-123",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12330",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-124",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12416",
+      "details": "* [elementHandle.$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-125",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12423",
+      "details": "* expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-126",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12424",
+      "details": "* expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-127",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12450",
+      "details": "* [elementHandle.$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-128",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12457",
+      "details": "* expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-129",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12458",
+      "details": "* expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-130",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12484",
+      "details": "* [elementHandle.$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-131",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12491",
+      "details": "* expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-132",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12492",
+      "details": "* expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-133",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12518",
+      "details": "* [elementHandle.$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-134",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12525",
+      "details": "* expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-135",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12526",
+      "details": "* expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-136",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12552",
+      "details": "* [elementHandle.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-137",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12566",
+      "details": "* expect(await feedHandle.$$eval('.tweet', nodes =>",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-138",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12593",
+      "details": "* [elementHandle.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-139",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12607",
+      "details": "* expect(await feedHandle.$$eval('.tweet', nodes =>",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-140",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12634",
+      "details": "* [elementHandle.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-141",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12648",
+      "details": "* expect(await feedHandle.$$eval('.tweet', nodes =>",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-142",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12675",
+      "details": "* [elementHandle.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-143",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/types.d.ts:12689",
+      "details": "* expect(await feedHandle.$$eval('.tweet', nodes =>",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-144",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/types/protocol.d.ts:22505",
+      "details": "which includes eval(), Function(), setTimeout() and setInterval()",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-145",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:54",
+      "details": "`).replace(/[\\u200b\\u00ad]/g,``).replace(/\\s\\s*/g,` `)).join(`\\xA0`).trim()}function _o(e,t){let n=[...e.querySelectorAll(t)];for(let r of go(e,e.getAttribute(`aria-owns`)))r.matches(t)&&n.push(r),n.p",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-146",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/utilsBundle.js:35630",
+      "details": "const makeValidate = new Function(`${names_1.default.self}`, `${names_1.default.scope}`, sourceCode);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-147",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/utilsBundle.js:42337",
+      "details": "const makeValidate = new Function(`${names_1.default.self}`, `${names_1.default.scope}`, sourceCode);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-148",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:9105",
+      "details": "const loadVite = new Function('return import(\"vite\")');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-149",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:12023",
+      "details": "source = '\\nvar __commonJS = obj => {\\n  let required = false;\\n  let result;\\n  return function __require() {\\n    if (!required) {\\n      required = true;\\n      let fn;\\n      for (const name in ob",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-150",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:19480",
+      "details": "source3 = '\\nvar __commonJS = obj => {\\n  let required = false;\\n  let result;\\n  return function __require() {\\n    if (!required) {\\n      required = true;\\n      let fn;\\n      for (const name in o",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-151",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:19538",
+      "details": "new Function(\"(\" + expression2 + \")\");",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-152",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:19545",
+      "details": "new Function(\"(\" + expression2 + \")\");",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-153",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:19837",
+      "details": "source4 = '\\nvar __commonJS = obj => {\\n  let required = false;\\n  let result;\\n  return function __require() {\\n    if (!required) {\\n      required = true;\\n      let fn;\\n      for (const name in o",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-154",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:20925",
+      "details": "const func = injected2.eval(\"(\" + params2.functionText + \")\");",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-155",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:24388",
+      "details": "let result3 = evaledExpression ?? globalThis.eval(expression3);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-156",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:24447",
+      "details": "let result2 = globalThis.eval(data.expression);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-157",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:24518",
+      "details": "const callback = injected.eval(callbackText2);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-158",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:58403",
+      "details": "return await this._frame.$$eval(this._selector, pageFunction, arg);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-159",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:58594",
+      "details": "return await this._frame.$$eval(this._selector, (ee) => ee.map((e) => e.innerText));",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-160",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:58597",
+      "details": "return await this._frame.$$eval(this._selector, (ee) => ee.map((e) => e.textContent || \"\"));",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-161",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:60434",
+      "details": "async $eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-162",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:60439",
+      "details": "async $$eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-163",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:60948",
+      "details": "async $eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-164",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:60952",
+      "details": "async $$eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-165",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:61538",
+      "details": "async $eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-166",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:61540",
+      "details": "return await this._mainFrame.$eval(selector, pageFunction, arg);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-167",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:61542",
+      "details": "async $$eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-168",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:61544",
+      "details": "return await this._mainFrame.$$eval(selector, pageFunction, arg);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-169",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:66352",
+      "details": "const value = eval(`(${expr})`);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-170",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Release/net10.0/.playwright/package/lib/coreBundle.js:66359",
+      "details": "const value = eval(`(${expr})`);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-171",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:384",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-172",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:390",
+      "details": "* const searchValue = await page.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-173",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:391",
+      "details": "* const preloadHref = await page.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-174",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:392",
+      "details": "* const html = await page.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-175",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:394",
+      "details": "* const preloadHrefTS = await page.$eval('link[rel=preload]', (el: HTMLLinkElement) => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-176",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:417",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-177",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:423",
+      "details": "* const searchValue = await page.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-178",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:424",
+      "details": "* const preloadHref = await page.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-179",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:425",
+      "details": "* const html = await page.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-180",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:427",
+      "details": "* const preloadHrefTS = await page.$eval('link[rel=preload]', (el: HTMLLinkElement) => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-181",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:450",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-182",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:456",
+      "details": "* const searchValue = await page.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-183",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:457",
+      "details": "* const preloadHref = await page.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-184",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:458",
+      "details": "* const html = await page.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-185",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:460",
+      "details": "* const preloadHrefTS = await page.$eval('link[rel=preload]', (el: HTMLLinkElement) => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-186",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:483",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-187",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:489",
+      "details": "* const searchValue = await page.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-188",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:490",
+      "details": "* const preloadHref = await page.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-189",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:491",
+      "details": "* const html = await page.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-190",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:493",
+      "details": "* const preloadHrefTS = await page.$eval('link[rel=preload]', (el: HTMLLinkElement) => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-191",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:519",
+      "details": "* [page.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-page#page-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-192",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:525",
+      "details": "* const divCounts = await page.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-193",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:549",
+      "details": "* [page.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-page#page-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-194",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:555",
+      "details": "* const divCounts = await page.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-195",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:579",
+      "details": "* [page.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-page#page-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-196",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:585",
+      "details": "* const divCounts = await page.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-197",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:609",
+      "details": "* [page.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-page#page-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-198",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:615",
+      "details": "* const divCounts = await page.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-199",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6187",
+      "details": "* [frame.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-200",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6193",
+      "details": "* const searchValue = await frame.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-201",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6194",
+      "details": "* const preloadHref = await frame.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-202",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6195",
+      "details": "* const html = await frame.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-203",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6220",
+      "details": "* [frame.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-204",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6226",
+      "details": "* const searchValue = await frame.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-205",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6227",
+      "details": "* const preloadHref = await frame.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-206",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6228",
+      "details": "* const html = await frame.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-207",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6253",
+      "details": "* [frame.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-208",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6259",
+      "details": "* const searchValue = await frame.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-209",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6260",
+      "details": "* const preloadHref = await frame.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-210",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6261",
+      "details": "* const html = await frame.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-211",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6286",
+      "details": "* [frame.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-212",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6292",
+      "details": "* const searchValue = await frame.$eval('#search', el => el.value);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-213",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6293",
+      "details": "* const preloadHref = await frame.$eval('link[rel=preload]', el => el.href);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-214",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6294",
+      "details": "* const html = await frame.$eval('.main-container', (e, suffix) => e.outerHTML + suffix, 'hello');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-215",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6320",
+      "details": "* [frame.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-216",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6326",
+      "details": "* const divsCounts = await frame.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-217",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6350",
+      "details": "* [frame.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-218",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6356",
+      "details": "* const divsCounts = await frame.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-219",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6380",
+      "details": "* [frame.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-220",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6386",
+      "details": "* const divsCounts = await frame.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-221",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6410",
+      "details": "* [frame.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-frame#frame-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-222",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:6416",
+      "details": "* const divsCounts = await frame.$$eval('div', (divs, min) => divs.length >= min, 10);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-223",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:11989",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector),",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-224",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12330",
+      "details": "* [page.$eval(selector, pageFunction[, arg, options])](https://playwright.dev/docs/api/class-page#page-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-225",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12416",
+      "details": "* [elementHandle.$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-226",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12423",
+      "details": "* expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-227",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12424",
+      "details": "* expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-228",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12450",
+      "details": "* [elementHandle.$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-229",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12457",
+      "details": "* expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-230",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12458",
+      "details": "* expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-231",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12484",
+      "details": "* [elementHandle.$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-232",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12491",
+      "details": "* expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-233",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12492",
+      "details": "* expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-234",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12518",
+      "details": "* [elementHandle.$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-235",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12525",
+      "details": "* expect(await tweetHandle.$eval('.like', node => node.innerText)).toBe('100');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-236",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12526",
+      "details": "* expect(await tweetHandle.$eval('.retweets', node => node.innerText)).toBe('10');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-237",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12552",
+      "details": "* [elementHandle.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-238",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12566",
+      "details": "* expect(await feedHandle.$$eval('.tweet', nodes =>",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-239",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12593",
+      "details": "* [elementHandle.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-240",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12607",
+      "details": "* expect(await feedHandle.$$eval('.tweet', nodes =>",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-241",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12634",
+      "details": "* [elementHandle.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-242",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12648",
+      "details": "* expect(await feedHandle.$$eval('.tweet', nodes =>",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-243",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12675",
+      "details": "* [elementHandle.$$eval(selector, pageFunction[, arg])](https://playwright.dev/docs/api/class-elementhandle#element-handle-eval-on-selector-all)",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-244",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/types.d.ts:12689",
+      "details": "* expect(await feedHandle.$$eval('.tweet', nodes =>",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-245",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/types/protocol.d.ts:22505",
+      "details": "which includes eval(), Function(), setTimeout() and setInterval()",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-246",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/vite/traceViewer/assets/defaultSettingsView-Ds6CBOo0.js:54",
+      "details": "`).replace(/[\\u200b\\u00ad]/g,``).replace(/\\s\\s*/g,` `)).join(`\\xA0`).trim()}function _o(e,t){let n=[...e.querySelectorAll(t)];for(let r of go(e,e.getAttribute(`aria-owns`)))r.matches(t)&&n.push(r),n.p",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-247",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/utilsBundle.js:35630",
+      "details": "const makeValidate = new Function(`${names_1.default.self}`, `${names_1.default.scope}`, sourceCode);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-248",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/utilsBundle.js:42337",
+      "details": "const makeValidate = new Function(`${names_1.default.self}`, `${names_1.default.scope}`, sourceCode);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-249",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:9105",
+      "details": "const loadVite = new Function('return import(\"vite\")');",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-250",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:12023",
+      "details": "source = '\\nvar __commonJS = obj => {\\n  let required = false;\\n  let result;\\n  return function __require() {\\n    if (!required) {\\n      required = true;\\n      let fn;\\n      for (const name in ob",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-251",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:19480",
+      "details": "source3 = '\\nvar __commonJS = obj => {\\n  let required = false;\\n  let result;\\n  return function __require() {\\n    if (!required) {\\n      required = true;\\n      let fn;\\n      for (const name in o",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-252",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:19538",
+      "details": "new Function(\"(\" + expression2 + \")\");",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-253",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:19545",
+      "details": "new Function(\"(\" + expression2 + \")\");",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-254",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:19837",
+      "details": "source4 = '\\nvar __commonJS = obj => {\\n  let required = false;\\n  let result;\\n  return function __require() {\\n    if (!required) {\\n      required = true;\\n      let fn;\\n      for (const name in o",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-255",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:20925",
+      "details": "const func = injected2.eval(\"(\" + params2.functionText + \")\");",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-256",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:24388",
+      "details": "let result3 = evaledExpression ?? globalThis.eval(expression3);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-257",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:24447",
+      "details": "let result2 = globalThis.eval(data.expression);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-258",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:24518",
+      "details": "const callback = injected.eval(callbackText2);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-259",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:58403",
+      "details": "return await this._frame.$$eval(this._selector, pageFunction, arg);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-260",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:58594",
+      "details": "return await this._frame.$$eval(this._selector, (ee) => ee.map((e) => e.innerText));",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-261",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:58597",
+      "details": "return await this._frame.$$eval(this._selector, (ee) => ee.map((e) => e.textContent || \"\"));",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-262",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:60434",
+      "details": "async $eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-263",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:60439",
+      "details": "async $$eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-264",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:60948",
+      "details": "async $eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-265",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:60952",
+      "details": "async $$eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-266",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:61538",
+      "details": "async $eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-267",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:61540",
+      "details": "return await this._mainFrame.$eval(selector, pageFunction, arg);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-268",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:61542",
+      "details": "async $$eval(selector, pageFunction, arg) {",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-269",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:61544",
+      "details": "return await this._mainFrame.$$eval(selector, pageFunction, arg);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-270",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:66352",
+      "details": "const value = eval(`(${expr})`);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    },
+    {
+      "id": "F-271",
+      "source": "grep (frontend XSS)",
+      "severity": "Medium",
+      "category": "xss",
+      "title": "Suspect pattern: eval / new Function (RCE risk)",
+      "file": "./tests/GazetaMarketplace.Web.Tests.Playwright/bin/Debug/net10.0/.playwright/package/lib/coreBundle.js:66359",
+      "details": "const value = eval(`(${expr})`);",
+      "fix": "Sanitize via DOMPurify; centralize token storage; remove inline scripts"
+    }
+  ]
+}

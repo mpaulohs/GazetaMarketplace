@@ -1,0 +1,22 @@
+{
+  "@types/node": {
+    "wanted": "20.19.43",
+    "latest": "26.6.4",
+    "dependent": "hooks"
+  },
+  "node-jq": {
+    "wanted": "6.3.1",
+    "latest": "6.3.1",
+    "dependent": "hooks"
+  },
+  "tsx": {
+    "wanted": "4.23.15",
+    "latest": "4.23.15",
+    "dependent": "hooks"
+  },
+  "typescript": {
+    "wanted": "5.9.3",
+    "latest": "7.0.2",
+    "dependent": "hooks"
+  }
+}

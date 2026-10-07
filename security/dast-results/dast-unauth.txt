@@ -1,0 +1,127 @@
+=== D1 cabeçalhos de segurança (/ , /painel/entrar, /404, /anuncio/999999) ===
+--- /
+HTTP/2 200 
+server: Kestrel
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(), microphone=(), camera=()
+content-security-policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'
+strict-transport-security: max-age=31536000; includeSubDomains
+--- /painel/entrar
+HTTP/2 200 
+server: Kestrel
+cache-control: no-store,no-cache
+set-cookie: .AspNetCore.Antiforgery.w2DdfWyTe2w=CfDJ8Eb2dB0YEi1Fup94F1QVbajWC8bMpt4EcBKFHrpUggr-7XRqfEEQtmQrimv_kR5QMXAcfECRjuXTB28ek-EfXLQpg0krUlUi4AlE08DX-ZKY2wHuNfnTZ0vczAb7N3kwqDjaj1_53AzAq_x2PQT64CI; path=/; secure; samesite=strict; httponly
+x-frame-options: DENY
+x-content-type-options: nosniff
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(), microphone=(), camera=()
+content-security-policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'
+strict-transport-security: max-age=31536000; includeSubDomains
+--- /rota-que-nao-existe
+HTTP/2 404 
+server: Kestrel
+cache-control: no-store,no-cache
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(), microphone=(), camera=()
+content-security-policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'
+strict-transport-security: max-age=31536000; includeSubDomains
+--- /anuncio/999999
+HTTP/2 404 
+server: Kestrel
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(), microphone=(), camera=()
+content-security-policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'; form-action 'self'
+strict-transport-security: max-age=31536000; includeSubDomains
+=== D2 acesso sem login às rotas do painel (esperado: 302 para /painel/entrar, nunca 200) ===
+/painel -> 404 
+/painel/anuncios -> 302 https://localhost:5443/painel/entrar?ReturnUrl=%2Fpainel%2Fanuncios
+/painel/anuncios/novo -> 302 https://localhost:5443/painel/entrar?ReturnUrl=%2Fpainel%2Fanuncios%2Fnovo
+/painel/anuncios/1/editar -> 302 https://localhost:5443/painel/entrar?ReturnUrl=%2Fpainel%2Fanuncios%2F1%2Feditar
+/painel/fila -> 404 
+/painel/usuarios -> 302 https://localhost:5443/painel/entrar?ReturnUrl=%2Fpainel%2Fusuarios
+/painel/categorias -> 302 https://localhost:5443/painel/entrar?ReturnUrl=%2Fpainel%2Fcategorias
+/painel/componentes -> 404 
+/painel/configuracoes -> 302 https://localhost:5443/painel/entrar?ReturnUrl=%2Fpainel%2Fconfiguracoes
+/painel/anuncios/1/fotos -> 405 
+/painel/usuarios/1/editar -> 302 https://localhost:5443/painel/entrar?ReturnUrl=%2Fpainel%2Fusuarios%2F1%2Feditar
+/painel/categorias/1/editar -> 302 https://localhost:5443/painel/entrar?ReturnUrl=%2Fpainel%2Fcategorias%2F1%2Feditar
+=== D3 POST sem login e sem antiforgery (esperado 400/302/401, nunca 200/204) ===
+POST /painel/entrar -> 400
+POST /painel/anuncios -> 405
+POST /painel/usuarios -> 405
+POST /painel/anuncios/1/excluir -> 404
+POST /painel/fila/1/rejeitar -> 404
+POST /painel/sair -> 400
+=== D4 API sem sessão (esperado 401 ProblemDetails) ===
+/api/v1/ads -> 400 application/problem+json
+{"title":"Bad Request","status":400,"detail":"Os dados enviados são inválidos.","instance":"/api/v1/ads","code":"VALIDATION_ERROR","traceId":"a5590823b21541f680d018ab8fde7f8f","errors":{"ids":["Info
+/api/v1/ads/1 -> 404 
+
+/api/v1/ads/1/photos -> 405 
+
+=== D5 fotos: traversal e acesso direto a originais ===
+/fotos/1/1-large.webp -> 404
+/fotos/1/1-orig.webp -> 404
+/fotos/../appsettings.json -> 404
+/fotos/1/..%2f..%2fappsettings.json -> 404
+/fotos/%2e%2e/%2e%2e/etc/passwd -> 404
+/_originals/ -> 404
+/photos/ -> 404
+/uploads/ -> 404
+/appsettings.json -> 404
+/appsettings.Production.json -> 404
+/web.config -> 404
+/GazetaMarketplace.Web.dll -> 404
+/.env -> 404
+/.git/config -> 404
+/logs/ -> 404
+/keys/ -> 404
+/swagger -> 404
+/swagger/v1/swagger.json -> 404
+/openapi/v1.json -> 404
+/metrics -> 404
+/health -> 404
+/health/ready -> 200
+/error -> 404
+/Home/Error -> 200
+/Home/Status -> 404
+/diagnostics -> 404
+/debug -> 404
+=== D6 open redirect em returnUrl ===
+returnUrl=https://evil.example/ -> 200 
+returnUrl=//evil.example/ -> 200 
+returnUrl=/\evil.example -> 200 
+returnUrl=javascript:alert(1) -> 200 
+=== D7 métodos HTTP e CORS ===
+OPTIONS / -> 200
+TRACE / -> 200
+-- preflight com Origin externo
+HTTP/2 405 
+-- GET com Origin externo
+HTTP/2 401 
+=== D8 injeção/entradas hostis em rotas públicas ===
+/busca?q=%27%20OR%201%3D1-- -> 200
+/busca?q=%3Cscript%3Ealert(1)%3C/script%3E -> 200
+/busca?q=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -> 200
+/busca?page=-1 -> 200
+/busca?page=99999999999999999999 -> 200
+/anuncio/abc -> 404
+/anuncio/-1 -> 404
+/anuncio/2147483648/x -> 404
+/categoria/..%2f..%2f -> 404
+/api/v1/cep/abcdefgh -> 401
+/api/v1/cep/00000000 -> 401
+/api/v1/cities?q=%27%3B-- -> 401
+=== D9 reflexão de XSS ===
+0
+=== D10 corpo gigante / content-type inesperado ===
+POST 20MB em /painel/entrar -> 413
+POST JSON malformado em /api/v1/ads -> 405
+=== D11 página de erro/stack trace ===
+0

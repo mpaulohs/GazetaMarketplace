@@ -1,0 +1,33 @@
+=== A1 login do Redator (usuário 3) ===
+HTTP/2 302  location: /painel/anuncios 
+=== A2 returnUrl externo no login (esperado: Location local, nunca evil.example) ===
+returnUrl=https://evil.example/ -> HTTP/2 302  location: /painel/anuncios 
+returnUrl=//evil.example/ -> HTTP/2 302  location: /painel/anuncios 
+returnUrl=/\evil.example -> HTTP/2 302  location: /painel/anuncios 
+=== A3 flags do cookie de sessão ===
+set-cookie: Gazeta.Team=<valor>; path=/; secure; samesite=lax; httponly
+=== A4 rotas de administrador com sessão de Redator (esperado 302 acesso-negado, nunca 200) ===
+/painel/usuarios -> 302 https://localhost:5443/painel/acesso-negado?ReturnUrl=%2Fpainel%2Fusuarios
+/painel/usuarios/novo -> 302 https://localhost:5443/painel/acesso-negado?ReturnUrl=%2Fpainel%2Fusuarios%2Fnovo
+/painel/usuarios/1/editar -> 302 https://localhost:5443/painel/acesso-negado?ReturnUrl=%2Fpainel%2Fusuarios%2F1%2Feditar
+/painel/categorias -> 302 https://localhost:5443/painel/acesso-negado?ReturnUrl=%2Fpainel%2Fcategorias
+/painel/configuracoes -> 302 https://localhost:5443/painel/acesso-negado?ReturnUrl=%2Fpainel%2Fconfiguracoes
+/painel/anuncios/fila -> 302 https://localhost:5443/painel/acesso-negado?ReturnUrl=%2Fpainel%2Fanuncios%2Ffila
+/painel/fila -> 404 
+/painel/revisao -> 404 
+=== A5 IDOR: Redator tenta anúncios do Administrador (16210 rascunho, 16214 outro estado) ===
+GET /painel/anuncios/16210/editar -> 403 
+GET /painel/anuncios/16214/editar -> 403 
+GET /painel/anuncios/16210/pre-visualizacao -> 302 https://localhost:5443/painel/acesso-negado?ReturnUrl=%2Fpainel%2Fanuncios%2F16210%2Fpre-visualizacao
+GET /painel/anuncios/16210/enviar/confirmar -> 403 
+GET /painel/anuncios/16214/arquivar -> 302 https://localhost:5443/painel/acesso-negado?ReturnUrl=%2Fpainel%2Fanuncios%2F16214%2Farquivar
+GET /painel/anuncios/16214/despublicar -> 302 https://localhost:5443/painel/acesso-negado?ReturnUrl=%2Fpainel%2Fanuncios%2F16214%2Fdespublicar
+GET /painel/anuncios/16210/excluir -> 404 
+=== A6 API fotos: IDOR e validações (Redator, anúncio do Administrador 16210) ===
+token antiforgery obtido: sim
+upload sem antiforgery -> 400
+upload em anúncio de outro autor -> 403
+upload em anúncio inexistente -> 404
+cover/delete em anúncio de outro autor -> 403 / 403
+=== A7 upload no próprio anúncio (Redator cria um rascunho) ===
+GET novo -> 

@@ -1,0 +1,18 @@
+antiforgery: ok
+(a) vazio                          -> 400 {"title":"Bad Request","status":400,"detail":"Os dados enviados são inválidos.","instance":"/api/v1/ads/16206/photos","code":"VALIDATION_ERROR","traceId":"689
+(b) acima de 10 MB (10,6 MB)       -> 400 {"title":"Bad Request","status":400,"detail":"Os dados enviados são inválidos.","instance":"/api/v1/ads/16206/photos","code":"VALIDATION_ERROR","traceId":"49e
+(c) MZ disfarçado de .jpg         -> 400 {"title":"Bad Request","status":400,"detail":"Os dados enviados são inválidos.","instance":"/api/v1/ads/16206/photos","code":"VALIDATION_ERROR","traceId":"18d
+(d) nome ../../etc/passwd.png      -> 201 {"id":16402,"sortOrder":1,"url480":"/fotos/16206/16402-480.webp","url1600":"/fotos/16206/16402-1600.webp","width":800,"height":600}
+(e) nome evil.jpg.exe              -> 201 {"id":16403,"sortOrder":2,"url480":"/fotos/16206/16403-480.webp","url1600":"/fotos/16206/16403-1600.webp","width":800,"height":600}
+(f) SVG com script                 -> 400 {"title":"Bad Request","status":400,"detail":"Os dados enviados são inválidos.","instance":"/api/v1/ads/16206/photos","code":"VALIDATION_ERROR","traceId":"1bb
+(g) PNG + PHP/JS anexado           -> 201 {"id":16404,"sortOrder":3,"url480":"/fotos/16206/16404-480.webp","url1600":"/fotos/16206/16404-1600.webp","width":100,"height":100}
+(h) PNG 6000x6000 (36 MP)          -> 201 {"id":16405,"sortOrder":4,"url480":"/fotos/16206/16405-480.webp","url1600":"/fotos/16206/16405-1600.webp","width":1600,"height":1600}
+(i) PNG válido 800x600            -> 201 {"id":16406,"sortOrder":5,"url480":"/fotos/16206/16406-480.webp","url1600":"/fotos/16206/16406-1600.webp","width":800,"height":600}
+--- o que ficou no disco para o anúncio (nomes)
+--- leitura das versões geradas
+url1600=/fotos/16206/16406-1600.webp
+HTTP/2 404 
+x-content-type-options: nosniff
+/tmp/tmp.tG3Zk3Uw9j/img: empty
+(j) PNG 20000x20000 (400 MP, 1,2 MB no disco) -> {"title":"Bad Request","status":400,"detail":"Os dados enviados são inválidos.","instance":"/api/v1/ads/16206/photos","code":"VALIDATION_ERROR","traceId":"31e
+tempo=.026332115s pico-RSS-do-processo(KB)=399768

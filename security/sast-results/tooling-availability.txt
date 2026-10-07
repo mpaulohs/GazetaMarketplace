@@ -1,0 +1,24 @@
+gitleaks: MISSING
+semgrep: MISSING
+trufflehog: MISSING
+snyk: MISSING
+trivy: MISSING
+hadolint: MISSING
+dotnet: installed (/usr/bin/dotnet)
+npm: installed (/opt/node22/bin/npm)
+node: installed (/opt/node22/bin/node)
+pip: installed (/usr/bin/pip)
+pip-audit: MISSING
+safety: MISSING
+bandit: MISSING
+mvn: installed (/opt/maven/bin/mvn)
+gradle: installed (/opt/gradle/bin/gradle)
+govulncheck: MISSING
+staticcheck: MISSING
+gosec: MISSING
+bundler-audit: MISSING
+brakeman: MISSING
+composer: installed (/usr/local/bin/composer)
+jq: installed (/usr/bin/jq)
+python3: installed (/usr/bin/python3)
+docker: installed (/usr/bin/docker)

@@ -1,0 +1,22 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `GazetaMarketplace.Core` has no updates given the current sources.
+The given project `GazetaMarketplace.Infrastructure` has no updates given the current sources.
+The given project `GazetaMarketplace.Web` has no updates given the current sources.
+The given project `CitiesImport.Tests` has no updates given the current sources.
+Project `GazetaMarketplace.IntegrationTests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                                Requested   Resolved   Latest 
+   > Microsoft.Testing.Extensions.CodeCoverage      18.11.2     18.11.2    18.12.0
+
+The given project `GazetaMarketplace.Web.Tests.Playwright` has no updates given the current sources.
+Project `GazetaMarketplace.Web.Tests` has the following updates to its packages
+   [net10.0]: 
+   Top-level Package                                Requested   Resolved   Latest 
+   > Microsoft.Testing.Extensions.CodeCoverage      18.11.2     18.11.2    18.12.0
+
+The given project `VehicleCatalogExport.Tests` has no updates given the current sources.
