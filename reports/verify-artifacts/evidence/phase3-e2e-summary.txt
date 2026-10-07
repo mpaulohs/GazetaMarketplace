@@ -1,0 +1,13 @@
+# Fase 3 — E2E (Playwright, Chromium) contra o artefato publicado
+artefato: 6953fa3 6bb592c8aa261c08c2572b2bbe1e87a0a5bb1c69e625e548c59f2630eb9b83ec
+site: https://localhost:5443 (Production, HTTPS autoassinado), SQL Server 2022 em contêiner (gazeta_e2e), CepCache e PasswordRecoveryAttempts limpos antes da rodada
+comando: dotnet run --no-build --project tests/GazetaMarketplace.Web.Tests.Playwright (variáveis em docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md)
+  total: 258
+  failed: 0
+  succeeded: 254
+  skipped: 4
+  duration: 13m 07s 357ms
+listados (--list-tests): 258
+ignorados (4): LcpInpCls_OnTheMobileProfile_AreWithinTheBudget(home);LcpInpCls_OnTheMobileProfile_AreWithinTheBudget(category);LcpInpCls_OnTheMobileProfile_AreWithinTheBudget(search);LcpInpCls_OnTheMobileProfile_AreWithinTheBudget(detail);
+  -> rodados à parte com GAZETA_VITALS=1 (4/4 passaram; ver phase4-vitals-and-weight.txt)
+log completo (ignorado pelo git): reports/verify-artifacts/report/e2e-full.log

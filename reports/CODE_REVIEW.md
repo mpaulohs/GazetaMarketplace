@@ -1302,3 +1302,7 @@ Observação sobre o R-06: o pedido falava em buscar só a lista no ancestral. I
 | Performance | 4 | **4** | sem mudança |
 
 **Veredito: APPROVE, sem condição bloqueante.** Itens que seguem abertos, todos com dono: R-11/SEC-01 e as chaves sem criptografia (`/infra`, com o R-05), R-12 (desvio documentado), R-13 e R-14/R-15/R-18 (`/simplify`) e os 🟢. Os 7 OPEN seguem as disposições da seção 5.
+
+### Addendum — `/verify` (2026-10-07)
+
+O `/verify` do artefato `6bb592c8…83ec` (commit `6953fa3`) **não achou defeito novo de segurança nem de dados** e confirmou na prática duas correções do review: o limite `auth` (R-07: 5 pedidos passam, o 6.º recebe 429) e o aviso de erro no lugar da página branca (R-10). Trouxe três observações de P2 (V-01 a V-03 no BACKLOG: balde de limite compartilhado entre entrar, esqueci e redefinir; 429 em texto simples; `/Home/Error` abrindo direto) e uma de P1 para o `/test` (V-04: 64 de 130 cenários sem teste de navegador marcado). As notas dos cinco eixos **não mudam**; o veredito do review continua **APPROVE sem condição bloqueante**, e as condições de promoção passam a ser as do `reports/VERIFY_REPORT.md` §5.

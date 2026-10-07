@@ -1,0 +1,7 @@
+# Fase 4 — métricas medidas no artefato (Production, HTTPS, celular simulado 4G + CPU 4x mais lenta), rodada GAZETA_VITALS=1 sozinha, 2026-10-07
+VITAIS home (/): LCP 916 ms (limite 2500) · INP 56 ms em 6 interação(ões) (limite 200) · CLS 0.0000 (limite 0.1)
+VITAIS category (/categoria/livros-e-revistas): LCP 1068 ms (limite 2500) · INP 56 ms em 2 interação(ões) (limite 200) · CLS 0.0000 (limite 0.1)
+VITAIS search (/busca?q=livro): LCP 1100 ms (limite 2500) · INP 80 ms em 5 interação(ões) (limite 200) · CLS 0.0000 (limite 0.1)
+VITAIS detail (/anuncio/16201/livro-disputado-471d9cef): LCP 440 ms (limite 2500) · INP 64 ms em 7 interação(ões) (limite 200) · CLS 0.0000 (limite 0.1)
+(fotos do ambiente de teste são sintéticas e minúsculas: o peso real com fotos de verdade é o item M6 do checklist)
+LISTA: 171 KB (limite 2048 KB) · 24 anúncios, 24 imagens reduzidas, 7 KB de imagens; DETALHE mais pesado: 168 KB (limite 3072 KB)

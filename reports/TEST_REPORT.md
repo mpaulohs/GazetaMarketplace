@@ -1815,3 +1815,21 @@ Nenhum arquivo de teste novo nesta rodada; só os logs em `reports/test-artifact
 | OPEN-005 | Cerca de 60 usos antigos do operador `!` nos testes, sem efeito (nullable desligado) | BACKLOG |
 | OPEN-006 | As 14 sugestões 🟢 do `/review` do Checkpoint 6 que continuam abertas | BACKLOG |
 | OPEN-007 | Sem `results.json`/`.trx` do executor: decidir se vale o pacote de relatório | Item 7 |
+
+## /verify — verificação do artefato (2026-10-07)
+
+> **Em resumo:** o artefato publicado (`6bb592c8…83ec`, commit `6953fa3`) **passou em tudo que a máquina consegue provar**: 254 de 254 testes de navegador executados, 4 de 4 métricas de velocidade rodadas à parte, contrato HTTP com 52 verificações sem falha. O veredito é **PASS WITH CONDITIONS** (ver `reports/VERIFY_REPORT.md`): 64 de 130 cenários ainda sem teste de navegador marcado, itens manuais no `docs/VERIFY-CHECKLIST.md` e ausência de perfil Staging.
+
+| Item | Resultado |
+|---|---|
+| Trava do artefato | `reports/verify-artifact.lock`: digest da pasta publicada `6bb592c8aa26…b83ec`; Production, HTTPS autoassinado, SQL Server em contêiner |
+| Liveness | 12 / 12 |
+| Contrato HTTP (curl no artefato) | 52 / 52; 3 observações (V-01 a V-03) |
+| E2E no artefato | 258 listados = 254 passaram + 4 ignorados; 0 falhas; 13 min 07 s |
+| Métricas de velocidade (`GAZETA_VITALS=1`, sozinhas) | 4 / 4: LCP 916 · 1.068 · 1.100 · 440 ms; INP 56 · 56 · 80 · 64 ms; CLS 0,0000 (busca com script atrasado: 0,0043) |
+| Peso (fotos sintéticas) | lista 171 KB, detalhe 168 KB (limites 2 MB e 3 MB) |
+| Limite de login no artefato (limites padrão) | 5 passam, o 6.º recebe 429 com `Retry-After: 900` |
+| Rastreabilidade | 66 / 130 provados no artefato; 23 prováveis; 41 só em processo (`reports/VERIFY_MATRIX.md`; item V-04 do BACKLOG) |
+| Fronteira | Nenhum arquivo de `src/` nem de `tests/` foi alterado pelo `/verify` |
+
+**OPEN do `/review` fechados ou movidos por este `/verify`:** OPEN-004 (`GAZETA_VITALS`) **fechado**: os 4 testes de métricas rodaram sozinhos e passaram; falta repeti-los na hospedagem (V-08). OPEN-001 (instabilidade de `US005S06`) **sem recorrência** em 3 rodadas completas hoje (258 testes cada). OPEN-005 e OPEN-007 seguem diferidos (`/simplify`, `/infra`).

@@ -2,24 +2,14 @@
 200 /health/live
 200 /health/ready
 200 /
-404 /categoria/veiculos
+200 /categoria/livros-e-revistas
 200 /busca
+200 /busca?q=livro
 200 /favoritos
 200 /sitemap.xml
 200 /robots.txt
 200 /painel/entrar
---- readiness body
+--- readiness
 Healthy
---- primeira categoria e primeiro anúncio publicado (lê o banco)
-href="/"
-href="/anuncio/15161/fv056ea3-caderno-03305492"
-href="/anuncio/15165/zq6b6b0c-livro-azul-7424ef7c"
-href="/anuncio/15166/zq6b6b0c-livro-azul-c854c754"
-href="/anuncio/15167/zq6b6b0c-livro-azul-56a2077a"
-href="/anuncio/15169/head-caderno-fed8b21b"
-href="/anuncio/15170/livro-da-vitrine-7465e98e"
-href="/anuncio/15171/livro-da-vitrine-537b9b1e"
-href="/anuncio/15172/img-srcx-onerrorwindow-xss1scriptalert1script-85af87ee"
-href="/anuncio/15174/telas-livro-dd81f289"
-href="/anuncio/15189/livro-disputado-a5c1aeb7"
-href="/anuncio/15198/livro-a-publicar-e60a3531"
+200 /anuncio/16201/livro-disputado-471d9cef (anúncio lido do banco)
+--- /busca?q=livro devolve anúncios do banco: 24 anúncios
