@@ -1851,3 +1851,62 @@ Nenhum arquivo de teste novo nesta rodada; só os logs em `reports/test-artifact
 | Fronteira | **Nenhum arquivo de `src/` nem de `tests/` foi alterado** (regra do pedido: só registrar). O banco de E2E recebeu a senha do Administrador copiada para 2 Redatores e a autoria do anúncio 16206 foi trocada, só para o DAST |
 
 **Bloqueiam o `/deploy` (P0):** SC-01 (`KnownProxies`, R-11/SEC-01) e SC-02 (balde único do limite de entrar + limite que conta entradas com sucesso, V-01). Ambos já iam ao `/infra`; o SC-02 ganhou uma nuance nova (a 6ª pessoa da redação recebe 429 com a senha certa) que só aparece com o limite de produção. **Decisões suas:** SC-03 (bloqueio de conta como negação de serviço ao Administrador), SC-07 (guardar ou não o original com GPS) e a exceção SC-28.
+
+## Correções do /scan e /infra (2026-10-07)
+
+> **Em resumo:** as correções aprovadas do `/scan` (SC-03, SC-04, SC-06, SC-07, SC-12) e o pacote do `/infra` (SC-01, SC-02, R-05, V-05, V-06, DPAPI, script de banco) passaram nas três suítes completas e em **22 de 22 mutações mortas**. Duas falhas apareceram no caminho e eram do contrato antigo, não do código novo: o teste do cabeçalho do script SQL e o do arquivo de exemplo de configuração. Foram atualizados junto com o código.
+
+### Rodada 1 — commit `31c6bdd` (correções do `/scan`)
+
+| Suíte | Resultado |
+|---|---|
+| Unitários e de rota (`GazetaMarketplace.Web.Tests`) | 1784 / 1784 |
+| Integração com SQL Server em contêiner | 162 / 162 |
+| E2E no artefato publicado (Production, HTTPS, SQL Server real) | 258 listados = 254 passaram + 4 ignorados (métricas de velocidade, que rodam só com `GAZETA_VITALS`); 0 falhas; 13 min 30 s |
+| Exportação do catálogo de veículos / importação de cidades | 43 / 43 · 27 / 27 |
+
+### Rodada 2 — commit `c5a8f68` (correções do `/scan` + `/infra`)
+
+| Suíte | Resultado |
+|---|---|
+| Unitários e de rota | **1803 / 1803** (+19 testes: bloqueio por conta e origem, baldes de login, ambientes de produção, fuso, DPAPI, teto do log, aviso na partida) |
+| Integração | 162 / 162 |
+| E2E | **258 listados = 254 passaram + 4 ignorados, 0 falhas** (13 min 11 s) |
+| Exportação / cidades | 43 / 43 · 27 / 27 |
+
+**Falhas que apareceram no caminho e como foram tratadas (nenhuma foi ignorada):**
+
+| Falha | Causa | Tratamento |
+|---|---|---|
+| `MigrationsTests.Script_LigaQuotedIdentifierNoTopo...` e `SecretsTests.ArquivoDeExemplo...` (Web.Tests) | O script SQL ganhou mais 6 `SET` no topo e o exemplo de configuração ganhou o interruptor `DataProtection__ProtectWithDpapi=true`: os dois testes tinham a regra antiga | Testes atualizados para a regra nova (cabeçalho com todos os `SET` exigidos antes do primeiro `GO`; `true` aceito como valor não secreto) e um exemplo em comentário no XML reescrito para não parecer valor real |
+| Integração 162 / 162 e vários E2E em 0 ms | O Docker caiu com o reinício do ambiente | `dockerd` e o contêiner do SQL Server religados; as duas suítes rodadas de novo |
+| 20 E2E com "Address already in use" | **Erro meu:** dois scripts de execução rodaram ao mesmo tempo e disputaram as portas dos servidores falsos (SendGrid 5990, ViaCEP 5991) | Processos encerrados e o E2E rodado uma única vez |
+| 2 E2E de favoritos (`US005S06_US011S04...`, `SemJavaScript_NaoHaCoracaoNemBotao...`) na primeira rodada limpa | Resíduo no banco das duas execuções simultâneas; a classe inteira passou 13 / 13 sozinha | O E2E completo foi repetido e passou 258 / 258 sem falhas |
+
+### Mutações (22 de 22 mortas)
+
+| Achado | Mutação | Resultado |
+|---|---|---|
+| SC-03 | bloqueio por conta e origem nunca bloqueia | morta |
+| SC-03 | volta ao bloqueio nativo por conta (Identity ligado e `lockoutOnFailure: true`) | morta (a primeira tentativa, só com `lockoutOnFailure`, **sobreviveu** porque o Identity estava desligado por `AllowedForNewUsers = false`: são duas travas; a mutação certa liga as duas) |
+| SC-03 | sem atraso progressivo; sem aviso por e-mail | mortas |
+| SC-07 | o original fica ao remover a foto | morta |
+| SC-06 | e-mail digitado vai ao log sem validar | morta |
+| SC-04 | arquivo de log sem rolagem; aviso 429 sem amostragem; máscara sem tempo-limite | mortas |
+| SC-12 | `HttpClient` volta ao nível Information | morta |
+| SC-01 | limite temporário sempre 5; sem aviso na partida | mortas |
+| SC-02 | "redefinir" divide o balde com "esqueci"; entrar volta a ter política de pedidos | mortas |
+| V-05 | só o nome "Production" é produção | morta |
+| R-05 | sem o id do Windows; sem o fuso fixo de reserva | mortas |
+| DPAPI | não recusa fora do Windows | morta |
+
+Seis mutações deram "erro de build" por defeito do **meu** script (ele esvaziava o arquivo antes de mutar) ou por avisos tratados como erro (`if (false)`); o script foi corrigido, as mutações reescritas e todas rodadas de novo.
+
+### Evidência do `/infra` (fora das suítes)
+
+| Item | Resultado |
+|---|---|
+| Script de banco idempotente | Aplicado duas vezes num SQL Server 2022 limpo (1.ª sem `-I`, 2.ª com `-I`), as duas com código de saída 0; **13 migrations, 20 tabelas** |
+| Publicação `-p:PublishProfile=IIS-win-x64` | **62 MB** (era 233 MB); 351 arquivos; sem `.pdb`, sem `.xml`, sem `appsettings.Development.json`, sem `web.Production.config.example`; só componentes nativos do Windows x64 (gerada em Linux; **não executada num Windows**) |
+| `web.Production.config.example` | XML válido; 12 variáveis |
+| Fronteira | Nenhuma mudança em `tests/` além dos testes novos e dos dois atualizados; produção intacta |

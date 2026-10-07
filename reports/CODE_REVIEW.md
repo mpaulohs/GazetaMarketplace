@@ -1320,3 +1320,17 @@ O `/scan` (relatório `security/SCAN_REPORT.md`, achados SC-01 a SC-28 no `plans
 | SC-09 a SC-13 proteções que dependem do nome "Production", pastas relativas, limite por prefixo, CEP no log, memória das fotos | amplia R-39, R-46, V-05 | P1 |
 
 **Notas dos eixos (sem alteração do veredito APPROVE):** Security continua em 4 — nenhum 🔴, mas o eixo segue limitado por R-11/SEC-01 e SC-02 até o `/infra`. Os Compliance Check de `security.md` e `monitoring.md` passam a citar também SC-04 e SC-06 como ressalvas de log.
+
+### Addendum — correções do `/scan` e `/infra` (2026-10-07)
+
+As correções aprovadas fecharam, no código, SC-03, SC-04, SC-06, SC-07 e SC-12 e entregaram o pacote do `/infra` (SC-01, SC-02, V-05, V-06, R-05, DPAPI). Reconfirmações do review: **R-07** (política de limite) agora tem três baldes (`LoginFailureCounter`, `auth-esqueci`, `auth-redefinir`); **R-05** e **V-01** fechados; **R-11** segue aberto só pelo valor real do proxy (ticket SEC-01).
+
+| Eixo | Antes | Depois | Por quê |
+|---|---|---|---|
+| Correctness | 4 | **4** | sem mudança |
+| Readability | 4 | **4** | sem mudança |
+| Architecture | 4 | **4** | `AccountOriginLockout` e `IsHardened` entram com testes; ADR-003 e ADR-005 atualizados |
+| Security | 4 | **4** | bloqueio por conta e origem só protege de verdade depois do IP real (SEC-01); por isso não sobe para 5 |
+| Performance | 4 | **4** | log com teto e aviso amostrado |
+
+Nenhum achado novo de revisão. Pontos que o próprio `/infra` encontrou, registrados no `plans/BACKLOG.md` e em `docs/INFRA.md`: o bloqueio por conta e origem se reduz a "por conta" enquanto todo visitante chega com o IP do proxy; o Hosting Bundle 10 no SmarterASP precisa ser confirmado; o ImageMagick/HEIC no Windows do provedor segue sem prova (AR-05).

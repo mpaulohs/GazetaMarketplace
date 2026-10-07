@@ -237,3 +237,16 @@ Os testes automatizados que cobrem as mesmas superfícies em processo (`AccessMa
 | SC-07 | Apagar o original na hora em que a foto é removida | **Corrigido** (`AdPhotoService.DeleteAsync`) |
 | SC-28 | Assinar a exceção | **Assinada** |
 | SC-05, SC-08 a SC-11, SC-13 a SC-27 | Seguem no BACKLOG como P1/P2 | `plans/BACKLOG.md` |
+
+### Estado depois das correções e do `/infra` (2026-10-07)
+
+| Achado | Estado |
+|---|---|
+| SC-01 | **Código pronto** (fail-closed, `Warning` na partida, limite temporário de 20); falta só o IP do proxy do SmarterASP (ticket SEC-01) |
+| SC-02 | **Corrigido** (entrar só conta falhas; baldes separados de "esqueci" e "redefinir") |
+| SC-03 | **Corrigido** (bloqueio por conta e origem, atraso 1/2/4/8/16 s, aviso por e-mail). **Só protege de verdade com o IP real do visitante** (SC-01) |
+| SC-04, SC-06, SC-07, SC-12 | **Corrigidos** |
+| SC-28 | **Exceção assinada** |
+| SC-05, SC-08 a SC-11, SC-13 a SC-27 | Seguem no `plans/BACKLOG.md` como P1/P2 |
+
+Provas: `reports/TEST_REPORT.md` ("Correções do /scan e /infra"): suítes completas verdes e 22 de 22 mutações mortas.
