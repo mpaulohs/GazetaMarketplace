@@ -1265,3 +1265,40 @@ Quatro mensagens de commit citam o achado com número trocado (R-03, R-05, R-04,
 | Performance | 4 | **4** | sem mudança |
 
 **Veredito:** **APPROVE com condições** (sem condição bloqueante). Condições abertas: decidir a correção do R-03 e do R-06 (P1), o R-02b, e o R-11/SEC-01 antes do `/deploy`. Os 7 OPEN seguem as disposições da seção 5; a única mudança é o OPEN-004, cuja variável `GAZETA_VITALS` agora está no roteiro (`docs/RODAR-TESTES-DE-INTEGRACAO-E-E2E.md`), e a correção de "44 telas" para 45 em `plans/plan.md`.
+
+### Resolution (2.ª rodada) — R-03, R-06 e R-02b, aprovados pelo Product Owner em 2026-10-07
+
+> **Em resumo:** os três itens que estavam provados e aguardando decisão foram corrigidos, cada um com teste que falha sem a correção. Não sobra nenhum 🟡 de comportamento aberto além do R-05 (fuso no Windows, a confirmar na hospedagem) e dos de tela que vão para o `/simplify`. O veredito é **APPROVE, sem condição bloqueante**.
+
+**(a) O que mudou**
+
+| Achado | O que mudou | Commit |
+|---|---|---|
+| R-03 | `CepService` desanexa só a entrada do cache (`Entry(entry).State = Detached`) em vez de `ChangeTracker.Clear()`; um interceptor de teste grava o mesmo CEP entre o `SELECT` e o `INSERT` e a edição do rascunho grava o título, uma linha de auditoria e uma de cache | 523978b |
+| R-06 | `FieldGroupRegistry.Resolve` devolve, para a categoria sem dados próprios, o grupo com as **listas, os campos e os obrigatórios** do ancestral mais próximo que os tem (`FieldGroup.ForCategory`, cópia em cache; as chamadas existentes não mudam). SPEC v1.9, A7 (a). Vale para Imóveis, Roupas, Eletro, Telefonia e para qualquer grupo com dados por categoria | 3867cd7 |
+| R-02b | `AdPhotoService.DeleteAsync` responde 409 ("Não é possível remover a última foto de um anúncio publicado. Despublique antes.") quando a remoção deixaria um Publicado abaixo do mínimo do grupo, conferido dentro da transação. SPEC v1.9, cenário `@US-008-S16`. Vale na API e na página sem JavaScript | f4bc8bd |
+
+Observação sobre o R-06: o pedido falava em buscar só a lista no ancestral. Implementei os três dados por categoria (lista, campos que existem, obrigatórios) porque, com só a lista, a filha de Imóveis continuaria sem quartos, banheiros e vagas e a de Terrenos sem a área obrigatória; os dois testes novos travam os três.
+
+**(b) Números da nova rodada** (commit `c92cb7b`):
+
+| Suíte | Total | Falhas | Ignorados | Observação |
+|---|---|---|---|---|
+| Unidade (`Web.Tests`) | 1.765 | 0 | 0 | 2 min 29 s; = `--list-tests` |
+| `CitiesImport.Tests` + `VehicleCatalogExport.Tests` | 27 + 43 | 0 | 0 | |
+| Integração (SQL Server em Docker) | 162 | 0 | 0 | 1 min 52 s |
+| E2E (site publicado) | 258 | 0 | 4 | 13 min 00 s; = `--list-tests`; os 4 ignorados são o `VitalsTests` (OPEN-004) |
+
+**Mutações desta rodada** (fonte restaurada depois de cada uma): R-03 (volta `ChangeTracker.Clear()`: 1 falha) · R-06 (`Resolve` sem herança: 6 falhas) · R-02b (sem a recusa: 3 falhas). Somadas às 8 da rodada anterior, são **11 mutações detectadas**.
+
+**(c) Notas recalculadas** (🟡 aberto limita a 4):
+
+| Eixo | Antes | Depois | Por quê |
+|---|---|---|---|
+| Correctness | 3 | **4** | R-02, R-03, R-04, R-06, R-09, R-10 e R-02b fechados; restam R-05 (fuso, confirmar na hospedagem) e R-14 a R-18 (tela, `/simplify`) |
+| Readability | 4 | **4** | R-13 (operador `!`) segue aberto |
+| Architecture | 4 | **4** | R-12 (FluentValidation) é desvio documentado |
+| Security | 4 | **4** | R-11/SEC-01 (proxy) segue para `/infra`; a rodada anterior já tinha fechado o 🔴 |
+| Performance | 4 | **4** | sem mudança |
+
+**Veredito: APPROVE, sem condição bloqueante.** Itens que seguem abertos, todos com dono: R-11/SEC-01 e as chaves sem criptografia (`/infra`, com o R-05), R-12 (desvio documentado), R-13 e R-14/R-15/R-18 (`/simplify`) e os 🟢. Os 7 OPEN seguem as disposições da seção 5.
