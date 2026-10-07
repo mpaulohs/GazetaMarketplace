@@ -99,6 +99,11 @@ public static class ServiceCollectionExtensions
 
         // Recuperação de senha (US-007): o envio sai da fila depois da resposta (RC-13)
         services.AddSingleton<PasswordRecoveryQueue>();
+        services.AddSingleton<AccountLockoutNotifier>();
+
+        // Bloqueio de entrada por conta e origem, com atraso progressivo (SC-03)
+        services.AddSingleton<AccountOriginLockout>();
+        services.TryAddSingleton<ILoginDelay, LoginDelay>();
         services.AddHostedService<PasswordRecoveryWorker>();
         services.AddSingleton<PasswordRecoveryCleanupService>();
         services.AddHostedService(provider => provider.GetRequiredService<PasswordRecoveryCleanupService>());

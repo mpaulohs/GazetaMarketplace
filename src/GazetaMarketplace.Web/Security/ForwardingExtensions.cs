@@ -16,7 +16,7 @@ public static class ForwardingExtensions
 {
     private const string Section = "ForwardedHeaders:KnownProxies";
 
-    private static string[] ConfiguredProxies(IConfiguration configuration) =>
+    public static string[] ConfiguredProxies(IConfiguration configuration) =>
         configuration.GetSection(Section).Get<string[]>()?.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray() ?? [];
 
     public static IServiceCollection AddSecureForwarding(this IServiceCollection services)

@@ -33,6 +33,15 @@ public sealed class AccountTests
         return factory;
     }
 
+    // O limite por IP (LoginFailureCounter) alto: assim só o bloqueio por conta e origem entra na conta
+    private static async Task<WebFactory> NewPerAccountFactoryAsync()
+    {
+        WebFactory factory = new(withDatabase: true, configuration: new Dictionary<string, string> { ["RateLimiting:LoginFailuresPerOrigin"] = "500" });
+        await factory.CreateUserAsync(Email, "Ana Souza", Password, RoleNames.Writer);
+        await factory.CreateUserAsync("marcos@exemplo.com.br", "Marcos Silva", Password, RoleNames.Administrator);
+        return factory;
+    }
+
     private static string Alert(string html) =>
         Regex.Match(html, @"<div class=""alert alert-danger"" role=""alert"">([^<]*)</div>").Groups[1].Value;
 
@@ -108,6 +117,24 @@ public sealed class AccountTests
     }
 
     [TestMethod]
+    [DataRow("Senha@123")]
+    [DataRow("Joao@Gazeta1")]
+    [DataRow("a@b")]
+    [DataRow("Segredo@x.com9")]
+    [DataRow("@@@@")]
+    public async Task SenhaComArrobaDigitadaNoCampoDeEmail_NaoVaiParaOLog(string typed) // SC-06
+    {
+        using WebFactory factory = await NewFactoryAsync();
+        using HttpClient client = TeamClient.Create(factory);
+
+        await client.SignInAsync(typed, "qualquer");
+
+        string all = string.Join("\n", factory.Logs.Events.Select(CollectorSink.AllAsText));
+        Assert.IsFalse(all.Contains(typed, StringComparison.Ordinal), "o texto digitado não pode estar no log: " + typed);
+        StringAssert.Contains(all, "(formato inválido)");
+    }
+
+    [TestMethod]
     [DataRow("https://evil.example/painel/anuncios")]
     [DataRow("//evil.example/painel")]
     [DataRow("/\\evil.example")]
@@ -136,15 +163,15 @@ public sealed class AccountTests
     }
 
     [TestMethod]
-    public async Task ContaInexistente_SenhaErrada_Desativada_E_Bloqueada_RespondemIgual()
+    public async Task ContaInexistente_SenhaErrada_Desativada_E_BloqueadaParaAOrigem_RespondemIgual()
     {
-        using WebFactory factory = await NewFactoryAsync();
+        using WebFactory factory = await NewPerAccountFactoryAsync();
         await factory.CreateUserAsync("inativo@exemplo.com.br", "Inativo", Password, RoleNames.Writer, active: false);
         await factory.CreateUserAsync("travada@exemplo.com.br", "Travada", Password, RoleNames.Writer);
         using HttpClient client = TeamClient.Create(factory);
         for (int i = 1; i <= 5; i++)
         {
-            await client.SignInAsync("travada@exemplo.com.br", "Senha@Errada9", ip: $"10.9.0.{i}");
+            await client.SignInAsync("travada@exemplo.com.br", "Senha@Errada9", ip: "10.8.0.4"); // bloqueia aquele IP naquela conta (SC-03)
         }
 
         (string Email, string Password, string Ip)[] cases =
@@ -165,24 +192,29 @@ public sealed class AccountTests
     }
 
     [TestMethod]
-    public async Task ContaBloqueadaPeloIdentity_BloqueiaDeVerdade_MesmoComSenhaCerta()
+    public async Task ContaBloqueadaParaAOrigem_BloqueiaDeVerdade_MesmoComSenhaCerta_SemTravarAContaParaOsOutros() // SC-03
     {
-        using WebFactory factory = await NewFactoryAsync();
+        using WebFactory factory = await NewPerAccountFactoryAsync();
         using HttpClient client = TeamClient.Create(factory);
         for (int i = 1; i <= 5; i++)
         {
-            await client.SignInAsync(Email, "Senha@Errada9", ip: $"10.5.0.{i}");
+            await client.SignInAsync(Email, "Senha@Errada9", ip: "10.5.0.1");
         }
 
         using (IServiceScope scope = factory.Services.CreateScope())
         {
             UserManager<AppUser> users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-            Assert.IsTrue(await users.IsLockedOutAsync(await users.FindByEmailAsync(Email)), "o bloqueio da conta é real");
+            AppUser account = await users.FindByEmailAsync(Email);
+            Assert.IsTrue(factory.Services.GetRequiredService<AccountOriginLockout>().IsBlocked(account.Id, "10.5.0.1"), "o bloqueio daquele IP naquela conta é real");
+            Assert.IsFalse(await users.IsLockedOutAsync(account), "a conta em si não fica travada para quem vem de outro IP");
         }
 
-        HttpResponseMessage response = await client.SignInAsync(Email, Password, ip: "10.5.0.99");
-        Assert.AreEqual(AccountController.InvalidCredentialsMessage, Alert(await response.TextAsync()), "a mensagem não revela o bloqueio da conta");
-        Assert.IsFalse(CreatedSession(response));
+        HttpResponseMessage blocked = await client.SignInAsync(Email, Password, ip: "10.5.0.1");
+        Assert.AreEqual(AccountController.InvalidCredentialsMessage, Alert(await blocked.TextAsync()), "a mensagem não revela o bloqueio");
+        Assert.IsFalse(CreatedSession(blocked));
+
+        HttpResponseMessage elsewhere = await client.SignInAsync(Email, Password, ip: "10.5.0.99");
+        Assert.AreEqual(HttpStatusCode.Redirect, elsewhere.StatusCode, "de outro IP a conta entra");
     }
 
     [TestMethod]

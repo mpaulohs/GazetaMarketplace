@@ -26,6 +26,7 @@ public sealed class UserManagement(
     UserManager<AppUser> users,
     AppDbContext context,
     IAuditLog audit,
+    AccountOriginLockout lockout,
     ICurrentUser currentUser) : IUserManagement
 {
     private const int MaxNameLength = 100;
@@ -228,8 +229,7 @@ public sealed class UserManagement(
             }
 
             target.IsActive = true;
-            await users.SetLockoutEndDateAsync(target, null);
-            await users.ResetAccessFailedCountAsync(target);
+            lockout.ClearAccount(target.Id);
             IdentityResult saved = await users.UpdateAsync(target);
             if (!saved.Succeeded)
             {
@@ -277,8 +277,7 @@ public sealed class UserManagement(
 
             // A senha nova também destrava a conta: o Administrador resolveu o acesso da pessoa
             target.MustChangePassword = true;
-            await users.SetLockoutEndDateAsync(target, null);
-            await users.ResetAccessFailedCountAsync(target);
+            lockout.ClearAccount(target.Id);
             IdentityResult saved = await users.UpdateAsync(target);
             if (!saved.Succeeded)
             {

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GazetaMarketplace.Core.Team;
 using GazetaMarketplace.Infrastructure.Identity;
+using GazetaMarketplace.Infrastructure.Recovery;
 using GazetaMarketplace.Web.Areas.Panel.Models;
 using GazetaMarketplace.Web.Models;
 using GazetaMarketplace.Web.Navigation;
@@ -28,6 +29,9 @@ public sealed class AccountController(
     UserManager<AppUser> users,
     SignInManager<AppUser> access,
     LoginFailureCounter failures,
+    AccountOriginLockout lockout,
+    ILoginDelay delay,
+    AccountLockoutNotifier notifier,
     IPasswordRecovery recovery,
     ILogger<AccountController> log) : Controller
 {
@@ -81,20 +85,37 @@ public sealed class AccountController(
 
         AppUser user = await users.FindByEmailAsync(model.Email.Trim());
         SignInResult result;
+        bool blockedForOrigin = false;
         if (user is null)
         {
             Hasher.VerifyHashedPassword(new AppUser(), DummyHash, submittedPassword);
             result = SignInResult.Failed;
         }
+        else if (lockout.IsBlocked(user.Id, source))
+        {
+            // Esta origem já errou 5 vezes a senha desta conta: nem confere a senha (a resposta é a de qualquer falha), mas gasta o mesmo tempo
+            Hasher.VerifyHashedPassword(new AppUser(), DummyHash, submittedPassword);
+            result = SignInResult.Failed;
+            blockedForOrigin = true;
+        }
         else
         {
-            result = await access.PasswordSignInAsync(user, submittedPassword, isPersistent: false, lockoutOnFailure: true);
+            // Contas atacadas de várias origens (3 bloqueios seguidos) fazem cada tentativa esperar 1, 2, 4, 8 e 16 segundos (SC-03)
+            TimeSpan wait = lockout.DelayFor(user.Id);
+            if (wait > TimeSpan.Zero)
+            {
+                await delay.WaitAsync(wait, HttpContext.RequestAborted);
+            }
+
+            // O bloqueio é nosso (conta e origem): o do Identity, por conta, deixaria qualquer um travar a conta de outra pessoa
+            result = await access.PasswordSignInAsync(user, submittedPassword, isPersistent: false, lockoutOnFailure: false);
         }
 
         if (result.Succeeded)
         {
             bool administrator = await users.IsInRoleAsync(user, RoleNames.Administrator);
             failures.Reset(source);
+            lockout.Reset(user.Id, source);
             log.LogInformation("Entrada do usuário {UserId} ({Role})", user.Id, administrator ? RoleNames.Administrator : RoleNames.Writer);
 
             // Senha provisória (S09): a troca vem antes de qualquer página, inclusive a que a pessoa tentava abrir
@@ -103,7 +124,7 @@ public sealed class AccountController(
                 : LocalRedirect(LocalReturnUrlOr(model.ReturnUrl, HomePageFor(administrator)));
         }
 
-        RecordFailure(source, model.Email, user, result);
+        RecordFailure(source, model.Email, user, result, blockedForOrigin);
 
         // Mesma mensagem para senha errada, e-mail inexistente, conta desativada e conta bloqueada (S04, S05)
         ModelState.AddModelError(string.Empty, InvalidCredentialsMessage);
@@ -220,28 +241,41 @@ public sealed class AccountController(
             ? returnUrl
             : defaultValue;
 
-    private void RecordFailure(string source, string email, AppUser user, SignInResult result)
+    private void RecordFailure(string source, string email, AppUser user, SignInResult result, bool blockedForOrigin)
     {
         bool blockEnded = failures.RecordFailure(source);
         string reason = user is null ? "conta inexistente"
-            : result.IsLockedOut ? "conta bloqueada"
+            : blockedForOrigin ? "conta bloqueada para esta origem"
             : result.IsNotAllowed ? "conta desativada"
             : "senha incorreta";
 
-        // Quem digita a senha no campo de e-mail não pode ir parar no log: só entra o que parece e-mail
-        string forLog = email.Contains('@', StringComparison.Ordinal) && email.Length <= 254 ? email : "(formato inválido)";
+        // Quem digita a senha no campo de e-mail não pode ir parar no log: só entra e-mail bem formado, e sempre mascarado (SC-06)
+        string forLog = LoginLogText.EmailOrInvalid(email);
         log.LogWarning("Falha de entrada de {Email} a partir de {Source}: {Reason}", forLog, source, reason);
 
-        if (result.IsLockedOut)
+        // Só a senha errada de conta ativa conta para o bloqueio (conta desativada não acumula falhas)
+        if (user is not null && !blockedForOrigin && !result.IsNotAllowed)
         {
-            log.LogWarning("Conta do usuário {UserId} bloqueada por tentativas de senha", user.Id);
+            LockoutOutcome outcome = lockout.RecordFailure(user.Id, source);
+            if (outcome.BlockStarted)
+            {
+                log.LogWarning(
+                    "Conta do usuário {UserId} bloqueada por tentativas de senha a partir de {Source} ({Blocks} bloqueios seguidos)",
+                    user.Id, source, outcome.ConsecutiveBlocks);
+
+                // A partir do 2.º bloqueio seguido o dono é avisado (no máximo um e-mail por hora); o envio sai depois da resposta
+                if (outcome.ConsecutiveBlocks >= AccountOriginLockout.NoticeAtBlock)
+                {
+                    notifier.Notify(user.Email, $"{Request.Scheme}://{Request.Host}", HttpContext.TraceIdentifier);
+                }
+            }
         }
 
         if (blockEnded)
         {
             log.LogWarning(
                 "Origem {Source} bloqueada por {Limit} falhas de entrada em {Window} minutos",
-                source, LoginFailureCounter.Limit, LoginFailureCounter.Window.TotalMinutes);
+                source, failures.Limit, LoginFailureCounter.Window.TotalMinutes);
         }
     }
 }

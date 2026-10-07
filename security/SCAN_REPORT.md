@@ -220,9 +220,20 @@ Os testes automatizados que cobrem as mesmas superfícies em processo (`AccessMa
 
 ## Approval
 
-> **Não preenchido por mim.** O auditor não aprova o próprio relatório. A decisão sobre SC-28 (exceção) e sobre SC-03/SC-07 é do Product Owner/Security Lead.
+> O auditor não aprova o próprio relatório. A aprovação abaixo é a **resposta escrita do Product Owner** ao relatório, no pedido de 2026-10-07 ("Aprovado na íntegra"), copiada para cá.
 
 | Role | Name | Date | Decision |
 |------|------|------|----------|
-| Security Lead | | | APPROVED / REJECTED |
-| Exceção SC-28 (chave de API revogada no histórico) | | | CONCEDIDA / NEGADA |
+| Security Lead (Product Owner da v1) | Product Owner (resposta no pedido do `/scan`) | 2026-10-07 | **APPROVED** — 0 críticos exploráveis; 24/29 ameaças e 20/21 controles Verified; 0 NuGet vulneráveis; 0 segredos no código; DAST completo; 28 achados SC-01 a SC-28 aceitos para triagem |
+| Exceção SC-28 (chave de API revogada no histórico) | Product Owner | 2026-10-07 | **CONCEDIDA** — chave já revogada no Google Cloud Console; histórico não reescrito; registrada em `SECURITY_REQUIREMENTS.md` §5 (Exceções aprovadas) e `.gitleaksignore` |
+
+### Decisões do Product Owner sobre os achados (2026-10-07)
+
+| Achado | Decisão | Onde está |
+|---|---|---|
+| SC-01, SC-02 | Vão juntos para o `/infra`: lista de proxies fail-closed com aviso na partida; baldes separados (entrar só conta falhas, "esqueci" e "redefinir" cada um com o seu); 20 por 15 min por IP enquanto a lista real não vem do provedor | `/infra` |
+| SC-03 | Bloqueio por **conta e origem**; depois de 3 bloqueios seguidos atraso de 1, 2, 4, 8 e 16 s; aviso por e-mail ao dono a partir do 2.º bloqueio | **Corrigido** (`AccountOriginLockout`) |
+| SC-04, SC-06, SC-12 | Corrigir agora | **Corrigidos** |
+| SC-07 | Apagar o original na hora em que a foto é removida | **Corrigido** (`AdPhotoService.DeleteAsync`) |
+| SC-28 | Assinar a exceção | **Assinada** |
+| SC-05, SC-08 a SC-11, SC-13 a SC-27 | Seguem no BACKLOG como P1/P2 | `plans/BACKLOG.md` |

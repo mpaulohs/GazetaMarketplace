@@ -9,7 +9,7 @@
 - [x] Revalidação do usuário a cada 5 min — `SecurityStampValidatorOptions.ValidationInterval = TimeSpan.FromMinutes(5)`; usuário desativado perde o acesso em até 5 min (Task 1.1, 1.3)
 - [x] Hash de senha do Identity — serviço `IPasswordHasher<AppUser>` padrão (PBKDF2-HMAC-SHA512); **`PasswordHasherOptions.IterationCount` não pode ser reduzido abaixo do padrão**. Escolha permitida por `rules/security.md` ("BCrypt ou `IPasswordHasher` do Identity") (Task 1.1)
 - [x] Política de senha — `IdentityOptions.Password`: `RequiredLength = 8`, `RequireUppercase`, `RequireLowercase`, `RequireDigit`, `RequireNonAlphanumeric = true` (Task 1.1, 1.3, 1.4)
-- [x] Bloqueio de conta — `IdentityOptions.Lockout`: `MaxFailedAccessAttempts = 5`, `DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15)`, `AllowedForNewUsers = true`; **redefinir a senha com sucesso zera o bloqueio** (RC-12) (Task 1.1, 1.4)
+- [x] Bloqueio de conta **por conta e origem** (SC-03, decisão do Product Owner de 2026-10-07) — `AccountOriginLockout`: 5 falhas de senha em 15 min de um mesmo IP contra uma mesma conta bloqueiam **aquele IP naquela conta**; outro IP continua entrando, então 5 senhas erradas de qualquer rede não travam o Administrador. Depois de 3 bloqueios seguidos da mesma conta, cada tentativa espera 1, 2, 4, 8 e 16 s (teto); a partir do 2.º bloqueio seguido o dono recebe um e-mail de aviso (no máximo um por hora). O bloqueio nativo do Identity por conta fica desligado (`Lockout.AllowedForNewUsers = false`, `lockoutOnFailure: false`). **Redefinir a senha com sucesso, ou o Administrador reativar ou redefinir a conta, zera os bloqueios** (RC-12) (Task 1.1, 1.4)
 - [x] Token de redefinição de 1 hora e uso único — `DataProtectionTokenProviderOptions.TokenLifespan = TimeSpan.FromHours(1)`; ao redefinir, `UserManager.UpdateSecurityStampAsync` (Task 1.4)
 - [x] Endereço de retorno do login só local — `Url.IsLocalUrl(returnUrl)` em `AccountController.Entrar` (RC-18) (Task 1.1)
 - [x] Mensagens de login e de recuperação genéricas; recuperação com resposta igual e sem esperar o envio (RC-13) (Task 1.1, 1.4)
@@ -44,7 +44,7 @@
 - [x] Dados em repouso — o único dado pessoal é o e-mail da equipe (NFR-19); senha só como hash; chaves do Data Protection em pasta fora da raiz (risco residual RR-2, RR-8) (Task 0.2)
 - [x] Nada sensível em log — Serilog com mascaramento de senha, token, link e e-mail (`m***@dominio`); `AuditEntries` guarda ids e valores de negócio, nunca senha (Task 0.3)
 - [x] Segredos fora do repositório — variáveis de ambiente em `<aspNetCore><environmentVariables>` do `web.config` publicado; `web.Production.config` e `appsettings.Development.json` no `.gitignore`; `OptionsBuilder.ValidateOnStart()` em produção (RC-20) (Task 0.2)
-- [x] Originais de foto com GPS — `_originals/` sem rota e apagado em 30 dias (RC-5) (Task 3.4, 3.6)
+- [x] Originais de foto com GPS — `_originals/` sem rota; **o original é apagado na hora quando a foto é removida** (SC-07, decisão do Product Owner de 2026-10-07) e, se ficou órfão de um envio que falhou, pela limpeza diária; o que sobra de fotos ativas sai em 30 dias (RC-5) (Task 3.4, 3.6)
 - [N/A] Criptografia de campos sensíveis (Always Encrypted) — não há dado pessoal sensível além do e-mail da equipe
 - [N/A] Mascaramento de dados pessoais em ambientes de teste — os dados de desenvolvimento e teste são fictícios; o catálogo não tem dado pessoal
 
@@ -56,7 +56,13 @@
 - [x] Limite do corpo de requisição — 1 MB global, 11 MB só no envio de foto: `RequestSizeLimit` e `MaxRequestBodySize` (RC-21) (Task 0.4, 3.5)
 - [x] Envio de foto — 30 por minuto por usuário e no máximo 2 conversões simultâneas (RC-6) (Task 3.5)
 - [x] Tempo de consulta — EF Core `CommandTimeout(30)`; Dapper `commandTimeout: 10` na busca e na lista do painel (RC-15) (Task 0.6, 5.4, 4.4)
-- [N/A] CAPTCHA — o limite por IP, o bloqueio de conta e o limite por e-mail bastam na escala da v1; reavaliar se houver ataque comprovado
+- [N/A] CAPTCHA — o limite por IP, o bloqueio por conta e origem e o limite por e-mail bastam na escala da v1; reavaliar se houver ataque comprovado
+
+#### Exceções aprovadas
+
+| Id | Achado | Decisão | Quem · quando | Condição de revisão |
+|----|--------|---------|---------------|---------------------|
+| SC-28 | `gitleaks` acusa 30 ocorrências de `gcp-api-key` no **histórico** do git: uma única chave de API do Google Maps, em HTML de templates dos commits `a3521ae0` e `2ee43b89`; nenhuma no código atual | **Exceção concedida.** A chave já foi **revogada no Google Cloud Console**, então não dá acesso a nada; o histórico **não é reescrito** (reescrever mudaria todos os hashes sem ganho de segurança). O `/scan` seguinte ignora só esses dois commits (`.gitleaksignore`) e continua acusando qualquer segredo novo | Product Owner (Security Lead da v1), decisão registrada em 2026-10-07 | Se aparecer qualquer segredo **diferente** no histórico ou no código; ou se for descoberto que a chave não está de fato revogada (verificar no console antes da publicação) |
 
 ### 6. Monitoring & Audit
 - [x] Registro de eventos de segurança — Serilog `Warning` para falha, bloqueio e recusa de login, permissão negada e limite excedido; `Information` para entrada e saída (RC-16) (Task 1.1, 0.4)

@@ -46,6 +46,8 @@ public static class PasswordRecoveryMessages
     public const string PasswordChanged = "Senha alterada. Entre com a nova senha.";
 
     public const string EmailSubject = "Redefinição de senha — GazetaMarketplace";
+
+    public const string LockoutNoticeSubject = "Tentativas de entrar na sua conta — GazetaMarketplace";
 }
 
 /// <summary>Recuperar a senha esquecida por e-mail (US-007).</summary>

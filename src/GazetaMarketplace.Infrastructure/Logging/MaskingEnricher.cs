@@ -53,15 +53,26 @@ public sealed partial class MaskingEnricher : ILogEventEnricher
         };
     }
 
+    /// <summary>Texto que o mascaramento não conseguiu examinar a tempo (SC-04): vai no lugar do original, que pode esconder e-mail ou segredo.</summary>
+    public const string Unmaskable = "[texto longo demais para mascarar]";
+
     private static string MaskText(string text)
     {
-        string withoutEmail = Email().Replace(text, m => m.Groups[1].Value + "***@" + m.Groups[2].Value);
-        return UrlSecret().Replace(withoutEmail, m => m.Groups[1].Value + "=" + Mask);
+        try
+        {
+            string withoutEmail = Email().Replace(text, m => m.Groups[1].Value + "***@" + m.Groups[2].Value);
+            return UrlSecret().Replace(withoutEmail, m => m.Groups[1].Value + "=" + Mask);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return Unmaskable;
+        }
     }
 
-    [GeneratedRegex(@"([A-Za-z0-9._%+\-])[A-Za-z0-9._%+\-]*@([A-Za-z0-9.\-]+\.[A-Za-z]{2,})")]
+    // Tempo-limite: um caminho de milhares de letras sem "@" faz a busca de e-mail custar o quadrado do tamanho (SC-04)
+    [GeneratedRegex(@"([A-Za-z0-9._%+\-])[A-Za-z0-9._%+\-]*@([A-Za-z0-9.\-]+\.[A-Za-z]{2,})", RegexOptions.None, matchTimeoutMilliseconds: 50)]
     private static partial Regex Email();
 
-    [GeneratedRegex(@"\b(token|code|access_token|key)=[^&\s""']+", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\b(token|code|access_token|key)=[^&\s""']+", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 50)]
     private static partial Regex UrlSecret();
 }

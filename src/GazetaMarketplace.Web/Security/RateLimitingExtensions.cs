@@ -138,11 +138,44 @@ public static class RateLimitingExtensions
     // O IP vem do servidor, já corrigido pelo UseForwardedHeaders quando há proxy conhecido (RC-10)
     private static string ClientIp(HttpContext context) => context.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
 
+    // Um aviso por IP por minuto e com o caminho cortado (SC-04): quem passa do limite pode mandar milhares de pedidos por minuto
+    // com caminhos de 4 KB, e cada aviso a mais encheria o arquivo de log até o dia perder os eventos de segurança.
+    private const int MaxLoggedPathLength = 200;
+
+    private const int MaxSampledOrigins = 10_000;
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> LastRejectionLog = new();
+
+    private static void LogRejection(HttpContext http)
+    {
+        long now = Environment.TickCount64;
+        string origin = ClientIp(http);
+        if (LastRejectionLog.Count > MaxSampledOrigins)
+        {
+            LastRejectionLog.Clear();
+        }
+
+        bool recent = LastRejectionLog.TryGetValue(origin, out long last) && now - last < 60_000;
+        if (recent)
+        {
+            return;
+        }
+
+        LastRejectionLog[origin] = now;
+        string path = http.Request.Path.Value ?? string.Empty;
+        if (path.Length > MaxLoggedPathLength)
+        {
+            path = string.Concat(path.AsSpan(0, MaxLoggedPathLength), "…");
+        }
+
+        http.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("LimiteDeRequisicoes")
+            .LogWarning("Limite de requisições excedido em {Method} {Path} (origem {Origin}; no máximo um aviso por origem por minuto)", http.Request.Method, path, origin);
+    }
+
     private static async ValueTask RespondTooManyRequestsAsync(OnRejectedContext context, System.Threading.CancellationToken cancellation)
     {
         HttpContext http = context.HttpContext;
-        http.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("LimiteDeRequisicoes")
-            .LogWarning("Limite de requisições excedido em {Method} {Path}", http.Request.Method, http.Request.Path);
+        LogRejection(http);
 
         http.Response.StatusCode = StatusCodes.Status429TooManyRequests;
         if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan wait))

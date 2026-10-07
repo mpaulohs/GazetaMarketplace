@@ -9,9 +9,10 @@ namespace GazetaMarketplace.Web.Security;
 /// requisições, para que uma redação inteira atrás do mesmo IP possa entrar de manhã. Fica em memória:
 /// uma reciclagem do site zera os contadores, o que só afrouxa o bloqueio por alguns minutos.
 /// </summary>
-public sealed class LoginFailureCounter(TimeProvider time)
+public sealed class LoginFailureCounter(TimeProvider time, int limit = AuthLimits.Default)
 {
-    public const int Limit = 5;
+    /// <summary>Falhas em <see cref="Window"/> que bloqueiam a origem (5 com proxies conhecidos, 20 enquanto a lista não vem do provedor: <see cref="AuthLimits"/>).</summary>
+    public int Limit { get; } = limit;
 
     public static readonly TimeSpan Window = TimeSpan.FromMinutes(15);
 

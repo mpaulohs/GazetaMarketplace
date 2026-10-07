@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -30,7 +31,9 @@ public static class IdentityExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddSingleton<LoginFailureCounter>();
+        services.AddSingleton(provider => new LoginFailureCounter(
+            provider.GetRequiredService<TimeProvider>(),
+            AuthLimits.LoginFailures(provider.GetRequiredService<IConfiguration>())));
 
         services.AddIdentity<AppUser, AppRole>(options =>
             {
@@ -41,10 +44,9 @@ public static class IdentityExtensions
                 options.Password.RequireDigit = true;
                 options.Password.RequireNonAlphanumeric = true;
 
-                // NFR-06: além do contador por IP, a própria conta trava por 15 minutos depois de 5 falhas
-                options.Lockout.AllowedForNewUsers = true;
-                options.Lockout.MaxFailedAccessAttempts = LoginFailureCounter.Limit;
-                options.Lockout.DefaultLockoutTimeSpan = LoginFailureCounter.Window;
+                // NFR-06: o bloqueio da entrada é por IP (LoginFailureCounter) e por conta e IP (AccountOriginLockout, SC-03). O bloqueio nativo,
+                // por conta para qualquer origem, deixava qualquer pessoa travar o Administrador com 5 pedidos: fica desligado
+                options.Lockout.AllowedForNewUsers = false;
 
                 options.User.RequireUniqueEmail = true;
 

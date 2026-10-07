@@ -181,7 +181,8 @@ public sealed class PhotosEndpointsTests
         CollectionAssert.AreEqual(new[] { 0, 1 }, afterDelete.Select(r => r.SortOrder).ToArray(), "as posições se renumeram");
         Assert.IsFalse(File.Exists(Path.Combine(photos.Folder, removed.StorageKey + "_480.webp")), "D3: as duas versões WebP são apagadas");
         Assert.IsFalse(File.Exists(Path.Combine(photos.Folder, removed.StorageKey + "_1600.webp")));
-        Assert.IsTrue(File.Exists(Path.Combine(photos.Folder, removed.OriginalKey)), "D3: o original fica para a limpeza de 30 dias");
+        Assert.IsFalse(File.Exists(Path.Combine(photos.Folder, removed.OriginalKey)), "SC-07: o original (com o GPS do vendedor) some junto com a foto, na hora");
+        Assert.AreEqual(photos.DiskFiles().Length, afterDelete.Count * 3, "as fotos que ficaram mantêm os três arquivos (duas versões e o original)");
         using HttpResponseMessage gone = await photos.Site.Writer.GetAsync(PhotoSite.Url(adId, removed.Id));
         Assert.AreEqual(HttpStatusCode.NotFound, gone.StatusCode, "a URL da foto removida deixa de funcionar");
     }

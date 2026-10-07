@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -211,39 +212,36 @@ public sealed class PasswordRecoveryLimitsTests
     }
 
     [TestMethod]
-    public async Task RedefinirComSucesso_LimpaOBloqueio() // RC-12
+    public async Task RedefinirComSucesso_LimpaOBloqueio() // RC-12 (SC-03: o bloqueio é por conta e origem)
     {
-        using RecoveryHarness harness = await NewHarnessAsync();
+        using RecoveryHarness harness = new(new Dictionary<string, string> { ["RateLimiting:LoginFailuresPerOrigin"] = "500" });
+        await harness.Factory.CreateUserAsync(Email, "Ana Souza", Password, RoleNames.Writer);
 
-        // Bloqueia a conta com 5 senhas erradas
+        // Bloqueia a conta para um IP com 5 senhas erradas
+        using HttpClient attacker = TeamClient.Create(harness.Factory);
         for (int i = 1; i <= 5; i++)
         {
-            using HttpClient attacker = TeamClient.Create(harness.Factory);
-            await attacker.SignInAsync(Email, "Errada@123", ip: "10.9.0." + i);
+            await attacker.SignInAsync(Email, "Errada@123", ip: "10.9.0.1");
         }
 
+        int userId;
         using (IServiceScope scope = harness.Factory.Services.CreateScope())
         {
             UserManager<AppUser> users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-            AppUser locked = await users.FindByEmailAsync(Email);
-            Assert.IsTrue(await users.IsLockedOutAsync(locked), "a conta está bloqueada");
+            userId = (await users.FindByEmailAsync(Email)).Id;
         }
+
+        AccountOriginLockout lockout = harness.Factory.Services.GetRequiredService<AccountOriginLockout>();
+        Assert.IsTrue(lockout.IsBlocked(userId, "10.9.0.1"), "a conta está bloqueada para aquele IP");
 
         await harness.RequestAsync(Email, ip: "10.0.7.1");
         await harness.WaitForSendingAsync();
         HttpResponseMessage save = await harness.SetNewPasswordAsync(harness.LastLink(), "Nova@Senha2");
         Assert.AreEqual(HttpStatusCode.Redirect, save.StatusCode);
 
-        using (IServiceScope scope = harness.Factory.Services.CreateScope())
-        {
-            UserManager<AppUser> users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-            AppUser user = await users.FindByEmailAsync(Email);
-            Assert.IsFalse(await users.IsLockedOutAsync(user), "o bloqueio foi desfeito");
-            Assert.AreEqual(0, user.AccessFailedCount, "o contador de falhas zerou");
-        }
-
+        Assert.IsFalse(lockout.IsBlocked(userId, "10.9.0.1"), "o bloqueio foi desfeito");
         using HttpClient owner = TeamClient.Create(harness.Factory);
-        Assert.AreEqual("/painel/anuncios", (await owner.SignInAsync(Email, "Nova@Senha2", ip: "10.9.1.1")).Destination());
+        Assert.AreEqual("/painel/anuncios", (await owner.SignInAsync(Email, "Nova@Senha2", ip: "10.9.0.1")).Destination(), "entra do mesmo IP que estava bloqueado");
     }
 
     [TestMethod]

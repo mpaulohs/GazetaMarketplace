@@ -24,6 +24,7 @@ public sealed class PasswordRecoveryService(
     IAuditLog audit,
     PasswordRecoveryQueue queue,
     IOptions<SiteOptions> site,
+    AccountOriginLockout lockout,
     TimeProvider time,
     ILogger<PasswordRecoveryService> log) : IPasswordRecovery
 {
@@ -114,8 +115,7 @@ public sealed class PasswordRecoveryService(
         }
 
         // RC-12: quem foi bloqueado por tentativas volta a entrar; e a senha agora é escolha da própria pessoa
-        await users.ResetAccessFailedCountAsync(user);
-        await users.SetLockoutEndDateAsync(user, null);
+        lockout.ClearAccount(user.Id);
         if (user.MustChangePassword)
         {
             user.MustChangePassword = false;

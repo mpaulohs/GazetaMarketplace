@@ -88,7 +88,13 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
         {
             // O limite de pedidos de login/recuperação (5 por 15 min, por IP) vale em produção; os testes entram várias vezes do mesmo IP, então o padrão do host de teste é alto.
             // Quem prova o limite (AuthRateLimitTests, RateLimiterTests) passa o valor na configuração
-            configuration.AddInMemoryCollection(new Dictionary<string, string> { ["RateLimiting:AuthPermits"] = "1000" });
+            configuration.AddInMemoryCollection(new Dictionary<string, string>
+            {
+                ["RateLimiting:AuthPermits"] = "1000",
+
+                // Em produção o limite de falhas por origem é 5 com proxies conhecidos e 20 sem eles; os testes de entrada contam com 5
+                ["RateLimiting:LoginFailuresPerOrigin"] = "5"
+            });
             configuration.AddInMemoryCollection(_configuration);
             configuration.AddInMemoryCollection(new Dictionary<string, string> { ["Logging:FileDirectory"] = _logsFolder });
         });

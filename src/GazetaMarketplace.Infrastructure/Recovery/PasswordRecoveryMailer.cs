@@ -31,12 +31,43 @@ public sealed class PasswordRecoveryMailer(
             return;
         }
 
+        if (job.Kind == RecoveryJobKind.LockoutNotice)
+        {
+            await sender.SendAsync(ComposeLockoutNotice(user, job.BaseUrl.TrimEnd('/') + "/painel/esqueci-minha-senha"), cancellationToken);
+            return;
+        }
+
         string token = await users.GeneratePasswordResetTokenAsync(user);
         string link = job.BaseUrl.TrimEnd('/') + RecoveryCode.LinkPath
             + "?id=" + user.Id.ToString(CultureInfo.InvariantCulture)
             + "&code=" + RecoveryCode.Encode(token);
 
         await sender.SendAsync(Compose(user, link), cancellationToken);
+    }
+
+    // SC-03: sem link com credencial; só o endereço da página "Esqueci minha senha", que qualquer pessoa já vê
+    private static EmailMessage ComposeLockoutNotice(AppUser user, string forgotPasswordUrl)
+    {
+        string name = string.IsNullOrWhiteSpace(user.FullName) ? "" : " " + user.FullName.Trim();
+        string text = $"""
+            Olá{name},
+
+            Houve várias tentativas seguidas de entrar na sua conta da área da equipe do GazetaMarketplace com a senha errada, e a entrada foi bloqueada por alguns minutos para a rede de onde elas vieram.
+
+            Se foi você, espere e tente de novo com a senha certa. Se não foi, escolha uma nova senha agora, por este endereço:
+
+            {forgotPasswordUrl}
+            """;
+
+        string safeName = WebUtility.HtmlEncode(name);
+        string safeUrl = WebUtility.HtmlEncode(forgotPasswordUrl);
+        string html = $"""
+            <p>Olá{safeName},</p>
+            <p>Houve várias tentativas seguidas de entrar na sua conta da área da equipe do GazetaMarketplace com a senha errada, e a entrada foi bloqueada por alguns minutos para a rede de onde elas vieram.</p>
+            <p>Se foi você, espere e tente de novo com a senha certa. Se não foi, <a href="{safeUrl}">escolha uma nova senha agora</a>.</p>
+            """;
+
+        return new EmailMessage(user.Email, PasswordRecoveryMessages.LockoutNoticeSubject, text, html);
     }
 
     private static EmailMessage Compose(AppUser user, string link)

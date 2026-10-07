@@ -107,8 +107,9 @@ public sealed class AdPhotoService(
             await context.SaveChangesAsync(cancellationToken);
         }, cancellationToken);
 
-        // Depois do commit: o registro já não existe, então a URL deixa de funcionar. O original fica (originalKey nulo) até a limpeza de 30 dias
-        await TryDeleteFilesAsync(removed.StorageKey, originalKey: null);
+        // Depois do commit: o registro já não existe, então a URL deixa de funcionar. O original sai junto (SC-07): ele guarda o GPS do vendedor e
+        // ninguém o usa na v1. Se a exclusão falhar, o arquivo vira órfão e a limpeza diária o apaga
+        await TryDeleteFilesAsync(removed.StorageKey, removed.OriginalKey);
     }
 
     private async Task<AdPhoto> InsertAsync(int adId, StoredPhoto stored, int max, CancellationToken cancellationToken)
