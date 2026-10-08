@@ -1,7 +1,7 @@
 # ADR-012: Componentes da pilha aprovada que não entram na v1
 
 **Date**: 2026-09-30
-**Status**: Accepted
+**Status**: Accepted (a linha **CDN** foi superada em 2026-10-08 pelo ADR-013: o site passa a ficar atrás do Cloudflare)
 
 > **Em resumo:** vários componentes aprovados em `rules/tech-stack.md` ficam de fora da v1, porque a escala é pequena (NFR-04, NFR-23) e a hospedagem compartilhada não comporta serviços auxiliares. Cada linha diz por que ficou de fora e o que faria a decisão ser revista.
 

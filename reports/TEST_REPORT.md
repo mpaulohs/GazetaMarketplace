@@ -1923,3 +1923,23 @@ Seis mutações deram "erro de build" por defeito do **meu** script (ele esvazia
 | `README.md` | Seção inicial com os links dos documentos de publicação e estado |
 
 **Cobertura:** a última medida é a do `/test` (98,0% de linhas e 91,8% de ramos, commit `7f3d3d1`); não foi medida de novo nesta etapa por não haver mudança de código.
+
+## Cloudflare — IP do visitante e HTTPS de origem (2026-10-08)
+
+> **Em resumo:** o site passou a funcionar atrás do Cloudflare. Com `ForwardedHeaders__Cloudflare=true` ele lê o IP do visitante de `CF-Connecting-IP`, mas só de pedidos que chegam de endereços do Cloudflare. **9 testes novos passam; a suíte unitária completa fecha em 1.812 de 1.812, 0 falhas** (eram 1.803). Duas mutações (tirar a escolha do cabeçalho; tirar o modo do pipeline) foram mortas (5 de 9 testes falham em cada). O modo é desligado por padrão, então integração e navegador (sem o modo) não mudam de comportamento; **não foram rodadas de novo nesta etapa**.
+
+| Teste (`Security/CloudflareForwardingTests`) | O que prova |
+|---|---|
+| Pedido do Cloudflare (IPv4 e IPv6) | O IP visto é o do `CF-Connecting-IP` |
+| Pedido de fora do Cloudflare com `CF-Connecting-IP` forjado | Ignorado: vale o IP da conexão |
+| Pedido do Cloudflare só com `X-Forwarded-For` | Não muda o IP (o cabeçalho escolhido é o `CF-Connecting-IP`) |
+| Sem o modo Cloudflare | `CF-Connecting-IP` de endereço do Cloudflare é ignorado |
+| Sem rede | O pacote usa a cópia embutida e o resultado é o mesmo |
+| Lista baixada diferente | Só as faixas baixadas são confiáveis |
+| `AuthLimits` | Modo Cloudflare conta como IP conhecido: limite 5 (e 20 sem nada) |
+| Production com o modo ligado | Sem o `Warning` de `KnownProxies`; um `Information` com "2 faixas" |
+
+**Achados desta etapa (verificados lendo o pacote e testando):**
+- O pacote **não lê `CF-Connecting-IP`**: ele só preenche as redes confiáveis, e por padrão o IP viria de `X-Forwarded-For`. Quem escolhe `CF-Connecting-IP` é o código do site (`ForwardingExtensions`).
+- O pacote tem uma única versão (1.0.0, abril de 2026) e autor individual; decisão registrada no ADR-013 e no BACKLOG CF-01.
+- O teste do IP também muda de lógica: **ver o IP do Cloudflare no log significa que o modo não está valendo**; ver o IP do visitante significa que está. Corrigido em `docs/DEPLOY-RUNBOOK.md` §7.1.

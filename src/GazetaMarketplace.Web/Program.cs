@@ -76,7 +76,7 @@ builder.Services.AddSingleton<IModuleVersions>(services =>
     IWebHostEnvironment environment = services.GetRequiredService<IWebHostEnvironment>();
     return new ModuleVersions(environment.WebRootFileProvider, cache: !environment.IsDevelopment());
 });
-builder.Services.AddSecureForwarding();
+builder.Services.AddSecureForwarding(builder.Configuration);
 // Nenhuma política CORS: site e endpoints JSON são da mesma origem (ARCHITECTURE.md §7)
 builder.Services.AddAppOptions(builder.Configuration, builder.Environment.IsHardened());
 // Chaves do Data Protection (cookie de login, antiforgery, links de redefinição de senha) numa pasta persistente fora da raiz do site (ADR-011, RC-16).

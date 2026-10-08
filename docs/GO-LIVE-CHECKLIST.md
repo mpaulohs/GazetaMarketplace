@@ -8,12 +8,12 @@
 
 ## A. Antes do dia (pode ser feito em dias anteriores)
 
-- [ ] **A1. Certificado HTTPS grátis solicitado** na aba **SSL** do painel do SmarterASP (AR-09) e emitido. Sem ele, o item D2 não passa.
+- [ ] **A1. Cloudflare Origin CA, não o certificado grátis do SmarterASP** (decisão de 2026-10-08). **Não solicite** o certificado grátis do provedor. No Cloudflare, crie o *Origin Certificate* (SSL/TLS → Origin Server) para `gzto.com.br` e `*.gzto.com.br`, guarde certificado e chave no cofre de senhas e instale no painel do SmarterASP (aba **SSL**; converta para `.pfx` se o painel pedir). No Cloudflare, ponha o modo **Full (strict)** (**nunca Flexible**) e deixe o DNS com a nuvem laranja ligada (RUNBOOK §5). Sem isso o item D2 não passa.
 - [ ] **A2. E-mail do site:** domínio remetente validado no SendGrid, com SPF e DKIM (AR-12), para o e-mail de redefinição de senha não cair no spam.
 - [ ] **A3. Google Maps:** no Google Cloud Console, a chave antiga aparece como **revogada** (SC-28). É uma conferência de 1 minuto.
 - [ ] **A4. Três pastas criadas** dentro de `h:\root\home\mpaulohs-001\www\`, ao lado da pasta do site: `gazeta-fotos`, `gazeta-chaves`, `gazeta-logs` (RUNBOOK §3).
 - [ ] **A5. Banco SQL Server 2022 criado** no painel; servidor, nome, usuário e senha anotados no cofre de senhas.
-- [ ] **A6. `web.Production.config` preenchido** a partir do `web.Production.config.example` (fora do git): cadeia de conexão com `Encrypt=True`, `SendGrid__ApiKey`, `SendGrid__FromEmail`, `Site__BaseUrl` com `https://` e sem barra no fim, e **só desta vez** `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword`. Confirme que `DataProtection__ProtectWithDpapi` está **`false`**.
+- [ ] **A6. `web.Production.config` preenchido** a partir do `web.Production.config.example` (fora do git): cadeia de conexão com `Encrypt=True`, `SendGrid__ApiKey`, `SendGrid__FromEmail`, `Site__BaseUrl` com `https://` e sem barra no fim, **`ForwardedHeaders__Cloudflare=true`**, e **só desta vez** `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword`. Confirme que `DataProtection__ProtectWithDpapi` está **`false`** e que `ForwardedHeaders__Cloudflare` está **`true`**.
 - [ ] **A7. Pacote gerado:** `dotnet publish src/GazetaMarketplace.Web -c Release -p:PublishProfile=IIS-win-x64` (cerca de 62 MB; RUNBOOK §2).
 
 ## B. Publicação (RUNBOOK §7)
@@ -25,18 +25,18 @@
 - [ ] **B5. Primeiro acesso:** entre com o Administrador, **troque a senha provisória**, remova `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword` do `web.Production.config` e reinicie o site.
 - [ ] **B6. As três pastas ganharam arquivos** sem você ter dado permissão nenhuma: um log do dia em `gazeta-logs` e um `key-*.xml` em `gazeta-chaves`. [PARE] se não: o pool não tem escrita nelas.
 
-## C. Teste prático do IP (RUNBOOK §7.1) — decide se há proxy a configurar
+## C. Teste prático do IP atrás do Cloudflare (RUNBOOK §7.1) — prova que o `CF-Connecting-IP` está sendo lido
 
-- [ ] **C1. Erre a senha de propósito** uma vez em `/painel/entrar`.
-- [ ] **C2. Leia o log do dia** e ache `Falha de entrada de ... a partir de <IP>`.
-- [ ] **C3. O IP é o seu?** Sim: nada a configurar. Não (sempre o mesmo, do provedor): grave-o em `ForwardedHeaders__KnownProxies__0`, reinicie e repita. [PARE] enquanto o IP visto não for o real: sem ele, a equipe inteira divide o limite de tentativas.
+- [ ] **C1. Partida:** no log do dia procure `Modo Cloudflare ligado: N faixas de IP do Cloudflare confiáveis`. [PARE] se houver `Warning` de `KnownProxies` (variável `ForwardedHeaders__Cloudflare` não está `true`) ou `Error` de "nenhuma faixa".
+- [ ] **C2. Erre a senha de propósito** uma vez em `https://gzto.com.br/painel/entrar` (pelo endereço público, passando pelo Cloudflare) e ache no log `Falha de entrada de ... a partir de <IP>`.
+- [ ] **C3. O IP é o seu?** Sim: o pacote está lendo o `CF-Connecting-IP`; nada a configurar. É um IP **do Cloudflare** (lista em `cloudflare.com/ips`): o modo não está valendo, volte ao C1. Sempre o mesmo e **nem o seu nem o do Cloudflare**: há um proxy do SmarterASP no meio, grave o IP dele em `ForwardedHeaders__KnownProxies__0`, reinicie e repita. [PARE] enquanto o IP visto não for o seu. Se não resolver, `ForwardedHeaders__Cloudflare=false` volta ao modo seguro e você não divulga.
 
 ## D. Conferências que bloqueiam a divulgação (VERIFY-CHECKLIST)
 
 Primeiro a preparação: **P1** criar um Redator, **P2** informar o telefone do site em `/painel/configuracoes`, **P3** cadastrar e publicar 3 anúncios reais com fotos de verdade.
 
 - [ ] **D1. M6 — fotos reais:** HEIC de iPhone e JPEG grande de Android aceitos; orientação e cor certas; **nenhuma linha de GPS** (`exiftool foto.webp | grep -i gps`). [PARE] se aparecer GPS (privacidade) ou se a HEIC não converter (o componente de imagens não carregou no Windows do provedor, AR-05).
-- [ ] **D2. M7 — HTTPS:** `http://` redireciona para `https://`; cadeado sem aviso; cabeçalhos `strict-transport-security`, `content-security-policy`, `x-content-type-options`, `x-frame-options`, `referrer-policy` presentes; um só `content-encoding`. [PARE] se o certificado não estiver válido.
+- [ ] **D2. M7 — HTTPS atrás do Cloudflare:** (a) `https://gzto.com.br` abre **sem erro 525 ou 526** (prova que o certificado de origem está instalado e é aceito); (b) no painel do Cloudflare, SSL/TLS → Overview mostra **Full (strict)**; (c) `http://` redireciona para `https://`; (d) cadeado sem aviso (é o certificado do Cloudflare, normal); (e) cabeçalhos `strict-transport-security`, `content-security-policy`, `x-content-type-options`, `x-frame-options`, `referrer-policy` presentes e **um só** `content-encoding`; (f) nenhum bloqueio de política de segurança no console do navegador (Rocket Loader, ofuscação de e-mail e Web Analytics automático desligados). [PARE] se (a) ou (b) falhar.
 - [ ] **D3. M10 — nunca página branca:** `/qualquer-coisa-que-nao-existe` mostra "Página não encontrada"; anúncio inexistente mostra "Este anúncio não está mais disponível"; formulário com aba velha mostra "Algo deu errado", nunca branco. [PARE] se aparecer página branca.
 
 ## E. Divulgar

@@ -63,8 +63,8 @@ Os números são do código do commit `c5a8f68`. Os commits seguintes mudaram s�
 
 | Item | O que é | Como resolver |
 |---|---|---|
-| **SEC-01 (R-11)** | Saber se o site enxerga o IP real de quem visita | Teste prático na primeira publicação: errar a senha e ler o IP no log ([`DEPLOY-RUNBOOK.md`](DEPLOY-RUNBOOK.md) §7.1). A proteção do SC-03 só vale de verdade com o IP real |
-| **AR-09** | Certificado HTTPS grátis | Solicitar na aba SSL do painel |
+| **SEC-01 (R-11)** | Saber se o site enxerga o IP real de quem visita | O site passa pelo **Cloudflare** e lê `CF-Connecting-IP` (pacote `Cloudflare.ForwardedHeaders`, `ForwardedHeaders__Cloudflare=true`). Confirmar com o teste do IP na primeira publicação ([`DEPLOY-RUNBOOK.md`](DEPLOY-RUNBOOK.md) §7.1). A proteção do SC-03 só vale de verdade com o IP real |
+| **AR-09** | Certificado HTTPS | **Cloudflare Origin CA** instalado no SmarterASP e modo **Full (strict)**; não solicitar o certificado grátis do provedor ([`DEPLOY-RUNBOOK.md`](DEPLOY-RUNBOOK.md) §5) |
 | **Pastas** | `gazeta-fotos`, `gazeta-chaves`, `gazeta-logs` | Criar ao lado da pasta do site |
 | **AR-12** | Domínio remetente no SendGrid, com SPF e DKIM | Sem isso o e-mail de redefinição pode cair no spam |
 | **SC-28** | Confirmar a chave do Google como revogada | 1 minuto no Google Cloud Console |

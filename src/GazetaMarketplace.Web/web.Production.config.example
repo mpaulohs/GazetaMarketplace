@@ -23,10 +23,12 @@
           <!-- Endereço público do site, com https (ex.: https://www.seudominio.com.br). Vai nos links enviados por e-mail;
                sem ele o link nasceria do cabeçalho Host da requisição, que um atacante pode forjar (US-007). -->
           <environmentVariable name="Site__BaseUrl" value="(endereço público do site, com https)" xdt:Transform="InsertIfMissing" />
-          <!-- IP do proxy do SmarterASP (SEC-01, PENDENTE: a resposta vem do ticket aberto no provedor).
-               Enquanto não houver o valor real, NÃO crie esta variável: o site ignora X-Forwarded-For (fail-closed), todos os visitantes dividem o IP do proxy,
-               e entrar, "esqueci" e "redefinir" aceitam 20 tentativas por 15 minutos para o site inteiro (com o IP certo, 5 por IP). Um Warning na partida lembra disso.
-               Quando o provedor responder, acrescente UMA variável por proxy, no mesmo formato das outras linhas deste arquivo:
+          <!-- Site atrás do Cloudflare (domínio gzto.com.br com o proxy ligado, "nuvem laranja"). Com true o site baixa a lista oficial de faixas de IP do Cloudflare
+               na partida (se não conseguir, usa a cópia que vem no pacote Cloudflare.ForwardedHeaders) e lê o IP do visitante do cabeçalho CF-Connecting-IP,
+               mas SÓ quando o pedido chega de um endereço do Cloudflare. Não precisa de ForwardedHeaders__KnownProxies__0 para isso. Sem o Cloudflare (ou com false),
+               o site ignora cabeçalhos de IP (fail-closed), todos os visitantes dividem um IP e entrar aceita 20 tentativas por 15 minutos em vez de 5. -->
+          <environmentVariable name="ForwardedHeaders__Cloudflare" value="true" xdt:Transform="InsertIfMissing" />
+          <!-- OPCIONAL, só se o teste do IP (docs/DEPLOY-RUNBOOK.md, 7.1) mostrar um proxy do SmarterASP entre o Cloudflare e o site: acrescente UMA variável por proxy,
                nome ForwardedHeaders__KnownProxies__0 (depois __1, __2...) e, como valor, o IP exato do proxy, sem faixa e sem texto. -->
           <!-- Cifra as chaves do Data Protection com o DPAPI do Windows (identidade do pool). COMEÇA DESLIGADO: o DPAPI por usuário exige que o pool
                do SmarterASP tenha o perfil do usuário carregado, o que só se descobre testando. Depois da primeira publicação funcionando (login, sessão e

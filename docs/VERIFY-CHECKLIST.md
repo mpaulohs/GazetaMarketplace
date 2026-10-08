@@ -207,6 +207,8 @@ Use **de 3 a 5 fotos suas**: uma HEIC de iPhone, um JPEG grande de Android (4 MB
 
 ### M7. HTTPS — na hospedagem — **[BLOQUEIA O GO-LIVE]**
 
+> **Atrás do Cloudflare (2026-10-08):** o cadeado é o do Cloudflare. Confira também o que está em `docs/GO-LIVE-CHECKLIST.md` D2: sem erro 525 ou 526 e modo **Full (strict)**.
+
 | Passo | O que esperar | Se falhar |
 |---|---|---|
 | Digite `http://seu-dominio` (sem o `s`) | Redireciona para `https://` | Anote; é configuração do IIS/SmarterASP (ver runbook) |

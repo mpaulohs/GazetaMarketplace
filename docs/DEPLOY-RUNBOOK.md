@@ -12,9 +12,9 @@
 | .NET 10 | Instalado no servidor | AR-02 |
 | SQL Server | 2022 e 2025 disponíveis; **usar a 2022** | AR-03 |
 | Disco | 30 GB, limite flexível | AR-04 |
-| HTTPS | Certificado grátis, solicitado na aba **SSL** do painel | AR-09 |
+| HTTPS | **Cloudflare** (domínio `gzto.com.br`): modo **Full (strict)** com **Origin CA** instalado na aba **SSL** do painel. **Não** solicitar o certificado grátis do provedor | AR-09, decisão de 2026-10-08 |
 | Usuário do banco | Sem resposta: **conta única com permissão total, risco aceito (RR-9)** | SEC-03 |
-| IP do proxy | Resposta sobre IISNode; **decisão pendente do Product Owner** (ver §8) | SEC-01 |
+| IP do visitante | O site lê `CF-Connecting-IP` (pacote `Cloudflare.ForwardedHeaders`, `ForwardedHeaders__Cloudflare=true`); confirmar com o teste do §7.1 | SEC-01 |
 
 ## 2. Pacote: framework-dependent, win-x64
 
@@ -54,15 +54,24 @@ sqlcmd -S (servidor) -U (usuario) -P (senha) -d (banco) -b -I -i db/scripts/gaze
 - O site **não** altera o banco ao subir (`Database.Migrate()` não existe).
 - A cadeia de conexão vai na variável `ConnectionStrings__DefaultConnection` (nunca no git), com `Encrypt=True`.
 
-## 5. HTTPS
+## 5. HTTPS com o Cloudflare (Origin CA + Full strict)
 
-No painel do SmarterASP, aba **SSL**: **solicite o certificado grátis** para o domínio e espere a emissão. Só depois divulgue o endereço. O site redireciona `http` para `https` (308) e envia HSTS; os cookies de sessão só viajam por HTTPS. Variável `Site__BaseUrl` com `https://` e sem barra no fim.
+O endereço público passa pelo Cloudflare. O navegador vê o certificado do **Cloudflare**; entre o Cloudflare e o SmarterASP vale um **Origin Certificate** (Origin CA) que você cria no Cloudflare. Explicação completa e o que fazer se algo falhar: [`INFRA.md`](INFRA.md) §5-A.
+
+1. **Cloudflare → SSL/TLS → Origin Server → Create Certificate.** Hosts `gzto.com.br` e `*.gzto.com.br`. Copie o **certificado** e a **chave privada** agora (a chave não aparece de novo) e guarde-os no cofre de senhas, **nunca no git**.
+2. Se o painel do SmarterASP pedir `.pfx`, converta: `openssl pkcs12 -export -inkey origin-key.pem -in origin-cert.pem -out origin.pfx`.
+3. **Painel do SmarterASP → aba SSL:** instale o certificado de origem no site. **Não solicite o certificado grátis do provedor.** Se o painel não tiver onde importar certificado próprio, abra chamado antes de seguir: sem isso o Full (strict) não fecha.
+4. **Cloudflare → SSL/TLS → Overview:** modo **Full (strict)**. **Nunca "Flexible"**: causa laço infinito de redirecionamentos, porque o site redireciona `http` para `https`.
+5. **Cloudflare → DNS:** registros apontando para o SmarterASP com a nuvem laranja ligada.
+6. Recomendado no Cloudflare: *Rocket Loader*, *Email Address Obfuscation* e a injeção automática do *Web Analytics* **desligados** (o site bloqueia scripts que não são dele; [`INFRA.md`](INFRA.md) §5-A).
+
+**Como conferir:** `https://gzto.com.br` abre sem erro 525 ou 526 (525 = o aperto de mão com o site falhou; 526 = certificado de origem inválido) e o painel do Cloudflare mostra **Full (strict)**. Acessar o IP do SmarterASP direto mostrar aviso de certificado é esperado (o Origin CA só vale para o Cloudflare). `Site__BaseUrl` = `https://gzto.com.br` (ou com `www`, se esse for o endereço principal), com `https://` e sem barra no fim. O site redireciona `http` para `https` (308) e envia HSTS; os cookies de sessão só viajam por HTTPS.
 
 ## 6. Variáveis de ambiente
 
 Copie `src/GazetaMarketplace.Web/web.Production.config.example` para `web.Production.config` (fora do git, no cofre de senhas) e troque cada valor entre parênteses. As três pastas já vêm com os caminhos reais. Tabela completa e o que **nunca** definir em produção: [`INFRA.md`](INFRA.md) §4.
 
-Em resumo: `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConnection`, as três pastas, `SendGrid__ApiKey`, `SendGrid__FromEmail`, `Site__BaseUrl`, `DataProtection__ProtectWithDpapi=false` (veja o §7 do `INFRA.md` antes de mudar) e, **só na primeira vez**, `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword` (remover depois do primeiro acesso).
+Em resumo: `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConnection`, as três pastas, `SendGrid__ApiKey`, `SendGrid__FromEmail`, `Site__BaseUrl`, `ForwardedHeaders__Cloudflare=true`, `DataProtection__ProtectWithDpapi=false` (veja o §7 do `INFRA.md` antes de mudar) e, **só na primeira vez**, `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword` (remover depois do primeiro acesso).
 
 ## 7. Ordem de uma publicação
 
@@ -75,21 +84,23 @@ Em resumo: `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConne
 7. **Teste prático do IP** (primeira publicação, §7.1).
 8. **Só depois que o site funcionar**, decidir sobre o DPAPI (§7.2).
 
-### 7.1 Teste prático do IP (primeira publicação) — decisão de 2026-10-07
+### 7.1 Teste prático do IP (primeira publicação, atrás do Cloudflare) — atualizado em 2026-10-08
 
-**Para que serve:** saber se o site enxerga o IP real de quem visita, sem esperar resposta do provedor. Isso decide se existe um proxy a configurar (SEC-01). O bloqueio por conta+IP e os limites de tentativas só protegem de verdade quando o IP é o real.
+**Para que serve:** conferir que o site enxerga o IP **real** de quem visita. Atrás do Cloudflare, sem a leitura do cabeçalho `CF-Connecting-IP`, todo visitante chegaria com o IP de um servidor do Cloudflare, e os limites de tentativas e o bloqueio por conta+IP valeriam para o site inteiro. O pacote `Cloudflare.ForwardedHeaders` (ligado por `ForwardedHeaders__Cloudflare=true`) cuida disso; este teste prova que cuidou.
 
-1. Abra `https://(site)/painel/entrar` e **erre a senha de propósito uma vez** (use o seu e-mail e uma senha qualquer).
-2. Abra o arquivo de log do dia na pasta `gazeta-logs` e procure a linha **`Falha de entrada de ... a partir de <IP>`**.
-3. Compare o `<IP>` com o **seu IP** (pesquise "meu IP" no navegador, na mesma rede).
+1. **Conferir a partida:** no log do dia em `gazeta-logs` procure `Modo Cloudflare ligado: N faixas de IP do Cloudflare confiáveis`. Se aparecer um `Warning` de `KnownProxies`, a variável `ForwardedHeaders__Cloudflare` não está `true`. Se aparecer um `Error` com "nenhuma faixa", a lista não carregou. Um `Warning` "Failed to fetch Cloudflare IP ranges" **não é problema**: o pacote usou a cópia embutida.
+2. Abra `https://gzto.com.br/painel/entrar` **pelo endereço público** (passando pelo Cloudflare) e **erre a senha de propósito uma vez**.
+3. No mesmo log, procure a linha **`Falha de entrada de ... a partir de <IP>`**.
+4. Compare o `<IP>` com o **seu IP** (pesquise "meu IP" no navegador, na mesma rede).
 
-| O que você vê | O que significa | O que fazer |
+| O IP na linha é | O que significa | O que fazer |
 |---|---|---|
-| O IP é **o seu** | O IIS entrega o IP real; **não há proxy a configurar** | Nada. O aviso de partida sobre `KnownProxies` pode ser ignorado; o limite temporário de 20 tentativas passa a ser folga |
-| O IP é **sempre o mesmo e não é o seu** (do provedor) | Há um proxy na frente do site | Grave esse IP em `ForwardedHeaders__KnownProxies__0` (um valor por variável, só o IP, sem faixa nem texto), reinicie o site e repita o teste: agora o IP deve ser o seu |
-| Não achou a linha | Log em outra pasta, ou o erro de senha não chegou ao site | Confira `Logging__FileDirectory` e repita o erro; **não divulgue o site** enquanto não resolver |
+| **O seu** | O site leu o `CF-Connecting-IP`: **o pacote resolve** | Nada. Os limites normais (5 por 15 minutos) já estão valendo |
+| **De um servidor do Cloudflare** (confira na lista oficial em `cloudflare.com/ips`) | O IP **não** foi trocado: o modo Cloudflare não está valendo | Revise o passo 1; confirme que o domínio está com a nuvem laranja ligada; corrija e repita o teste |
+| **Sempre o mesmo, e nem o seu nem o do Cloudflare** | Há um proxy do SmarterASP **entre** o Cloudflare e o site | Grave esse IP em `ForwardedHeaders__KnownProxies__0` (uma variável por IP, só o IP, sem faixa nem texto), reinicie e repita: o site passa a aceitar o `CF-Connecting-IP` também vindo desse proxy |
+| Não achou a linha | Log em outra pasta, ou o erro de senha não chegou ao site | Confira `Logging__FileDirectory` e repita o erro |
 
-**Se falhar:** o site continua seguro (ele ignora o cabeçalho `X-Forwarded-For` enquanto a lista está vazia), mas **a equipe inteira pode dividir o mesmo limite de tentativas**. Resolva antes de divulgar. Mais detalhes: [`INFRA.md`](INFRA.md) §5.
+**Se não resolver:** ponha `ForwardedHeaders__Cloudflare=false` e reinicie. O site volta ao modo seguro de antes (ignora cabeçalhos de IP; entrar aceita 20 tentativas por 15 minutos para o site inteiro) e **você não divulga o endereço** até resolver. Detalhes: [`INFRA.md`](INFRA.md) §5-B.
 
 ### 7.2 DPAPI (criptografia das chaves de sessão) — decisão de 2026-10-07
 
@@ -108,7 +119,7 @@ Para ligar depois:
 
 | Item | O que é | Situação |
 |---|---|---|
-| **SEC-01 — IP do proxy** | O artigo indicado pelo SmarterASP é para **IISNode**, não para ASP.NET Core. Para ASP.NET Core o padrão é `X-Forwarded-For` com a lista `KnownProxies` | **Pendente, com decisão tomada:** o site segue fail-closed (lista vazia): ignora `X-Forwarded-For`, avisa na partida e aceita 20 tentativas de entrada por 15 min enquanto isso. **Resolve-se com o teste prático do §7.1** na primeira publicação: se o IP no log for o real, não há proxy a configurar; se for o do provedor, grave-o em `ForwardedHeaders__KnownProxies__0` |
+| **SEC-01 — IP do visitante** | O SmarterASP indicou um artigo sobre **IISNode**, que não vale para ASP.NET Core. Com o Cloudflare na frente a questão muda: o IP real vem de `CF-Connecting-IP` | **Resolvido no código** (pacote `Cloudflare.ForwardedHeaders`, `ForwardedHeaders__Cloudflare=true`) e **confirmado pelo teste do §7.1** na primeira publicação. Se o teste mostrar outro proxy do SmarterASP, é só acrescentar o IP dele em `ForwardedHeaders__KnownProxies__0` |
 | **SEC-03 — conta do banco** | Sem resposta do provedor: o site usa a conta única com permissão total | **Risco aceito (RR-9)** em `security/SECURITY_REQUIREMENTS.md` §5 |
 | **SC-28 — chave do Google Maps no histórico do git** | Uma chave de API antiga aparece em dois commits de templates | **Exceção assinada.** A chave já foi revogada no Google Cloud Console; o histórico não é reescrito. Antes de publicar, confirme no console que ela aparece como revogada |
 | **AR-12 — e-mail** | Domínio remetente validado no SendGrid, com SPF e DKIM, para o e-mail de redefinição não cair no spam | Pendente (Product Owner) |

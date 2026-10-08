@@ -84,6 +84,13 @@ internal sealed class WebFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(_environment);
+
+        // O modo Cloudflare decide o que se registra em Program.cs (antes de a configuração do host de teste existir), então este valor entra como configuração do host
+        if (_configuration.TryGetValue(GazetaMarketplace.Web.Security.ForwardingExtensions.CloudflareKey, out string cloudflare))
+        {
+            builder.UseSetting(GazetaMarketplace.Web.Security.ForwardingExtensions.CloudflareKey, cloudflare);
+        }
+
         builder.ConfigureAppConfiguration((_, configuration) =>
         {
             // O limite de pedidos de login/recuperação (5 por 15 min, por IP) vale em produção; os testes entram várias vezes do mesmo IP, então o padrão do host de teste é alto.

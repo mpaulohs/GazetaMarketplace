@@ -13,6 +13,7 @@
     <PackageVersion Include="Dapper" Version="2.1.89" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.6" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Cloudflare.ForwardedHeaders" Version="1.0.0" />
     <PackageVersion Include="Magick.NET-Q8-x64" Version="14.17.2" />
   </ItemGroup>
 

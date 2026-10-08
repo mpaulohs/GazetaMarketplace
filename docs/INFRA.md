@@ -34,7 +34,7 @@ O que o pacote **não tem** (V-06): `.pdb` (símbolos de depuração), `.xml` de
 | Item | Situação | O que fazer |
 |---|---|---|
 | **.NET 10** (runtime e módulo do IIS) | **Instalado** (AR-02). Publicação *framework-dependent*, `win-x64` | Nada. Se o site der erro 500.19 ou 502.5 na primeira publicação, abra chamado citando o runtime 10 |
-| **HTTPS** | Certificado **grátis** do provedor (AR-09) | **Solicitar no painel, aba SSL**, antes de divulgar o site. O site redireciona `http` para `https` (308) e envia HSTS; sem o certificado válido o HSTS trava o navegador |
+| **HTTPS** | **Cloudflare** na frente do site (domínio `gzto.com.br`), modo **Full (strict)**, com **Origin CA** no SmarterASP (§5-A). **Não** solicitar o certificado grátis do provedor (decisão de 2026-10-08) | Criar o Origin Certificate no Cloudflare, instalá-lo no painel do SmarterASP e ligar Full (strict). O site redireciona `http` para `https` (308) e envia HSTS; sem origem em HTTPS válido o Cloudflare mostra erro 525/526 |
 | **Pastas fora da raiz do site** | Caminho base: `h:\root\home\mpaulohs-001\www\`. O pool do IIS tem **leitura e escrita por padrão** (AR-01) | Criar **três subpastas irmãs do site** (não dentro dele): `gazeta-fotos`, `gazeta-chaves`, `gazeta-logs`. Passo a passo no `docs/DEPLOY-RUNBOOK.md`. Dentro da pasta do site o Web Deploy poderia apagá-las numa publicação |
 | **SQL Server** | 2022 e 2025 disponíveis; **escolher a 2022** (AR-03) | Criar o banco na 2022 pelo painel; rodar o script (§3) |
 | **Disco** | **30 GB**, limite flexível (AR-04) | Cabe com folga (estimativa de ~2 GB de fotos). O envio de fotos não tem cota por usuário (SC-05): olhe o uso da pasta `gazeta-fotos` toda semana |
@@ -74,35 +74,66 @@ O arquivo real **não vai para o git**: ele fica no cofre de senhas e na máquin
 | `SendGrid__ApiKey`, `SendGrid__FromEmail` | sim | Chave de API do SendGrid (permissão só de envio) e remetente validado |
 | `Site__BaseUrl` | sim | Endereço público **com `https`**, sem barra no fim. Vai nos links dos e-mails; sem ele o link nasceria do cabeçalho `Host`, que um atacante forja |
 | `DataProtection__ProtectWithDpapi` | opcional | **Começa `false`.** `true` cifra as chaves com o DPAPI do Windows, mas exige que o pool do provedor tenha o perfil do usuário carregado, o que só se descobre testando (§6). Só no servidor Windows; em outro sistema o site **recusa subir** com a opção ligada |
-| `ForwardedHeaders__KnownProxies__0` | **pendente (SEC-01)** | IP do proxy do SmarterASP. Veja §5 |
+| `ForwardedHeaders__Cloudflare` | **sim (atrás do Cloudflare)** | `true`: o site confia nas faixas de IP do Cloudflare e lê o IP do visitante de `CF-Connecting-IP`. Padrão `false`. Veja §5 |
+| `ForwardedHeaders__KnownProxies__0` | só se o teste do IP mostrar outro proxy | IP exato de um proxy do SmarterASP entre o Cloudflare e o site. Veja §5-B |
 | `Bootstrap__AdminEmail`, `Bootstrap__AdminPassword` | só na 1.ª vez | Primeiro Administrador, com troca de senha obrigatória no primeiro acesso. **Remover depois** |
 | `HttpsRedirection__HttpsPort` | não | Padrão 443 em produção |
 
 **Nunca defina em produção** `RateLimiting__*`, `SendGrid__BaseUrl`, `ViaCep__BaseUrl` nem `Authentication__SessionMinutes` com valor de teste: existem para a suíte de testes e afrouxam os limites de proteção ou desviam a chave de API (R-39). Se faltar qualquer variável obrigatória, o site **não sobe** e diz qual faltou (validação na partida).
 
-## 5. IP do proxy (SEC-01, R-11): decisão pendente do Product Owner
+## 5. Cloudflare: HTTPS de origem e IP do visitante (SEC-01, R-11)
 
-**Resposta do SmarterASP (2026-10-07):** o provedor indicou o artigo <https://www.smarterasp.net/support/kb/a2314/how-to-get-remote-ip-address-with-iisnode.aspx>.
-**O KB do SmarterASP é para IISNode (Node.js atrás do IIS). Para ASP.NET Core, o padrão é `X-Forwarded-For` com `KnownProxies`.** O Product Owner vai ler o artigo e, com o que ele disser sobre como as requisições chegam ao site, configura a lista (`ForwardedHeaders__KnownProxies__0`, `__1`...). **Decisão mantida: o site continua fail-closed (lista vazia) até lá.**
+> **Em resumo:** o domínio `gzto.com.br` passa pelo Cloudflare (CDN e proxy). Isso muda duas coisas no site: **(A)** o certificado de HTTPS entre o Cloudflare e o SmarterASP é um *Origin CA* do Cloudflare, e **(B)** todo pedido chega ao site com o IP de um servidor do Cloudflare, então o IP do visitante precisa ser lido do cabeçalho `CF-Connecting-IP`. O site faz o item (B) quando `ForwardedHeaders__Cloudflare=true`. Decisão do Product Owner de 2026-10-08; substitui o plano de esperar o IP do proxy do SmarterASP.
 
-**O que acontece sem o valor:** o site ignora o cabeçalho `X-Forwarded-For` (seguro por padrão, "fail-closed"). Se existir um proxy na frente do IIS, todo visitante chega com o mesmo IP e os limites por IP valem para o **site inteiro**. Se **não** existir proxy (o ASP.NET Core roda **em processo** dentro do IIS, e nesse modo o IIS costuma entregar o IP do cliente direto), o site já enxerga o IP certo e a lista nem é necessária.
+### 5-A. HTTPS: Origin CA + Full (strict)
 
-**Como descobrir sem esperar ninguém (depois da primeira publicação):** erre a senha de propósito uma vez no painel e abra o log do dia em `gazeta-logs`. A linha `Falha de entrada de ... a partir de <IP>` mostra o IP que o site vê. Se for o **seu IP**, não há proxy a configurar: o aviso de partida pode ser ignorado e o limite temporário de 20 passa a ser folga. Se for **sempre o mesmo IP do provedor** (outro que não o seu), é o proxy: grave esse IP em `ForwardedHeaders__KnownProxies__0`. Esta é uma forma prática de decidir; a confirmação do provedor continua valendo.
+| Etapa | Onde | O que fazer |
+|---|---|---|
+| 1 | Cloudflare → **SSL/TLS → Origin Server → Create Certificate** | Gerar o certificado (RSA, hosts `gzto.com.br` e `*.gzto.com.br`, validade à escolha). Copie o **certificado** e a **chave privada** na hora: a chave **não** pode ser vista de novo. Guarde as duas no cofre de senhas, **nunca no git** |
+| 2 | Sua máquina | Se o painel do SmarterASP pedir um arquivo `.pfx`, converta: `openssl pkcs12 -export -inkey origin-key.pem -in origin-cert.pem -out origin.pfx` (defina uma senha) |
+| 3 | SmarterASP → painel → **SSL** | Instalar o certificado de origem no site (importar o certificado próprio). **Não** solicitar o certificado grátis do provedor. *Se o painel não oferecer importação de certificado próprio, abra um chamado antes de seguir; sem isso o modo Full (strict) não fecha.* |
+| 4 | Cloudflare → **SSL/TLS → Overview** | Modo **Full (strict)**. **Nunca "Flexible"**: com Flexible o Cloudflare fala `http` com o site, que responde com redirecionamento 308 para `https`, e o navegador entra em laço infinito de redirecionamentos |
+| 5 | Cloudflare → DNS | Registros do domínio apontando para o SmarterASP com o proxy ligado (nuvem laranja) |
 
-**O que foi feito para isso não travar a redação (SC-01, SC-02, decisão do Product Owner de 2026-10-07):**
+**Efeitos que você vai ver:** o cadeado do navegador é o certificado do **Cloudflare** (borda); o Origin CA só vale entre o Cloudflare e o site, e **navegador nenhum confia nele**. Acessar o IP do SmarterASP direto, sem passar pelo Cloudflare, mostra aviso de certificado: é esperado. **Erros do Cloudflare:** 525 = falha no aperto de mão com o site (certificado não instalado ou site sem HTTPS); 526 = certificado de origem inválido ou fora do prazo.
 
-| Ação | Com `KnownProxies` (ou com IP real visto direto) | Sem `KnownProxies` atrás de um proxy (pior caso) |
+**Ajustes recomendados no Cloudflare** (o site usa uma política de segurança de conteúdo estrita, `script-src 'self'`, e nenhum script inserido pelo Cloudflare passa por ela): deixar **desligados** o *Rocket Loader*, a *ofuscação de e-mail* (Email Address Obfuscation) e a injeção automática do *Web Analytics*. Se algum estiver ligado, o console do navegador mostrará bloqueios da política e o item M7 do `docs/VERIFY-CHECKLIST.md` pode falhar. Confira o M7 (cabeçalhos e **um só** `content-encoding`) já pelo domínio final.
+
+### 5-B. IP do visitante: pacote `Cloudflare.ForwardedHeaders` e `CF-Connecting-IP`
+
+**Como funciona (`ForwardedHeaders__Cloudflare=true`):**
+
+1. Na partida o site baixa as faixas oficiais de IP do Cloudflare (`cloudflare.com/ips-v4` e `ips-v6`, até 5 segundos). Se a hospedagem não alcançar o endereço, o pacote usa a **cópia embutida nele** e registra um `Warning` ("Failed to fetch Cloudflare IP ranges. Using embedded fallback").
+2. Quando o pedido chega de um endereço dessas faixas, o site troca o IP da conexão pelo valor de **`CF-Connecting-IP`**, que o Cloudflare preenche com o IP do visitante (e sobrescreve se o visitante mandar o seu).
+3. Pedido que **não** vem de um endereço do Cloudflare (por exemplo, quem acessa o IP do SmarterASP direto) **não** pode forjar o cabeçalho: ele é ignorado e o IP da conexão vale.
+4. O pacote só preenche as faixas confiáveis; **a escolha do cabeçalho `CF-Connecting-IP` é do site** (por padrão o pacote usaria `X-Forwarded-For`).
+5. Na partida o log traz `Modo Cloudflare ligado: N faixas de IP do Cloudflare confiáveis`. Se `N` for zero aparece um `Error`: o site passa a ignorar `CF-Connecting-IP`.
+
+**Não é preciso `ForwardedHeaders__KnownProxies__0` para o Cloudflare.** Ele só entra se o teste do IP (abaixo) mostrar **outro proxy do SmarterASP** entre o Cloudflare e o site.
+
+**Limites de tentativas com o IP real** (SC-01, SC-02): com `ForwardedHeaders__Cloudflare=true` o site passa a usar os limites normais.
+
+| Ação | Atrás do Cloudflare (IP real lido) | Modo desligado atrás de um proxy (pior caso) |
 |---|---|---|
 | Entrar | só **falhas** contam: 5 por 15 min por IP | só falhas: **20** por 15 min por IP |
 | "Esqueci minha senha" | balde próprio: 5 por 15 min por IP | balde próprio: **20** |
 | "Redefinir senha" | balde próprio: 5 por 15 min por IP | balde próprio: **20** |
-| Bloqueio de conta | 5 falhas **do mesmo IP contra a mesma conta**; outro IP segue entrando (SC-03) | igual no código, **mas sem o IP real todos os visitantes parecem o mesmo IP**: o bloqueio de uma conta vale para todo mundo, como antes do SC-03. O atraso progressivo e o aviso por e-mail continuam valendo |
-| Aviso na partida | nenhum quando a lista tem valor | `Warning` nos logs: "ForwardedHeaders:KnownProxies não está configurado..." (também aparece se não houver proxy nenhum; nesse caso é só um lembrete) |
+| Bloqueio de conta | 5 falhas **do mesmo IP contra a mesma conta**; outro IP segue entrando (SC-03) | sem o IP real todos parecem o mesmo IP: o bloqueio de uma conta vale para todos |
+| Aviso na partida | `Information` com o número de faixas | `Warning`: "ForwardedHeaders:KnownProxies não está configurado..." |
 
-**Atenção:** a proteção do SC-03 (5 senhas erradas de qualquer rede não travam o Administrador) **só funciona de verdade com o IP real do visitante**. Por isso o SEC-01 se fecha antes de divulgar o site.
+**Teste do IP (primeira publicação):** é o §7.1 do `docs/DEPLOY-RUNBOOK.md`. Erre a senha de propósito uma vez e leia no log do dia a linha `Falha de entrada de ... a partir de <IP>`.
 
-**Quando houver o IP do proxy:** grave uma variável por endereço (`ForwardedHeaders__KnownProxies__0`, `__1`...) com o IP exato, sem faixa e sem texto (um valor que não é IP derruba a partida) e reinicie o site. O aviso some e o limite volta a 5.
-**Como conferir:** faça 6 senhas erradas de um IP e confira que o 6.º recebe 429 e que outro IP segue entrando.
+| O IP no log é | Significa | O que fazer |
+|---|---|---|
+| **O seu** | O pacote e o `CF-Connecting-IP` estão funcionando | Nada |
+| **De um servidor do Cloudflare** (confira na lista oficial, `cloudflare.com/ips`) | O IP **não** foi trocado: o modo Cloudflare não está valendo | Confira `ForwardedHeaders__Cloudflare=true` (sem isso há o `Warning` de `KnownProxies` na partida), a linha `Modo Cloudflare ligado: N faixas` (com `N` zero há um `Error`), e se o domínio está com a nuvem laranja ligada |
+| **Sempre o mesmo e nem o seu nem o do Cloudflare** | Há um proxy do SmarterASP **entre** o Cloudflare e o site | Grave esse IP em `ForwardedHeaders__KnownProxies__0` (um por variável, só o IP) e repita o teste |
+
+**Se nada resolver:** ponha `ForwardedHeaders__Cloudflare=false` e reinicie. O site volta ao modo fail-closed (ignora cabeçalhos de IP, limite temporário de 20 tentativas) e **não divulgue o endereço** antes de resolver.
+
+**Atenção:** a proteção do SC-03 (5 senhas erradas de qualquer rede não travam o Administrador) **só vale de verdade com o IP real do visitante**. Por isso o teste acima se faz antes de divulgar o site.
+
+**Sobre o pacote (decisão de tecnologia, ADR-013):** `Cloudflare.ForwardedHeaders` 1.0.0 (licença MIT, versão única, publicado em 2026-04, autor individual, sem histórico de uso conhecido). O código foi lido antes de entrar: só baixa as listas oficiais, usa a cópia embutida se falhar e preenche as redes confiáveis. Como ele decide **quem pode informar o IP** (e portanto os limites de login), a versão fica **fixa** em `Directory.Packages.props` e qualquer atualização passa por revisão. A alternativa, se ele for abandonado ou der problema, é uma lista de faixas escrita no próprio site (poucas linhas; BACKLOG CF-01).
 
 ## 6. Chaves do Data Protection
 
@@ -131,5 +162,5 @@ O `gitleaks` acusa 30 ocorrências de uma única chave de API do Google Maps em 
 | `https://(site)/health/ready` | `Healthy` (banco acessível e migration em dia) |
 | `https://(site)/health/live` | `Healthy` |
 | Cabeçalhos da página inicial | `Strict-Transport-Security`, `Content-Security-Policy`, `X-Content-Type-Options` |
-| Logs na pasta `Logging__FileDirectory` | arquivo do dia, com a linha de início e, sem proxy configurado, o `Warning` do §5 |
+| Logs na pasta `Logging__FileDirectory` | arquivo do dia, com a linha de início e `Modo Cloudflare ligado: N faixas de IP do Cloudflare confiáveis` (§5-B). Um `Warning` de `KnownProxies` significa que o modo Cloudflare não está ligado |
 | Entrar com o Administrador do primeiro acesso | pede a troca de senha; depois **remover** `Bootstrap__*` |
