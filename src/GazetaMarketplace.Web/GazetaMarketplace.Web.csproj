@@ -7,7 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\lib\autolist\Documentation\assets\plugins\iconfonts\fonts\ionicons\fonts\" />
+    <Compile Remove="wwwroot\lib\autolist\**" />
+    <Content Remove="wwwroot\lib\autolist\**" />
+    <EmbeddedResource Remove="wwwroot\lib\autolist\**" />
+    <None Remove="wwwroot\lib\autolist\**" />
   </ItemGroup>
 
 </Project>
