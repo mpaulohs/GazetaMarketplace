@@ -1,7 +1,7 @@
 # Runbook de publicação — GazetaMarketplace no SmarterASP
 
-> **Em resumo:** este é o passo a passo para **você** (Product Owner) publicar o site na hospedagem, com os dados reais da conta. Ele cobre o que o `/infra` já definiu: o tipo de pacote, o banco, o certificado, as três pastas e as variáveis. A **conferência final de lançamento e a promoção para o público** são completadas na etapa `/deploy`; os pontos que ainda dependem de você estão no fim, em "Pendências antes de divulgar o site".
-> Detalhes e motivos de cada decisão: [`INFRA.md`](INFRA.md).
+> **Em resumo:** este é o passo a passo para **você** (Product Owner) publicar o site na hospedagem, com os dados reais da conta: o tipo de pacote, o banco, o certificado, as três pastas e as variáveis. **A publicação é sua**; nada aqui foi publicado por quem escreveu o site. No dia, siga o [`GO-LIVE-CHECKLIST.md`](GO-LIVE-CHECKLIST.md) (uma página, na ordem). Os pontos que ainda dependem de você estão no fim, em "Pendências antes de divulgar o site".
+> Detalhes e motivos de cada decisão: [`INFRA.md`](INFRA.md). Estado geral do projeto: [`PROJECT-STATUS.md`](PROJECT-STATUS.md).
 
 ## 1. Dados da conta (respostas do SmarterASP, 2026-10-07)
 
@@ -72,12 +72,43 @@ Em resumo: `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConne
 4. Abrir `https://(site)/health/ready` → `Healthy`.
 5. Primeira vez: entrar com o Administrador, trocar a senha provisória, **remover `Bootstrap__*`** do `web.Production.config` e reiniciar.
 6. Conferir os logs em `gazeta-logs` (linha de início do dia; veja o aviso do §8).
+7. **Teste prático do IP** (primeira publicação, §7.1).
+8. **Só depois que o site funcionar**, decidir sobre o DPAPI (§7.2).
+
+### 7.1 Teste prático do IP (primeira publicação) — decisão de 2026-10-07
+
+**Para que serve:** saber se o site enxerga o IP real de quem visita, sem esperar resposta do provedor. Isso decide se existe um proxy a configurar (SEC-01). O bloqueio por conta+IP e os limites de tentativas só protegem de verdade quando o IP é o real.
+
+1. Abra `https://(site)/painel/entrar` e **erre a senha de propósito uma vez** (use o seu e-mail e uma senha qualquer).
+2. Abra o arquivo de log do dia na pasta `gazeta-logs` e procure a linha **`Falha de entrada de ... a partir de <IP>`**.
+3. Compare o `<IP>` com o **seu IP** (pesquise "meu IP" no navegador, na mesma rede).
+
+| O que você vê | O que significa | O que fazer |
+|---|---|---|
+| O IP é **o seu** | O IIS entrega o IP real; **não há proxy a configurar** | Nada. O aviso de partida sobre `KnownProxies` pode ser ignorado; o limite temporário de 20 tentativas passa a ser folga |
+| O IP é **sempre o mesmo e não é o seu** (do provedor) | Há um proxy na frente do site | Grave esse IP em `ForwardedHeaders__KnownProxies__0` (um valor por variável, só o IP, sem faixa nem texto), reinicie o site e repita o teste: agora o IP deve ser o seu |
+| Não achou a linha | Log em outra pasta, ou o erro de senha não chegou ao site | Confira `Logging__FileDirectory` e repita o erro; **não divulgue o site** enquanto não resolver |
+
+**Se falhar:** o site continua seguro (ele ignora o cabeçalho `X-Forwarded-For` enquanto a lista está vazia), mas **a equipe inteira pode dividir o mesmo limite de tentativas**. Resolva antes de divulgar. Mais detalhes: [`INFRA.md`](INFRA.md) §5.
+
+### 7.2 DPAPI (criptografia das chaves de sessão) — decisão de 2026-10-07
+
+**Na primeira publicação o DPAPI fica desligado:** `DataProtection__ProtectWithDpapi=false` (já é o valor do `web.Production.config.example`). **Só ligue depois que o site funcionar** (login, sessão, link de redefinição).
+
+Para ligar depois:
+
+1. Mude a variável para `true` e reinicie o site.
+2. Entre no painel de novo (a sessão antiga pode cair; é esperado).
+3. Peça uma redefinição de senha para o seu e-mail e abra o link.
+4. Confira em `gazeta-chaves` que existe um arquivo `key-*.xml` **novo** e que ele cita `dpapi`.
+
+**Se der erro ou o site não subir:** volte a variável para `false` e reinicie. Nada se perde além de a equipe precisar entrar de novo e de links de redefinição já enviados deixarem de valer. O motivo (chaves ligadas à identidade do pool): [`INFRA.md`](INFRA.md) §6.
 
 ## 8. Pontos que ainda são seus
 
 | Item | O que é | Situação |
 |---|---|---|
-| **SEC-01 — IP do proxy** | O artigo indicado pelo SmarterASP é para **IISNode**, não para ASP.NET Core. Para ASP.NET Core o padrão é `X-Forwarded-For` com a lista `KnownProxies`. Depois de ler o artigo, você configura a lista (`ForwardedHeaders__KnownProxies__0`...) | **Pendente.** O site segue fail-closed (lista vazia): ignora `X-Forwarded-For`, avisa na partida e aceita 20 tentativas de entrada por 15 min enquanto isso. Teste rápido no [`INFRA.md`](INFRA.md) §5: errar uma senha e ver que IP aparece no log |
+| **SEC-01 — IP do proxy** | O artigo indicado pelo SmarterASP é para **IISNode**, não para ASP.NET Core. Para ASP.NET Core o padrão é `X-Forwarded-For` com a lista `KnownProxies` | **Pendente, com decisão tomada:** o site segue fail-closed (lista vazia): ignora `X-Forwarded-For`, avisa na partida e aceita 20 tentativas de entrada por 15 min enquanto isso. **Resolve-se com o teste prático do §7.1** na primeira publicação: se o IP no log for o real, não há proxy a configurar; se for o do provedor, grave-o em `ForwardedHeaders__KnownProxies__0` |
 | **SEC-03 — conta do banco** | Sem resposta do provedor: o site usa a conta única com permissão total | **Risco aceito (RR-9)** em `security/SECURITY_REQUIREMENTS.md` §5 |
 | **SC-28 — chave do Google Maps no histórico do git** | Uma chave de API antiga aparece em dois commits de templates | **Exceção assinada.** A chave já foi revogada no Google Cloud Console; o histórico não é reescrito. Antes de publicar, confirme no console que ela aparece como revogada |
 | **AR-12 — e-mail** | Domínio remetente validado no SendGrid, com SPF e DKIM, para o e-mail de redefinição não cair no spam | Pendente (Product Owner) |

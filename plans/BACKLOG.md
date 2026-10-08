@@ -493,3 +493,9 @@ Veredito APPROVE com condições: 0 🔴 · 5 🟡 · 23 🟢. Todos abertos, se
 - [ ] **SEC-01 IP do proxy** — o provedor indicou um artigo sobre **IISNode**, que não vale para ASP.NET Core. Decisão do Product Owner: manter o site fail-closed (lista vazia) e documentar; o Product Owner lê o artigo e configura `ForwardedHeaders__KnownProxies__n`. Teste prático sem esperar o provedor: errar uma senha na primeira publicação e ver o IP no log (`docs/INFRA.md` §5). Em hospedagem **em processo** o IIS costuma entregar o IP real, e então não há proxy a configurar
 - [ ] **DPAPI** — `DataProtection__ProtectWithDpapi` começa **`false`** no exemplo: só ligar depois da primeira publicação funcionando, se o pool tiver o perfil do usuário carregado (`docs/INFRA.md` §6)
 - [ ] **AR-05** — falta provar o ImageMagick/HEIC no Windows do provedor (primeiro envio de foto real: `docs/VERIFY-CHECKLIST.md` M6)
+
+## /deploy — documentação final (2026-10-08)
+
+- [x] **GO-LIVE-CHECKLIST, PROJECT-STATUS, README e DEPLOY-RUNBOOK** gerados/atualizados (teste prático do IP na primeira publicação e DPAPI desligado na primeira publicação). **A publicação é do Product Owner; nada foi publicado.**
+- [ ] **Publicar e divulgar (Product Owner)**, na ordem de `docs/GO-LIVE-CHECKLIST.md`: certificado (AR-09), três pastas (AR-01), e-mail do SendGrid (AR-12), confirmar a chave revogada (SC-28), teste do IP (SEC-01/R-11), M6, M7 e M10.
+- [ ] **README ainda traz o texto do modelo (`ClaudeStack.*`) abaixo da nova seção:** reescrever ou enxugar numa tarefa de limpeza (`/simplify`), junto dos 177 arquivos `.claude.backup-*` (R-67) — found by /deploy, 2026-10-08, `README.md` (P2)

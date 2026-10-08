@@ -1910,3 +1910,16 @@ Seis mutações deram "erro de build" por defeito do **meu** script (ele esvazia
 | Publicação `-p:PublishProfile=IIS-win-x64` | **62 MB** (era 233 MB); 351 arquivos; sem `.pdb`, sem `.xml`, sem `appsettings.Development.json`, sem `web.Production.config.example`; só componentes nativos do Windows x64 (gerada em Linux; **não executada num Windows**) |
 | `web.Production.config.example` | XML válido; 12 variáveis |
 | Fronteira | Nenhuma mudança em `tests/` além dos testes novos e dos dois atualizados; produção intacta |
+
+## /deploy — documentação final (2026-10-08)
+
+> **Em resumo:** esta etapa **não publica nada** (a publicação é do Product Owner) e **não altera código**: só entram documentos. Nenhum arquivo de `src/` nem de `tests/` mudou, então o artefato verificado no `/verify` e os números das suítes (1.803 unitários, 162 de integração, 258 de navegador listados, 0 falhas) continuam valendo. Conferência feita hoje: o subconjunto de testes de configuração e segredos (32) passou depois de os documentos entrarem.
+
+| Documento | O que é |
+|---|---|
+| `docs/GO-LIVE-CHECKLIST.md` | Checklist de uma página para o dia da publicação (antes, publicar, teste do IP, conferências que bloqueiam, divulgar, depois) |
+| `docs/DEPLOY-RUNBOOK.md` | Acrescentados o teste prático do IP na primeira publicação (§7.1) e o DPAPI desligado na primeira publicação (§7.2), decisões de 2026-10-07 |
+| `docs/PROJECT-STATUS.md` | Estado do projeto: Fases 0 a 6, testes, cobertura, achados corrigidos, pendências P0/P1/P2 e o que fica para depois do lançamento |
+| `README.md` | Seção inicial com os links dos documentos de publicação e estado |
+
+**Cobertura:** a última medida é a do `/test` (98,0% de linhas e 91,8% de ramos, commit `7f3d3d1`); não foi medida de novo nesta etapa por não haver mudança de código.
