@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <UserSecretsId>84ac4215-7eba-4894-a153-6736fb6d7da4</UserSecretsId>
+    <AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel>
   </PropertyGroup>
 
   <!-- V-06: o que não precisa ir para a hospedagem. Os .pdb e os .xml de documentação ficam só no build; o appsettings.Development.json só vale em Development -->
