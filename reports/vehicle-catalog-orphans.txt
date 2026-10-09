@@ -1,0 +1,10 @@
+﻿Registros descartados: 8
+tipo	tabela	chave	motivo
+car	ano	492/1949	ano fora de 1950 a 2100
+car	versão	21020	sem ano
+moto	versão	9124	sem nome
+moto	versão	9125	sem nome
+moto	versão	9126	sem nome
+moto	versão	9127	sem nome
+moto	versão	9128	sem nome
+moto	versão	17851	sem nome
