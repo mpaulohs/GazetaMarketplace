@@ -46,38 +46,32 @@ public sealed class PhotosPageTests
     }
 
     [TestMethod]
-    public async Task AnuncioNovo_AindaNaoTemFotos_PedeParaSalvarOrascunhoPrimeiro()
+    public async Task AnuncioNovo_SemJavaScript_AindaPedeParaSalvarOrascunhoPrimeiro_ESemFormularioDeEnvio()
     {
         using PhotoSite photos = await PhotoSite.StartAsync();
 
         string page = await DraftSite.BodyAsync(await photos.Site.Writer.GetAsync("/painel/anuncios/novo"));
 
         StringAssert.Contains(page, "Clique em 'Salvar rascunho' abaixo para liberar o envio de fotos.");
-        Assert.IsFalse(page.Contains("Salve o rascunho primeiro", StringComparison.Ordinal), "a frase antiga saiu");
-        Assert.IsFalse(page.Contains("data-photo-upload", StringComparison.Ordinal), "sem anúncio gravado não há onde enviar");
-        Assert.IsFalse(page.Contains("data-photos", StringComparison.Ordinal), "e não há seção de galeria");
+        Assert.IsFalse(page.Contains("data-photo-upload", StringComparison.Ordinal), "sem anúncio gravado não há formulário de envio");
+        Assert.IsFalse(page.Contains("data-upload-url", StringComparison.Ordinal), "e não há endereço de envio da API");
     }
 
     [TestMethod]
-    public async Task AnuncioNovo_TemUmBotaoSalvarRascunho_ColadoNaMensagemDasFotos_ComDestaque()
+    public async Task AnuncioNovo_TemSoUmBotaoSalvarRascunho_ESecaoDeFotosOcultaAteOJavaScript()
     {
         using PhotoSite photos = await PhotoSite.StartAsync();
 
         string page = await DraftSite.BodyAsync(await photos.Site.Writer.GetAsync("/painel/anuncios/novo"));
 
-        int message = page.IndexOf("data-photo-rule", StringComparison.Ordinal);
-        Match button = Regex.Match(page[message..], @"<button\b[^>]*data-save-draft-shortcut[^>]*>\s*Salvar rascunho\s*</button>");
-        Assert.IsGreaterThan(-1, message, "a mensagem das fotos está na página");
-        Assert.IsTrue(button.Success, "o botão fica logo depois da mensagem, antes do resto do formulário");
-        Assert.IsLessThan(900, button.Index, "colado na mensagem, não no rodapé");
-        StringAssert.Contains(button.Value, "type=\"submit\"");
-        StringAssert.Contains(button.Value, "form=\"anuncio-form\"");
-        StringAssert.Contains(button.Value, "data-submit-button");
-        StringAssert.Contains(button.Value, "btn-primary");
+        Assert.AreEqual(1, Regex.Matches(page, @"<button\b[^>]*data-submit-button[^>]*>\s*Salvar rascunho\s*</button>").Count, "só o botão do rodapé");
+        Assert.IsFalse(page.Contains("data-save-draft-shortcut", StringComparison.Ordinal), "o botão duplicado saiu");
 
-        string ruleTag = Regex.Match(page, @"<p\b[^>]*data-photo-rule[^>]*>").Value;
-        StringAssert.Contains(ruleTag, "text-primary");
-        Assert.IsFalse(ruleTag.Contains("text-body-secondary", StringComparison.Ordinal), "em destaque, não esmaecido");
+        string section = Regex.Match(page, @"<section\b[^>]*data-photos-new[^>]*>").Value;
+        Assert.IsFalse(string.IsNullOrEmpty(section), "a seção de fotos do anúncio novo existe");
+        StringAssert.Contains(section, "hidden", "e fica oculta até o JavaScript mostrá-la");
+        Assert.IsTrue(Regex.IsMatch(page, @"<input\b[^>]*type=""file""[^>]*multiple|<input\b[^>]*multiple[^>]*type=""file"""), "com campo para várias fotos");
+        StringAssert.Contains(page, "data-photo-max=\"20\"", "o limite da categoria vai na regra para o JavaScript");
     }
 
     [TestMethod]

@@ -78,21 +78,20 @@ else
 {
     if (Model.IsNew)
     {
-        @* Anúncio novo ainda não tem onde guardar fotos: o botão salva o rascunho (o mesmo do rodapé) e a página reabre com o envio liberado *@
-        <p class="form-text text-primary fw-semibold" data-photo-rule>
+        @* Anúncio novo: com JavaScript a seção de fotos (fora deste trecho) deixa escolher as fotos já e as envia ao salvar o rascunho; data-photo-max leva o limite da categoria até ela *@
+        <p class="form-text" data-photo-rule data-photo-max="@group.MaxPhotos">
             Este anúncio aceita até @group.MaxPhotos fotos (JPG, PNG, WebP, GIF ou HEIC, até 10 MB cada).
-            Clique em 'Salvar rascunho' abaixo para liberar o envio de fotos.
+            <span class="somente-sem-js">Clique em 'Salvar rascunho' abaixo para liberar o envio de fotos.</span>
         </p>
-        <button class="btn btn-primary alvo-toque mb-3" type="submit" form="anuncio-form" data-submit-button data-save-draft-shortcut>Salvar rascunho</button>
     }
     else
     {
-        <p class="form-text" data-photo-rule>
+        <p class="form-text" data-photo-rule data-photo-max="@group.MaxPhotos">
             Este anúncio aceita até @group.MaxPhotos fotos (JPG, PNG, WebP, GIF ou HEIC, até 10 MB cada).
         </p>
     }
 }
 else
 {
-    <p class="form-text" data-photo-rule>Vagas de emprego não têm fotos.</p>
+    <p class="form-text" data-photo-rule data-photo-max="0">Vagas de emprego não têm fotos.</p>
 }
