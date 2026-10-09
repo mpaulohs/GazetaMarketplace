@@ -28,7 +28,7 @@
 ## C. Teste prático do IP atrás do Cloudflare (RUNBOOK §7.1) — prova que o `CF-Connecting-IP` está sendo lido
 
 - [ ] **C1. Partida:** no log do dia procure `Modo Cloudflare ligado: N faixas de IP do Cloudflare confiáveis`. [PARE] se houver `Warning` de `KnownProxies` (variável `ForwardedHeaders__Cloudflare` não está `true`) ou `Error` de "nenhuma faixa".
-- [ ] **C2. Erre a senha de propósito** uma vez em `https://gzto.com.br/painel/entrar` (pelo endereço público, passando pelo Cloudflare) e ache no log `Falha de entrada de ... a partir de <IP>`.
+- [ ] **C2. Erre a senha de propósito** uma vez em `https://www.gzto.com.br/painel/entrar` (pelo endereço público, passando pelo Cloudflare) e ache no log `Falha de entrada de ... a partir de <IP>`.
 - [ ] **C3. O IP é o seu?** Sim: o pacote está lendo o `CF-Connecting-IP`; nada a configurar. É um IP **do Cloudflare** (lista em `cloudflare.com/ips`): o modo não está valendo, volte ao C1. Sempre o mesmo e **nem o seu nem o do Cloudflare**: há um proxy do SmarterASP no meio, grave o IP dele em `ForwardedHeaders__KnownProxies__0`, reinicie e repita. [PARE] enquanto o IP visto não for o seu. Se não resolver, `ForwardedHeaders__Cloudflare=false` volta ao modo seguro e você não divulga.
 
 ## D. Conferências que bloqueiam a divulgação (VERIFY-CHECKLIST)
