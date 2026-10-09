@@ -88,7 +88,7 @@ Para cada categoria: `/painel/anuncios/novo` → escolher a categoria → preenc
 
 | Grupo | Categoria de teste | O que conferir |
 |---|---|---|
-| Carros | qualquer de Carros | Marca → Modelo → Ano → Versão se liberam em cadeia. **Se a lista de marcas vier vazia, é esperado enquanto a carga real do catálogo de veículos não foi feita** (falta exportar e aplicar; `db/seed/README.md`) |
+| Carros | qualquer de Carros | Marca → Modelo → Ano → Versão se liberam em cadeia. **O catálogo real foi carregado em 2026-10-09** (277 marcas, 2154 modelos, 29031 anos, 71280 versões); se a lista de marcas vier vazia, é falha: confira o cache de 10 minutos e a tabela `VehicleBrands` |
 | Serviços | qualquer de Serviços | Tipo de serviço; **sem preço** é aceito |
 | Vagas | qualquer de Vagas | Salário; **sem foto** é aceito |
 | Imóveis | qualquer de Imóveis | Área, quartos, condomínio/IPTU com máscara de dinheiro |

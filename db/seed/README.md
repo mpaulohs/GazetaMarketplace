@@ -5,7 +5,7 @@
 | Arquivo | O que é | Pode ir para produção? |
 |---|---|---|
 | `sample/vehicle-catalog-sample.sql` | Catálogo **reduzido de teste** (10 marcas, 45 modelos, 214 anos, 307 versões; `Source = 'sample'`), gerado a partir da origem simulada `tests/VehicleCatalogExport.Tests/Data/sample-catalog.sql`. Os nomes são genéricos; nada foi copiado do GazetaOnline. | **Não.** Serve para desenvolvimento, testes e para provar a ferramenta. |
-| `vehicle-catalog.sql` | O catálogo real exportado do GazetaOnline. **Ainda não existe no repositório**: quem tem acesso ao banco do GazetaOnline gera na própria máquina (próxima seção), confere o relatório e aplica no GazetaMarketplace. A origem (`--source`) registra de onde veio cada linha. | Sim, depois de revisado. |
+| `vehicle-catalog.sql` | O catálogo real exportado do GazetaOnline. **Não fica no repositório**: foi gerado e aplicado em produção em 2026-10-09 (`--source gazetaonline-2026-10`: 277 marcas, 2154 modelos, 29031 anos, 71280 versões). Para atualizar, quem tem acesso ao banco do GazetaOnline gera de novo na própria máquina (próxima seção), confere o relatório e aplica. A origem (`--source`) registra de onde veio cada linha. | Sim, depois de revisado. |
 
 ## Passo a passo: do GazetaOnline para o GazetaMarketplace
 
