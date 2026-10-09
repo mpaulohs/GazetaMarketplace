@@ -171,7 +171,7 @@ Os diagramas estão em `architecture/diagrams/`:
 
 **AdPhotos** — `Id`, `AdId`, `SortOrder` (0 = capa), `StorageKey` (nome do arquivo, gerado — nunca o nome enviado), `Width`, `Height`, `SizeBytes`, `OriginalKey` (caminho do original em `_originals/`; **nulo depois da limpeza de 30 dias**), `CreatedAt`.
 
-**Catálogo de veículos** (ADR-008) — `VehicleBrands`, `VehicleModels`, `VehicleModelYears`, `VehicleVersions`. Chave primária e estrangeiras **compostas com `Kind`** (`car`/`moto`, porque os ids de carros e de motos podem coincidir); `VehicleModelYears` é tabela própria (há anos sem versões); `Source` registra a origem dos dados (A5). Ids vêm da origem, nunca são gerados.
+**Catálogo de veículos** (ADR-008) — `VehicleBrands`, `VehicleModels`, `VehicleModelYears`, `VehicleVersions`. Chave primária e estrangeiras **compostas com `Kind`** (`car`/`moto`, porque os ids de carros e de motos podem coincidir); `VehicleModelYears` é tabela própria (há anos sem versões); `Source` registra a origem dos dados. Ids vêm da origem, nunca são gerados.
 
 **Demais tabelas**
 
@@ -379,7 +379,6 @@ As páginas Razor mostram as mensagens do SPEC na própria tela; os endpoints JS
 | A2 | Sem impacto técnico na v1: a comissão é cobrada fora do sistema (D-02, D-06) | Decisão de negócio (não bloqueia) |
 | A3 | **Resolvida no ADR-008** (importação única com origem registrada) | — |
 | A4 | **Resolvida:** bloco neutro "Vaga de emprego" no lugar da foto (`design-system.md` §5.2 e §5.4) | — |
-| A5 | Continua aberta: parecer jurídico sobre o catálogo vindo da OLX; o ADR-008 permite trocar a fonte | **Lançamento** |
 | A6 | **Resolvida:** preço nulo, fora da faixa de preço e no fim das ordenações (ADR-006); Tipo do serviço no lugar do preço (`design-system.md` §5.3) | — |
 | A7 | **Resolvida:** §6.3, aprovada pelo Product Owner | — |
 | S6 | **Resolvida:** SendGrid (ADR-009); alternativa de redefinição pelo Administrador na US-014-S10 (SPEC v1.2) | — |

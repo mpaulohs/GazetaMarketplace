@@ -1,6 +1,6 @@
 # Sequência: importação única do catálogo de veículos
 
-> **Em resumo:** uma pessoa da equipe técnica roda, na própria máquina, a ferramenta de exportação contra o banco do GazetaOnline com uma conta somente leitura; ela gera um script SQL idempotente, que é revisado, versionado e aplicado no banco do GazetaMarketplace. O site só lê as tabelas carregadas. Base: A3, A5, ADR-008.
+> **Em resumo:** uma pessoa da equipe técnica roda, na própria máquina, a ferramenta de exportação contra o banco do GazetaOnline com uma conta somente leitura; ela gera um script SQL idempotente, que é revisado, versionado e aplicado no banco do GazetaMarketplace. O site só lê as tabelas carregadas. Base: A3, ADR-008.
 
 ```text
  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
@@ -30,7 +30,7 @@
         │                  │                  │                  │                  │─┐ 7. site lê via IVehicleCatalog (cache 10 min)
         │                  │                  │                  │                  │◀┘
         │                  │                  │                  │                  │
-  ╔═ parecer da A5 negativo → nova exportação de outra fonte com outro Source
+  ╔═ trocar de fonte → nova exportação de outra fonte com outro Source
   ╚═
         │                  │                  │                  │                  │
 ```
@@ -45,5 +45,5 @@ Legenda: `╔═` abre um caminho alternativo (falha ou exceção), `╠═` out
 | Banco do GazetaOnline inacessível | Erro claro; nenhum arquivo gerado | ADR-008 |
 | Modelos sem marca ou versões sem ano (dados órfãos) | Descartados e listados num relatório para revisão | ADR-008 |
 | Script aplicado pela metade | Rodar de novo: o script é idempotente (MERGE) | ADR-008 |
-| Parecer jurídico negativo (A5) | Nova carga de outra fonte com outro `Source`; o site não muda | A5, ADR-008 |
+| Troca de fonte | Nova carga de outra fonte com outro `Source`; o site não muda | ADR-008 |
 | Credencial antiga do GazetaOnline | Não é usada; só a conta somente leitura por variável de ambiente | Descoberta, ADR-008 |

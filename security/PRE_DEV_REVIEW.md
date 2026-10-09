@@ -1,6 +1,6 @@
 # Pre-Development Security Review: GazetaMarketplace v1
 
-> **Em resumo:** a revisão de segurança antes de programar está **APROVADA pelo Product Owner (2026-09-30), com pendências registradas**. O desenho é seguro para começar a construir: são **15 controles novos**, que entram como critérios de aceite nas tarefas que já existem (nenhuma tarefa nova), e **10 riscos residuais** aceitos, cada um com condição de revisão. O Product Owner decidiu as três perguntas novas (SEC-01 a SEC-03), reconheceu as 10 pendências herdadas do `/arch` e os 4 itens de operação. **Bloqueiam o lançamento (não o `/build`):** AR-09, AR-12, A5, RR-10 e SEC-01.
+> **Em resumo:** a revisão de segurança antes de programar está **APROVADA pelo Product Owner (2026-09-30), com pendências registradas**. O desenho é seguro para começar a construir: são **15 controles novos**, que entram como critérios de aceite nas tarefas que já existem (nenhuma tarefa nova), e **10 riscos residuais** aceitos, cada um com condição de revisão. O Product Owner decidiu as três perguntas novas (SEC-01 a SEC-03), reconheceu as 10 pendências herdadas do `/arch` e os 4 itens de operação. **Bloqueiam o lançamento (não o `/build`):** AR-09, AR-12, RR-10 e SEC-01.
 
 ## Scope
 - **Modo:** greenfield, execução por mudança: sistema inteiro da v1, com `plans/plan.md` (39 tarefas) existente, então cada mitigação aponta uma **tarefa real do plano**. Nenhum id foi inventado.
@@ -82,7 +82,6 @@ Reconciliação de `architecture/ARCHITECTURE.md` §13 (cada linha aparece aqui)
 | A2 | Não é de segurança | A comissão é cobrada fora do sistema |
 | A3 | Deferred — ack recebido (PO, 2026-09-30) | Exportação do catálogo: usar só conta somente leitura por variável de ambiente; **a senha antiga do banco do GazetaOnline, que estava em texto no código, precisa ser trocada pelo responsável** (achado crítico da descoberta) Reconhecida; a troca da senha é ação imediata do responsável pelo GazetaOnline (item de operação 3). |
 | A4 | Não é de segurança | Resolvida no design system |
-| A5 | Deferred — ack recebido (PO, 2026-09-30) | Parecer jurídico do catálogo coletado da OLX; não é risco técnico e **bloqueia o lançamento** **Bloqueia o lançamento** (PO, 2026-09-30). |
 | A6 | Não é de segurança | Resolvida; o filtro "somente publicados" vale também para Serviços (I3) |
 | A7 | Não é de segurança | Resolvida; a herança de campos não altera permissões |
 | S6 | Resolvida pelo /secure | SendGrid com RC-11, RC-12 e RC-13 e redefinição pelo Administrador (US-014-S10) |
@@ -116,7 +115,7 @@ Reconciliação de `architecture/ARCHITECTURE.md` §13 (cada linha aparece aqui)
 | Pendências herdadas | As 10 reconhecidas |
 | Itens de operação | Os 4 reconhecidos |
 
-**Bloqueiam o lançamento (resolver antes do go-live):** AR-09 (certificado HTTPS), AR-12 (SPF e DKIM do SendGrid), A5 (parecer jurídico do catálogo), RR-10 (.NET 10 candidata para estável) e SEC-01 (`KnownProxies` definido).
+**Bloqueiam o lançamento (resolver antes do go-live):** AR-09 (certificado HTTPS), AR-12 (SPF e DKIM do SendGrid), RR-10 (.NET 10 candidata para estável) e SEC-01 (`KnownProxies` definido).
 
 **Não bloqueiam o `/build`:** AR-01, AR-02, AR-04, AR-09 (resolução parcial durante a construção) e DS-01 a DS-03.
 

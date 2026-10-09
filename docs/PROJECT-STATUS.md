@@ -93,7 +93,7 @@ A lista completa e atualizada, com arquivo e linha de cada item, está em `plans
 | **Com o site funcionando** | Ligar o **DPAPI** (`DataProtection__ProtectWithDpapi=true`) | Começa desligado de propósito; ligar só depois do login, da sessão e do link de redefinição funcionando ([`DEPLOY-RUNBOOK.md`](DEPLOY-RUNBOOK.md) §7.2) |
 | **Toda semana** | Tamanho da pasta de fotos | Não há cota por usuário nem alerta de disco (SC-05) |
 | **Primeiros 7 dias** | LCP p75 e visitas por dia | Gatilhos de CDN, cache e fila (V-07; NFR-23 respondeu "ainda não") |
-| **Quando houver tempo** | P1 e P2 acima; carga real do catálogo de veículos (depende do parecer jurídico A5) e de municípios do IBGE | Dependem de você ou de decisões de produto |
+| **Quando houver tempo** | P1 e P2 acima; carga real do catálogo de veículos (exportar do GazetaOnline, `db/seed/README.md`) e de municípios do IBGE | Dependem de você ou de decisões de produto |
 
 ## 6. Riscos aceitos (com o seu "de acordo")
 

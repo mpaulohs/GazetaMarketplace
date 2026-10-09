@@ -7,7 +7,7 @@
 | Item | Por que bloqueia |
 |---|---|
 | Carga real dos municípios do IBGE (`db/seed/cities.sql` via `tools/CitiesImport`) | Hoje só existe a amostra de 40 cidades |
-| Exportação real do catálogo de veículos (A5) e o esquema presumido da origem (GazetaOnline) | Hoje só existe o catálogo reduzido de exemplo; depende de parecer jurídico e acesso somente leitura |
+| Exportação real do catálogo de veículos (GazetaOnline) | Hoje só existe o catálogo reduzido de exemplo; depende de o Product Owner exportar e aplicar (passo a passo em `db/seed/README.md`) |
 | AR-05: provar o Magick.NET (HEIC e WebP) na hospedagem Windows compartilhada | Só foi provado em Linux; sem o componente nativo o HEIC é recusado |
 | HEIC de iPhone de verdade e JPEG com GPS real (orientação, perfil de cor, GPS) | Os arquivos de teste são sintéticos; a prova no site publicado (Checkpoint 3) usa esses |
 | Publicar com `RuntimeIdentifier` fixo (`win-x64`) | A saída publicada tem 233 MB com os nativos de todas as plataformas |
@@ -54,7 +54,6 @@
 | Administrador reenviar anúncio Em revisão/Publicado | Hoje não pode (409) |
 | Rastro (auditoria) de quem mexeu nas fotos; arrastar para reordenar | Hoje não existe |
 | Excluir a última subcategoria não devolve o status de postável ao pai | Confirmar o comportamento |
-| Parecer jurídico e acesso somente leitura ao GazetaOnline (A5) | Destrava o catálogo real |
 | Amostras reais (HEIC de iPhone, JPEG com GPS) | Para a verificação do item 1 |
 | Chave do Google Maps no histórico da branch antiga | Decidido: não reescrever o histórico (manter registrado) |
 

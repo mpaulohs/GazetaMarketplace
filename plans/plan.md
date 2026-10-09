@@ -23,7 +23,7 @@
 | Layout e design system (0.7) | new | `_Layout`, `base.css`, `api.js` | — | — | Todas | Contraste e foco medidos (design-system §2.4) |
 | US-006, US-007, US-014 (1.1–1.4) | new | Identity, `AccountController`, `UsersController`, `SendGridEmailSender` | Páginas de conta e usuários | Tabelas do Identity | Entrar, primeiro acesso, recuperar, usuários | Segurança crítica: política de senha, bloqueio, sessão; chaves do Data Protection (AR-01) |
 | Categorias e campos (2.1–2.4, US-013 em 2.6) | new | `Category`, `CategoryTree`, `FieldGroupRegistry`, 18 grupos | — | `Categories` com carga de 124 + mães | Categorias | Regras do Apêndice B e da A7; listas novas pendentes (PL-01) |
-| Catálogo de veículos (2.5) | new | `IVehicleCatalog`, `VehicleCatalogController`, ferramenta de exportação (leitura e carga em lote com Dapper) | `listVehicleBrands`, `listVehicleModels`, `listVehicleModelYears`, `listVehicleVersions` | 4 tabelas + script de carga | Formulário de Carros e Motos | A5 (jurídico) bloqueia o lançamento; credencial antiga do GazetaOnline nunca reutilizada |
+| Catálogo de veículos (2.5) | new | `IVehicleCatalog`, `VehicleCatalogController`, ferramenta de exportação (leitura e carga em lote com Dapper) | `listVehicleBrands`, `listVehicleModels`, `listVehicleModelYears`, `listVehicleVersions` | 4 tabelas + script de carga | Formulário de Carros e Motos | Credencial antiga do GazetaOnline nunca reutilizada |
 | US-015 (2.7) | new | `SiteSettingsService` | Página de configurações | `SiteSettings` | Configurações | Bloqueia a publicação (US-010-S08) |
 | Modelo do anúncio (3.1) | new | `Ad`, `AdService`, `Normalizer` | — | `Ads` com JSON, colunas calculadas e índices | — | Duas representações (C# e SQL): teste diferencial obrigatório (ADR-002) |
 | CEP (3.2) | new | `ViaCepLookup`, `CepController`, `cep.js` | `getCep` | `CepCache`, `Cities` | Campo de CEP | Dependência externa; contrato 503 × 404 |
@@ -928,11 +928,11 @@
 - Marca existente sem modelos, modelo sem anos e ano sem versões devolvem **200 com lista vazia**; item que não existe devolve **404**; `kind` ausente ou inválido e ano fora de 1950 a 2100 devolvem **400**.
 - Cache de 10 minutos por consulta (só o que existe entra no cache); respostas HTTP com `Cache-Control: public, max-age=600`.
 - Ferramenta `tools/VehicleCatalogExport` (fora da solução; testada por `tests/VehicleCatalogExport.Tests`, que está na solução): `export` gera o script `MERGE` idempotente e `load` carrega em lote, só em Development ou Testing, rodando os mesmos `MERGE` numa transação.
-- **Catálogo reduzido de teste:** `tests/VehicleCatalogExport.Tests/Data/sample-catalog.sql` simula a origem (10 marcas, 45 modelos, 214 anos, 307 versões) com ids que colidem entre carros e motos e os casos de borda; `db/seed/sample/vehicle-catalog-sample.sql` é o script gerado dele (`Source = 'sample'`) e um teste confere que está em dia. **A exportação real fica para o lançamento**, quando a A5 e o acesso somente leitura estiverem resolvidos.
+- **Catálogo reduzido de teste:** `tests/VehicleCatalogExport.Tests/Data/sample-catalog.sql` simula a origem (10 marcas, 45 modelos, 214 anos, 307 versões) com ids que colidem entre carros e motos e os casos de borda; `db/seed/sample/vehicle-catalog-sample.sql` é o script gerado dele (`Source = 'sample'`) e um teste confere que está em dia. **A exportação real fica para o lançamento**, quando o Product Owner a executar com uma conta somente leitura.
 
 **Dependencies**: 2.1, 0.6
 
-**Verification**: Done when every test under "Tests to add" passes, plus manual check: Rodar a ferramenta contra um banco de teste reduzido e aplicar o script duas vezes. A exportação real depende da A5 e de acesso somente leitura (ver Risk register).
+**Verification**: Done when every test under "Tests to add" passes, plus manual check: Rodar a ferramenta contra um banco de teste reduzido e aplicar o script duas vezes. A exportação real depende de acesso somente leitura ao GazetaOnline (ver Risk register).
 
 **Estimate**: L
 
@@ -2061,7 +2061,7 @@
 | 5.4 | Injeção de SQL pela ordenação ou pelo termo de busca | `SqlBuilderTests.OrdenacaoForaDaLista_EIgnorada`, `SearchQueryTests.TermoComAspasEPonto_NaoQuebraNemInjeta` e `SecurityTests.Termo_E_Parametro_NaoConcatenado` |
 | 0.6 | Escrita Dapper sem justificativa ou fora da transação do EF | `DapperJustificationTests.TodaEscritaDapper_TemComentarioComOMotivo` e o critério de aceite da 0.6 sobre a conexão e a transação do `DbContext` |
 | 5.4 | Busca lenta com o volume da v1 | `VolumeOfV1Tests.SearchAndDetail_WithAbout200ActiveAds_P95Under500ms` (projeto de integração; roda no `/test`) |
-| 2.5 | Catálogo copiado da API da OLX (A5) e credencial antiga do GazetaOnline | Critério de aceite da 2.5: nenhuma credencial no repositório; `ExportTests.SemVariavelDeConexao_ParaSemGerarArquivo`; bloqueio de lançamento registrado na seção 9 |
+| 2.5 | Credencial antiga do GazetaOnline | Critério de aceite da 2.5: nenhuma credencial no repositório; `ExportTests.SemVariavelDeConexao_ParaSemGerarArquivo` |
 | 2.4 | Listas novas não definidas (PL-01) travam 9 grupos | Critério de aceite da 2.4 (bloqueado até a PL-01); a tarefa não fecha sem a resposta |
 | 0.4 | Acesso indevido por rota nova sem política de papel | `AccessMatrixTests.EveryEndpoint_IsInTheMatrix_AndEveryMatrixEntryExists` (tarefa 6.1) |
 | 3.5 | Arquivo de 10 a 11 MB recebe erro do servidor em vez da mensagem do SPEC | `LimitesTests.ArquivoDe10a11Mb_RecebeMensagemDaAplicacao` |
@@ -2085,7 +2085,7 @@ Fica para as fases seguintes do fluxo e **não** é feito aqui:
 - `/infra` — perfil de publicação (`.pubxml`), `web.Production.config` real, script de migrations do pacote de publicação, Docker só de desenvolvimento, verificação externa de saúde
 - `/docs` — referência da API e manuais de publicação
 - `/deploy` — publicação em homologação e produção, notas de versão
-- Execução real da exportação do catálogo contra o GazetaOnline (depende da A5 e de acesso somente leitura)
+- Execução real da exportação do catálogo contra o GazetaOnline (depende de acesso somente leitura)
 
 ## 9. Pendências bloqueantes e perguntas em aberto
 
@@ -2098,7 +2098,7 @@ O `/plan` não preenche lacunas do SPEC (*no invented scope*). Estas ficam regis
 | AR-06 | Aprovação dos pacotes novos: Identity EF Core, `Serilog.AspNetCore`, `Serilog.Sinks.File`, `Serilog.Formatting.Compact`, Magick.NET Q8 Windows x64, FluentValidation | Tarefas 0.3, 1.1 e 3.4 (cada pacote é pedido antes de entrar) | Product Owner |
 | AR-05 | Magick.NET e HEIC na hospedagem compartilhada, provados no ambiente | Tarefa 3.4 (risco; há plano B no ADR-005) | Arquiteto |
 | AR-01, AR-02, AR-04, AR-09 | Pasta fora da raiz, runtime do .NET 10, espaço em disco, certificado HTTPS | `/infra` e a primeira publicação | Product Owner com o SmarterASP |
-| A5, AR-12, DS-01 a DS-03 | Parecer jurídico do catálogo, domínio e DNS do SendGrid, paleta, fonte e logotipo | **Lançamento** | Product Owner |
+| AR-12, DS-01 a DS-03 | Domínio e DNS do SendGrid, paleta, fonte e logotipo | **Lançamento** | Product Owner |
 | SEC-01, RR-10, AR-09 | `KnownProxies` do SmarterASP (assumido `X-Forwarded-For` até lá), troca do .NET 10 candidata pela estável e certificado HTTPS (`security/PRE_DEV_REVIEW.md`) | **Lançamento** (não bloqueiam o `/build`) | Product Owner |
 | AR-10 | Limpeza do texto das regras da US-002 e da US-013 e requisitos de CORS, limite de requisições e health checks no SPEC | Próxima versão do SPEC | Product Owner |
 | S7 | Confirmação de SEO | Tarefa 5.6 | Product Owner — **confirmada em 2026-10-05** |

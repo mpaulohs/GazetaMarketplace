@@ -134,6 +134,6 @@ Severidade proposta: Crítico / Alto / Médio / Baixo / Info. **Nenhum Crítico.
 
 ## 4. Itens operacionais que o código não prova (para o `/infra` e o `/verify`, não contam como Partial)
 
-- HTTPS e certificado (AR-09); SPF e DKIM do SendGrid (AR-12); parecer jurídico do catálogo (A5); trocar o runtime candidato (RR-10; o `global.json` já aponta SDK `10.0.100`, ver R-64 do review).
+- HTTPS e certificado (AR-09); SPF e DKIM do SendGrid (AR-12); trocar o runtime candidato (RR-10; o `global.json` já aponta SDK `10.0.100`, ver R-64 do review).
 - 2FA no painel do provedor, conta de publicação própria, cofre do `web.Production.config` (item 1); mais de um Administrador ativo (item 2); senha antiga do GazetaOnline (item 3); verificação externa de `/health/ready` (item 4).
 - Permissão de escrita só para a identidade do site nas pastas de chaves, logs e fotos; monitoramento de disco (AR-04, ver F-05); prova do ImageMagick/HEIC no Windows do provedor (AR-05).

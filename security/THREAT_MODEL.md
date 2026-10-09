@@ -26,7 +26,7 @@ Site de classificados com site público (sem login), painel da equipe (Redator e
 | Fotos originais com GPS (`_originals/`) | High | Módulo Fotos | Revelam o endereço do vendedor; guardadas 30 dias e nunca servidas |
 | Anúncios não publicados (rascunho, em revisão, rejeitado) | Medium | Módulo Anúncios | Informação de negócio; não pode aparecer ao público |
 | Anúncios publicados e fotos publicadas | Medium | Módulo Anúncios | Integridade do conteúdo e da reputação do site |
-| Catálogo de veículos | Medium | Módulo Catálogo | Origem a validar juridicamente (A5) |
+| Catálogo de veículos | Medium | Módulo Catálogo | Origem registrada em `Source` |
 | Árvore de categorias e grupos de campos | Medium | Módulo Categorias | Alteração indevida quebra o cadastro e a busca |
 | Texto digitado pela equipe (título, descrição, nomes, motivos) | Medium | Módulo Anúncios | Vetor de XSS se for exibido sem codificação |
 | Favoritos do visitante (`localStorage`) | Low | Visitante | Só lista de ids; sem dado pessoal |
@@ -938,4 +938,4 @@ Ver `security/SECURITY_REQUIREMENTS.md` (gerado do modelo `OWASP_TEMPLATE.md` §
 - [x] **SEC-01** — IP do cliente atrás do proxy: **assumido `X-Forwarded-For`**; `KnownProxies` a definir após a resposta do SmarterASP (ticket aberto); **pendência de lançamento** (RC-10)
 - [x] **SEC-02** — Senha atual do Administrador em ações de alto impacto: **decidido não exigir** (2026-09-30); RR-1 aceito
 - [x] **SEC-03** — Conta separada do banco: **assumido o pior caso** (RR-9); ticket aberto; reavaliar no `/infra`
-- [ ] Pendências herdadas do `/arch` reconhecidas pelo Product Owner (AR-01, AR-02, AR-03, AR-06, AR-09, AR-12, A3, A5, S16 e S19, S18): ver `PRE_DEV_REVIEW.md` §Open Questions e §Decisões do Product Owner
+- [ ] Pendências herdadas do `/arch` reconhecidas pelo Product Owner (AR-01, AR-02, AR-03, AR-06, AR-09, AR-12, A3, S16 e S19, S18): ver `PRE_DEV_REVIEW.md` §Open Questions e §Decisões do Product Owner

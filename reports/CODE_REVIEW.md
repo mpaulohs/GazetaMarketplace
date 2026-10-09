@@ -700,7 +700,7 @@ Formato compacto: cada sugestão traz os mesmos cinco campos. "Já no BACKLOG" i
 - **Description:** nome acima de 150/250, `Id <= 0` e ano fora de uma faixa razoável passam pelo validador e só falham ao aplicar o script (`XACT_ABORT` desfaz tudo, sem dano). A ferramenta de municípios (`CityValidator`) já confere o limite de 80.
 - **Cenário:** o script é "aprovado", e a falha só aparece na hora da carga em produção.
 - **Recommendation:** validar tamanho (150/150/250), `Id > 0` e `Year` entre 1900 e ano atual + 2, enviando ao relatório de descartados.
-- Relates-to: ADR-008, Task 2.5 (A5)
+- Relates-to: ADR-008, Task 2.5
 
 #### R-25 (A-12) — `BootstrapAdminInitializer` ignora o resultado de `AddToRoleAsync` e não é atômico
 - **Where:** `Identity/BootstrapAdminInitializer.cs:105-113`.

@@ -9,6 +9,6 @@ public class VehicleBrand
 
     public string Name { get; set; }
 
-    /// <summary>De onde o registro veio (por exemplo <c>gazetaonline-2026-09</c>), para trocar de fonte sem mudar código (A5).</summary>
+    /// <summary>De onde o registro veio (por exemplo <c>gazetaonline-2026-09</c>), para trocar de fonte sem mudar código.</summary>
     public string Source { get; set; }
 }
