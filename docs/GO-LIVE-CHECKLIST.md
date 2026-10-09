@@ -14,7 +14,7 @@
 - [ ] **A4. Três pastas criadas** dentro de `h:\root\home\mpaulohs-001\www\`, ao lado da pasta do site: `gazeta-fotos`, `gazeta-chaves`, `gazeta-logs` (RUNBOOK §3).
 - [ ] **A5. Banco SQL Server 2022 criado** no painel; servidor, nome, usuário e senha anotados no cofre de senhas.
 - [ ] **A6. `web.Production.config` preenchido** a partir do `web.Production.config.example` (fora do git): cadeia de conexão com `Encrypt=True`, `SendGrid__ApiKey`, `SendGrid__FromEmail`, `Site__BaseUrl` com `https://` e sem barra no fim, **`ForwardedHeaders__Cloudflare=true`**, e **só desta vez** `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword`. Confirme que `DataProtection__ProtectWithDpapi` está **`false`** e que `ForwardedHeaders__Cloudflare` está **`true`**.
-- [ ] **A7. Pacote gerado:** `dotnet publish src/GazetaMarketplace.Web -c Release -p:PublishProfile=IIS-win-x64` (cerca de 62 MB; RUNBOOK §2).
+- [ ] **A7. Pacote gerado:** `dotnet publish src/GazetaMarketplace.Web -c Release -p:PublishProfile=IIS-win-x64` (cerca de 62 MB; RUNBOOK §2). A saída tem de mostrar `web.Production.config mesclado no web.config publicado: N variáveis`. Se mostrar `AVISO: web.Production.config não encontrado`, o `web.config` do pacote não tem as variáveis: **não publique** (o site cairia com 502).
 
 ## B. Publicação (RUNBOOK §7)
 

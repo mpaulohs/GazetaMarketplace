@@ -34,4 +34,7 @@
     <ProjectReference Include="..\GazetaMarketplace.Infrastructure\GazetaMarketplace.Infrastructure.csproj" />
   </ItemGroup>
 
+  <!-- Na publicação, mescla o web.Production.config (fora do git) no web.config gerado: sem isso o pacote sai sem as variáveis de ambiente do site -->
+  <Import Project="MergeProductionConfig.targets" />
+
 </Project>

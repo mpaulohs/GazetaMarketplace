@@ -67,6 +67,8 @@ sqlcmd -S (servidor) -U (usuario) -P (senha) -d (banco) -b -I -f 65001 -i db/scr
 
 O arquivo real **não vai para o git**: ele fica no cofre de senhas e na máquina de quem publica. O exemplo é `src/GazetaMarketplace.Web/web.Production.config.example` (só marcadores entre parênteses). Em produção as variáveis ficam em `<aspNetCore><environmentVariables>`.
 
+**A publicação mescla o `web.Production.config` no `web.config` gerado** (alvo `MergeProductionConfig` em `src/GazetaMarketplace.Web/MergeProductionConfig.targets`, importado pelo `.csproj`). Basta o arquivo real estar em `src/GazetaMarketplace.Web/web.Production.config` na máquina de quem publica (o git o ignora); o pacote sai com as variáveis já dentro do `web.config`. Antes isso era manual, e um pacote publicado por cima do servidor trazia um `web.config` **sem** as variáveis: o site respondia 502 e não escrevia log (até o caminho dos logs vem de uma variável). A saída da publicação mostra `web.Production.config mesclado no web.config publicado: N variáveis (nomes)`, nunca os valores. Se mostrar `AVISO: web.Production.config não encontrado`, **não publique**: o pacote sai sem variáveis. Se o arquivo existir, o valor dele vale sobre o que o SDK pôs (por exemplo `ASPNETCORE_ENVIRONMENT`); os atributos `xdt:*` do arquivo são ignorados. Outro caminho: `-p:ProductionConfigFile=<arquivo>`.
+
 | Variável | Obrigatória | Valor |
 |---|---|---|
 | `ASPNETCORE_ENVIRONMENT` | sim | `Production`. Para um site de homologação, `Staging`: sobe com as **mesmas** proteções (ver §7) |

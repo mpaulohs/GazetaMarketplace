@@ -1,0 +1,104 @@
+<Project>
+  <!--
+    Mescla o web.Production.config (fora do git, na máquina de quem publica) no web.config que a publicação gera.
+
+    Por que existe: em produção as variáveis de ambiente (cadeia de conexão, pasta dos logs, SendGrid, Cloudflare...) ficam em
+    <aspNetCore><environmentVariables> do web.config, e a publicação gera um web.config novo SEM elas. Publicar por cima do servidor
+    apagava as variáveis: o site respondia 502, sem log (até o caminho dos logs vem de uma variável). Veja docs/INFRA.md §4 e o RUNBOOK.
+
+    Regras:
+      - Cada <environmentVariable name=... value=...> do web.Production.config entra no web.config; se o nome já existe (o SDK põe o ASPNETCORE_ENVIRONMENT),
+        o valor do web.Production.config vale. Os atributos xdt:* do arquivo são ignorados: a mesclagem é esta, não a do SDK.
+      - O arquivo é procurado em $(ProductionConfigFile), por padrão a pasta do projeto. Sem o arquivo a publicação continua, mas avisa em destaque
+        que o pacote sai SEM as variáveis (um aviso de MSBuild viraria erro por causa do TreatWarningsAsErrors).
+      - O log mostra só os NOMES das variáveis, nunca os valores.
+      - web.config sem o módulo aspNetCore, ou arquivo ilegível: a publicação falha, em vez de sair um pacote sem variáveis.
+  -->
+  <UsingTask TaskName="MergeEnvironmentVariables" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <WebConfig ParameterType="System.String" Required="true" />
+      <ProductionConfig ParameterType="System.String" Required="true" />
+      <Names ParameterType="System.String" Output="true" />
+      <Count ParameterType="System.Int32" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        XDocument production;
+        try
+        {
+            production = XDocument.Load(ProductionConfig);
+        }
+        catch (System.Exception ex)
+        {
+            // Só o tipo do erro: a mensagem do parser pode citar um trecho do arquivo, que tem senhas
+            Log.LogError("web.Production.config não é um XML válido ({0}). Corrija o arquivo e publique de novo.", ex.GetType().Name);
+            return false;
+        }
+
+        XDocument document = XDocument.Load(WebConfig, LoadOptions.PreserveWhitespace);
+        XElement aspNetCore = document.Descendants("aspNetCore").FirstOrDefault();
+        if (aspNetCore == null)
+        {
+            Log.LogError("O web.config gerado não tem o módulo aspNetCore: não há onde pôr as variáveis de ambiente, e o pacote sairia sem elas.");
+            return false;
+        }
+
+        XElement variables = aspNetCore.Element("environmentVariables");
+        if (variables == null)
+        {
+            variables = new XElement("environmentVariables");
+            aspNetCore.Add(variables);
+        }
+
+        var names = new System.Collections.Generic.List<string>();
+        foreach (XElement wanted in production.Descendants("environmentVariable"))
+        {
+            string name = (string)wanted.Attribute("name");
+            if (string.IsNullOrEmpty(name))
+            {
+                continue;
+            }
+
+            XElement existing = variables.Elements("environmentVariable").FirstOrDefault(e => (string)e.Attribute("name") == name);
+            if (existing == null)
+            {
+                variables.Add(new XElement("environmentVariable", new XAttribute("name", name), new XAttribute("value", (string)wanted.Attribute("value") ?? string.Empty)));
+            }
+            else
+            {
+                existing.SetAttributeValue("value", (string)wanted.Attribute("value") ?? string.Empty);
+            }
+
+            names.Add(name);
+        }
+
+        document.Save(WebConfig);
+        Count = names.Count;
+        Names = string.Join(", ", names);
+        return true;
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="MergeProductionConfig" AfterTargets="_TransformXml">
+    <PropertyGroup>
+      <ProductionConfigFile Condition="'$(ProductionConfigFile)' == ''">$(MSBuildProjectDirectory)/web.Production.config</ProductionConfigFile>
+      <_PublishedWebConfig>$(PublishIntermediateOutputPath)web.config</_PublishedWebConfig>
+    </PropertyGroup>
+
+    <Message Importance="high"
+             Text="AVISO: web.Production.config não encontrado em $(ProductionConfigFile). O web.config publicado sai SEM as variáveis de ambiente (cadeia de conexão, logs, SendGrid...) e o site NÃO sobe se este pacote substituir o web.config do servidor. Veja docs/INFRA.md §4."
+             Condition="!Exists('$(ProductionConfigFile)') And Exists('$(_PublishedWebConfig)')" />
+
+    <MergeEnvironmentVariables Condition="Exists('$(ProductionConfigFile)') And Exists('$(_PublishedWebConfig)')"
+                               WebConfig="$(_PublishedWebConfig)" ProductionConfig="$(ProductionConfigFile)">
+      <Output TaskParameter="Count" PropertyName="_MergedCount" />
+      <Output TaskParameter="Names" PropertyName="_MergedNames" />
+    </MergeEnvironmentVariables>
+
+    <Message Importance="high" Condition="'$(_MergedCount)' != ''"
+             Text="web.Production.config mesclado no web.config publicado: $(_MergedCount) variáveis ($(_MergedNames)). Os valores não são mostrados." />
+  </Target>
+</Project>

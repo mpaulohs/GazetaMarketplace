@@ -72,7 +72,7 @@ O endereço público passa pelo Cloudflare. O navegador vê o certificado do **C
 
 ## 6. Variáveis de ambiente
 
-Copie `src/GazetaMarketplace.Web/web.Production.config.example` para `web.Production.config` (fora do git, no cofre de senhas) e troque cada valor entre parênteses. As três pastas já vêm com os caminhos reais. Tabela completa e o que **nunca** definir em produção: [`INFRA.md`](INFRA.md) §4.
+Copie `src/GazetaMarketplace.Web/web.Production.config.example` para `web.Production.config` **na mesma pasta** (fora do git, no cofre de senhas) e troque cada valor entre parênteses. **A publicação mescla esse arquivo no `web.config` do pacote** (`INFRA.md` §4): confira na saída a linha `web.Production.config mesclado no web.config publicado: N variáveis`. Se aparecer `AVISO: web.Production.config não encontrado`, não envie o pacote: ele sobrescreveria o `web.config` do servidor sem as variáveis e o site cairia (502, sem log). As três pastas já vêm com os caminhos reais. Tabela completa e o que **nunca** definir em produção: [`INFRA.md`](INFRA.md) §4.
 
 Em resumo: `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConnection`, as três pastas, `SendGrid__ApiKey`, `SendGrid__FromEmail`, `Site__BaseUrl`, `ForwardedHeaders__Cloudflare=true`, `DataProtection__ProtectWithDpapi=false` (veja o §7 do `INFRA.md` antes de mudar) e, **só na primeira vez**, `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword` (remover depois do primeiro acesso).
 
@@ -80,7 +80,7 @@ Em resumo: `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConne
 
 1. Backup do banco.
 2. Rodar o script do banco (§4).
-3. Publicar o pacote (§2).
+3. Publicar o pacote (§2), conferindo a linha `web.Production.config mesclado ...` da publicação (§6).
 4. Abrir `https://(site)/health/ready` → `Healthy`.
 5. Primeira vez: entrar com o Administrador, trocar a senha provisória, **remover `Bootstrap__*`** do `web.Production.config` e reiniciar.
 6. Conferir os logs em `gazeta-logs` (linha de início do dia; veja o aviso do §8).
