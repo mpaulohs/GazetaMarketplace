@@ -508,3 +508,37 @@ Veredito APPROVE com condições: 0 🔴 · 5 🟡 · 23 🟢. Todos abertos, se
 - [ ] **CF-03 Regra de limite de pedidos no Cloudflare para `/painel/entrar` (P2, opcional):** camada extra antes do site; o limite do site continua valendo
 - [ ] **CF-04 Cache de fotos no Cloudflare (P2):** as fotos já saem com `cache-control: public, max-age=31536000, immutable`; conferir no M7 que o Cloudflare as serve do cache (`cf-cache-status: HIT`) e que o HTML não é guardado
 - [ ] **CF-05 Acesso direto ao IP do SmarterASP (P2, Info):** quem acessa o IP da hospedagem sem passar pelo Cloudflare contorna o Cloudflare (mas não forja o IP no site: o cabeçalho é ignorado de fora das faixas). Restringir só se o provedor permitir
+
+## Pós-publicação em https://www.gzto.com.br (2026-10-09) — diagnóstico
+
+> Origem: diagnóstico pedido depois da publicação (`/health/ready` Healthy). Roteiro de conferência: `docs/POST-DEPLOY-VERIFICATION.md`. Os GETs de leitura em produção **não puderam ser feitos** do ambiente do Claude: o proxy de saída recusou o domínio (`x-deny-reason: host_not_allowed`, `CONNECT 403`). Só o DNS foi consultado: `www.gzto.com.br` e `gzto.com.br` resolvem para IPs do Cloudflare (172.67.132.109 e 104.21.4.204), ou seja, os dois registros estão com o proxy ligado (nuvem laranja). Os cabeçalhos e o HTML ficam para o Product Owner (`curl`, Parte 0 do roteiro).
+
+### Alta prioridade (PD-01 resolvido em 2026-10-09)
+
+- [x] **PD-01 Hospedagem `OutOfProcess` (commit `16b7c14`, do Product Owner, intencional): RESOLVIDO em 2026-10-09, sem mudança de código.** Risco levantado: o site só aceita `CF-Connecting-IP` quando a conexão vem de um endereço do Cloudflare, e em `OutOfProcess` a conexão com o Kestrel poderia chegar por loopback (IP `127.0.0.1`, sem HSTS). **Evidência (conferida pelo Product Owner em produção, `https://www.gzto.com.br`):** (1) `/health/ready` responde `Healthy`; (2) HSTS, CSP e `X-Frame-Options` presentes (o HSTS só sai com `Request.IsHttps`, então o esquema `https` chega ao site); (3) o redirecionamento `http`→`https` funciona; (4) **o IP real do visitante é lido** com `ForwardedHeaders__Cloudflare=true` (teste do IP do `docs/DEPLOY-RUNBOOK.md` §7.1); (5) o limite de tentativas funciona; (6) só 2 scripts no HTML (`bootstrap.bundle.min.js` e `layout.js`, nenhum do Cloudflare); (7) logs em `gazeta-logs`. Mantida a regra: não gravar `127.0.0.1` em `KnownProxies`. Resta atualizar a documentação para o modelo real (PD-02) — found by /diagnóstico, 2026-10-09, `GazetaMarketplace.Web.csproj:5`, `Security/ForwardingExtensions.cs`, `Middleware/SecurityHeadersMiddleware.cs:29`
+
+### Não bloqueiam, mas devem ser resolvidos
+
+- [ ] **PD-02 Documentação diz "em processo" e a hospedagem agora é `OutOfProcess`:** `docs/INFRA.md` (linha 7 e §5-B), `docs/DEPLOY-RUNBOOK.md` (§7.1) e `architecture/ADR-011`/`ARCHITECTURE.md` §9 precisam refletir o modelo real depois do resultado do PD-01 — found by /diagnóstico, 2026-10-09
+- [ ] **PD-03 Perfis de publicação de hoje (`mpaulohs-001-site2 - FTP.pubxml` e `- Web Deploy.pubxml`) divergem do perfil `IIS-win-x64`:** `SiteUrlToLaunchAfterPublish` aponta para `http://gzto.com.br/` (sem `www`, sem `https`), `Web Deploy` sem `RuntimeIdentifier` `win-x64` nem exclusão de `.pdb`/`.xml` (V-06); decidir qual perfil é o oficial e corrigir o outro. Sem senha nos arquivos (`_SavePWD` grava em `.pubxml.user`, ignorado pelo git) — found by /diagnóstico, 2026-10-09, `Properties/PublishProfiles/`
+- [ ] **PD-04 CSP sem `connect-src` próprio e sem `report-uri`/`report-to`:** `connect-src` cai no `default-src 'self'` (suficiente hoje); sem relatório, bloqueios de scripts injetados (Cloudflare, extensões) só aparecem no console de quem visita. Avaliar `Content-Security-Policy-Report-Only` com endpoint próprio de baixo volume antes de apertar — found by /diagnóstico, 2026-10-09, `SecurityHeadersMiddleware.cs:12-14` (P2)
+- [ ] **PD-05 `/health/ready` responde só `Healthy`/`Unhealthy` em texto:** sem `ResponseWriter` não diz qual verificação falhou; escrever o JSON padrão (nome e estado de cada verificação, sem detalhes internos) para o monitoramento externo — found by /diagnóstico, 2026-10-09, `Program.cs:160` (P2)
+- [ ] **PD-06 Regra do sem-www no Cloudflare e `Site__BaseUrl = https://www.gzto.com.br`:** os dois nomes resolvem para o Cloudflare; confirmar que `gzto.com.br` redireciona (301) para `https://www.gzto.com.br` com o mesmo caminho e que o `Site__BaseUrl` tem `www` (links de e-mail, `og:image`, `robots.txt`, `sitemap.xml`) (`docs/POST-DEPLOY-VERIFICATION.md` §0.3)
+- [ ] **PD-07 Catálogo de veículos e cidades reais ainda não carregados em produção (dado esperado):** Marca/Modelo/Ano/Versão e a lista de municípios podem vir vazias no formulário de Carros; carga depende do parecer jurídico A5 e do arquivo do IBGE — Product Owner
+- [ ] **PD-08 Branch `claude/admiring-cray-wrjfmg`:** sem nada exclusivo (3 commits atrás do `main`); **remover só depois do go-live e da confirmação do Product Owner**
+- [ ] **PD-09 Branch `adicionar-template-autolist` (só no GitHub):** **manter por enquanto** (decisão do Product Owner). Tem 6 commits fora do `main`, 2.214 arquivos de template (`src/.../wwwroot/lib/autolist`) e os dois commits da chave revogada do Google Maps (SC-28: `a3521ae`, `2ee43b8`), que não estão no `main`. Só apagar depois de confirmar que os assets não fazem falta e **com aviso**; o `main` só tem `docs/templates/autolist`
+
+### Dependem de terceiros
+
+- [ ] **PD-10 SendGrid:** domínio remetente autenticado (SPF e DKIM), registros CNAME de autenticação no Cloudflare em **DNS only** (nuvem cinza, nunca proxiados), `SendGrid__FromEmail` igual ao remetente/domínio validado e chave de API com permissão **Mail Send** (AR-12) — Product Owner (SendGrid e Cloudflare); prazo depende da propagação do DNS
+- [ ] **PD-11 Cloudflare:** Rocket Loader, ofuscação de e-mail e Web Analytics automático desligados (Web Analytics já desligado em 2026-10-09; conferir os outros e o Bot Fight Mode pelo `curl | grep` do item 0.2); modo **Full (strict)**; **Always Use HTTPS**; nenhuma regra de cache que guarde HTML — Product Owner
+- [ ] **PD-12 SmarterASP:** Origin CA importado (CF-02), ImageMagick/HEIC no Windows do servidor (AR-05), saída de rede para `cloudflare.com/ips-v4` e para o ViaCEP (se bloqueada, o pacote usa a cópia embutida e o CEP cai no preenchimento manual) — Product Owner com o provedor
+- [ ] **PD-13 Pacote `Cloudflare.ForwardedHeaders` (CF-01):** acompanhar atualizações e avisos do autor; trocar por lista de faixas própria quando houver tempo
+
+### Monitoramento
+
+- [ ] **PD-14 Logs diários (`gazeta-logs`):** olhar toda semana `Error` e `Warning`; procurar `Falha ao enviar o e-mail de redefinição`, `Falha de entrada`, `Too many`/429 e `Failed to fetch Cloudflare IP ranges`; conferir que há 14 arquivos no máximo e nenhum perto de 100 MB
+- [ ] **PD-15 Disco (`gazeta-fotos`):** tamanho semanal (SC-05); não há cota por usuário nem alerta automático
+- [ ] **PD-16 Chaves (`gazeta-chaves`):** conferir que existe `key-*.xml` e que a sessão sobrevive a um reinício; antes de ligar o DPAPI, guardar uma cópia da pasta
+- [ ] **PD-17 Cloudflare Analytics e erros 5xx:** painel do Cloudflare (Analytics → Traffic e Security → Events) para picos de erro 525/526/52x, ataques e cache de fotos (`cf-cache-status`); alertas por e-mail do Cloudflare ligados para o domínio
+- [ ] **PD-18 Primeiros 7 dias:** LCP p75 e visitas por dia (V-07); `/health/ready` por um monitor externo gratuito (aviso por e-mail quando cair)
