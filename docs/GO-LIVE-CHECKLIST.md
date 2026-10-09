@@ -19,7 +19,7 @@
 ## B. Publicação (RUNBOOK §7)
 
 - [ ] **B1. Backup do banco** (ou confirmação do backup automático do plano).
-- [ ] **B2. Script do banco:** `sqlcmd -S (servidor) -U (usuario) -P (senha) -d (banco) -b -I -i db/scripts/gazeta-idempotente.sql`. Esperado: termina sem erro.
+- [ ] **B2. Script do banco:** `sqlcmd -S (servidor) -U (usuario) -P (senha) -d (banco) -b -I -f 65001 -i db/scripts/gazeta-idempotente.sql`. Esperado: termina sem erro e `SELECT Name FROM Categories WHERE Id = 1` devolve `Imóveis` (7 letras). **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`).
 - [ ] **B3. Publicar o pacote** na hospedagem.
 - [ ] **B4. `https://(site)/health/ready` responde `Healthy`.** [PARE] se não responder: veja o log em `gazeta-logs` (a mensagem diz qual variável falta).
 - [ ] **B5. Primeiro acesso:** entre com o Administrador, **troque a senha provisória**, remova `Bootstrap__AdminEmail` e `Bootstrap__AdminPassword` do `web.Production.config` e reinicie o site.

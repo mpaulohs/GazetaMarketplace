@@ -46,13 +46,16 @@ O que o pacote **não tem** (V-06): `.pdb` (símbolos de depuração), `.xml` de
 O site **não** aplica migrations na partida (`Database.Migrate()` não existe no código): um site que sobe tentando alterar o banco de produção é arriscado e pode rodar duas vezes ao mesmo tempo. O esquema vem do script, que você roda **antes** de publicar uma versão nova.
 
 ```bash
-sqlcmd -S (servidor) -U (usuario) -P (senha) -d (banco) -b -I -i db/scripts/gazeta-idempotente.sql
+sqlcmd -S (servidor) -U (usuario) -P (senha) -d (banco) -b -I -f 65001 -i db/scripts/gazeta-idempotente.sql
 ```
+
+> **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`). Já aconteceu em produção em 2026-10-09; o reparo é o `db/scripts/reparar-acentos-categorias.sql`.
 
 | Opção | Por que |
 |---|---|
 | `-b` | Para no primeiro erro e devolve código de saída diferente de zero; sem ela o `sqlcmd` segue adiante e você acha que deu certo |
 | `-I` | Liga `QUOTED_IDENTIFIER`. O script já começa com `SET QUOTED_IDENTIFIER ON` e os demais `SET` exigidos por índice sobre coluna calculada (`ARITHABORT`, `ANSI_NULLS`, `ANSI_PADDING`, `ANSI_WARNINGS`, `CONCAT_NULL_YIELDS_NULL`, `NUMERIC_ROUNDABORT OFF`), mas o `-I` continua obrigatório como segunda barreira: sem os dois, o `sqlcmd` falha com o **erro 1934** em `CREATE INDEX ... WHERE` (índices filtrados) |
+| `-f 65001` | **Obrigatório:** lê o arquivo de entrada em UTF-8. Sem ele os acentos são gravados corrompidos |
 | `-i` | Arquivo de entrada |
 
 - **Idempotente:** pode rodar de novo sem estragar nada; cada migration só se aplica se ainda não estiver em `__EFMigrationsHistory`. Verificado em 2026-10-07 num SQL Server 2022 limpo: 1.ª execução sem `-I`, 2.ª com `-I`, as duas com código de saída 0 e **13 migrations / 20 tabelas**.
@@ -163,6 +166,7 @@ O `gitleaks` acusa 30 ocorrências de uma única chave de API do Google Maps em 
 |---|---|
 | `https://(site)/health/ready` | `Healthy` (banco acessível e migration em dia) |
 | `https://(site)/health/live` | `Healthy` |
+| `SELECT Name FROM Categories WHERE Id = 1` (depois da carga do banco) | `Imóveis` com 7 letras. `ImÃ³veis` (8) = a carga foi lida sem `-f 65001`: rode `db/scripts/reparar-acentos-categorias.sql` |
 | Cabeçalhos da página inicial | `Strict-Transport-Security`, `Content-Security-Policy`, `X-Content-Type-Options` |
 | Logs na pasta `Logging__FileDirectory` | arquivo do dia, com a linha de início e `Modo Cloudflare ligado: N faixas de IP do Cloudflare confiáveis` (§5-B). Um `Warning` de `KnownProxies` significa que o modo Cloudflare não está ligado |
 | Entrar com o Administrador do primeiro acesso | pede a troca de senha; depois **remover** `Bootstrap__*` |

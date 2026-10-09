@@ -42,8 +42,10 @@ Um contêiner para a suíte inteira; cada teste cria o próprio banco com nome �
 docker run -d --name gazeta-e2e-sql -p 14330:1433 -e ACCEPT_EULA=Y -e 'MSSQL_SA_PASSWORD=<senha-forte>' mcr.microsoft.com/mssql/server:2022-latest
 docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P '<senha-forte>' -Q "CREATE DATABASE gazeta_e2e"
 docker cp db/scripts/gazeta-idempotente.sql gazeta-e2e-sql:/tmp/s.sql
-docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -b -I -i /tmp/s.sql
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -b -I -f 65001 -i /tmp/s.sql
 ```
+
+> **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`). Já aconteceu em produção em 2026-10-09; o reparo é o `db/scripts/reparar-acentos-categorias.sql`. (No contêiner Linux o `sqlcmd` já lê UTF-8, mas mantenha o `-f 65001`: o mesmo comando vale no Windows.)
 
 2. Publicar e subir o site. **Rodar a saída publicada**, não `dotnet run` na pasta do código: em Production os arquivos estáticos só são servidos pela saída publicada (senão o CSS não carrega e os testes de layout falham).
 
@@ -71,8 +73,8 @@ cd /caminho/publish && dotnet GazetaMarketplace.Web.dll
 ```bash
 docker cp db/seed/sample/vehicle-catalog-sample.sql gazeta-e2e-sql:/tmp/v.sql
 docker cp db/seed/sample/cities-sample.sql gazeta-e2e-sql:/tmp/c.sql
-docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -i /tmp/v.sql
-docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -i /tmp/c.sql
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -f 65001 -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -i /tmp/v.sql
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -f 65001 -S localhost -U sa -P '<senha-forte>' -d gazeta_e2e -i /tmp/c.sql
 ```
 
 O `sample` do catálogo e das cidades é só para teste: nunca vai para produção (ver `db/seed/README.md`).
@@ -159,7 +161,7 @@ Depois de criar uma migration, rode `db/scripts/gerar-script.sh`. Ele chama `dot
 
 ## Publicação (para o runbook de implantação)
 
-- **Script de banco:** aplicar `db/scripts/gazeta-idempotente.sql` com `sqlcmd -I` (redundância defensiva; o script já liga o `QUOTED_IDENTIFIER`).
+- **Script de banco:** aplicar `db/scripts/gazeta-idempotente.sql` com `sqlcmd -I -f 65001` (o `-I` é redundância defensiva, o script já liga o `QUOTED_IDENTIFIER`). **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`).
 - **Limite de pedidos do E2E:** `RateLimiting__GlobalPerMinute=1000` só no site de teste. Sem isso, a suíte completa recebe 429 em páginas de login e os testes caem por tempo esgotado. Em produção a chave não existe e vale 100.
 - **Limite de login e recuperação do E2E:** `RateLimiting__AuthPermits=100000` só no site de teste (o limite de produção é 5 pedidos por 15 minutos por IP, nas ações de entrar, "esqueci minha senha" e "redefinir senha"; a suíte entra dezenas de vezes do mesmo IP). Sem isso, a suíte recebe 429 nas telas de entrada. Em produção a chave não existe e vale 5.
 - **Limite de entrega de fotos do E2E:** `RateLimiting__PhotosPerMinute=5000` só no site de teste. Sem isso, a galeria do detalhe do anúncio esgota os 300 pedidos por minuto e `PhotosE2ETests` recebe 429. Em produção a chave não existe e vale 300.

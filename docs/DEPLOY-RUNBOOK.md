@@ -46,10 +46,13 @@ Crie **três subpastas dentro de `h:\root\home\mpaulohs-001\www\`, irmãs da pas
 3. Rode o script do repositório, **antes** de publicar uma versão nova:
 
 ```bash
-sqlcmd -S (servidor) -U (usuario) -P (senha) -d (banco) -b -I -i db/scripts/gazeta-idempotente.sql
+sqlcmd -S (servidor) -U (usuario) -P (senha) -d (banco) -b -I -f 65001 -i db/scripts/gazeta-idempotente.sql
 ```
 
+> **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`). Já aconteceu em produção em 2026-10-09; o reparo é o `db/scripts/reparar-acentos-categorias.sql`.
+
 - `-b` para no primeiro erro; `-I` liga `QUOTED_IDENTIFIER`. O script também declara `ARITHABORT ON` e os outros `SET` que índice sobre coluna calculada exige. Sem `-I` e sem esses `SET`, o `sqlcmd` falha com o erro 1934. O script é **idempotente**: pode rodar de novo.
+- **Conferir o resultado:** `SELECT Name FROM Categories WHERE Id = 1` deve devolver `Imóveis` (7 letras). Com `ImÃ³veis` (8) a carga foi lida sem `-f 65001`: faça backup e rode `db/scripts/reparar-acentos-categorias.sql` (só ASCII, idempotente; o cabeçalho explica o que faz).
 - Se o `sqlcmd` não estiver na sua máquina, use a ferramenta de SQL do painel (cole o conteúdo do arquivo; ela precisa aceitar o `GO`).
 - O site **não** altera o banco ao subir (`Database.Migrate()` não existe).
 - A cadeia de conexão vai na variável `ConnectionStrings__DefaultConnection` (nunca no git), com `Encrypt=True`.

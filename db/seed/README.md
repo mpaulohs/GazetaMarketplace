@@ -21,7 +21,9 @@ dotnet run --project tools/VehicleCatalogExport -- export \
 
 ## Aplicar o script
 
-Com `sqlcmd -I` ou na ferramenta de SQL do provedor, **depois** de aplicar as migrations. É idempotente (`MERGE`): pode ser aplicado de novo sem duplicar nada, e uma nova carga com outro `--source` atualiza a origem das linhas.
+> **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`). Já aconteceu em produção em 2026-10-09; o reparo é o `db/scripts/reparar-acentos-categorias.sql`.
+
+Com `sqlcmd -I -f 65001` ou na ferramenta de SQL do provedor, **depois** de aplicar as migrations. É idempotente (`MERGE`): pode ser aplicado de novo sem duplicar nada, e uma nova carga com outro `--source` atualiza a origem das linhas.
 
 ## Carga em lote (só desenvolvimento e teste)
 
@@ -60,7 +62,9 @@ dotnet run --project tools/CitiesImport -- export --input /tmp/municipios.json -
 
 ## Aplicar o script
 
-Com `sqlcmd -I` ou na ferramenta de SQL do provedor, **depois** das migrations. É idempotente (`MERGE`): aplicar de novo não duplica nada e um nome corrigido pelo IBGE é atualizado. O `MERGE` **nunca apaga**: município extinto continua na tabela até ser removido à mão.
+> **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`). Já aconteceu em produção em 2026-10-09; o reparo é o `db/scripts/reparar-acentos-categorias.sql`.
+
+Com `sqlcmd -I -f 65001` ou na ferramenta de SQL do provedor, **depois** das migrations. É idempotente (`MERGE`): aplicar de novo não duplica nada e um nome corrigido pelo IBGE é atualizado. O `MERGE` **nunca apaga**: município extinto continua na tabela até ser removido à mão.
 
 ## Carga em lote (só desenvolvimento e teste)
 

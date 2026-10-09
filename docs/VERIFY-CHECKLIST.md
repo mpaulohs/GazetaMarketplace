@@ -31,6 +31,8 @@ dotnet run --project tests/GazetaMarketplace.Web.Tests -- --list-tests | tail -3
 
 O site precisa de um SQL Server. Os comandos abaixo criam tudo numa pasta `~/gazeta-verify`. **Faça uma vez; depois só reinicie o contêiner e o site.**
 
+> **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`). Já aconteceu em produção em 2026-10-09; o reparo é o `db/scripts/reparar-acentos-categorias.sql`.
+
 ```bash
 # 0) pasta de trabalho e variáveis (copie este bloco no começo de cada terminal novo)
 export WORK=~/gazeta-verify; export SQLPW='<senha-forte>'; export ADMINPW='<senha-do-admin-forte>'
@@ -45,12 +47,12 @@ docker run -d --name gazeta-e2e-sql -p 14330:1433 -e ACCEPT_EULA=Y -e "MSSQL_SA_
 #    espere uns 40 segundos; se o comando abaixo der "Login timeout", espere mais e repita
 docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$SQLPW" -Q "CREATE DATABASE gazeta_e2e"
 docker cp db/scripts/gazeta-idempotente.sql gazeta-e2e-sql:/tmp/s.sql
-docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$SQLPW" -d gazeta_e2e -b -I -i /tmp/s.sql
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$SQLPW" -d gazeta_e2e -b -I -f 65001 -i /tmp/s.sql
 #    dados de exemplo (catálogo de veículos e cidades): SÓ para teste local, nunca para produção
 docker cp db/seed/sample/vehicle-catalog-sample.sql gazeta-e2e-sql:/tmp/v.sql
 docker cp db/seed/sample/cities-sample.sql gazeta-e2e-sql:/tmp/c.sql
-docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -S localhost -U sa -P "$SQLPW" -d gazeta_e2e -i /tmp/v.sql
-docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -S localhost -U sa -P "$SQLPW" -d gazeta_e2e -i /tmp/c.sql
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -f 65001 -S localhost -U sa -P "$SQLPW" -d gazeta_e2e -i /tmp/v.sql
+docker exec gazeta-e2e-sql /opt/mssql-tools18/bin/sqlcmd -C -b -I -f 65001 -S localhost -U sa -P "$SQLPW" -d gazeta_e2e -i /tmp/c.sql
 
 # 3) publicar (a saída publicada é o que vai à hospedagem; em Production o CSS só é servido por ela)
 dotnet publish src/GazetaMarketplace.Web -c Release -o $WORK/publish
