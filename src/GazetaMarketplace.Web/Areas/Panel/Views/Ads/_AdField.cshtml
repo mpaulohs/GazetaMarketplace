@@ -13,7 +13,7 @@
         break;
     case AdFieldKind.Select:
         <label class="form-label" for="@Model.Id">@Model.Label @if (Model.Required) { <span aria-hidden="true">*</span> }</label>
-        <select class="form-select @(invalid ? "is-invalid" : "")" id="@Model.Id" name="@Model.Name" disabled="@Model.Disabled" data-catalog-kind="@Model.CatalogKind" data-catalog-level="@Model.CatalogLevel"
+        <select class="form-select @(invalid ? "is-invalid" : "")" id="@Model.Id" name="@Model.Name" disabled="@Model.Disabled" data-catalog-kind="@(string.IsNullOrEmpty(Model.CatalogLevel) ? null : Model.CatalogKind)" data-catalog-level="@(string.IsNullOrEmpty(Model.CatalogLevel) ? null : Model.CatalogLevel)"
                 aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(describedBy.Trim().Length == 0 ? null : describedBy.Trim())">
             <option value="">@(Model.Disabled ? "Escolha o campo anterior primeiro" : "Selecione")</option>
             @foreach (AdOption option in Model.Options)

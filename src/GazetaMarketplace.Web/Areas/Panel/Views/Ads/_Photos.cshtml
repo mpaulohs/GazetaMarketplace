@@ -6,7 +6,39 @@
     string error = TempData[AdPhotoPagesController.ErrorKey] as string;
     bool manage = Model.CanManagePhotos;
 }
-@* Anúncio novo e categoria sem fotos (Vagas) não têm galeria: a regra aparece no formulário (_AdGroupRegion) *@
+@* Anúncio novo: sem JavaScript só a regra no formulário (_AdGroupRegion) pede para salvar o rascunho; com JavaScript esta seção (oculta até lá) deixa escolher, ver e ordenar as fotos, que sobem quando o rascunho é salvo. Categoria sem fotos (Vagas) não tem galeria. *@
+@if (Model.IsNew)
+{
+<section class="fotos mt-4" id="fotos" tabindex="-1" aria-labelledby="titulo-fotos-novo" data-photos-new data-max-bytes="@PhotoLimits.MaxBytes" hidden>
+    <h2 class="fs-5" id="titulo-fotos-novo" data-new-heading>Fotos</h2>
+    <div class="visually-hidden" role="status" data-new-status></div>
+    <div class="alert alert-danger py-2" role="alert" tabindex="-1" data-new-error hidden></div>
+    <p class="form-text" data-new-empty>Nenhuma foto escolhida ainda.</p>
+    <ol class="list-unstyled row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 mb-2" data-new-list aria-label="Fotos escolhidas"></ol>
+
+    <label class="form-label" for="novas-fotos">Escolher fotos</label>
+    <input class="form-control" type="file" id="novas-fotos" multiple aria-describedby="ajuda-novas-fotos" data-new-input
+           accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif" />
+    <p class="form-text mb-2" id="ajuda-novas-fotos">
+        As fotos sobem quando você clicar em 'Salvar rascunho'. A primeira é a capa; use 'Subir' e 'Descer' para mudar a ordem.
+    </p>
+
+    <template data-new-template>
+        <li class="col fotos__item" data-new-item>
+            <figure class="fotos__figura mb-0">
+                <img class="fotos__imagem" src="" alt="" />
+                <span class="badge text-bg-primary fotos__capa" data-show-on-cover>Capa</span>
+            </figure>
+            <p class="small text-break mb-0 mt-1" data-new-name></p>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                <button class="btn btn-sm btn-outline-secondary alvo-toque" type="button" data-action="move-up">Subir</button>
+                <button class="btn btn-sm btn-outline-secondary alvo-toque" type="button" data-action="move-down">Descer</button>
+                <button class="btn btn-sm btn-outline-danger alvo-toque" type="button" data-action="remove-new">Remover</button>
+            </div>
+        </li>
+    </template>
+</section>
+}
 @if (!Model.IsNew && Model.PhotoLimit > 0)
 {
 <section class="fotos mt-4" id="fotos" tabindex="-1" aria-labelledby="titulo-fotos" data-photos

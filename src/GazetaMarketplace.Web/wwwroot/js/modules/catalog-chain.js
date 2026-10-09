@@ -35,7 +35,9 @@ export function ativarCadeiaDoCatalogo() {
     const select = evento.target.closest?.("select[data-catalog-level]");
     if (!select) return;
 
+    // Selects comuns (Câmbio, Cor…) não têm nível, mas trazem o atributo vazio: não fazem parte da cadeia
     const nivel = select.dataset.catalogLevel;
+    if (!NIVEIS.includes(nivel)) return;
     const seguintes = NIVEIS.slice(NIVEIS.indexOf(nivel) + 1);
     for (const nome of seguintes) {
       const filho = campo(nome);

@@ -3,6 +3,7 @@ import { consultarCep, listarCidades, somenteDigitos } from "../modules/cep.js";
 import { ativarCadeiaDoCatalogo } from "../modules/catalog-chain.js";
 import { atualizarContador, ativarContadores } from "../modules/counter.js";
 import { ativarFotos } from "../modules/photos.js";
+import { ativarFotosDoAnuncioNovo } from "../modules/photos-new.js";
 import { ativarMascaraDeInteiro } from "../modules/integer.js";
 import { ativarMascaraDePreco } from "../modules/price.js";
 
@@ -14,6 +15,7 @@ if (formulario) {
   ativarContadores();
   ativarCadeiaDoCatalogo();
   ativarFotos();
+  ativarFotosDoAnuncioNovo(formulario);
   trocaDeCategoria(formulario);
   localizacao(formulario);
   envio(formulario);
@@ -252,7 +254,7 @@ function trocarCidade(atual, cidades, textoVazio) {
 
 /**
  * Trava os botões de salvar e enviar enquanto envia, para um clique duplo não criar dois rascunhos nem dois envios.
- * Os botões são lidos na hora do envio: o "Salvar rascunho" da seção de fotos nasce e some junto com os campos da categoria.
+ * Os botões são lidos na hora do envio, para pegar os que existem naquele momento.
  */
 function envio(form) {
   const botoes = () => [...document.querySelectorAll("[data-submit-button]")];
