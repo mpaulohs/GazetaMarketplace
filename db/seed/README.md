@@ -73,7 +73,7 @@ Lido do código do GazetaOnline (entidades `CarBrand`, `CarModel`, `CarYearModel
 |---|---|---|
 | `sample/cities-sample.json` | **Amostra** de 40 municípios no formato do IBGE (os códigos foram escritos de memória e precisam ser conferidos). | **Não.** |
 | `sample/cities-sample.sql` | O script gerado da amostra (`-- AMOSTRA DE TESTE` no cabeçalho). Um teste confere que ele é igual ao que a ferramenta gera do JSON. | **Não.** Uma UF com poucas cidades daria uma lista de preenchimento manual incompleta. |
-| `cities.sql` | O script da carga real. **Ainda não existe.** | Sim, depois de revisado e versionado. |
+| `cities.sql` | O script da carga real. **Não fica no repositório**: foi gerado e aplicado em produção em 2026-10-09 (`--source ibge-2026-10`, 5571 municípios). Para atualizar, gere de novo com o passo abaixo. | Sim, depois de revisado. |
 
 ## Gerar o script da carga real
 
