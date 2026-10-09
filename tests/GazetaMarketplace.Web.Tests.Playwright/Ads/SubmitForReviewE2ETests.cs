@@ -103,7 +103,7 @@ public class SubmitForReviewE2ETests : SitePage
             await Expect(page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
         }
 
-        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await page.GetByText("Rascunho salvo").WaitForAsync().ConfigureAwait(false);
         return page.Url;
     }
@@ -233,7 +233,7 @@ public class SubmitForReviewE2ETests : SitePage
         await page.GetByLabel("Condição").SelectOptionAsync(new SelectOptionValue { Index = 1 }).ConfigureAwait(false);
         await page.GetByLabel("Preço").FillAsync("50").ConfigureAwait(false);
         await page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await page.GetByText("Rascunho salvo").WaitForAsync().ConfigureAwait(false);
         await page.GetByLabel("Escolher fotos").SetInputFilesAsync(Photo).ConfigureAwait(false);
         await page.GetByRole(AriaRole.Button, new() { Name = "Enviar fotos" }).ClickAsync().ConfigureAwait(false);
@@ -272,7 +272,7 @@ public class SubmitForReviewE2ETests : SitePage
         await Page.GetByLabel("Preço").FillAsync("5000").ConfigureAwait(false);
         await Page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
         await Expect(Page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Page.GetByText("Rascunho salvo").WaitForAsync().ConfigureAwait(false);
         await AddPhotoAsync(Page).ConfigureAwait(false);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Enviar para revisão" }).ClickAsync().ConfigureAwait(false);

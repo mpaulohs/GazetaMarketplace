@@ -51,7 +51,7 @@ public class PhotosE2ETests : SitePage
     {
         await page.GotoAsync(Url("/painel/anuncios/novo")).ConfigureAwait(false);
         await page.GetByLabel("Título").FillAsync(title ?? Unique("Fotos")).ConfigureAwait(false);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await page.GetByText("Rascunho salvo").WaitForAsync().ConfigureAwait(false);
         await page.GetByRole(AriaRole.Heading, new() { Name = "Fotos (0 de 20)" }).WaitForAsync().ConfigureAwait(false);
         return page.Url;
@@ -111,7 +111,7 @@ public class PhotosE2ETests : SitePage
         await AssertThumbnailsLoadedAsync(Page).ConfigureAwait(false);
 
         // Salvar o rascunho e reabrir: as 3 fotos continuam, na mesma ordem (o botão fica fora do formulário das fotos e salva o anúncio)
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByText("Rascunho salvo")).ToBeVisibleAsync().ConfigureAwait(false);
         await Page.ReloadAsync().ConfigureAwait(false);
         await Expect(Items(Page)).ToHaveCountAsync(3).ConfigureAwait(false);
@@ -208,6 +208,32 @@ public class PhotosE2ETests : SitePage
         await Page.ReloadAsync().ConfigureAwait(false);
         await Expect(Items(Page)).ToHaveCountAsync(0).ConfigureAwait(false);
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Fotos (0 de 20)" })).ToBeVisibleAsync().ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task AnuncioNovo_MostraOBotaoSalvarRascunhoPertoDaMensagemDasFotos_EClicarLiberaOEnvio()
+    {
+        await SignInAsync(Page).ConfigureAwait(false);
+        await Page.GotoAsync(Url("/painel/anuncios/novo")).ConfigureAwait(false);
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
+        await Page.GetByLabel("Título").FillAsync(Unique("Botão perto das fotos")).ConfigureAwait(false);
+
+        // A mensagem em destaque e, logo abaixo dela, o botão (o mesmo do rodapé): sobem juntos na tela, sem rolar até o fim
+        ILocator message = Page.Locator("[data-photo-rule]");
+        ILocator nearButton = Page.Locator("[data-save-draft-shortcut]");
+        await Expect(message).ToContainTextAsync("Clique em 'Salvar rascunho' abaixo para liberar o envio de fotos.").ConfigureAwait(false);
+        await Expect(nearButton).ToBeVisibleAsync().ConfigureAwait(false);
+        LocatorBoundingBoxResult messageBox = await message.BoundingBoxAsync().ConfigureAwait(false);
+        LocatorBoundingBoxResult buttonBox = await nearButton.BoundingBoxAsync().ConfigureAwait(false);
+        Assert.IsGreaterThan(messageBox.Y, buttonBox.Y, "o botão fica abaixo da mensagem");
+        Assert.IsLessThan(messageBox.Y + messageBox.Height + 60, buttonBox.Y, "e colado nela");
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Fotos (0 de 20)" })).ToHaveCountAsync(0).ConfigureAwait(false);
+
+        // Clicar nele salva o rascunho e a página reabre com a seção de fotos liberada
+        await nearButton.ClickAsync().ConfigureAwait(false);
+        await Page.GetByText("Rascunho salvo").WaitForAsync().ConfigureAwait(false);
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Fotos (0 de 20)" })).ToBeVisibleAsync().ConfigureAwait(false);
+        await Expect(Page.Locator("[data-save-draft-shortcut]")).ToHaveCountAsync(0).ConfigureAwait(false);
     }
 
     [TestMethod]

@@ -132,7 +132,7 @@ internal static class PublishingFlow
     {
         await page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
         await Microsoft.Playwright.Assertions.Expect(page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Microsoft.Playwright.Assertions.Expect(page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
         if (photos > 0)

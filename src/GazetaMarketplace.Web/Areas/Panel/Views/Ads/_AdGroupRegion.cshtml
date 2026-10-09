@@ -76,9 +76,21 @@ else
 @* A regra de fotos da categoria escolhida (muda com a troca de categoria); a galeria e o envio ficam na seção de fotos, fora deste formulário *@
 @if (Model.HasPhotos)
 {
-    <p class="form-text" data-photo-rule>
-        Este anúncio aceita até @group.MaxPhotos fotos (JPG, PNG, WebP, GIF ou HEIC, até 10 MB cada).@(Model.IsNew ? " Salve o rascunho primeiro para poder enviá-las." : null)
-    </p>
+    if (Model.IsNew)
+    {
+        @* Anúncio novo ainda não tem onde guardar fotos: o botão salva o rascunho (o mesmo do rodapé) e a página reabre com o envio liberado *@
+        <p class="form-text text-primary fw-semibold" data-photo-rule>
+            Este anúncio aceita até @group.MaxPhotos fotos (JPG, PNG, WebP, GIF ou HEIC, até 10 MB cada).
+            Clique em 'Salvar rascunho' abaixo para liberar o envio de fotos.
+        </p>
+        <button class="btn btn-primary alvo-toque mb-3" type="submit" form="anuncio-form" data-submit-button data-save-draft-shortcut>Salvar rascunho</button>
+    }
+    else
+    {
+        <p class="form-text" data-photo-rule>
+            Este anúncio aceita até @group.MaxPhotos fotos (JPG, PNG, WebP, GIF ou HEIC, até 10 MB cada).
+        </p>
+    }
 }
 else
 {

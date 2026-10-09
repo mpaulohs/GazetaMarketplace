@@ -154,7 +154,7 @@ public class DraftE2ETests : SitePage
         await Page.GetByLabel(new Regex(@"^Ano\b")).SelectOptionAsync(new SelectOptionValue { Label = "2018" }).ConfigureAwait(false);
         await Page.GetByLabel("Quilometragem").FillAsync("45000").ConfigureAwait(false);
 
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
 
         // Recarrega a página: só o que o servidor guardou pode aparecer
@@ -248,7 +248,7 @@ public class DraftE2ETests : SitePage
         string title = Unique("Preço mascarado");
         await Page.GetByLabel("Título").FillAsync(title).ConfigureAwait(false);
         await price.PressSequentiallyAsync("6200000").ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
         await Page.ReloadAsync().ConfigureAwait(false);
         await Expect(Page.GetByLabel("Preço")).ToHaveValueAsync("62.000,00").ConfigureAwait(false);
@@ -285,7 +285,7 @@ public class DraftE2ETests : SitePage
         await OpenNewAsync(Page).ConfigureAwait(false);
         await Page.GetByLabel("Descrição").FillAsync("Sem título").ConfigureAwait(false);
 
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
 
         await Expect(Page.GetByText("Informe um título")).ToBeVisibleAsync().ConfigureAwait(false);
         await Expect(Page.GetByLabel("Título")).ToBeFocusedAsync().ConfigureAwait(false);
@@ -321,7 +321,7 @@ public class DraftE2ETests : SitePage
             await city.FillAsync("Campinas").ConfigureAwait(false);
         }
 
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
 
         await Page.ReloadAsync().ConfigureAwait(false);
@@ -368,7 +368,7 @@ public class DraftE2ETests : SitePage
         await page.GetByLabel("Quilometragem").FillAsync("45000").ConfigureAwait(false);
         await page.GetByLabel("Preço").FillAsync("62000").ConfigureAwait(false);
         await page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
 
         await Expect(page.GetByText("Rascunho salvo")).ToBeVisibleAsync().ConfigureAwait(false);
         await Expect(page.GetByLabel("Título")).ToHaveValueAsync(title).ConfigureAwait(false);
@@ -399,7 +399,7 @@ public class DraftE2ETests : SitePage
         await ChooseCategoryAsync(Cars).ConfigureAwait(false);
         await Expect(Page.GetByLabel("Quilometragem")).ToBeVisibleAsync().ConfigureAwait(false);
         await Page.GetByLabel("Quilometragem").FillAsync("muito").ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByText("Informe um título")).ToBeVisibleAsync().ConfigureAwait(false);
         await Expect(Page.GetByText("Informe apenas números")).ToBeVisibleAsync().ConfigureAwait(false);
         AxeResult errors = await Page.RunAxe(options).ConfigureAwait(false);

@@ -53,7 +53,7 @@ public class PanelAdListE2ETests : SitePage
         await Page.GetByLabel("Preço").FillAsync("5000").ConfigureAwait(false);
         await Page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
         await Expect(Page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
         await Page.WaitForFunctionAsync("() => document.getElementById('arquivo-foto')?.multiple === true").ConfigureAwait(false);
@@ -94,7 +94,7 @@ public class PanelAdListE2ETests : SitePage
         await SubmitAdAsync(reviewTitle).ConfigureAwait(false);
         await Page.GotoAsync(Url("/painel/anuncios/novo")).ConfigureAwait(false);
         await Page.GetByLabel("Título").FillAsync(draftTitle).ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
 
         // S04: o termo sem acento e em minúsculas acha os dois anúncios do teste; a lista mostra o autor e as abas do Administrador

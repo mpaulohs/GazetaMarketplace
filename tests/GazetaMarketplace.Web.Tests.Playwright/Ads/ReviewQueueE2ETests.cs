@@ -52,7 +52,7 @@ public class ReviewQueueE2ETests : SitePage
         await Page.GetByLabel("Preço").FillAsync("5000").ConfigureAwait(false);
         await Page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
         await Expect(Page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
         await Page.WaitForFunctionAsync("() => document.getElementById('arquivo-foto')?.multiple === true").ConfigureAwait(false);

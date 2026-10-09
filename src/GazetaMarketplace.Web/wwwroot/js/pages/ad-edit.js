@@ -250,15 +250,19 @@ function trocarCidade(atual, cidades, textoVazio) {
   atual.replaceWith(novo);
 }
 
-/** Trava os botões de salvar e enviar enquanto envia, para um clique duplo não criar dois rascunhos nem dois envios. */
+/**
+ * Trava os botões de salvar e enviar enquanto envia, para um clique duplo não criar dois rascunhos nem dois envios.
+ * Os botões são lidos na hora do envio: o "Salvar rascunho" da seção de fotos nasce e some junto com os campos da categoria.
+ */
 function envio(form) {
-  const botoes = [...document.querySelectorAll("[data-submit-button]")];
-  if (botoes.length === 0) return;
-  const rotulos = new Map(botoes.map((botao) => [botao, botao.textContent]));
+  const botoes = () => [...document.querySelectorAll("[data-submit-button]")];
+  if (botoes().length === 0) return;
+  const rotulos = new Map();
   form.addEventListener("submit", (evento) => {
     // "Atualizar campos" também envia o formulário, mas não deve travar os botões
-    if (evento.submitter && !botoes.includes(evento.submitter)) return;
-    for (const botao of botoes) {
+    if (evento.submitter && !evento.submitter.matches("[data-submit-button]")) return;
+    for (const botao of botoes()) {
+      rotulos.set(botao, botao.textContent);
       botao.disabled = true;
       if (botao === evento.submitter) botao.textContent = botao.dataset.submitReview === undefined ? "Salvando…" : "Enviando…";
     }

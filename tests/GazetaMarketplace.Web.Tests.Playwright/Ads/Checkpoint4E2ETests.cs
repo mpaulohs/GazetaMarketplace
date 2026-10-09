@@ -81,7 +81,7 @@ public class Checkpoint4E2ETests : SitePage
         await page.GetByLabel("Preço").FillAsync("5000").ConfigureAwait(false);
         await page.GetByLabel("CEP").FillAsync("13015-100").ConfigureAwait(false);
         await Expect(page.GetByLabel("Cidade (automático)")).ToHaveValueAsync("Campinas").ConfigureAwait(false);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
         await page.WaitForFunctionAsync("() => document.getElementById('arquivo-foto')?.multiple === true").ConfigureAwait(false);

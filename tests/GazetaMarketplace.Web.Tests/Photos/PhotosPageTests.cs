@@ -52,9 +52,44 @@ public sealed class PhotosPageTests
 
         string page = await DraftSite.BodyAsync(await photos.Site.Writer.GetAsync("/painel/anuncios/novo"));
 
-        StringAssert.Contains(page, "Salve o rascunho primeiro para poder enviá-las");
+        StringAssert.Contains(page, "Clique em 'Salvar rascunho' abaixo para liberar o envio de fotos.");
+        Assert.IsFalse(page.Contains("Salve o rascunho primeiro", StringComparison.Ordinal), "a frase antiga saiu");
         Assert.IsFalse(page.Contains("data-photo-upload", StringComparison.Ordinal), "sem anúncio gravado não há onde enviar");
         Assert.IsFalse(page.Contains("data-photos", StringComparison.Ordinal), "e não há seção de galeria");
+    }
+
+    [TestMethod]
+    public async Task AnuncioNovo_TemUmBotaoSalvarRascunho_ColadoNaMensagemDasFotos_ComDestaque()
+    {
+        using PhotoSite photos = await PhotoSite.StartAsync();
+
+        string page = await DraftSite.BodyAsync(await photos.Site.Writer.GetAsync("/painel/anuncios/novo"));
+
+        int message = page.IndexOf("data-photo-rule", StringComparison.Ordinal);
+        Match button = Regex.Match(page[message..], @"<button\b[^>]*data-save-draft-shortcut[^>]*>\s*Salvar rascunho\s*</button>");
+        Assert.IsGreaterThan(-1, message, "a mensagem das fotos está na página");
+        Assert.IsTrue(button.Success, "o botão fica logo depois da mensagem, antes do resto do formulário");
+        Assert.IsLessThan(900, button.Index, "colado na mensagem, não no rodapé");
+        StringAssert.Contains(button.Value, "type=\"submit\"");
+        StringAssert.Contains(button.Value, "form=\"anuncio-form\"");
+        StringAssert.Contains(button.Value, "data-submit-button");
+        StringAssert.Contains(button.Value, "btn-primary");
+
+        string ruleTag = Regex.Match(page, @"<p\b[^>]*data-photo-rule[^>]*>").Value;
+        StringAssert.Contains(ruleTag, "text-primary");
+        Assert.IsFalse(ruleTag.Contains("text-body-secondary", StringComparison.Ordinal), "em destaque, não esmaecido");
+    }
+
+    [TestMethod]
+    public async Task AnuncioGravado_NaoTemOBotaoExtraDeSalvarRascunho_NemAMensagem()
+    {
+        using PhotoSite photos = await PhotoSite.StartAsync();
+        int adId = await photos.Site.AddAdAsync(Writer);
+
+        string page = await PageAsync(photos.Site.Writer, adId);
+
+        Assert.IsFalse(page.Contains("data-save-draft-shortcut", StringComparison.Ordinal));
+        Assert.IsFalse(page.Contains("liberar o envio de fotos", StringComparison.Ordinal));
     }
 
     [TestMethod]

@@ -66,7 +66,7 @@ public class Checkpoint3E2ETests : SitePage
 
     private async Task<string> SaveAsync()
     {
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).ClickAsync().ConfigureAwait(false);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Salvar rascunho" }).Last.ClickAsync().ConfigureAwait(false);
         await Expect(Page.GetByRole(AriaRole.Status).Filter(new() { HasText = "Rascunho salvo" })).ToBeVisibleAsync().ConfigureAwait(false);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle).ConfigureAwait(false);
         return Page.Url;
