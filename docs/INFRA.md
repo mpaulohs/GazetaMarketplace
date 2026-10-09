@@ -4,7 +4,7 @@
 
 | O que | Valor |
 |---|---|
-| Destino | SmarterASP, IIS, Windows, ASP.NET Core 10 em processo (`hostingModel="inprocess"`). Conta `mpaulohs-001`; raiz de arquivos `h:\root\home\mpaulohs-001\www\` |
+| Destino | SmarterASP, IIS, Windows, ASP.NET Core 10 **fora do processo do IIS** (`hostingModel="outofprocess"`: o IIS repassa os pedidos ao site, que roda em um processo `dotnet` próprio; definido no commit `16b7c14` por `<AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel>` no `GazetaMarketplace.Web.csproj`, vale para qualquer perfil de publicação). Conta `mpaulohs-001`; raiz de arquivos `h:\root\home\mpaulohs-001\www\` |
 | Pasta publicada | `src/GazetaMarketplace.Web/bin/publish/win-x64/`, cerca de **62 MB** (eram 233 MB com os componentes de todas as plataformas) |
 | Banco | **SQL Server 2022** (o provedor oferece 2022 e 2025; escolhido o 2022, o mesmo dos testes), criado só pelo script `db/scripts/gazeta-idempotente.sql`. Conta única com permissão total (SEC-03, risco aceito RR-9) |
 | Contêiner | **Não há.** O destino é o IIS compartilhado; o `trivy` e o `hadolint` do `/scan` não se aplicam (nenhum Dockerfile) |
@@ -101,10 +101,12 @@ O arquivo real **não vai para o git**: ele fica no cofre de senhas e na máquin
 
 ### 5-B. IP do visitante: pacote `Cloudflare.ForwardedHeaders` e `CF-Connecting-IP`
 
+**Hospedagem `OutOfProcess` (a real, desde 2026-10-09).** Com o site em processo próprio, o pedido passa pelo IIS e chega ao site por uma conexão local. Isso levantou a dúvida de o site enxergar `127.0.0.1` em vez do visitante e de o esquema `https` se perder (o HSTS só sai quando o site vê `https`). **Conferido em produção pelo Product Owner em 2026-10-09, sem mudança de código:** o IP real do visitante é lido, o HSTS sai, o redirecionamento `http`→`https` funciona e o limite de tentativas funciona (BACKLOG PD-01, resolvido). O mecanismo exato pelo qual o IP e o esquema chegam ao site **não foi examinado**; o que vale é o resultado do teste do IP abaixo, que se repete depois de qualquer mudança na hospedagem (modelo, versão do .NET, regras do Cloudflare). **Se o IP no log aparecer como `127.0.0.1` ou `::1`, não grave o endereço local em `ForwardedHeaders__KnownProxies__0`:** isso faria o site aceitar um `CF-Connecting-IP` forjado por quem acessar o IP do SmarterASP direto, sem passar pelo Cloudflare. O ajuste, nesse caso, é de código.
+
 **Como funciona (`ForwardedHeaders__Cloudflare=true`):**
 
 1. Na partida o site baixa as faixas oficiais de IP do Cloudflare (`cloudflare.com/ips-v4` e `ips-v6`, até 5 segundos). Se a hospedagem não alcançar o endereço, o pacote usa a **cópia embutida nele** e registra um `Warning` ("Failed to fetch Cloudflare IP ranges. Using embedded fallback").
-2. Quando o pedido chega de um endereço dessas faixas, o site troca o IP da conexão pelo valor de **`CF-Connecting-IP`**, que o Cloudflare preenche com o IP do visitante (e sobrescreve se o visitante mandar o seu).
+2. Quando o pedido chega, **já com o IP de origem restaurado pela hospedagem**, de um endereço dessas faixas, o site troca o IP da conexão pelo valor de **`CF-Connecting-IP`**, que o Cloudflare preenche com o IP do visitante (e sobrescreve se o visitante mandar o seu).
 3. Pedido que **não** vem de um endereço do Cloudflare (por exemplo, quem acessa o IP do SmarterASP direto) **não** pode forjar o cabeçalho: ele é ignorado e o IP da conexão vale.
 4. O pacote só preenche as faixas confiáveis; **a escolha do cabeçalho `CF-Connecting-IP` é do site** (por padrão o pacote usaria `X-Forwarded-For`).
 5. Na partida o log traz `Modo Cloudflare ligado: N faixas de IP do Cloudflare confiáveis`. Se `N` for zero aparece um `Error`: o site passa a ignorar `CF-Connecting-IP`.

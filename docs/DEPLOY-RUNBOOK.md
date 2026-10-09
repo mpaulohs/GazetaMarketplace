@@ -84,12 +84,12 @@ Em resumo: `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConne
 7. **Teste prático do IP** (primeira publicação, §7.1).
 8. **Só depois que o site funcionar**, decidir sobre o DPAPI (§7.2).
 
-### 7.1 Teste prático do IP (primeira publicação, atrás do Cloudflare) — atualizado em 2026-10-08
+### 7.1 Teste prático do IP (primeira publicação, atrás do Cloudflare, hospedagem `OutOfProcess`) — atualizado em 2026-10-09
 
-**Para que serve:** conferir que o site enxerga o IP **real** de quem visita. Atrás do Cloudflare, sem a leitura do cabeçalho `CF-Connecting-IP`, todo visitante chegaria com o IP de um servidor do Cloudflare, e os limites de tentativas e o bloqueio por conta+IP valeriam para o site inteiro. O pacote `Cloudflare.ForwardedHeaders` (ligado por `ForwardedHeaders__Cloudflare=true`) cuida disso; este teste prova que cuidou.
+**Para que serve:** conferir que o site enxerga o IP **real** de quem visita. Atrás do Cloudflare, sem a leitura do cabeçalho `CF-Connecting-IP`, todo visitante chegaria com o IP de um servidor do Cloudflare, e os limites de tentativas e o bloqueio por conta+IP valeriam para o site inteiro. O pacote `Cloudflare.ForwardedHeaders` (ligado por `ForwardedHeaders__Cloudflare=true`) cuida disso; este teste prova que cuidou. **A hospedagem é `OutOfProcess`** (o IIS repassa o pedido ao site, que roda em processo `dotnet` próprio): por isso o teste vale também para descobrir se o site vê `127.0.0.1`. Em 2026-10-09 ele foi feito em produção e deu o IP real (BACKLOG PD-01, resolvido); **repita-o depois de qualquer mudança de hospedagem**.
 
 1. **Conferir a partida:** no log do dia em `gazeta-logs` procure `Modo Cloudflare ligado: N faixas de IP do Cloudflare confiáveis`. Se aparecer um `Warning` de `KnownProxies`, a variável `ForwardedHeaders__Cloudflare` não está `true`. Se aparecer um `Error` com "nenhuma faixa", a lista não carregou. Um `Warning` "Failed to fetch Cloudflare IP ranges" **não é problema**: o pacote usou a cópia embutida.
-2. Abra `https://gzto.com.br/painel/entrar` **pelo endereço público** (passando pelo Cloudflare) e **erre a senha de propósito uma vez**.
+2. Abra `https://www.gzto.com.br/painel/entrar` **pelo endereço público** (passando pelo Cloudflare) e **erre a senha de propósito uma vez**.
 3. No mesmo log, procure a linha **`Falha de entrada de ... a partir de <IP>`**.
 4. Compare o `<IP>` com o **seu IP** (pesquise "meu IP" no navegador, na mesma rede).
 
@@ -97,6 +97,7 @@ Em resumo: `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConne
 |---|---|---|
 | **O seu** | O site leu o `CF-Connecting-IP`: **o pacote resolve** | Nada. Os limites normais (5 por 15 minutos) já estão valendo |
 | **De um servidor do Cloudflare** (confira na lista oficial em `cloudflare.com/ips`) | O IP **não** foi trocado: o modo Cloudflare não está valendo | Revise o passo 1; confirme que o domínio está com a nuvem laranja ligada; corrija e repita o teste |
+| **`127.0.0.1` ou `::1`** | O pedido chegou ao site pela conexão local do `OutOfProcess` e o IP do visitante se perdeu no caminho | **Não grave `127.0.0.1` em `ForwardedHeaders__KnownProxies__0`:** o site passaria a aceitar um `CF-Connecting-IP` forjado por quem acessar o IP do SmarterASP direto. Mande ao Claude a linha do log e a linha `Modo Cloudflare ligado`; o ajuste é de código e precisa da sua autorização. Enquanto isso, `ForwardedHeaders__Cloudflare=false` e não divulgue |
 | **Sempre o mesmo, e nem o seu nem o do Cloudflare** | Há um proxy do SmarterASP **entre** o Cloudflare e o site | Grave esse IP em `ForwardedHeaders__KnownProxies__0` (uma variável por IP, só o IP, sem faixa nem texto), reinicie e repita: o site passa a aceitar o `CF-Connecting-IP` também vindo desse proxy |
 | Não achou a linha | Log em outra pasta, ou o erro de senha não chegou ao site | Confira `Logging__FileDirectory` e repita o erro |
 
