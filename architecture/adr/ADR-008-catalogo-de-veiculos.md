@@ -48,4 +48,4 @@ Revisit this decision when **any** of the following becomes true:
 - **Contrato:** `GET …/brands/{id}/models`, `…/models/{id}/years` e `…/models/{id}/years/{year}/versions` exigem `kind=car|moto`. Sem ele o id não identifica o item.
 - **Ano em tabela própria**, para existirem anos sem versões.
 - **Carga em lote:** executa os mesmos `MERGE` do script numa transação (uma só implementação da regra); recusa ambiente que não seja Development ou Testing e cadeia de conexão com "prod".
-- **Esquema da origem presumido:** ver `plans/BACKLOG.md`; só `OriginReader.cs` conhece a origem.
+- **Esquema da origem:** lido do código do GazetaOnline (atualizado em 2026-10-09; antes era presumido); só `OriginReader.cs` conhece a origem. O `IsPublished` de lá não é filtro (só marca o item que algum anúncio publicado usa); a carga traz o catálogo inteiro.

@@ -5,25 +5,50 @@
 | Arquivo | O que é | Pode ir para produção? |
 |---|---|---|
 | `sample/vehicle-catalog-sample.sql` | Catálogo **reduzido de teste** (10 marcas, 45 modelos, 214 anos, 307 versões; `Source = 'sample'`), gerado a partir da origem simulada `tests/VehicleCatalogExport.Tests/Data/sample-catalog.sql`. Os nomes são genéricos; nada foi copiado do GazetaOnline. | **Não.** Serve para desenvolvimento, testes e para provar a ferramenta. |
-| `vehicle-catalog.sql` | O catálogo real exportado do GazetaOnline. **Ainda não existe**: depende do parecer jurídico (A5) e do acesso somente leitura ao banco do GazetaOnline. | Sim, depois de revisado e versionado. |
+| `vehicle-catalog.sql` | O catálogo real exportado do GazetaOnline. **Ainda não existe no repositório**: quem tem acesso ao banco do GazetaOnline gera na própria máquina (próxima seção), confere o relatório e aplica no GazetaMarketplace. A origem (`--source`) registra de onde veio cada linha. | Sim, depois de revisado. |
 
-## Gerar o script (quem exporta, na própria máquina)
+## Passo a passo: do GazetaOnline para o GazetaMarketplace
 
-```bash
-export VEHICLE_CATALOG_ORIGIN_CONNECTION='<cadeia de uma conta SOMENTE LEITURA do GazetaOnline>'
-dotnet run --project tools/VehicleCatalogExport -- export \
+> **Em resumo:** a ferramenta lê `CarBrands`, `CarModels`, `CarYearModels`, `CarVersions` e as quatro de `Motorcycle…` do banco do GazetaOnline e escreve um arquivo `.sql` com o catálogo inteiro. Você confere o relatório, faz backup do banco do GazetaMarketplace e aplica o arquivo nas tabelas `VehicleBrands`, `VehicleModels`, `VehicleModelYears` e `VehicleVersions`. A ferramenta **nunca grava** no GazetaOnline nem no GazetaMarketplace; quem aplica é você.
+
+**1. Gerar o arquivo (no Windows, na sua máquina).** Use uma conta **somente leitura** do GazetaOnline, e coloque a cadeia de conexão **só na variável de ambiente** (nunca em arquivo nem no histórico compartilhado):
+
+```powershell
+$env:VEHICLE_CATALOG_ORIGIN_CONNECTION = "<cadeia do GazetaOnline, conta somente leitura>"
+dotnet run --project tools/VehicleCatalogExport -- export `
   --source gazetaonline-2026-10 --out db/seed/vehicle-catalog.sql --report reports/vehicle-catalog-orphans.txt
+Remove-Item Env:VEHICLE_CATALOG_ORIGIN_CONNECTION
 ```
 
+A saída traz as contagens (`Marcas: N | Modelos: N | Anos: N | Versões: N | Descartados: N`). Cada tipo (`car` e `moto`) tem os seus ids, que se repetem entre os dois; no GazetaMarketplace a chave é o par (id, tipo).
+
+**2. Conferir o relatório** (`reports/vehicle-catalog-orphans.txt`). O catálogo **inteiro** é lido, inclusive o que nenhum anúncio usa: o `IsPublished` do GazetaOnline só diz que algum anúncio publicado usa o item e **não** é usado como filtro. Ficam de fora, com o motivo no relatório:
+
+| Motivo no relatório | O que significa |
+|---|---|
+| `sem nome` | nome vazio ou só espaços |
+| `nome longo demais` | acima de 150 letras (marca, modelo) ou 250 (versão), o limite da coluna; nada é cortado em silêncio |
+| `id inválido` | id zero ou negativo |
+| `sem marca` / `sem modelo` / `sem ano` | o pai não existe (ou foi descartado, e os filhos vão junto) |
+| `ano inválido` | o ano da origem é texto que não vira número (por exemplo "Zero km") |
+| `ano fora de 1950 a 2100` | a API do site só aceita esse intervalo |
+| `ano repetido no modelo` / `id repetido` | a segunda ocorrência é descartada |
+| `texto corrompido` | o nome tem acento já corrompido na origem (por exemplo `AutomÃ¡tico`); corrija na origem e exporte de novo |
+
+**3. Fazer o backup** do banco do GazetaMarketplace e aplicar, **depois** das migrations:
+
+```powershell
+sqlcmd -S <servidor> -d <banco> -U <usuario> -b -I -f 65001 -i db/seed/vehicle-catalog.sql
+```
+
+> **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`). Já aconteceu em produção em 2026-10-09; o reparo é o `db/scripts/reparar-acentos-categorias.sql`. Como rede de segurança, o fim do script procura acentos corrompidos nas linhas desta carga e, se achar, **desfaz a carga inteira** com a mensagem "Acentos corrompidos".
+
+**4. Conferir** no banco: `SELECT Kind, COUNT(*) FROM VehicleBrands GROUP BY Kind;` (e o mesmo nas outras três tabelas) tem de bater com as contagens da saída do passo 1. O site guarda as listas em cache por 10 minutos: espere esse tempo ou reinicie o site para os campos Marca, Modelo, Ano e Versão aparecerem.
+
+O script é idempotente (`MERGE`): pode ser aplicado de novo sem duplicar nada, e uma nova carga com outro `--source` atualiza a origem das linhas.
+
 - Sem a variável, ou com a origem inacessível, a ferramenta **para sem criar arquivo** (códigos de saída 2 e 3).
-- Registros sem pai (modelo sem marca, ano sem modelo, versão sem ano) são **descartados e listados** no relatório; decida o que fazer com eles antes de aplicar.
-- Nenhuma credencial entra no repositório: a cadeia vem só da variável de ambiente.
-
-## Aplicar o script
-
-> **O `-f 65001` é obrigatório.** Sem ele, o `sqlcmd` do Windows lê o arquivo na página de código do sistema e grava os acentos corrompidos (`ImÃ³veis` em vez de `Imóveis`). Já aconteceu em produção em 2026-10-09; o reparo é o `db/scripts/reparar-acentos-categorias.sql`.
-
-Com `sqlcmd -I -f 65001` ou na ferramenta de SQL do provedor, **depois** de aplicar as migrations. É idempotente (`MERGE`): pode ser aplicado de novo sem duplicar nada, e uma nova carga com outro `--source` atualiza a origem das linhas.
+- A cadeia de conexão nunca vai para o repositório nem para o chat. Se ela já apareceu em algum lugar, troque a senha.
 
 ## Carga em lote (só desenvolvimento e teste)
 
@@ -34,9 +59,9 @@ dotnet run --project tools/VehicleCatalogExport -- load --source sample --enviro
 
 A ferramenta **recusa** ambiente que não seja `Development` ou `Testing` e cadeia de conexão com "prod" no servidor, no banco ou no nome da aplicação. Executa os mesmos `MERGE` do script, numa transação.
 
-## Esquema da origem (presumido)
+## Esquema da origem
 
-O banco do GazetaOnline nunca foi lido. A ferramenta presume `CarBrands(Id, Name)`, `CarModels(Id, BrandId, Name)`, `CarYearModels(Id, ModelId, Year)`, `CarVersions(Id, YearModelId, Name)` e as quatro equivalentes de motos (`Motorcycle…`). Quando houver acesso, ajuste as consultas em `tools/VehicleCatalogExport/OriginReader.cs`, o único lugar que conhece a origem.
+Lido do código do GazetaOnline (entidades `CarBrand`, `CarModel`, `CarYearModel`, `CarVersion` e as de moto): `CarBrands(CarBrandId, Name)`, `CarModels(CarModelId, CarBrandId, Name)`, `CarYearModels(CarYearModelId, CarModelId, Year)` com `Year` em **texto**, `CarVersions(CarVersionId, CarYearModelId, Name)` e as quatro equivalentes `Motorcycle…`. Se o banco de lá mudar, ajuste as consultas em `tools/VehicleCatalogExport/OriginReader.cs`, o único lugar que conhece a origem.
 
 ---
 

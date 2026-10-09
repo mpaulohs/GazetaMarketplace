@@ -25,7 +25,10 @@ internal static class ScriptGenerator
         script.AppendLine("-- Catálogo de veículos (ADR-008). GERADO por tools/VehicleCatalogExport: não edite à mão; gere de novo.");
         script.AppendLine(CultureInfo.InvariantCulture, $"-- Origem (Source): {source}");
         script.AppendLine(CultureInfo.InvariantCulture, $"-- Marcas: {data.Brands.Count} | Modelos: {data.Models.Count} | Anos: {data.Years.Count} | Versões: {data.Versions.Count}");
-        script.AppendLine("-- Idempotente: pode ser aplicado mais de uma vez. Aplique com 'sqlcmd -I' ou na ferramenta de SQL do provedor.");
+        script.AppendLine("-- Idempotente: pode ser aplicado mais de uma vez. Aplique depois de um backup, com:");
+        script.AppendLine("--   sqlcmd -b -I -f 65001 -S <servidor> -d <banco> -U <usuario> -i <este arquivo>");
+        script.AppendLine("-- O -f 65001 é obrigatório: sem ele o sqlcmd do Windows lê o arquivo em outra página de código e grava os acentos errados.");
+        script.AppendLine("-- Se isso acontecer, a guarda no fim do script aborta e desfaz a carga inteira.");
         script.AppendLine("SET QUOTED_IDENTIFIER ON;");
         script.AppendLine("GO");
         script.AppendLine("SET XACT_ABORT ON;");
@@ -37,9 +40,35 @@ internal static class ScriptGenerator
             script.AppendLine();
         }
 
+        script.AppendLine(AccentGuard(source));
+        script.AppendLine();
         script.AppendLine("COMMIT TRANSACTION;");
         script.AppendLine("GO");
         return script.ToString();
+    }
+
+    /// <summary>
+    /// Rede de segurança contra o erro que já aconteceu uma vez no site (ImÃ³veis em vez de Imóveis): o <c>sqlcmd</c> do Windows, sem <c>-f 65001</c>, lê o arquivo UTF-8
+    /// em outra página de código e grava os bytes de cada acento como letras soltas. Depois da carga, procura "Ã" ou "Â" seguido de um desses restos nas linhas desta origem;
+    /// achando, lança erro dentro da transação e <c>XACT_ABORT</c> desfaz tudo. É escrita só em ASCII (<c>NCHAR(n)</c>) para a leitura errada não corromper a própria guarda.
+    /// </summary>
+    private static string AccentGuard(string source)
+    {
+        string src = Literal(source);
+        string[] tables = ["VehicleBrands", "VehicleModels", "VehicleVersions"];
+        string selects = string.Join("\n    UNION ALL ", tables.Select(t => $"SELECT 1 AS Found FROM [{t}] WHERE [Source] = {src} AND [Name] {Exact} LIKE @Corrupted"));
+
+        StringBuilder guard = new();
+        guard.AppendLine("-- Guarda de acentos corrompidos (ASCII de proposito): aborta e desfaz tudo se o arquivo foi lido sem '-f 65001'.");
+        // Faixa U+0080-U+00BF (Latin-1) e os simbolos que o Windows-1252 poe em 0x80-0x9F, depois de A com til (195) ou com circunflexo (194)
+        guard.AppendLine("DECLARE @Corrupted nvarchar(100) = N'%[' + NCHAR(194) + NCHAR(195) + N'][' + NCHAR(128) + N'-' + NCHAR(191)");
+        guard.AppendLine("    + NCHAR(338) + NCHAR(339) + NCHAR(352) + NCHAR(353) + NCHAR(376) + NCHAR(381) + NCHAR(382) + NCHAR(402) + NCHAR(710) + NCHAR(732)");
+        guard.AppendLine("    + NCHAR(8211) + N'-' + NCHAR(8250) + NCHAR(8364) + NCHAR(8482) + N']%';");
+        guard.AppendLine("IF EXISTS (");
+        guard.AppendLine("    " + selects);
+        guard.AppendLine(")");
+        guard.Append("    THROW 50001, N'Acentos corrompidos: o arquivo foi lido sem UTF-8. Aplique com sqlcmd -f 65001. Nada foi gravado.', 1;");
+        return guard.ToString();
     }
 
     /// <summary>Os comandos <c>MERGE</c>, um por lote, na ordem em que precisam rodar (cada nível depende do anterior).</summary>

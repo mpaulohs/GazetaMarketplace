@@ -114,4 +114,40 @@ public sealed class ScriptGeneratorTests
     {
         StringAssert.Contains(ScriptGenerator.Script(Small(), "teste"), "-- Marcas: 2 | Modelos: 2 | Anos: 2 | Versões: 2");
     }
+
+    [TestMethod]
+    public void Cabecalho_MandaAplicarComUtf8_ComOSqlcmdDoWindows()
+    {
+        string script = ScriptGenerator.Script(Small(), "teste");
+
+        StringAssert.Contains(script, "sqlcmd -b -I -f 65001");
+    }
+
+    [TestMethod]
+    public void Script_TemGuardaDeAcentoCorrompido_AntesDoCommit_ESoNasLinhasDestaCarga()
+    {
+        string script = ScriptGenerator.Script(Small(), "gazetaonline-2026-10");
+
+        int guard = script.IndexOf("THROW 50001", System.StringComparison.Ordinal);
+        int commit = script.LastIndexOf("COMMIT TRANSACTION;", System.StringComparison.Ordinal);
+        Assert.IsTrue(guard > 0 && guard < commit, "a guarda precisa rodar dentro da transação, antes do COMMIT");
+        foreach (string table in new[] { "VehicleBrands", "VehicleModels", "VehicleVersions" })
+        {
+            StringAssert.Contains(script, $"FROM [{table}] WHERE [Source] = 'gazetaonline-2026-10'");
+        }
+
+        // A guarda é ASCII: ela mesma não pode ser corrompida pela leitura errada que vai detectar
+        string guardText = script[script.LastIndexOf("-- Guarda", System.StringComparison.Ordinal)..commit];
+        Assert.IsTrue(guardText.All(c => c < 128), "a guarda tem de usar NCHAR(n), sem acento literal");
+        StringAssert.Contains(guardText, "NCHAR(195)");
+        StringAssert.Contains(guardText, "NCHAR(194)");
+        StringAssert.Contains(guardText, "Latin1_General_100_BIN2");
+    }
+
+    [TestMethod]
+    public void GuardaDeAcento_TemOMesmoTextoParaOMesmoCatalogo()
+    {
+        Assert.AreEqual(ScriptGenerator.Script(Small(), "teste"), ScriptGenerator.Script(Small(), "teste"));
+        Assert.AreNotEqual(ScriptGenerator.Script(Small(), "a"), ScriptGenerator.Script(Small(), "b"), "a guarda cita a origem");
+    }
 }

@@ -1,26 +1,29 @@
--- Banco de ORIGEM de teste: imita o esquema PRESUMIDO do GazetaOnline (nunca lido; ver OriginReader) com um catálogo reduzido.
+-- Banco de ORIGEM de teste: imita o esquema REAL do GazetaOnline (lido do código dele: entidades CarBrand/CarModel/CarYearModel/CarVersion e as
+-- equivalentes de moto) com um catálogo reduzido. Colunas como no GazetaOnline: {P}BrandId, {P}ModelId, {P}YearModelId, {P}VersionId, Name,
+-- LegacyCode e IsPublished; o ano é TEXTO (nvarchar). IsPublished fica em 0 em TODAS as linhas de propósito: no GazetaOnline ele só diz que algum anúncio
+-- publicado usa o item, não que o item é curado; a carga tem de ignorá-lo e trazer o catálogo inteiro.
 -- 10 marcas (5 de carros, 5 de motos). Os ids de carros e de motos COLIDEM de propósito (cada tabela numera a partir de 1),
 -- inclusive Honda de carros = Honda de motos = id 1. Não é dado do GazetaOnline: nomes genéricos escritos para o teste.
 -- Casos de borda: marca sem modelos (Suzuki, moto); modelo sem nenhum ano (Etios); modelo com anos e nenhuma versão (Mobi);
 -- ano sem versões (Civic 2016); ano com várias versões; nome com apóstrofo e com acento.
 
-CREATE TABLE CarBrands (Id int NOT NULL PRIMARY KEY, Name nvarchar(100) NULL);
-CREATE TABLE CarModels (Id int NOT NULL PRIMARY KEY, BrandId int NULL, Name nvarchar(150) NULL);
-CREATE TABLE CarYearModels (Id int NOT NULL PRIMARY KEY, ModelId int NULL, Year int NULL);
-CREATE TABLE CarVersions (Id int NOT NULL PRIMARY KEY, YearModelId int NULL, Name nvarchar(250) NULL);
+CREATE TABLE CarBrands (CarBrandId int NOT NULL PRIMARY KEY, Name nvarchar(max) NULL, LegacyCode int NOT NULL DEFAULT 0, IsPublished bit NOT NULL DEFAULT 0);
+CREATE TABLE CarModels (CarModelId int NOT NULL PRIMARY KEY, CarBrandId int NOT NULL, Name nvarchar(max) NULL, LegacyCode int NOT NULL DEFAULT 0, IsPublished bit NOT NULL DEFAULT 0);
+CREATE TABLE CarYearModels (CarYearModelId int NOT NULL PRIMARY KEY, CarModelId int NOT NULL, Year nvarchar(450) NULL, IsPublished bit NOT NULL DEFAULT 0);
+CREATE TABLE CarVersions (CarVersionId int NOT NULL PRIMARY KEY, CarYearModelId int NOT NULL, Name nvarchar(max) NULL, LegacyCode int NOT NULL DEFAULT 0, IsPublished bit NOT NULL DEFAULT 0);
 
-CREATE TABLE MotorcycleBrands (Id int NOT NULL PRIMARY KEY, Name nvarchar(100) NULL);
-CREATE TABLE MotorcycleModels (Id int NOT NULL PRIMARY KEY, BrandId int NULL, Name nvarchar(150) NULL);
-CREATE TABLE MotorcycleYearModels (Id int NOT NULL PRIMARY KEY, ModelId int NULL, Year int NULL);
-CREATE TABLE MotorcycleVersions (Id int NOT NULL PRIMARY KEY, YearModelId int NULL, Name nvarchar(250) NULL);
+CREATE TABLE MotorcycleBrands (MotorcycleBrandId int NOT NULL PRIMARY KEY, Name nvarchar(max) NULL, LegacyCode int NOT NULL DEFAULT 0, IsPublished bit NOT NULL DEFAULT 0);
+CREATE TABLE MotorcycleModels (MotorcycleModelId int NOT NULL PRIMARY KEY, MotorcycleBrandId int NOT NULL, Name nvarchar(max) NULL, LegacyCode int NOT NULL DEFAULT 0, IsPublished bit NOT NULL DEFAULT 0);
+CREATE TABLE MotorcycleYearModels (MotorcycleYearModelId int NOT NULL PRIMARY KEY, MotorcycleModelId int NOT NULL, Year nvarchar(450) NULL, IsPublished bit NOT NULL DEFAULT 0);
+CREATE TABLE MotorcycleVersions (MotorcycleVersionId int NOT NULL PRIMARY KEY, MotorcycleYearModelId int NOT NULL, Name nvarchar(max) NULL, LegacyCode int NOT NULL DEFAULT 0, IsPublished bit NOT NULL DEFAULT 0);
 
-INSERT INTO CarBrands (Id, Name) VALUES
+INSERT INTO CarBrands (CarBrandId, Name) VALUES
   (1, N'Honda'),
   (2, N'Toyota'),
   (3, N'Volkswagen'),
   (4, N'Fiat'),
   (5, N'Chevrolet');
-INSERT INTO CarModels (Id, BrandId, Name) VALUES
+INSERT INTO CarModels (CarModelId, CarBrandId, Name) VALUES
   (1, 1, N'Civic'),
   (2, 1, N'Fit'),
   (3, 1, N'HR-V'),
@@ -49,7 +52,7 @@ INSERT INTO CarModels (Id, BrandId, Name) VALUES
   (26, 5, N'Cruze'),
   (27, 5, N'Spin'),
   (28, 5, N'Montana');
-INSERT INTO CarYearModels (Id, ModelId, Year) VALUES
+INSERT INTO CarYearModels (CarYearModelId, CarModelId, Year) VALUES
   (1, 1, 2016),
   (2, 1, 2017),
   (3, 1, 2018),
@@ -180,7 +183,7 @@ INSERT INTO CarYearModels (Id, ModelId, Year) VALUES
   (128, 28, 2020),
   (129, 28, 2021),
   (130, 28, 2022);
-INSERT INTO CarVersions (Id, YearModelId, Name) VALUES
+INSERT INTO CarVersions (CarVersionId, CarYearModelId, Name) VALUES
   (1, 2, N'Touring 1.5 Turbo CVT'),
   (2, 3, N'Advance 1.8 Flex'),
   (3, 3, N'LX 1.6 Flex'),
@@ -365,13 +368,13 @@ INSERT INTO CarVersions (Id, YearModelId, Name) VALUES
   (182, 129, N'LX 1.6 Flex'),
   (183, 130, N'LX 1.6 Flex');
 
-INSERT INTO MotorcycleBrands (Id, Name) VALUES
+INSERT INTO MotorcycleBrands (MotorcycleBrandId, Name) VALUES
   (1, N'Honda'),
   (2, N'Yamaha'),
   (3, N'Kawasaki'),
   (4, N'Suzuki'),
   (5, N'BMW');
-INSERT INTO MotorcycleModels (Id, BrandId, Name) VALUES
+INSERT INTO MotorcycleModels (MotorcycleModelId, MotorcycleBrandId, Name) VALUES
   (1, 1, N'CG 160'),
   (2, 1, N'CB 500'),
   (3, 1, N'XRE 300'),
@@ -389,7 +392,7 @@ INSERT INTO MotorcycleModels (Id, BrandId, Name) VALUES
   (15, 5, N'R 1250 GS'),
   (16, 5, N'S 1000 RR'),
   (17, 5, N'F 850 GS');
-INSERT INTO MotorcycleYearModels (Id, ModelId, Year) VALUES
+INSERT INTO MotorcycleYearModels (MotorcycleYearModelId, MotorcycleModelId, Year) VALUES
   (1, 1, 2017),
   (2, 1, 2018),
   (3, 1, 2019),
@@ -474,7 +477,7 @@ INSERT INTO MotorcycleYearModels (Id, ModelId, Year) VALUES
   (82, 17, 2020),
   (83, 17, 2021),
   (84, 17, 2022);
-INSERT INTO MotorcycleVersions (Id, YearModelId, Name) VALUES
+INSERT INTO MotorcycleVersions (MotorcycleVersionId, MotorcycleYearModelId, Name) VALUES
   (1, 1, N'Special Edition'),
   (2, 2, N'Standard'),
   (3, 2, N'ABS'),

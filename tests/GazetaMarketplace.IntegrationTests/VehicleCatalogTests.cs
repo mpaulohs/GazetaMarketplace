@@ -61,7 +61,7 @@ public sealed class VehicleCatalogTests
         return rows;
     }
 
-    /// <summary>Banco de origem simulado: o esquema presumido do GazetaOnline com o catálogo reduzido de teste.</summary>
+    /// <summary>Banco de origem simulado: o esquema real do GazetaOnline (colunas CarBrandId, CarModelId…) com o catálogo reduzido de teste.</summary>
     private static async Task<string> OriginAsync(bool withOrphans = false)
     {
         string connection = await SqlServerFixture.CreateEmptyDatabaseAsync();
@@ -69,10 +69,10 @@ public sealed class VehicleCatalogTests
         if (withOrphans)
         {
             await ExecuteAsync(connection, """
-                INSERT INTO CarModels (Id, BrandId, Name) VALUES (900, 99, N'Modelo de marca que não existe');
-                INSERT INTO CarYearModels (Id, ModelId, Year) VALUES (900, NULL, 2020), (901, 28, 2020);
-                INSERT INTO CarVersions (Id, YearModelId, Name) VALUES (900, 99999, N'Versão de ano que não existe');
-                INSERT INTO MotorcycleVersions (Id, YearModelId, Name) VALUES (900, NULL, N'Versão sem ano');
+                INSERT INTO CarModels (CarModelId, CarBrandId, Name) VALUES (900, 99, N'Modelo de marca que não existe');
+                INSERT INTO CarYearModels (CarYearModelId, CarModelId, Year) VALUES (900, 99999, N'2020'), (901, 28, N'2020');
+                INSERT INTO CarVersions (CarVersionId, CarYearModelId, Name) VALUES (900, 99999, N'Versão de ano que não existe');
+                INSERT INTO MotorcycleVersions (MotorcycleVersionId, MotorcycleYearModelId, Name) VALUES (900, 99999, N'Versão sem ano');
                 """);
         }
 
@@ -157,7 +157,7 @@ public sealed class VehicleCatalogTests
 
         StringAssert.Contains(output, $"Marcas: {Brands} | Modelos: {Models} | Anos: {Years} | Versões: {Versions} | Descartados: 5");
         StringAssert.Contains(report, "Registros descartados: 5");
-        foreach (string line in new[] { "car\tmodelo\t900\tsem marca", "car\tano\t/2020\tsem modelo", "car\tversão\t900\tsem ano", "moto\tversão\t900\tsem ano" })
+        foreach (string line in new[] { "car\tmodelo\t900\tsem marca", "car\tano\t99999/2020\tsem modelo", "car\tversão\t900\tsem ano", "moto\tversão\t900\tsem ano" })
         {
             StringAssert.Contains(report, line);
         }
@@ -166,6 +166,41 @@ public sealed class VehicleCatalogTests
         StringAssert.Contains(report, "car\tano\t28/2020\tano repetido no modelo");
         Assert.DoesNotContain("Modelo de marca que não existe", script);
         Assert.DoesNotContain("Versão sem ano", script);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task Origem_ComAnoEmTextoNaoNumerico_ENomeDeVersaoNulo_VaiParaORelatorio_SemQuebrarALeitura()
+    {
+        string origin = await OriginAsync();
+        await ExecuteAsync(origin, """
+            INSERT INTO CarYearModels (CarYearModelId, CarModelId, Year) VALUES (950, 1, N'Zero km'), (951, 1, NULL), (952, 1, N'1900'), (953, 1, N' 2031 ');
+            INSERT INTO CarVersions (CarVersionId, CarYearModelId, Name) VALUES (950, 950, N'Versão de ano em texto'), (951, 1, NULL), (952, 1, N'   ');
+            """);
+
+        (int _, string output, string script, string report) = await ExportAsync(origin);
+
+        // 2031 (com espaços) é um ano válido para o site (até 2100) e entra; "Zero km", nulo e 1900 não
+        StringAssert.Contains(output, $"Marcas: {Brands} | Modelos: {Models} | Anos: {Years + 1} | Versões: {Versions} | Descartados: 6");
+        foreach (string line in new[] { "car\tano\t1/\tano inválido", "car\tano\t1/1900\tano fora de 1950 a 2100", "car\tversão\t950\tsem ano", "car\tversão\t951\tsem nome", "car\tversão\t952\tsem nome" })
+        {
+            StringAssert.Contains(report, line);
+        }
+
+        Assert.DoesNotContain("Versão de ano em texto", script);
+        StringAssert.Contains(script, "(1, 2031, 'car')");
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task Origem_ComIsPublishedEmZero_TrazOCatalogoInteiro_PoisOFlagNaoEDeCuradoria()
+    {
+        string origin = await OriginAsync();
+
+        CollectionAssert.AreEqual(new[] { "0" }, await QueryAsync(origin, "SELECT COUNT(*) FROM CarBrands WHERE IsPublished = 1"), "premissa do teste: nenhuma marca marcada como publicada");
+        (int _, string output, _, _) = await ExportAsync(origin);
+
+        StringAssert.Contains(output, $"Marcas: {Brands} | Modelos: {Models} | Anos: {Years} | Versões: {Versions} | Descartados: 0");
     }
 
     // ---------- script e carga em lote ----------
@@ -266,6 +301,35 @@ public sealed class VehicleCatalogTests
         CollectionAssert.AreEqual(new[] { Brands, Models, Years, Versions }, await CountsAsync(target));
         Assert.AreEqual(0, (await QueryAsync(target, "SELECT 1 FROM (SELECT Source FROM VehicleBrands UNION ALL SELECT Source FROM VehicleModels UNION ALL SELECT Source FROM VehicleModelYears UNION ALL SELECT Source FROM VehicleVersions) x WHERE Source <> 'fipe-2027-01'")).Count);
         CollectionAssert.AreEqual(new[] { "Honda" }, await QueryAsync(target, "SELECT Name FROM VehicleBrands WHERE Id = 1 AND Kind = 'car'"), "o nome corrompido voltou ao da origem (comparação exata)");
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task ScriptLidoSemUtf8_AbortaEDesfazTudo_PelaGuardaDeAcentos()
+    {
+        string target = await SqlServerFixture.CreateMigratedDatabaseAsync();
+        string script = (await ExportAsync(await OriginAsync())).Script;
+        // O sqlcmd do Windows sem -f 65001 lê os bytes UTF-8 como Latin-1: "Ã" + resto do acento. Reproduz exatamente isso.
+        string misread = System.Text.Encoding.Latin1.GetString(new System.Text.UTF8Encoding(false).GetBytes(script));
+        Assert.Contains("Ã", misread, "premissa do teste: o catálogo reduzido tem nome com acento");
+
+        SqlException failure = await Assert.ThrowsExactlyAsync<SqlException>(() => ApplyAsync(target, misread));
+
+        StringAssert.Contains(failure.Message, "Acentos corrompidos");
+        CollectionAssert.AreEqual(new[] { 0, 0, 0, 0 }, await CountsAsync(target), "a transação inteira foi desfeita");
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task ScriptLidoComUtf8_PassaPelaGuardaDeAcentos_ENomesComAcentoLegitimoEntram()
+    {
+        string origin = await OriginAsync();
+        await ExecuteAsync(origin, "INSERT INTO CarBrands (CarBrandId, Name) VALUES (800, N'ÂNGULO São Paulo Edition'), (801, N'Água Ação');");
+        string target = await SqlServerFixture.CreateMigratedDatabaseAsync();
+
+        await ApplyAsync(target, (await ExportAsync(origin)).Script);
+
+        CollectionAssert.AreEqual(new[] { "ÂNGULO São Paulo Edition", "Água Ação" }, await QueryAsync(target, "SELECT Name FROM VehicleBrands WHERE Kind = 'car' AND Id IN (800, 801) ORDER BY Id"));
     }
 
     // ---------- chaves e restrições no SQL Server ----------

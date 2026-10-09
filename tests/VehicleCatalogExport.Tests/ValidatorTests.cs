@@ -138,4 +138,87 @@ public sealed class ValidatorTests
         Assert.AreEqual(1, result.Data.Years.Count);
         Assert.IsEmpty(result.Data.Versions);
     }
+
+    // ---------- limites do site (colunas e API) e texto corrompido na origem ----------
+
+    [TestMethod]
+    public void Nomes_AcimaDoLimiteDaColunaDoSite_SaoDescartados_NaoTruncados()
+    {
+        RawCatalog raw = Raw.Catalog(
+            Kind.Car,
+            brands: [new RawBrand(1, new string('a', 150)), new RawBrand(2, new string('a', 151))],
+            models: [new RawModel(1, 1, new string('m', 150)), new RawModel(2, 1, new string('m', 151))],
+            years: [new RawYear(1, 1, 2019)],
+            versions: [new RawVersion(1, 1, 2019, new string('v', 250)), new RawVersion(2, 1, 2019, new string('v', 251))]);
+
+        ValidationResult result = CatalogValidator.Validate([raw]);
+
+        Assert.AreEqual(1, result.Data.Brands.Count);
+        Assert.AreEqual(1, result.Data.Models.Count);
+        Assert.AreEqual(1, result.Data.Versions.Count);
+        CollectionAssert.AreEquivalent(
+            new[] { "marca|2|nome longo demais", "modelo|2|nome longo demais", "versão|2|nome longo demais" },
+            result.Orphans.Select(o => $"{o.Table}|{o.Key}|{o.Reason}").ToArray());
+    }
+
+    [TestMethod]
+    public void Ids_ZeroOuNegativos_SaoDescartados()
+    {
+        RawCatalog raw = Raw.Catalog(Kind.Car, brands: [new RawBrand(0, "Zero"), new RawBrand(-3, "Negativa"), new RawBrand(1, "Honda")]);
+
+        ValidationResult result = CatalogValidator.Validate([raw]);
+
+        Assert.AreEqual("Honda", result.Data.Brands.Single().Name);
+        CollectionAssert.AreEquivalent(new[] { "marca|0|id inválido", "marca|-3|id inválido" }, result.Orphans.Select(o => $"{o.Table}|{o.Key}|{o.Reason}").ToArray());
+    }
+
+    [TestMethod]
+    public void Ano_ForaDeMil950A2100_OuNaoNumerico_ENaoEntra_ComMotivoClaro()
+    {
+        RawCatalog raw = Raw.Catalog(
+            Kind.Car,
+            brands: [new RawBrand(1, "Honda")],
+            models: [new RawModel(1, 1, "Civic")],
+            years: [new RawYear(1, 1, 1949), new RawYear(2, 1, 1950), new RawYear(3, 1, 2100), new RawYear(4, 1, 2101), new RawYear(5, 1, null)],
+            versions: [new RawVersion(1, 1, 1949, "Ano fora"), new RawVersion(2, 1, 2100, "Ano no limite")]);
+
+        ValidationResult result = CatalogValidator.Validate([raw]);
+
+        CollectionAssert.AreEqual(new[] { 1950, 2100 }, result.Data.Years.Select(y => y.Year).OrderBy(y => y).ToArray());
+        CollectionAssert.AreEquivalent(
+            new[] { "ano|1/1949|ano fora de 1950 a 2100", "ano|1/2101|ano fora de 1950 a 2100", "ano|1/|ano inválido", "versão|1|sem ano" },
+            result.Orphans.Select(o => $"{o.Table}|{o.Key}|{o.Reason}").ToArray());
+        Assert.AreEqual("Ano no limite", result.Data.Versions.Single().Name);
+    }
+
+    [TestMethod]
+    [DataRow("ImÃ³veis")]
+    [DataRow("AutomÃ¡tico")]
+    [DataRow("Ã‰poca")]
+    [DataRow("Â£ Especial")]
+    public void NomeComAcentoCorrompidoNaOrigem_EDescartado_ENaoVaiParaOSite(string corrupted)
+    {
+        RawCatalog raw = Raw.Catalog(
+            Kind.Car,
+            brands: [new RawBrand(1, corrupted)],
+            models: [new RawModel(1, 1, "Modelo")]);
+
+        ValidationResult result = CatalogValidator.Validate([raw]);
+
+        Assert.IsEmpty(result.Data.Brands);
+        CollectionAssert.AreEqual(new[] { "marca|1|texto corrompido", "modelo|1|sem marca" }, result.Orphans.Select(o => $"{o.Table}|{o.Key}|{o.Reason}").ToArray());
+    }
+
+    [TestMethod]
+    [DataRow("Ão")]
+    [DataRow("ÂNGULO 2.0")]
+    [DataRow("SÃO PAULO EDITION")]
+    [DataRow("Água Ação")]
+    public void NomeComAcentoLegitimoMaiusculo_NaoEConfundidoComCorrompido(string legitimate)
+    {
+        ValidationResult result = CatalogValidator.Validate([Raw.Catalog(Kind.Car, brands: [new RawBrand(1, legitimate)])]);
+
+        Assert.AreEqual(legitimate, result.Data.Brands.Single().Name);
+        Assert.IsEmpty(result.Orphans);
+    }
 }

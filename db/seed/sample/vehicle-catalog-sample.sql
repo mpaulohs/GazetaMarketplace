@@ -1,7 +1,10 @@
 ﻿-- Catálogo de veículos (ADR-008). GERADO por tools/VehicleCatalogExport: não edite à mão; gere de novo.
 -- Origem (Source): sample
 -- Marcas: 10 | Modelos: 45 | Anos: 214 | Versões: 307
--- Idempotente: pode ser aplicado mais de uma vez. Aplique com 'sqlcmd -I' ou na ferramenta de SQL do provedor.
+-- Idempotente: pode ser aplicado mais de uma vez. Aplique depois de um backup, com:
+--   sqlcmd -b -I -f 65001 -S <servidor> -d <banco> -U <usuario> -i <este arquivo>
+-- O -f 65001 é obrigatório: sem ele o sqlcmd do Windows lê o arquivo em outra página de código e grava os acentos errados.
+-- Se isso acontecer, a guarda no fim do script aborta e desfaz a carga inteira.
 SET QUOTED_IDENTIFIER ON;
 GO
 SET XACT_ABORT ON;
@@ -610,6 +613,17 @@ USING (VALUES
 ON t.[Id] = s.[Id] AND t.[Kind] = s.[Kind]
 WHEN MATCHED AND (t.[Source] <> 'sample' OR t.[ModelId] <> s.[ModelId] OR t.[Year] <> s.[Year] OR t.[Name] COLLATE Latin1_General_100_BIN2 <> s.[Name] COLLATE Latin1_General_100_BIN2) THEN UPDATE SET [ModelId] = s.[ModelId], [Year] = s.[Year], [Name] = s.[Name], [Source] = 'sample'
 WHEN NOT MATCHED THEN INSERT ([Id], [Kind], [ModelId], [Year], [Name], [Source]) VALUES (s.[Id], s.[Kind], s.[ModelId], s.[Year], s.[Name], 'sample');
+
+-- Guarda de acentos corrompidos (ASCII de proposito): aborta e desfaz tudo se o arquivo foi lido sem '-f 65001'.
+DECLARE @Corrupted nvarchar(100) = N'%[' + NCHAR(194) + NCHAR(195) + N'][' + NCHAR(128) + N'-' + NCHAR(191)
+    + NCHAR(338) + NCHAR(339) + NCHAR(352) + NCHAR(353) + NCHAR(376) + NCHAR(381) + NCHAR(382) + NCHAR(402) + NCHAR(710) + NCHAR(732)
+    + NCHAR(8211) + N'-' + NCHAR(8250) + NCHAR(8364) + NCHAR(8482) + N']%';
+IF EXISTS (
+    SELECT 1 AS Found FROM [VehicleBrands] WHERE [Source] = 'sample' AND [Name] COLLATE Latin1_General_100_BIN2 LIKE @Corrupted
+    UNION ALL SELECT 1 AS Found FROM [VehicleModels] WHERE [Source] = 'sample' AND [Name] COLLATE Latin1_General_100_BIN2 LIKE @Corrupted
+    UNION ALL SELECT 1 AS Found FROM [VehicleVersions] WHERE [Source] = 'sample' AND [Name] COLLATE Latin1_General_100_BIN2 LIKE @Corrupted
+)
+    THROW 50001, N'Acentos corrompidos: o arquivo foi lido sem UTF-8. Aplique com sqlcmd -f 65001. Nada foi gravado.', 1;
 
 COMMIT TRANSACTION;
 GO
