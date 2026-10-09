@@ -189,7 +189,7 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
             AdFieldViewModel built = field.Type switch
             {
                 FieldType.Text => Text(field, raw),
-                FieldType.Integer => Number(field, raw, "numeric"),
+                FieldType.Integer => Integer(field, raw),
                 FieldType.Decimal => Number(field, raw, "decimal"),
                 FieldType.Money => Number(field, raw, "decimal"),
                 FieldType.Select => SelectField(field, raw, field.OptionsFor(categoryId)),
@@ -233,6 +233,13 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
 
     private static AdFieldViewModel Number(FieldDefinition field, string[] raw, string inputMode) =>
         Base(field, AdFieldKind.Number, raw.FirstOrDefault(), raw.FirstOrDefault(), inputMode: inputMode);
+
+    // O inteiro limita o tamanho ao do maior valor permitido: sem teto declarado vale o de int (10 dígitos). O maxlength conta os pontos de milhar que a máscara escreve (9.999.999 = 9).
+    private static AdFieldViewModel Integer(FieldDefinition field, string[] raw)
+    {
+        int digits = ((long)(field.Max ?? int.MaxValue)).ToString(CultureInfo.InvariantCulture).Length;
+        return Base(field, AdFieldKind.Number, raw.FirstOrDefault(), raw.FirstOrDefault(), inputMode: "numeric", maxLength: digits + (digits - 1) / 3, maxDigits: digits);
+    }
 
     private static AdFieldViewModel SelectField(FieldDefinition field, string[] raw, FieldList list)
     {
@@ -286,7 +293,7 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
     private static string Id(int id) => id.ToString(CultureInfo.InvariantCulture);
 
     private static AdFieldViewModel Base(
-        FieldDefinition field, AdFieldKind kind, string value, string display, IReadOnlyList<AdOption> options = null, string inputMode = null, int? maxLength = null, bool disabled = false) => new()
+        FieldDefinition field, AdFieldKind kind, string value, string display, IReadOnlyList<AdOption> options = null, string inputMode = null, int? maxLength = null, bool disabled = false, int? maxDigits = null) => new()
         {
             Key = field.Key,
             Label = field.Label,
@@ -297,6 +304,7 @@ public sealed class AdFormFactory(ICategoryTree tree, IVehicleCatalog catalog, I
             DisplayValue = display,
             MaxLength = maxLength,
             InputMode = inputMode,
+            MaxDigits = maxDigits,
             Options = options ?? [],
             Disabled = disabled,
             CatalogKind = field.Catalog is null ? null : field.Catalog.Kind == CatalogKind.Motorcycle ? VehicleKinds.Moto : VehicleKinds.Car,

@@ -72,6 +72,9 @@ public sealed class AdFieldViewModel
     /// <summary>"numeric" (inteiro), "decimal" (com vírgula) ou nulo.</summary>
     public string InputMode { get; init; }
 
+    /// <summary>Só nos campos de número inteiro: quantos dígitos cabem no maior valor permitido (9.999.999 km = 7). O JavaScript não deixa passar disso.</summary>
+    public int? MaxDigits { get; init; }
+
     public IReadOnlyList<AdOption> Options { get; init; } = [];
 
     /// <summary>Texto de leitura (somente leitura e detalhe): o rótulo da opção escolhida ou o valor digitado.</summary>

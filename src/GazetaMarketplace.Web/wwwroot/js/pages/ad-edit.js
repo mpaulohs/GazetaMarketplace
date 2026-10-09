@@ -3,12 +3,14 @@ import { consultarCep, listarCidades, somenteDigitos } from "../modules/cep.js";
 import { ativarCadeiaDoCatalogo } from "../modules/catalog-chain.js";
 import { atualizarContador, ativarContadores } from "../modules/counter.js";
 import { ativarFotos } from "../modules/photos.js";
+import { ativarMascaraDeInteiro } from "../modules/integer.js";
 import { ativarMascaraDePreco } from "../modules/price.js";
 
 const formulario = document.querySelector("[data-ad-form]");
 
 if (formulario) {
   ativarMascaraDePreco();
+  ativarMascaraDeInteiro();
   ativarContadores();
   ativarCadeiaDoCatalogo();
   ativarFotos();

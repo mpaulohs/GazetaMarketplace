@@ -193,6 +193,27 @@ public class Checkpoint3E2ETests : SitePage
         await Expect(price).ToHaveValueAsync("620.000,01").ConfigureAwait(false);
     }
 
+    [TestMethod]
+    public async Task Quilometragem_SoAceitaDigitos_ComPontoDeMilhar_ENaoPassaDoTeto()
+    {
+        await SignInAsync().ConfigureAwait(false);
+        await OpenNewAsync(Unique("Quilometragem com máscara")).ConfigureAwait(false);
+        await Page.GetByLabel("Categoria").SelectOptionAsync(new SelectOptionValue { Label = "Carros, vans e utilitários" }).ConfigureAwait(false);
+        ILocator km = Page.GetByLabel("Quilometragem");
+        await Expect(km).ToBeVisibleAsync().ConfigureAwait(false);
+
+        // Letra e símbolo não entram; os dígitos ganham o ponto de milhar
+        await km.PressSequentiallyAsync("ab1x2,3-4").ConfigureAwait(false);
+        await Expect(km).ToHaveValueAsync("1.234").ConfigureAwait(false);
+
+        // Passar do teto (9.999.999 km) não é possível, digitando ou colando
+        await km.FillAsync("").ConfigureAwait(false);
+        await km.PressSequentiallyAsync("1234567890123").ConfigureAwait(false);
+        await Expect(km).ToHaveValueAsync("1.234.567").ConfigureAwait(false);
+        await km.FillAsync("999999999999999999999999").ConfigureAwait(false);
+        await Expect(km).ToHaveValueAsync("9.999.999").ConfigureAwait(false);
+    }
+
     // R-09: com a sessão vencida o servidor redireciona o fetch dos campos para a tela de entrada; ela nunca pode ser injetada no formulário
     [TestMethod]
     public async Task TrocaDeCategoria_ComASessaoVencida_MostraOAvisoEMantemOFormulario_SemInjetarATelaDeEntrada()
